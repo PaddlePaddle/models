@@ -25,22 +25,24 @@ from functools import partial
 import numpy as np
 import paddle
 from paddle.io import DataLoader
+from paddle.metric import Metric, Accuracy, Precision, Recall
 
 from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 from paddlenlp.utils.log import logger
+from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 TASK_CLASSES = {
-    "cola": (GlueCoLA, paddle.metric.Accuracy),
-    "sst-2": (GlueSST2, paddle.metric.Accuracy),
-    "mrpc": (GlueMRPC, paddle.metric.Accuracy),
-    "sts-b": (GlueSTSB, paddle.metric.Accuracy),
-    "qqp": (GlueQQP, paddle.metric.Accuracy),
-    "mnli": (GlueMNLI, paddle.metric.Accuracy),
-    "qnli": (GlueQNLI, paddle.metric.Accuracy),
-    "rte": (GlueRTE, paddle.metric.Accuracy),
+    "cola": (GlueCoLA, Mcc),
+    "sst-2": (GlueSST2, Accuracy),
+    "mrpc": (GlueMRPC, AccuracyAndF1),
+    "sts-b": (GlueSTSB, PearsonAndSpearman),
+    "qqp": (GlueQQP, AccuracyAndF1),
+    "mnli": (GlueMNLI, Accuracy),
+    "qnli": (GlueQNLI, Accuracy),
+    "rte": (GlueRTE, Accuracy),
 }
 
 MODEL_CLASSES = {
@@ -54,21 +56,17 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def evaluate(model, loss_fct, metric, data_loader, return_dict):
+def evaluate(model, loss_fct, metric, data_loader):
     model.eval()
     metric.reset()
     for batch in data_loader:
         input_ids, segment_ids, labels = batch
-        model_output = model(input_ids=input_ids, token_type_ids=segment_ids)
-        if not return_dict:
-            logits = model_output[0]
-        else:
-            logits = model_output.logits
+        logits = model(input_ids=input_ids, token_type_ids=segment_ids)
         loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
-        accu = metric.accumulate()
-    print("eval loss: %f, accu: %f, " % (loss.numpy(), accu), end='')
+    acc = metric.accumulate()
+    print("eval loss: %f, acc: %s, " % (loss.numpy(), acc), end='')
     model.train()
 
 
@@ -215,9 +213,10 @@ def do_train(args):
             num_workers=0,
             return_list=True)
 
+    num_labels = 1 if train_dataset.get_labels() == None else len(
+        train_dataset.get_labels())
     model = model_class.from_pretrained(
-        args.model_name_or_path, num_labels=len(train_dataset.get_labels()))
-    return_dict = model.return_dict
+        args.model_name_or_path, num_labels=num_labels)
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
@@ -264,14 +263,14 @@ def do_train(args):
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
+            global_step += 1
             input_ids, segment_ids, labels = batch
-            model_output = model(
-                input_ids=input_ids, token_type_ids=segment_ids)
-            if not return_dict:
-                logits = model_output[0]
-            else:
-                logits = model_output.logits
+            logits = model(input_ids=input_ids, token_type_ids=segment_ids)
             loss = loss_fct(logits, labels)
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.clear_gradients()
             if global_step % args.logging_steps == 0:
                 print(
                     "global step %d/%d, epoch: %d, batch: %d, rank_id: %s, loss: %f, lr: %.10f, speed: %.4f step/s"
@@ -279,21 +278,15 @@ def do_train(args):
                        paddle.distributed.get_rank(), loss, optimizer.get_lr(),
                        args.logging_steps / (time.time() - tic_train)))
                 tic_train = time.time()
-            loss.backward()
-            optimizer.step()
-            lr_scheduler.step()
-            optimizer.clear_gradients()
-            if global_step > 1 and global_step % args.save_steps == 0:
+            if global_step % args.save_steps == 0:
                 tic_eval = time.time()
                 if args.task_name == "mnli":
-                    evaluate(model, loss_fct, metric, dev_data_loader_matched,
-                             return_dict)
+                    evaluate(model, loss_fct, metric, dev_data_loader_matched)
                     evaluate(model, loss_fct, metric,
-                             dev_data_loader_mismatched, return_dict)
+                             dev_data_loader_mismatched)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 else:
-                    evaluate(model, loss_fct, metric, dev_data_loader,
-                             return_dict)
+                    evaluate(model, loss_fct, metric, dev_data_loader)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
                     output_dir = os.path.join(args.output_dir,
@@ -306,7 +299,6 @@ def do_train(args):
                         model, paddle.DataParallel) else model
                     model_to_save.save_pretrained(output_dir)
                     tokenizer.save_pretrained(output_dir)
-            global_step += 1
 
 
 def get_md5sum(file_path):
@@ -371,7 +363,7 @@ if __name__ == "__main__":
         "than this will be truncated, sequences shorter will be padded.", )
     parser.add_argument(
         "--learning_rate",
-        default=3e-4,
+        default=1e-4,
         type=float,
         help="The initial learning rate for Adam.")
     parser.add_argument(

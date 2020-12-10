@@ -53,22 +53,22 @@ class ErnieTokenizer(PretrainedTokenizer):
     resource_files_names = {"vocab_file": "vocab.txt"}  # for save_pretrained
     pretrained_resource_files_map = {
         "vocab_file": {
-            "ernie":
+            "ernie-1.0":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie/vocab.txt",
-            "ernie_v2_eng_base":
+            "ernie-2.0-en":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/vocab.txt",
-            "ernie_v2_eng_large":
+            "ernie-2.0-large-en":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/vocab.txt",
         }
     }
     pretrained_init_configuration = {
-        "ernie": {
+        "ernie-1.0": {
             "do_lower_case": True
         },
-        "ernie_v2_eng_base": {
+        "ernie-2.0-en": {
             "do_lower_case": True
         },
-        "ernie_v2_eng_large": {
+        "ernie-2.0-large-en": {
             "do_lower_case": True
         },
     }

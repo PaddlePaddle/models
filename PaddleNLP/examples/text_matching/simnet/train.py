@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from functools import partial
 import argparse
 import os
+import random
+import time
 
 import paddle
 import paddlenlp as ppnlp
-from paddlenlp.datasets import ChnSentiCorp
+from paddlenlp.datasets import LCQMC
 
 from utils import load_vocab, generate_batch, convert_example
 
@@ -28,8 +31,8 @@ parser.add_argument('--use_gpu', type=eval, default=True, help="Whether use GPU 
 parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate used to train.")
 parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
-parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The directory to dataset.")
-parser.add_argument('--network_name', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
+parser.add_argument("--vocab_path", type=str, default="./data/term2id.dict", help="The directory to dataset.")
+parser.add_argument('--network', type=str, default="cnn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
 parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 args = parser.parse_args()
 # yapf: enable
@@ -82,27 +85,23 @@ if __name__ == "__main__":
     vocab = load_vocab(args.vocab_path)
 
     # Loads dataset.
-    train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(
+    train_ds, dev_dataset, test_ds = LCQMC.get_datasets(
         ['train', 'dev', 'test'])
 
     # Constructs the newtork.
     label_list = train_ds.get_labels()
-    model = ppnlp.models.Senta(
-        network_name=args.network_name,
+    model = ppnlp.models.SimNet(
+        network=args.network,
         vocab_size=len(vocab),
         num_classes=len(label_list))
     model = paddle.Model(model)
 
     # Reads data and generates mini-batches.
-    trans_fn = partial(
-        convert_example,
-        vocab=vocab,
-        unk_token_id=vocab['[UNK]'],
-        is_test=False)
+    trans_fn = partial(convert_example, vocab=vocab, is_test=False)
     train_loader = create_dataloader(
         train_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='train')
     dev_loader = create_dataloader(
-        dev_ds,
+        dev_dataset,
         trans_fn=trans_fn,
         batch_size=args.batch_size,
         mode='validation')
@@ -124,10 +123,11 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
-    model.fit(train_loader,
-              dev_loader,
-              epochs=args.epochs,
-              save_dir=args.save_dir)
+    model.fit(
+        train_loader,
+        dev_loader,
+        epochs=args.epochs,
+        save_dir=args.save_dir, )
 
     # Finally tests model.
     results = model.evaluate(test_loader)

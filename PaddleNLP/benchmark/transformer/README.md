@@ -20,5 +20,5 @@ python3 train.py
 ``` shell
 cd dygraph/
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python3 -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7 train.py
+python3 -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py
 ```
