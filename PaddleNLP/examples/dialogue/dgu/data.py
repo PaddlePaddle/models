@@ -20,7 +20,7 @@ def get_label_map(label_list):
 
 class UDCv1(Dataset):
     """
-    The UDCv1 dataset is using in task DRS(Dialogue Response Selection).
+    The UDCv1 dataset is using in task Dialogue Response Selection.
     The source dataset is UDCv1(Ubuntu Dialogue Corpus v1.0). See detail at
     http://dataset.cs.mcgill.ca/ubuntu-corpus-1.0/
     """
@@ -107,7 +107,7 @@ class UDCv1(Dataset):
 
 class DSTC2(Dataset):
     """
-    The dataset DSTC2 is using in task DST(Dialogue State Tracking).
+    The dataset DSTC2 is using in task Dialogue State Tracking.
     The source dataset is DSTC2(Dialog State Tracking Challenges 2). See detail at
     https://github.com/matthen/dstc
     """
@@ -207,7 +207,7 @@ class DSTC2(Dataset):
 
 class ATIS_DSF(Dataset):
     """
-    The dataset ATIS_DSF is using in task DSF(Dialogue Slot Filling).
+    The dataset ATIS_DSF is using in task Dialogue Slot Filling.
     The source dataset is ATIS(Airline Travel Information System). See detail at
     https://www.kaggle.com/siddhadev/ms-cntk-atis
     """
@@ -281,7 +281,7 @@ class ATIS_DSF(Dataset):
 
 class ATIS_DID(Dataset):
     """
-    The dataset ATIS_ID is using in task DID(Dialogue Intent Detection).
+    The dataset ATIS_ID is using in task Dialogue Intent Detection.
     The source dataset is ATIS(Airline Travel Information System). See detail at
     https://www.kaggle.com/siddhadev/ms-cntk-atis
     """
@@ -441,7 +441,7 @@ def truncate_and_concat(pre_txt: List[str],
 
 class MRDA(Dataset):
     """
-    The dataset MRDA is using in task DA(Dialogue Act).
+    The dataset MRDA is using in task Dialogue Act.
     The source dataset is MRDA(Meeting Recorder Dialogue Act). See detail at
     https://www.aclweb.org/anthology/W04-2319.pdf
     """
@@ -479,7 +479,7 @@ class MRDA(Dataset):
 
 class SwDA(Dataset):
     """
-    The dataset SwDA is using in task DA(Dialogue Act).
+    The dataset SwDA is using in task Dialogue Act.
     The source dataset is SwDA(Switchboard Dialog Act). See detail at
     http://compprag.christopherpotts.net/swda.html
     """
