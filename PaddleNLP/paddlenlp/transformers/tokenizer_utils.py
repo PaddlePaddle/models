@@ -22,7 +22,7 @@ import os
 import six
 import unicodedata
 
-from paddle.utils.download import get_path_from_url
+from paddlenlp.utils.downloader import get_path_from_url
 from paddlenlp.utils.env import MODEL_HOME
 
 from ..data.vocab import Vocab
