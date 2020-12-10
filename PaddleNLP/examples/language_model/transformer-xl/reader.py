@@ -62,7 +62,7 @@ class LMDataset(IterableDataset):
             yield [
                 src[self.rank * self.batch_size:(self.rank + 1) *
                     self.batch_size], target[self.rank * self.batch_size:(
-                        self.rank + 1) * self.batch_size], seq_len
+                        self.rank + 1) * self.batch_size], [seq_len]
             ]
 
 
