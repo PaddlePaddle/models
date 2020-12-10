@@ -27,9 +27,16 @@ class InferPlato2(nn.Layer):
         self.topk = topk
         self.vocab_size = vocab_size
 
-        self.mask_id = 8000
+        self.unk_id = 0
         self.bos_id = 1
         self.eos_id = 2
+        self.mask_id = 8000
+        self.after_eos = paddle.ones([vocab_size]) * -1e9
+        self.after_eos[self.eos_id] = 0
+
+        self.dropout_layer = nn.Dropout(hidden_dropout_prob)
+        self.gelu_layer = nn.GELU()
+        self.softmax = nn.Softmax()
 
         self.latent_weight = paddle.create_parameter(
             [hidden_size, latent_type_size], 'float32')
@@ -37,9 +44,7 @@ class InferPlato2(nn.Layer):
         self.sent_embedding_layer = nn.Embedding(type_size, hidden_size)
         self.pos_embedding_layer = nn.Embedding(max_position_seq_len,
                                                 hidden_size)
-        self.dropout_layer = nn.Dropout(hidden_dropout_prob)
         self.post_encoder_layer_norm = nn.LayerNorm(hidden_size)
-        self.gelu_layer = nn.GELU()
 
         self.n_pre_norm_layers = []
         self.n_multi_att = []
@@ -77,13 +82,6 @@ class InferPlato2(nn.Layer):
         self.logits_layer_norm = nn.LayerNorm(hidden_size)
         self.logits_bias = paddle.create_parameter(
             [vocab_size], 'float32', is_bias=True)
-
-        self.token_penalty = paddle.zeros([vocab_size])
-        self.token_penalty[self.mask_id] = -1e9
-        self.eos_penalty = paddle.zeros([vocab_size])
-        self.eos_penalty[self.eos_id] = -1e9
-
-        self.softmax = nn.Softmax()
 
     def forward(self, inputs):
         token_ids = inputs['token_ids']
@@ -123,11 +121,7 @@ class InferPlato2(nn.Layer):
             # [-1, seq_len + 1, hidden_size]
             query = self.n_pre_norm_layers[i](out)
             attn_output, self.caches[i] = self.n_multi_att[i](
-                query,
-                query,
-                query,
-                n_head_self_attn_mask,
-                cache=self.caches[i])
+                query, None, None, n_head_self_attn_mask, cache=self.caches[i])
             attn_output = self.dropout_layer(attn_output)
             attn_output = attn_output + out
 
@@ -168,20 +162,20 @@ class InferPlato2(nn.Layer):
         tgt_ids = inputs['tgt_ids']
         tgt_pos = inputs['tgt_pos']
         tgt_generation_mask = inputs['tgt_generation_mask']
-        scores = inputs['init_score']
+        predictions = tgt_ids
 
         # TODO
         step = 0
         while step < self.max_dec_len:
-            append_mask = paddle.ones(
-                [tgt_ids.shape[0], 1, 1], dtype=tgt_generation_mask.dtype)
+            print(step)
+            # [-1, 1]
+            append_mask = paddle.cast(
+                tgt_ids != self.eos_id, dtype=tgt_generation_mask.dtype)
             tgt_generation_mask = paddle.concat(
-                [tgt_generation_mask, append_mask], axis=-1)
+                [tgt_generation_mask, paddle.unsqueeze(append_mask, 1)],
+                axis=-1)
             tgt_sent = paddle.ones(
                 [tgt_generation_mask.shape[0], 1], dtype=tgt_ids.dtype)
-            tgt_pos = paddle.ones(
-                [tgt_generation_mask.shape[0], 1],
-                dtype=tgt_ids.dtype) * step + tgt_pos
 
             # [-1, 1, hidden_size]
             out = self.encoder(tgt_ids, tgt_sent, tgt_pos, tgt_generation_mask)
@@ -189,42 +183,35 @@ class InferPlato2(nn.Layer):
 
             # [-1, hidden_size]
             trans = self.logits_fc_layer(out)
-            trans = self.gelu_layer(out)
-            trans = self.logits_layer_norm(out)
+            trans = self.gelu_layer(trans)
+            trans = self.logits_layer_norm(trans)
 
             # [-1, vocab_size]
             logits = paddle.matmul(
                 trans, self.word_embedding_layer.weight,
                 transpose_y=True) + self.logits_bias
-            logits += self.token_penalty
+            logits[:, self.unk_id] = -1e9
+            logits[:, self.bos_id] = -1e9
+            logits[:, self.mask_id] = -1e9
             if step < self.min_dec_len:
-                logits += self.eos_penalty
-
+                logits[:, self.eos_id] = -1e9
+            logits = logits * append_mask + (1 - append_mask) * self.after_eos
             probs = self.softmax(logits)
 
             # [-1, topk]
             topk_probs, _ = paddle.topk(probs, k=self.topk)
-            mask = probs >= paddle.unsqueeze(topk_probs[:, -1], axis=1)
-            mask = paddle.cast(mask, 'float32')
+            mask = paddle.cast(probs >= topk_probs[:, -1:], 'float32')
             sums = paddle.sum(topk_probs, axis=-1, keepdim=True)
             new_probs = probs * mask / sums
             # [-1, 1]
             sampling_ids = paddle.multinomial(new_probs)
-            sampling_ids = paddle.squeeze(sampling_ids, axis=1)
 
-            # [-1, vocab_size]
-            sampling_scores = F.one_hot(sampling_ids, self.vocab_size)
-            sampling_scores = sampling_scores * probs - (1 - sampling_scores
-                                                         ) * 1e3
-            # [-1, 1]
-            topk_scores, topk_indices = paddle.topk(sampling_scores, k=1)
-
-            pre_len = step
-            cur_len = step = step + 1
-
-            accu_scores = (paddle.log(topk_scores) + scores * pre_len) / cur_len
-
-            # TODO beam_search & gather
+            step = step + 1
+            tgt_ids = sampling_ids
+            tgt_pos = tgt_pos + 1
+            predictions = paddle.concat([predictions, tgt_ids], axis=1)
+        print(predictions)
+        return predictions
 
 
 if __name__ == '__main__':
@@ -249,9 +236,14 @@ if __name__ == '__main__':
         inputs[key] = paddle.to_tensor(inputs[key])
         if key in ['token_ids', 'type_ids', 'pos_ids', 'tgt_ids', 'tgt_pos']:
             inputs[key] = paddle.squeeze(inputs[key], axis=-1)
-        print(key, inputs[key].shape, inputs[key].dtype)
+        #print(key, inputs[key].shape, inputs[key].dtype)
 
     model = InferPlato2()
-    # TODO load pretrained params
 
-    model(inputs)
+    ckpt_path = './data/pretrain.pdparams'
+    state_dict = paddle.load(ckpt_path)
+    model.set_state_dict(state_dict)
+
+    model.eval()
+
+    dec_out = model(inputs)
