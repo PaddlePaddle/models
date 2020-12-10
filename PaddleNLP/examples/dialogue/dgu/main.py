@@ -22,10 +22,10 @@ import data
 import metric
 
 TASK_CLASSES = {
-    'drs': (data.UDCv1, metric.RecallAtK),
-    'dst': (data.DSTC2, metric.JointAccuracy),
-    'dsf': (data.ATIS_DSF, metric.F1Score),
-    'did': (data.ATIS_DID, Accuracy),
+    'udc': (data.UDCv1, metric.RecallAtK),
+    'dstc2': (data.DSTC2, metric.JointAccuracy),
+    'atis_slot': (data.ATIS_DSF, metric.F1Score),
+    'atis_intent': (data.ATIS_DID, Accuracy),
     'mrda': (data.MRDA, Accuracy),
     'swda': (data.SwDA, Accuracy)
 }
@@ -70,18 +70,20 @@ class DGULossFunction(nn.Layer):
         self.loss_fn = self.get_loss_fn()
 
     def get_loss_fn(self):
-        if self.task_name in ['drs', 'dsf', 'did', 'mrda', 'swda']:
+        if self.task_name in [
+                'udc', 'atis_slot', 'atis_intent', 'mrda', 'swda'
+        ]:
             return F.softmax_with_cross_entropy
-        elif self.task_name == 'dst':
+        elif self.task_name == 'dstc2':
             return nn.BCEWithLogitsLoss(reduction='sum')
 
     def forward(self, logits, labels):
-        if self.task_name in ['drs', 'did', 'mrda', 'swda']:
+        if self.task_name in ['udc', 'atis_intent', 'mrda', 'swda']:
             loss = self.loss_fn(logits, labels)
             loss = paddle.mean(loss)
-        elif self.task_name == 'dst':
+        elif self.task_name == 'dstc2':
             loss = self.loss_fn(logits, paddle.cast(labels, dtype=logits.dtype))
-        elif self.task_name == 'dsf':
+        elif self.task_name == 'atis_slot':
             labels = paddle.unsqueeze(labels, axis=-1)
             loss = self.loss_fn(logits, labels)
             loss = paddle.mean(loss)
@@ -89,8 +91,8 @@ class DGULossFunction(nn.Layer):
 
 
 def print_logs(args, step, logits, labels, loss, total_time, metric):
-    if args.task_name in ['drs', 'did', 'mrda', 'swda']:
-        if args.task_name == 'drs':
+    if args.task_name in ['udc', 'atis_intent', 'mrda', 'swda']:
+        if args.task_name == 'udc':
             metric = Accuracy()
         metric.reset()
         correct = metric.compute(logits, labels)
@@ -98,13 +100,13 @@ def print_logs(args, step, logits, labels, loss, total_time, metric):
         acc = metric.accumulate()
         print('step %d - loss: %.4f - acc: %.4f - %.3fs/step' %
               (step, loss, acc, total_time / args.logging_steps))
-    elif args.task_name == 'dst':
+    elif args.task_name == 'dstc2':
         metric.reset()
         metric.update(logits, labels)
         joint_acc = metric.accumulate()
         print('step %d - loss: %.4f - joint_acc: %.4f - %.3fs/step' %
               (step, loss, joint_acc, total_time / args.logging_steps))
-    elif args.task_name == 'dsf':
+    elif args.task_name == 'atis_slot':
         metric.reset()
         metric.update(logits, labels)
         f1_micro = metric.accumulate()
@@ -181,6 +183,7 @@ def train(args, model, train_data_loader, dev_data_loader, metric, rank):
             batch_start_time = time.time()
 
 
+@paddle.no_grad()
 def evaluation(args, model, data_loader, metric):
     model.eval()
     metric.reset()
@@ -195,17 +198,17 @@ def evaluation(args, model, data_loader, metric):
     model.train()
     metric_out = metric.accumulate()
     print('Total samples: %d' % (len(data_loader) * args.test_batch_size))
-    if args.task_name == 'drs':
+    if args.task_name == 'udc':
         print('R1@10: %.4f - R2@10: %.4f - R5@10: %.4f\n' %
               (metric_out[0], metric_out[1], metric_out[2]))
         return metric_out[0]
-    elif args.task_name == 'dst':
+    elif args.task_name == 'dstc2':
         print('Joint_acc: %.4f\n' % metric_out)
         return metric_out
-    elif args.task_name == 'dsf':
+    elif args.task_name == 'atis_slot':
         print('F1_micro: %.4f\n' % metric_out)
         return metric_out
-    elif args.task_name in ['did', 'mrda', 'swda']:
+    elif args.task_name in ['atis_intent', 'mrda', 'swda']:
         print('Acc: %.4f\n' % metric_out)
         return metric_out
 
@@ -248,7 +251,7 @@ def main(args):
         max_seq_length=args.test_max_seq_len)
     metric = metric_class()
 
-    if args.task_name in ('drs', 'dst', 'did', 'mrda', 'swda'):
+    if args.task_name in ('udc', 'dstc2', 'atis_intent', 'mrda', 'swda'):
         batchify_fn = lambda samples, fn=Tuple(
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # input
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
@@ -256,7 +259,7 @@ def main(args):
         ): fn(samples)
         model = BertForSequenceClassification.from_pretrained(
             args.model_name_or_path, num_classes=dataset_class.num_classes())
-    elif args.task_name == 'dsf':
+    elif args.task_name == 'atis_slot':
         batchify_fn = lambda samples, fn=Tuple(
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # input
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
