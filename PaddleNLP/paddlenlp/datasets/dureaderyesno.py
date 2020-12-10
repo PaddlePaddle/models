@@ -3,10 +3,11 @@ import collections
 import os
 import warnings
 
-from paddle.dataset.common import DATA_HOME, md5file
+from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 import json
 from paddle.io import Dataset
+from paddlenlp.utils.env import DATA_HOME
 
 __all__ = ['DuReaderYesNo']
 
@@ -19,13 +20,13 @@ class DuReaderYesNo(Dataset):
     SEGMENTS = {
         'train': SEGMENT_INFO(
             os.path.join('dureader_yesno-data', 'train.json'),
-            'dc2dac669a113866a6480a0b10cd50bf'),
+            'c469a0ef3f975cfd705e3553ddb27cc1'),
         'dev': SEGMENT_INFO(
             os.path.join('dureader_yesno-data', 'dev.json'),
-            '185958e46ba556b38c6a7cc63f3a2135'),
+            'c38544f8b5a7b567492314e3232057b5'),
         'test': SEGMENT_INFO(
             os.path.join('dureader_yesno-data', 'test.json'),
-            '185958e46ba556b38c6a7cc63f3a2135')
+            '1c7a1a3ea5b8992eeaeea017fdc2d55f')
     }
 
     def __init__(self, segment='train', root=None, **kwargs):
@@ -67,8 +68,10 @@ class DuReaderYesNo(Dataset):
         examples = []
         for entry in data_lines:
             source = json.loads(entry.strip())
-            examples.append(
-                [source['question'], source['answer'], source['yesno_answer']])
+            examples.append([
+                source['question'], source['answer'], source['yesno_answer'],
+                source['id']
+            ])
 
         self.examples = examples
 
@@ -80,6 +83,6 @@ class DuReaderYesNo(Dataset):
 
     def get_labels(self):
         """
-        Return labels of the GlueCoLA object.
+        Return labels of the DuReaderYesNo sample.
         """
         return ["Yes", "No", "Depends"]

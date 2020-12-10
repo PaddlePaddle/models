@@ -38,57 +38,25 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
-class InputFeature(object):
-    """A single set of features of data."""
-
-    def __init__(self,
-                 unique_id,
-                 example_index,
-                 doc_span_index,
-                 tokens,
-                 token_to_orig_map,
-                 token_is_max_context,
-                 input_ids,
-                 input_mask,
-                 segment_ids,
-                 start_position=None,
-                 end_position=None):
-        self.unique_id = unique_id
-        self.example_index = example_index
-        self.doc_span_index = doc_span_index
-        self.tokens = tokens
-        self.token_to_orig_map = token_to_orig_map
-        self.token_is_max_context = token_is_max_context
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
-        self.start_position = start_position
-        self.end_position = end_position
-
-
 def convert_example(example,
                     tokenizer,
                     label_list,
                     max_seq_length=512,
                     is_test=False):
-    """convert a glue example into necessary features"""
+    """convert a DuReaderYesNo example into necessary features"""
 
     def _truncate_seqs(seqs, max_seq_length):
-        if len(seqs) == 1:  # single sentence
-            # Account for [CLS] and [SEP] with "- 2"
-            seqs[0] = seqs[0][0:(max_seq_length - 2)]
-        else:  # sentence pair
-            # Account for [CLS], [SEP], [SEP] with "- 3"
-            tokens_a, tokens_b = seqs
-            max_seq_length -= 3
-            while True:  # truncate with longest_first strategy
-                total_length = len(tokens_a) + len(tokens_b)
-                if total_length <= max_seq_length:
-                    break
-                if len(tokens_a) > len(tokens_b):
-                    tokens_a.pop()
-                else:
-                    tokens_b.pop()
+        # Account for [CLS], [SEP], [SEP] with "- 3"
+        tokens_a, tokens_b = seqs
+        max_seq_length -= 3
+        while True:  # truncate with longest_first strategy
+            total_length = len(tokens_a) + len(tokens_b)
+            if total_length <= max_seq_length:
+                break
+            if len(tokens_a) > len(tokens_b):
+                tokens_a.pop()
+            else:
+                tokens_b.pop()
         return seqs
 
     def _concat_seqs(seqs, separators, seq_mask=0, separator_mask=1):
@@ -109,8 +77,8 @@ def convert_example(example,
         # `label_list == None` is for regression task
         label_dtype = "int64" if label_list else "float32"
         # get the label
-        label = example[-1]
-        example = example[:-1]
+        label = example[-2]
+        example = example[:-2]
         #create label maps if classification task
         if label_list:
             label_map = {}
@@ -118,7 +86,9 @@ def convert_example(example,
                 label_map[l] = i
             label = label_map[label]
         label = np.array([label], dtype=label_dtype)
-
+    else:
+        qas_id = example[-1]
+        example = example[:-2]
     # tokenize raw text
     tokens_raw = [tokenizer(l) for l in example]
     # truncate to the truncate_length,
@@ -130,18 +100,16 @@ def convert_example(example,
     # convert the token to ids
     input_ids = tokenizer.convert_tokens_to_ids(tokens)
     valid_length = len(input_ids)
-    # The mask has 1 for real tokens and 0 for padding tokens. Only real
-    # tokens are attended to.
-    # input_mask = [1] * len(input_ids)
+
     if not is_test:
         return input_ids, segment_ids, valid_length, label
     else:
-        return input_ids, segment_ids, valid_length
+        return input_ids, segment_ids, valid_length, qas_id
 
 
-def evaluate(model, metric, data_loader, is_test=False):
+def evaluate(model, metric, data_loader, do_pred=False):
     model.eval()
-    if not is_test:
+    if not do_pred:
         metric.reset()
         for batch in data_loader:
             input_ids, segment_ids, labels = batch
@@ -150,6 +118,17 @@ def evaluate(model, metric, data_loader, is_test=False):
             metric.update(correct)
             accu = metric.accumulate()
         print("accu: %f" % (accu))
+    else:
+        res = {}
+        for batch in data_loader:
+            input_ids, segment_ids, qas_id = batch
+            logits = model(input_ids, segment_ids)
+            qas_id = qas_id.numpy()
+            preds = paddle.argmax(logits, axis=1).numpy()
+            for i in range(len(preds)):
+                res[str(qas_id[i])] = data_loader.dataset.get_labels()[preds[i]]
+        with open('prediction.json', "w") as writer:
+            writer.write(json.dumps(res, ensure_ascii=False, indent=4) + "\n")
 
     model.train()
 
@@ -178,7 +157,7 @@ def do_train(args):
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True)
 
-    train_batchify_fn = lambda samples, fn=Tuple(
+    batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
         Stack(),  # length
@@ -188,7 +167,7 @@ def do_train(args):
     train_data_loader = DataLoader(
         dataset=train_ds,
         batch_sampler=train_batch_sampler,
-        collate_fn=train_batchify_fn,
+        collate_fn=batchify_fn,
         return_list=True)
 
     dev_ds = dev_ds.apply(trans_func, lazy=True)
@@ -199,7 +178,7 @@ def do_train(args):
     dev_data_loader = DataLoader(
         dataset=dev_ds,
         batch_sampler=dev_batch_sampler,
-        collate_fn=train_batchify_fn,
+        collate_fn=batchify_fn,
         return_list=True)
 
     test_trans_func = partial(
@@ -222,7 +201,7 @@ def do_train(args):
     test_data_loader = DataLoader(
         dataset=test_ds,
         batch_sampler=test_batch_sampler,
-        collate_fn=test_batchify_fn,
+        collate_fn=batchify_fn,
         return_list=True)
 
     model = model_class.from_pretrained(args.model_name_or_path, num_classes=3)
@@ -289,6 +268,9 @@ def do_train(args):
 
         if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
             evaluate(model, metric, dev_data_loader)
+
+    if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+        evaluate(model, metric, test_data_loader, True)
 
 
 if __name__ == "__main__":

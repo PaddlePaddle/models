@@ -21,13 +21,13 @@ class DuReaderRobust(SQuAD):
     SEGMENTS = {
         'train': SEGMENT_INFO(
             os.path.join('dureader_robust-data', 'train.json'),
-            'dc2dac669a113866a6480a0b10cd50bf'),
+            '800a3dcb742f9fdf9b11e0a83433d4be'),
         'dev': SEGMENT_INFO(
             os.path.join('dureader_robust-data', 'dev.json'),
-            '185958e46ba556b38c6a7cc63f3a2135'),
+            'ae73cec081eaa28a735204c4898a2222'),
         'test': SEGMENT_INFO(
             os.path.join('dureader_robust-data', 'test.json'),
-            '185958e46ba556b38c6a7cc63f3a2135')
+            'e0e8aa5c7b6d11b6fc3935e29fc7746f')
     }
 
     def __init__(self,

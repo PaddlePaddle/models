@@ -92,7 +92,7 @@ def evaluate(model, data_loader, args, tokenizer, do_pred=False):
     all_predictions, _, scores_diff_json = compute_predictions(
         data_loader.dataset.examples, data_loader.dataset.features, all_results,
         args.n_best_size, args.max_answer_length, args.do_lower_case, False,
-        args.null_score_diff_threshold, args.verbose, tokenizer)
+        0.0, args.verbose, tokenizer)
     if do_pred:
         with open('prediction.json', "w") as writer:
             writer.write(

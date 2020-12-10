@@ -69,31 +69,27 @@ class SQuAD(Dataset):
     SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
 
     DEV_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v2.0.json'
-    DEV_DATA_MD5_V2 = '7ab59a1b04bd7cb773f98a0717106c9b'
     TRAIN_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v2.0.json'
-    TRAIN_DATA_MD5_V2 = '793daf7b6224281e75fe61c1f80afe35'
 
     DEV_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v1.1.json'
-    DEV_DATA_MD5_V1 = '7ab59a1b04bd7cb773f98a0717106c9b'
     TRAIN_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v1.1.json'
-    TRAIN_DATA_MD5_V1 = '793daf7b6224281e75fe61c1f80afe35'
 
     SEGMENTS = {
         '1.1': {
             'train': SEGMENT_INFO(
-                os.path.join('v1', 'train.json'),
-                'dc2dac669a113866a6480a0b10cd50bf'),
+                os.path.join('v1', 'train-v1.1.json'),
+                '981b29407e0affa3b1b156f72073b945'),
             'dev': SEGMENT_INFO(
-                os.path.join('v1', 'dev.json'),
-                '185958e46ba556b38c6a7cc63f3a2135')
+                os.path.join('v1', 'dev-v1.1.json'),
+                '3e85deb501d4e538b6bc56f786231552')
         },
         '2.0': {
             'train': SEGMENT_INFO(
-                os.path.join('v2', 'train.json'),
-                'dc2dac669a113866a6480a0b10cd50bf'),
+                os.path.join('v2', 'train-v2.0.json'),
+                '62108c273c268d70893182d5cf8df740'),
             'dev': SEGMENT_INFO(
-                os.path.join('v2', 'dev.json'),
-                '185958e46ba556b38c6a7cc63f3a2135')
+                os.path.join('v2', 'dev-v2.0.json'),
+                '246adae8b7002f8679c027697b0b7cf8')
         }
     }
 

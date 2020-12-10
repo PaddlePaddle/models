@@ -102,12 +102,6 @@ def parse_args():
         help="The total number of n-best predictions to generate in the nbest_predictions.json output file."
     )
     parser.add_argument(
-        "--null_score_diff_threshold",
-        type=float,
-        default=0.0,
-        help="If null_score - best_non_null is greater than the threshold predict null."
-    )
-    parser.add_argument(
         "--max_query_length", type=int, default=64, help="Max query length.")
     parser.add_argument(
         "--max_answer_length", type=int, default=30, help="Max answer length.")
