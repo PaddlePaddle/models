@@ -268,6 +268,7 @@ def train(args):
             #NOTE: this is for benchmark
             if args.max_iter and total_batch_num == args.max_iter:
                 return
+
             reader_cost_averager.record(time.time() - batch_start)
 
             train_batch_metrics = exe.run(compiled_train_prog,

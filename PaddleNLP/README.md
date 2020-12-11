@@ -6,9 +6,9 @@
 
 ## Introduction
 
-PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use API and detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
+PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
-**TODO:** Add an architecture chart for PaddleNLP
+** This project is still UNDER ACTIVE DEVELOPMENT. **
 
 ## Features
 
@@ -29,7 +29,7 @@ PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use
 * paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp
+pip install paddlenlp==2.0.0a
 ```
 
 ## Quick Start
@@ -37,36 +37,55 @@ pip install paddlenlp
 ### Quick Dataset Loading
 
 ```python
-dataset = paddlenlp.datasets.ChnSentiCorp(split="train")
+
+from paddlenlp.datasets import ChnSentiCrop
+train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
 
-### Reusable Text Emebdding
+### Chinese Text Emebdding Loading
 
 ```python
-wordemb = paddlenlp.embedding.SkipGram("Text8")
-wordemb("language")
->>> [1.0, 2.0, 3.0, ...., 5.0, 6.0]
+
+from paddlenlp.embeddings import TokenEmbedding
+wordemb = TokenEmbedding("word2vec.baike.300d")
+print(wordemb.search("中国"))
+>>> [0.260801, 0.1047, 0.129453 ... 0.096542, 0.0092513]
+
 ```
 
-### High Quality Chinsese Pre-trained Model
+### One-Line Classical Model Building
 
 ```python
-from paddlenlp.transformer import ErnieModel
-ernie = ErnieModel.from_pretrained("ernie-1.0-chinese")
-sequence_output, pooled_output = ernie.forward(input_ids, segment_ids)
+from paddlenlp.models import Ernie
+ernie = Ernie(Ernie.Task.SeqCls)
+ernie.forward(input_ids, segment_ids)
 ```
+
+### Rich Chinsese Pre-trained Models
+
+```python
+from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
+ernie = ErnieModel.from_pretrained('ernie-1.0')
+bert = BertModel.from_pretrained('bert-wwm-ext-large')
+electra = ElectraModel.from_pretrained('eclectra-chinese')
+roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
+```
+
+For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
 
 ## Tutorials
 
 List our notebook tutorials based on AI Studio.
+TBD
 
 ## Community
 
 * SIG for Pretrained Model Contribution
 * SIG for Dataset Integration
+TBD
 
 ## FAQ
 
 ## License
 
-PaddleNLP is provided under the [Apache-2.0 license](./LICENSE).
+PaddleNLP is provided under the [Apache-2.0 License](./LICENSE).
