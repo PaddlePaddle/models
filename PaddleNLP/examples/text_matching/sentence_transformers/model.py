@@ -17,12 +17,11 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 
 
-class SentenceTransformers(nn.Layer):
+class SentenceTransformer(nn.Layer):
     def __init__(self, pretrained_model, dropout=None):
         super().__init__()
         self.ptm = pretrained_model
-        self.dropout = nn.Dropout(dropout if dropout is not None else
-                                  self.ptm.config["hidden_dropout_prob"])
+        self.dropout = nn.Dropout(dropout if dropout is not None else 0.1)
         # num_labels = 2 (similar or dissimilar)
         self.classifier = nn.Linear(self.ptm.config["hidden_size"] * 3, 2)
 
@@ -38,9 +37,10 @@ class SentenceTransformers(nn.Layer):
         query_token_embedding, _ = self.ptm(
             query_input_ids, query_token_type_ids, query_position_ids,
             query_attention_mask)
+        # query_token_embedding = self.dropout(query_token_embedding)
         query_attention_mask = paddle.unsqueeze(
-            (query_input_ids == self.ptm.pad_token_id
-             ).astype(self.ptm.pooler.dense.weight.dtype) * -1e9,
+            (query_input_ids != self.ptm.pad_token_id
+             ).astype(self.ptm.pooler.dense.weight.dtype),
             axis=2)
         # Set token embeddings to 0 for padding tokens
         query_token_embedding = query_token_embedding * query_attention_mask
@@ -51,9 +51,10 @@ class SentenceTransformers(nn.Layer):
         title_token_embedding, _ = self.ptm(
             title_input_ids, title_token_type_ids, title_position_ids,
             title_attention_mask)
+        # title_token_embedding = self.dropout(title_token_embedding)
         title_attention_mask = paddle.unsqueeze(
-            (title_input_ids == self.ptm.pad_token_id
-             ).astype(self.ptm.pooler.dense.weight.dtype) * -1e9,
+            (title_input_ids != self.ptm.pad_token_id
+             ).astype(self.ptm.pooler.dense.weight.dtype),
             axis=2)
         # Set token embeddings to 0 for padding tokens
         title_token_embedding = title_token_embedding * title_attention_mask

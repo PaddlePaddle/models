@@ -1,33 +1,64 @@
-# 使用预训练模型Fine-tune完成中文文本分类任务
+# 使用预训练模型Fine-tune完成pointwise中文文本匹配任务
 
 随着深度学习的发展，模型参数的数量飞速增长。为了训练这些参数，需要更大的数据集来避免过拟合。然而，对于大部分NLP任务来说，构建大规模的标注数据集非常困难（成本过高），特别是对于句法和语义相关的任务。相比之下，大规模的未标注语料库的构建则相对容易。为了利用这些数据，我们可以先从其中学习到一个好的表示，再将这些表示应用到其他任务中。最近的研究表明，基于大规模未标注语料库的预训练模型（Pretrained Models, PTM) 在NLP任务上取得了很好的表现。
 
 近年来，大量的研究表明基于大型语料库的预训练模型（Pretrained Models, PTM）可以学习通用的语言表示，有利于下游NLP任务，同时能够避免从零开始训练模型。随着计算能力的发展，深度模型的出现（即 Transformer）和训练技巧的增强使得 PTM 不断发展，由浅变深。
 
-本示例展示了以BERT（[Bidirectional Encoder Representations from Transformers](https://arxiv.org/abs/1810.04805)）代表的预训练模型如何Finetune完成中文文本分类任务。
+百度的预训练模型ERNIE经过海量的数据训练后，其特征抽取的工作已经做的非常好。借鉴迁移学习的思想，我们可以利用其在海量数据中学习的语义信息辅助小数据集（如本示例中的医疗文本数据集）上的任务。
+
+<center> <img width="600px" src="https://ai-studio-static-online.cdn.bcebos.com/d96c602338044ee8bcd4171f38ea6d49506d1f3253f3496b802ec56cb654ecf5" /> </center>
+
+使用预训练模型ERNIE完成pointwise文本匹配任务，大家可能会想到将query和title文本拼接，之后输入ERNIE中，取`CLS`特征（pooled_output），之后输出全连接层，进行二分类。如下图ERNIE用于句对分类任务的用法：
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/45440029c07240ad89d665c5b176e63297e9584e1da24e02b79dd54fb990f74a" width='30%'/> <br />
+</p>
+
+然而，以上用法的问题在于，**ERNIE的模型参数非常庞大，导致计算量非常大，预测的速度也不够理想**。从而达不到线上业务的要求。针对该问题，可以使用PaddleNLP工具搭建Sentence Transformer网络。
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/103998703e134a7184883511a538620e16fed045e2614dcc8afacec446600438" width='30%'/> <br />
+</p>
+
+Sentence Transformer采用了双塔（Siamese）的网络结构。Query和Title分别输入ERNIE，共享一个ERNIE参数，得到各自的token embedding特征。之后对token embedding进行pooling（此处教程使用mean pooling操作），之后输出分别记作u，v。之后将三个表征（u,v,|u-v|)拼接起来，进行二分类。网络结构如上图所示。
+
+更多关于Sentence Transformer的信息可以参考论文：https://arxiv.org/abs/1908.10084
+
+**同时，不仅可以使用ERNIR作为文本语义特征提取器，可以利用BERT/RoBerta/Electra等模型作为文本语义特征提取器**
+
+**那么Sentence Transformer采用Siamese的网路结构，是如何提升预测速度呢？**
+
+**Siamese的网络结构好处在于query和title分别输入同一套网络。如在信息搜索任务中，此时就可以将数据库中的title文本提前计算好对应sequence_output特征，保存在数据库中。当用户搜索query时，只需计算query的sequence_output特征与保存在数据库中的title sequence_output特征，通过一个简单的mean_pooling和全连接层进行二分类即可。从而大幅提升预测效率，同时也保障了模型性能。**
+
+关于匹配任务常用的Siamese网络结构可以参考：https://blog.csdn.net/thriving_fcl/article/details/73730552
+
+PaddleNLP提供了丰富的预训练模型，并且可以便捷地获取PaddlePaddle生态下的所有预训练模型。下面展示如何使用PaddleNLP一键加载ERNIE，优化文本匹配任务。
 
 ## 模型简介
 
-本项目针对中文文本分类问题，开源了一系列模型，供用户可配置地使用：
+本项目针对中文文本匹配问题，开源了一系列模型，供用户可配置地使用：
 
 + BERT([Bidirectional Encoder Representations from Transformers](https://arxiv.org/abs/1810.04805))中文模型，简写`bert-base-chinese`， 其由12层Transformer网络组成。
-+ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie`）和ERNIE Tiny中文模型（简写`ernie_tiny`)。
++ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie_tiny`)。
    其中`ernie`由12层Transformer网络组成，`ernie_tiny`由3层Transformer网络组成。
 + RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
++ Electra([ELECTRA: Pre-training Text Encoders as Discriminators Rather Than Generators](https://arxiv.org/abs/2003.10555)), 支持hidden_size=256的`chinese-electra-discriminator-small`和
+  hidden_size=768的`chinese-electra-discriminator-base`
 
+## TODO 增加模型效果
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
-| bert-base-chinese  | 0.93833 | 0.94750 |
-| bert-wwm-chinese | 0.94583 | 0.94917 |
-| bert-wwm-ext-chinese | 0.94667 | 0.95500 |
-| ernie  | 0.94667  | 0.95333  |
-| ernie-tiny  | 0.93917  | 0.94833 |
-| roberta-wwm-ext  | 0.94750  | 0.95250 |
-| roberta-wwm-ext-large | 0.95250 | 0.95333 |
-| rbt3 | 0.92583 | 0.93250 |
-| rbtl3 | 0.9341 | 0.93583 |
-| chinese-electra-discriminator-base | 0.94500 | 0.94500 |
-| chinese-electra-discriminator-small | 0.92417 | 0.93417 |
+| bert-base-chinese  |  | |
+| bert-wwm-chinese | |  |
+| bert-wwm-ext-chinese |  |  |
+| ernie  |   |   |
+| ernie-tiny  |  | |
+| roberta-wwm-ext  |  |  |
+| roberta-wwm-ext-large | |  |
+| rbt3 |  |  |
+| rbtl3 |  | |
+| chinese-electra-discriminator-base | |  |
+| chinese-electra-discriminator-small |  |  |
 
 ## 快速开始
 
@@ -52,19 +83,26 @@
 以下是本项目主要代码结构及说明：
 
 ```text
-pretrained_models/
-├── predict.py # 预测脚本
-├── README.md # 使用说明
-└── train.py # 训练评估脚本
+sentence_transformers/
+├── checkpoint
+│   ├── model_100
+│   │   ├── model_state.pdparams
+│   │   ├── tokenizer_config.json
+│   │   └── vocab.txt
+│   ├── ...
+│
+├── model.py # Sentence Transfomer 组网文件
+├── README.md # 文本说明
+└── train.py # 模型训练评估
 ```
 
 ### 模型训练
 
-我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
+我们以中文文本匹配公开数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
 # 设置使用的GPU卡号
 export CUDA_VISIBLE_DEVICES=0
-python train.py --model_type ernie --model_name ernie_tiny --n_gpu 1 --save_dir ./checkpoints
+python train.py --model_type ernie --model_name ernie-1.0 --n_gpu 1 --save_dir ./checkpoints
 ```
 
 可支持配置的参数：

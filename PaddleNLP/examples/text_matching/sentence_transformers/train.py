@@ -89,12 +89,12 @@ def parse_args():
         help="Weight decay if we apply some.")
     parser.add_argument(
         "--epochs",
-        default=10,
+        default=3,
         type=int,
         help="Total number of training epochs to perform.")
     parser.add_argument(
         "--warmup_proption",
-        default=0.1,
+        default=0.0,
         type=float,
         help="Linear warmup proption over the training process.")
     parser.add_argument(
