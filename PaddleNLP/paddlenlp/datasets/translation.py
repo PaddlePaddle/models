@@ -74,7 +74,7 @@ class TranslationDataset(paddle.io.Dataset):
         Args:
             root (str, optional): data directory to save dataset. If not
                 provided, dataset will be saved in
-                `DATA_HOME/machine_translation`. Default: None.
+                `/root/.paddlenlp/datasets/machine_translation`. Default: None.
         Returns:
             str: All file paths of dataset.
 
@@ -120,7 +120,7 @@ class TranslationDataset(paddle.io.Dataset):
 
         Args:
             root (str, optional): Data directory to save dataset. If not provided,
-                dataset will be save in `DATA_HOME/machine_translation`.
+                dataset will be save in `/root/.paddlenlp/datasets/machine_translation`.
                 If vocab files exist, they won't be overwritten. Default: None.
         Returns:
             tuple: Source vocab and target vocab.
