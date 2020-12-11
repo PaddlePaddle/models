@@ -203,7 +203,7 @@ class ProjAdaptiveSoftmax(nn.Layer):
 
             head_logit = self._compute_logits(hidden, head_weight, head_bias,
                                               head_proj)
-            head_logprob = F.log_softmax(head_logit, axis=1)
+            head_logprob = paddle.log(F.softmax(head_logit, axis=-1))
 
             nll = paddle.zeros_like(target, dtype=hidden.dtype)
 
@@ -215,15 +215,13 @@ class ProjAdaptiveSoftmax(nn.Layer):
                 mask_i = paddle.cast(
                     target >= l_idx,
                     dtype=paddle.get_default_dtype()) * paddle.cast(
-                        target < r_idx, dtype=paddle.get_default_dtype())
+                        target < r_idx, dtype="int64")
                 indices_i = paddle.nonzero(mask_i).squeeze([1])
 
                 if paddle.numel(indices_i) == 0:
                     continue
-
-                target_i = target.index_select(indices_i, 0) - l_idx
-                head_logprob_i = head_logprob.index_select(indices_i, 0)
-
+                target_i = paddle.gather(target, indices_i, axis=0) - l_idx
+                head_logprob_i = paddle.gather(head_logprob, indices_i, axis=0)
                 if i == 0:
                     target_i_idx = paddle.concat(
                         [
@@ -237,11 +235,13 @@ class ProjAdaptiveSoftmax(nn.Layer):
                         i], self.out_projs[i].weight if self.out_projs[
                             i] is not None else None
 
-                    hidden_i = hidden.index_select(indices_i, 0)
+                    hidden_i = paddle.gather(hidden, indices_i, axis=0)
 
                     tail_logit_i = self._compute_logits(hidden_i, weight_i,
                                                         bias_i, proj_i)
-                    tail_logprob_i = F.log_softmax(tail_logit_i, axis=1)
+                    tail_logprob_i = paddle.log(
+                        F.softmax(
+                            tail_logit_i, axis=-1))
 
                     target_i_idx = paddle.concat(
                         [
@@ -1160,7 +1160,7 @@ class MemTransformerLM(nn.Layer):
 
         hidden, new_mems = self._forward(data, mems=mems)
 
-        # TODO(FrostML): use get item.
+        # TODO(FrostML): use getitem.
         tgt_len = target.shape[1]
         pred_hid = paddle.slice(hidden, [1], [-tgt_len], [hidden.shape[1]])
         if self.sample_softmax > 0 and self.training:
