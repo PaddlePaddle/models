@@ -257,7 +257,7 @@ def do_train(args):
         ])
     if args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
-            custom_white_list=['softmax'])
+            custom_white_list=['softmax', 'layer_norm', 'gelu'])
         optimizer = paddle.fluid.contrib.mixed_precision.decorate(
             optimizer,
             amp_list,
