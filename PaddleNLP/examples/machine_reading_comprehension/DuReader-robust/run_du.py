@@ -118,11 +118,11 @@ def do_train(args):
 
     train_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        mode='train')
+        segment='train')
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True)
@@ -143,11 +143,11 @@ def do_train(args):
 
     dev_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        mode='dev')
+        segment='dev')
 
     dev_batch_sampler = paddle.io.BatchSampler(
         dev_ds, batch_size=args.batch_size, shuffle=False)
@@ -166,11 +166,11 @@ def do_train(args):
 
     test_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        mode='test')
+        segment='test')
 
     test_batch_sampler = paddle.io.BatchSampler(
         test_ds, batch_size=args.batch_size, shuffle=False)

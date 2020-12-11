@@ -76,18 +76,18 @@ class SQuAD(Dataset):
 
     MODES = {
         '1.1': {
-            'train': MODE_INFO(
+            'train': SEGMENT_INFO(
                 os.path.join('v1', 'train-v1.1.json'),
                 '981b29407e0affa3b1b156f72073b945'),
-            'dev': MODE_INFO(
+            'dev': SEGMENT_INFO(
                 os.path.join('v1', 'dev-v1.1.json'),
                 '3e85deb501d4e538b6bc56f786231552')
         },
         '2.0': {
-            'train': MODE_INFO(
+            'train': SEGMENT_INFO(
                 os.path.join('v2', 'train-v2.0.json'),
                 '62108c273c268d70893182d5cf8df740'),
-            'dev': MODE_INFO(
+            'dev': SEGMENT_INFO(
                 os.path.join('v2', 'dev-v2.0.json'),
                 '246adae8b7002f8679c027697b0b7cf8')
         }
