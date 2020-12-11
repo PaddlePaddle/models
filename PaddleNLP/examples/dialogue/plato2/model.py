@@ -1,4 +1,5 @@
 import argparse
+from collections import namedtuple
 
 import paddle
 import paddle.nn as nn
@@ -6,7 +7,76 @@ import paddle.nn.functional as F
 
 from readers.nsp_reader import NSPReader
 from utils.args import parse_args
-from tasks.dialog_generation import post_process_context, post_process_response
+
+
+def post_process_context(token_ids, reader, merge=True):
+    """Post-process the context sequence."""
+    context = []
+    utt = []
+    for tok_id in token_ids[1:]:
+        if tok_id == reader.eos_id:
+            utt = reader.tokenizer.convert_ids_to_tokens(utt)
+            if merge:
+                utt = reader.tokenizer.merge_subword(utt)
+            context.append(utt)
+            utt = []
+        else:
+            utt.append(tok_id)
+    return context
+
+
+def post_process_response(token_ids, reader, merge=True):
+    """
+    Post-process the decoded sequence. Truncate from the first
+    <eos> and remove the <bos> and <eos> tokens currently.
+    """
+    eos_pos = len(token_ids)
+    for i, tok_id in enumerate(token_ids):
+        if tok_id == reader.eos_id:
+            eos_pos = i
+            break
+    token_ids = token_ids[1:eos_pos]
+    response = reader.tokenizer.convert_ids_to_tokens(token_ids)
+    if merge:
+        response = reader.tokenizer.merge_subword(response)
+    return token_ids, response
+
+
+def get_cross_turn_repetition(context, pred_tokens, eos_idx, is_cn=False):
+    """Get cross-turn repetition."""
+    if len(pred_tokens) == 0:
+        return 1.0
+    if is_cn:
+        context = ["".join(utt) for utt in context]
+        pred_tokens = "".join(pred_tokens)
+
+    pred_tri_grams = set()
+    for i in range(len(pred_tokens) - 2):
+        tri_gram = tuple(pred_tokens[i:i + 3])
+        pred_tri_grams.add(tri_gram)
+    for utt in context:
+        for i in range(len(utt) - 2):
+            tri_gram = tuple(utt[i:i + 3])
+            if tri_gram in pred_tri_grams:
+                return 1.0
+    return 0.0
+
+
+def get_in_turn_repetition(pred, is_cn=False):
+    """Get in-turn repetition."""
+    if len(pred) == 0:
+        return 1.0
+    if isinstance(pred[0], str):
+        pred = [tok.lower() for tok in pred]
+        if is_cn:
+            pred = "".join(pred)
+    tri_grams = set()
+    for i in range(len(pred) - 2):
+        tri_gram = tuple(pred[i:i + 3])
+        if tri_gram in tri_grams:
+            return 1.0
+        tri_grams.add(tri_gram)
+    return 0.0
 
 
 class Plato2EncoderLayer(nn.Layer):
@@ -41,6 +111,9 @@ class Plato2EncoderLayer(nn.Layer):
 
         return out, new_cache
 
+    def gen_cache(self, key):
+        return self.self_attn.gen_cache(key)
+
 
 class Plato2Encoder(nn.Layer):
     def __init__(self, vocab_size, type_size, max_position_seq_len, num_layers,
@@ -59,7 +132,7 @@ class Plato2Encoder(nn.Layer):
             encoder_layer = Plato2EncoderLayer(n_head, hidden_size,
                                                attn_dropout, act_dropout)
             self.encoder_layers.append(encoder_layer)
-            self.add_sublayer('plato2_encoder_layer_' + str(i))
+            self.add_sublayer('layers.' + str(i), encoder_layer)
         self.post_encoder_layer_norm = nn.LayerNorm(hidden_size)
 
         self.dropout_layer = nn.Dropout(act_dropout)
@@ -76,7 +149,7 @@ class Plato2Encoder(nn.Layer):
 
         new_caches = []
         for i, encoder_layer in enumerate(self.encoder_layers):
-            out, new_cache = encoder_layers(out, self_attn_mask, caches[i])
+            out, new_cache = encoder_layer(out, self_attn_mask, caches[i])
             new_caches.append(new_cache)
 
         enc_output = self.post_encoder_layer_norm(out)
@@ -104,12 +177,26 @@ class Plato2Encoder(nn.Layer):
 
         return emb_out, n_head_self_attn_mask
 
+    def gen_caches(self, key):
+        caches = [
+            encoder_layer.gen_cache(key)
+            for encoder_layer in self.encoder_layers
+        ]
+        return caches
+
 
 class NSP(nn.Layer):
-    def __init__(self, ):
+    def __init__(self, vocab_size, type_size, max_position_seq_len, num_layers,
+                 n_head, hidden_size, attn_dropout, act_dropout):
         super(NSP, self).__init__()
 
+        self.n_head = n_head
         self.hidden_size = hidden_size
+
+        self.word_embedding_layer = nn.Embedding(vocab_size, hidden_size)
+        self.sent_embedding_layer = nn.Embedding(type_size, hidden_size)
+        self.pos_embedding_layer = nn.Embedding(max_position_seq_len,
+                                                hidden_size)
 
         encoder_layer = nn.TransformerEncoderLayer(
             hidden_size, n_head, hidden_size * 4, act_dropout, 'gelu',
@@ -120,10 +207,11 @@ class NSP(nn.Layer):
         self.fc1 = nn.Linear(hidden_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 2)
 
+        self.dropout_layer = nn.Dropout(act_dropout)
         self.tanh_layer = nn.Tanh()
         self.softmax = nn.Softmax()
 
-    def forward(self, inputs, label_pos):
+    def forward(self, inputs):
         """
         token_ids (20, 108, 1)
         type_ids (20, 108, 1)
@@ -135,11 +223,11 @@ class NSP(nn.Layer):
         token_ids = inputs['token_ids']
         type_ids = inputs['type_ids']
         pos_ids = inputs['pos_ids']
-        generation_mask = inputs['generation_mask']
+        attention_mask = inputs['attention_mask']
         label_pos = inputs["label_pos"]
 
         out, self_attn_mask = self.gen_input(token_ids, type_ids, pos_ids,
-                                             generation_mask)
+                                             attention_mask)
         # [-1, seq_len, hidden_size]
         enc_out = self.encoder(out, self_attn_mask)
 
@@ -205,20 +293,24 @@ class Plato2InferModel(nn.Layer):
         self.mask_id = 8000
         self.after_eos = paddle.ones([vocab_size]) * -1e9
         self.after_eos[self.eos_id] = 0
+        self.is_cn = False
+        self.batch_size = 1
 
         self.latent_weight = paddle.create_parameter(
             [hidden_size, latent_type_size], 'float32')
 
-        self.encoder = Plato2Encoder(vocab_size, type_size,
-                                     max_position_seq_len, num_layers, n_head,
-                                     hidden_size, attn_dropout, act_dropout)
+        self.plato2_encoder = Plato2Encoder(
+            vocab_size, type_size, max_position_seq_len, num_layers, n_head,
+            hidden_size, attn_dropout, act_dropout)
 
         self.logits_fc_layer = nn.Linear(hidden_size, hidden_size)
         self.logits_layer_norm = nn.LayerNorm(hidden_size)
         self.logits_bias = paddle.create_parameter(
             [vocab_size], 'float32', is_bias=True)
 
-        self.nsp_predictor = NSP()
+        self.nsp_predictor = NSP(vocab_size, type_size, max_position_seq_len,
+                                 num_layers, n_head, hidden_size, attn_dropout,
+                                 act_dropout)
 
         self.gelu_layer = nn.GELU()
         self.softmax = nn.Softmax()
@@ -240,21 +332,19 @@ class Plato2InferModel(nn.Layer):
         latent_emb = paddle.matmul(
             latent_id, self.latent_weight, transpose_y=True)
 
-        caches = [
-            self.n_multi_att[i].gen_cache(token_ids)
-            for i in range(self.num_layers)
-        ]
+        caches = self.plato2_encoder.gen_caches(token_ids)
+
         # [-1, seq_len + 1, hidden_size]
-        enc_out, new_caches = self.encoder(caches, token_ids, type_ids, pos_ids,
-                                           generation_mask, latent_emb)
+        enc_out, new_caches = self.plato2_encoder(
+            caches, token_ids, type_ids, pos_ids, generation_mask, latent_emb)
 
         pred_ids = self.decoder(inputs, new_caches)
 
-        data_generator = self.gen_nsp_input(token_ids, pred_ids, data_id)
-        for nsp_inputs in data_generator():
-            probs = self.nsp_predictor(nsp_inputs)
+        nsp_inputs = self.gen_nsp_input(token_ids, pred_ids)
+        # [-1, 2]
+        probs = self.nsp_predictor(nsp_inputs)
 
-        return
+        return self.get_results(data_id, token_ids, pred_ids, probs)
 
     def decoder(self, inputs, caches):
         tgt_ids = inputs['tgt_ids']
@@ -275,7 +365,8 @@ class Plato2InferModel(nn.Layer):
                 [tgt_generation_mask.shape[0], 1], dtype=tgt_ids.dtype)
 
             # [-1, 1, hidden_size]
-            out = self.encoder(tgt_ids, tgt_sent, tgt_pos, tgt_generation_mask)
+            out, caches = self.plato2_encoder(caches, tgt_ids, tgt_sent,
+                                              tgt_pos, tgt_generation_mask)
             out = paddle.squeeze(out, axis=1)
 
             # [-1, hidden_size]
@@ -286,7 +377,7 @@ class Plato2InferModel(nn.Layer):
             # [-1, vocab_size]
             logits = paddle.matmul(
                 trans,
-                self.encoder.word_embedding_layer.weight,
+                self.plato2_encoder.word_embedding_layer.weight,
                 transpose_y=True) + self.logits_bias
             logits[:, self.unk_id] = -1e9
             logits[:, self.bos_id] = -1e9
@@ -314,34 +405,16 @@ class Plato2InferModel(nn.Layer):
         parser = argparse.ArgumentParser()
         NSPReader.add_cmdline_args(parser)
         args = parse_args(parser)
-        args.batch_size *= args.latent_type_size
+        args.batch_size = self.batch_size * self.latent_type_size
         args.tokenized_input = True
+        import json
+        print(json.dumps(args, indent=4))
         reader = NSPReader(args)
         return reader
 
-    def gen_nsp_input(self, token_ids, pred_ids, data_id):
+    def gen_nsp_input(self, token_ids, pred_ids):
         token_ids = token_ids.numpy()
         pred_ids = pred_ids.numpy()
-        data_id = data_id.numpy()
-        predictions = []
-        for raw, pred, idx in zip(token_ids, pred_ids, data_id):
-            info = {
-                'response_token_ids': pred,
-                'context_token_ids': raw,
-                'data_id': idx
-            }
-            tokens = post_process_context(raw, self.reader)
-            pred_token_ids, pred_tokens = post_process_response(
-                info["response_token_ids"], self.reader)
-            info["context"] = " [SEP] ".join(" ".join(u) for u in tokens)
-            info["response"] = " ".join(pred_tokens)
-            info["num_token"] = len(pred_token_ids)
-            info["cross_turn_repetition"] = get_cross_turn_repetition(
-                tokens, pred_tokens, self.reader.eos_id, self.is_cn)
-            info["in_turn_repetition"] = max(
-                get_in_turn_repetition(pred_tokens, self.is_cn),
-                get_in_turn_repetition(pred_token_ids))
-            predictions.append(info)
 
         def __reader__():
             headers = ["src", "tgt", "data_id"]
@@ -369,7 +442,59 @@ class Plato2InferModel(nn.Layer):
             reader=__reader__,
             is_infer=True,
             phase="test", )
-        return generator
+        inputs = next(generator())
+        for key in inputs:
+            inputs[key] = paddle.to_tensor(inputs[key])
+            if key in ['token_ids', 'type_ids', 'pos_ids']:
+                inputs[key] = paddle.squeeze(inputs[key], axis=-1)
+        return inputs
+
+    def get_results(self, data_id, token_ids, pred_ids, probs):
+        data_id = data_id.numpy()
+        token_ids = token_ids.numpy()
+        pred_ids = pred_ids.numpy()
+        probs = probs.numpy()
+
+        infos = []
+        for raw, pred, prob in zip(token_ids, pred_ids, probs):
+            tokens = post_process_context(raw, self.data_reader)
+            pred_token_ids, pred_tokens = post_process_response(
+                pred, self.data_reader)
+            info = {}
+            info['response'] = ' '.join(pred_tokens)
+            cross_turn_repetition = get_cross_turn_repetition(
+                tokens, pred_tokens, self.data_reader.eos_id, self.is_cn)
+            in_turn_repetition = max(
+                get_in_turn_repetition(pred_tokens, self.is_cn),
+                get_in_turn_repetition(pred_token_ids))
+
+            info['score'] = float(prob[1])
+            if len(pred_token_ids) >= self.max_dec_len:
+                info['score'] -= 1e3
+            elif cross_turn_repetition > 0:
+                info['score'] -= 1e3
+            elif in_turn_repetition > 0:
+                info['score'] -= 1e3
+            infos.append(info)
+
+        results = []
+        pre_idx = 0
+        sample = []
+        for idx, info in zip(data_id, infos):
+            if idx != pre_idx:
+                sample = sorted(sample, key=lambda info: -info["score"])
+                result = sample[0]
+                result['data_id'] = pre_idx
+                results.apeend(result)
+                sample = []
+                pre_idx = idx
+            sample.append(info)
+        if sample:
+            sample = sorted(sample, key=lambda info: -info["score"])
+            result = sample[0]
+            result['data_id'] = pre_idx
+            results.append(result)
+        return results
 
 
 if __name__ == '__main__':
@@ -392,11 +517,14 @@ if __name__ == '__main__':
     """
     for key in inputs:
         inputs[key] = paddle.to_tensor(inputs[key])
-        if key in ['token_ids', 'type_ids', 'pos_ids', 'tgt_ids', 'tgt_pos']:
+        if key in [
+                'token_ids', 'type_ids', 'pos_ids', 'tgt_ids', 'tgt_pos',
+                'data_id'
+        ]:
             inputs[key] = paddle.squeeze(inputs[key], axis=-1)
         #print(key, inputs[key].shape, inputs[key].dtype)
 
-    model = InferPlato2()
+    model = Plato2InferModel()
 
     ckpt_path = './data/pretrain.pdparams'
     state_dict = paddle.load(ckpt_path)
@@ -404,4 +532,5 @@ if __name__ == '__main__':
 
     model.eval()
 
-    dec_out = model(inputs)
+    results = model(inputs)
+    print(results)
