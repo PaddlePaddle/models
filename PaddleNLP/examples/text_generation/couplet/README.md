@@ -18,7 +18,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本目录包含Seq2Seq的一个经典样例：自动对联生成，带attention机制的文本生成模型。
 
-运行本目录下的范例模型需要安装PaddlePaddle 2.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 
 ## 模型概览
@@ -51,7 +51,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--reload_model` 指定）对test的数据集（由 `--infer_file` 指定）进行beam search解码，命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集进行beam search解码，命令如下：
 
 ```sh
 python predict.py \
@@ -67,5 +67,4 @@ python predict.py \
 
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
-## 效果评价
-(TODO: liujiaqi)
+## 生成对联样例
