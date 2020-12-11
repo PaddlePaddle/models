@@ -126,7 +126,7 @@ def evaluate(model, loss_fct, metric, data_loader, label_num):
             None, length, preds, labels)
         metric.update(num_infer_chunks.numpy(),
                       num_label_chunks.numpy(), num_correct_chunks.numpy())
-    precision, recall, f1_score = metric.accumulate()
+        precision, recall, f1_score = metric.accumulate()
     print("eval loss: %f, precision: %f, recall: %f, f1: %f" %
           (avg_loss, precision, recall, f1_score))
     model.train()
@@ -139,6 +139,38 @@ def convert_example(example,
                     max_seq_length=512,
                     is_test=False):
     """convert a glue example into necessary features"""
+
+    def _truncate_seqs(seqs, max_seq_length):
+        if len(seqs) == 1:  # single sentence
+            # Account for [CLS] and [SEP] with "- 2"
+            seqs[0] = seqs[0][0:(max_seq_length - 2)]
+        else:  # sentence pair
+            # Account for [CLS], [SEP], [SEP] with "- 3"
+            tokens_a, tokens_b = seqs
+            max_seq_length -= 3
+            while True:  # truncate with longest_first strategy
+                total_length = len(tokens_a) + len(tokens_b)
+                if total_length <= max_seq_length:
+                    break
+                if len(tokens_a) > len(tokens_b):
+                    tokens_a.pop()
+                else:
+                    tokens_b.pop()
+        return seqs
+
+    def _concat_seqs(seqs, separators, seq_mask=0, separator_mask=1):
+        concat = sum((seq + sep for sep, seq in zip(separators, seqs)), [])
+        segment_ids = sum(
+            ([i] * (len(seq) + len(sep))
+             for i, (sep, seq) in enumerate(zip(separators, seqs))), [])
+        if isinstance(seq_mask, int):
+            seq_mask = [[seq_mask] * len(seq) for seq in seqs]
+        if isinstance(separator_mask, int):
+            separator_mask = [[separator_mask] * len(sep) for sep in separators]
+        p_mask = sum((s_mask + mask
+                      for sep, seq, s_mask, mask in zip(
+                          separators, seqs, seq_mask, separator_mask)), [])
+        return concat, segment_ids, p_mask
 
     def _reseg_token_label(tokens, tokenizer, labels=None):
         if labels:
@@ -189,13 +221,19 @@ def convert_example(example,
 
     tokens_raw, labels_raw = _reseg_token_label(
         tokens=example, labels=label, tokenizer=tokenizer)
-    input_ids, segment_ids = tokenizer.encode(
-        tokens_raw, pad_to_max_seq_len=False)
+    # truncate to the truncate_length,
+    tokens_trun = _truncate_seqs([tokens_raw], max_seq_length)
+    # concate the sequences with special tokens
+    tokens_trun[0] = [tokenizer.cls_token] + tokens_trun[0]
+    tokens, segment_ids, _ = _concat_seqs(tokens_trun, [[tokenizer.sep_token]] *
+                                          len(tokens_trun))
+    # convert the token to ids
+    input_ids = tokenizer.convert_tokens_to_ids(tokens)
     valid_length = len(input_ids)
     if labels_raw:
-        labels_id = [no_entity_id] + [
-            label_map[lbl] for lbl in labels_raw[:max_seq_length - 2]
-        ] + [no_entity_id]
+        labels_trun = _truncate_seqs([labels_raw], max_seq_length)[0]
+        labels_id = [no_entity_id] + [label_map[lbl]
+                                      for lbl in labels_trun] + [no_entity_id]
     if not is_test:
         return input_ids, segment_ids, valid_length, labels_id
     else:
