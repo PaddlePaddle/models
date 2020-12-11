@@ -132,16 +132,11 @@ def parse_args():
         type=float,
         default=1.0,
         help="The value of scale_loss for fp16.")
-    parser.add_argument(
-        "--use_dynamic_loss_scaling",
-        type=distutils.util.strtobool,
-        default=True,
-        help="Whether to use dynamic loss scaling.")
     args = parser.parse_args()
     return args
 
 
-def construct_compiled_program(main_program, loss):
+def build_compiled_program(main_program, loss):
     exec_strategy = paddle.static.ExecutionStrategy()
     exec_strategy.num_threads = 1
     exec_strategy.num_iteration_per_drop_scope = 10000
@@ -233,12 +228,12 @@ def do_train(args):
         ])
     if args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
-            custom_white_list=['layer_norm', 'softmax'])
+            custom_white_list=['layer_norm', 'softmax', 'gelu'])
         optimizer = paddle.fluid.contrib.mixed_precision.decorate(
             optimizer,
             amp_list,
             init_loss_scaling=args.scale_loss,
-            use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
+            use_dynamic_loss_scaling=True)
     optimizer.minimize(loss)
 
     # Define the Executor for running the static model
@@ -250,7 +245,7 @@ def do_train(args):
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
     # Construct the compiled program
-    main_program = construct_compiled_program(main_program, loss)
+    main_program = build_compiled_program(main_program, loss)
     global_step = 0
     tic_train = time.time()
     epoch = 0

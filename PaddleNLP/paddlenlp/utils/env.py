@@ -40,8 +40,8 @@ def _get_ppnlp_home():
     return os.path.join(_get_user_home(), '.paddlenlp')
 
 
-def _get_sub_home(directory):
-    home = os.path.join(_get_ppnlp_home(), directory)
+def _get_sub_home(directory, parent_home=_get_ppnlp_home()):
+    home = os.path.join(parent_home, directory)
     if not os.path.exists(home):
         os.makedirs(home)
     return home
