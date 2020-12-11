@@ -146,13 +146,13 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def evaluate(model, loss_fct, metric, data_loader):
+def evaluate(model, criterion, metric, data_loader):
     model.eval()
     metric.reset()
     for batch in data_loader:
         input_ids, segment_ids, labels = batch
         logits = model(input_ids, segment_ids)
-        loss = loss_fct(logits, labels)
+        loss = criterion(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
         accu = metric.accumulate()
@@ -310,19 +310,10 @@ def do_train(args):
             if not any(nd in n for nd in ["bias", "norm"])
         ])
 
-    loss_fct = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
+    criterion = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
     ) else paddle.nn.loss.MSELoss()
 
     metric = metric_class()
-
-    ### TODO: use hapi
-    # trainer = paddle.hapi.Model(model)
-    # trainer.prepare(optimizer, loss_fct, paddle.metric.Accuracy())
-    # trainer.fit(train_data_loader,
-    #             dev_data_loader,
-    #             log_freq=args.logging_steps,
-    #             epochs=args.num_train_epochs,
-    #             save_dir=args.output_dir)
 
     global_step = 0
     tic_train = time.time()
@@ -331,7 +322,7 @@ def do_train(args):
             global_step += 1
             input_ids, segment_ids, labels = batch
             logits = model(input_ids, segment_ids)
-            loss = loss_fct(logits, labels)
+            loss = criterion(logits, labels)
             if global_step % args.logging_steps == 0:
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
                     logger.info(
@@ -344,7 +335,7 @@ def do_train(args):
             lr_scheduler.step()
             optimizer.clear_gradients()
             if global_step % args.save_steps == 0:
-                evaluate(model, loss_fct, metric, dev_data_loader)
+                evaluate(model, criterion, metric, dev_data_loader)
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
                     output_dir = os.path.join(args.output_dir,
                                               "model_%d" % global_step)
