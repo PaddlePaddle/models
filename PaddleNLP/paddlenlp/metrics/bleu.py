@@ -104,7 +104,7 @@ class BLEU(paddle.metric.Metric):
             cand = "Welcome to PaddleNLP."
             ref_list = ["Welcome PaddleNLP"]
             bleu.add_inst(cand, ref_list)
-            print(bleu.accumulate()) # 0.7510186074254295
+            print(bleu.score()) # 0.7510186074254295
 
         2. Using as an instance of `paddle.metric.Metric`.
                 
