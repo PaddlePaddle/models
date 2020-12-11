@@ -25,8 +25,8 @@
 我们提供了少数样本用以示例输入数据格式。执行以下命令，下载并解压示例数据集：
 
 ```bash
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-2.0.0.tar.gz
-tar xvf lexical_analysis-dataset-2.0.0.tar.gz
+wget --no-check-certificate https://paddlenlp.bj.bcebos.com/data/lexical_analysis_dataset_tiny.tar.gz
+tar xvf lexical_analysis_dataset_tiny.tar.gz
 ```
 
 训练使用的数据可以由用户根据实际的应用场景，自己组织数据。除了第一行是 `text_a\tlabel` 固定的开头，后面的每行数据都是由两列组成，以制表符分隔，第一列是 utf-8 编码的中文文本，以 `\002` 分割，第二列是对应每个字的标注，以 `\002` 分隔。我们采用 IOB2 标注体系，即以 X-B 作为类型为 X 的词的开始，以 X-I 作为类型为 X 的词的持续，以 O 表示不关注的字（实际上，在词性、专名联合标注中，不存在 O ）。示例如下：
@@ -59,27 +59,21 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 
 ```bash
 python -m paddle.distributed.launch train.py \
-        --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+        --root ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
         --use_gpu True
 ```
 
-其中 base_path 是数据集所在文件夹路径，word_dict_path 是输入文本的词典路径，label_dict_path 是标记标签的词典路径，word_rep_dict_path 是对输入文本中特殊字符进行转换的字典路径。
+其中 root 是数据集所在文件夹路径。
 
 ### 2.4 模型评估
 
 通过加载训练保存的模型，可以对测试集数据进行验证，启动方式如下：
 
 ```bash
-python eval.py --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+python eval.py --root ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
@@ -92,22 +86,11 @@ python eval.py --base_path ./data \
 对无标签数据可以启动模型预测：
 
 ```bash
-python predict.py --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+python predict.py --root ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
 ```
-
-### 预训练模型
-
-我们提供了在大规模数据集中预训练得到的模型：
-
-|       模型       | Precision | Recall | F1-score |
-| :--------------: | :-------: | :----: | :------: |
-| [BiGRU + CRF](链接)      |   89.2%   | 89.4%  |  89.3%   |
 
 
 ### 如何贡献代码
