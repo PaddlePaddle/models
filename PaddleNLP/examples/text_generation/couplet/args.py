@@ -55,9 +55,6 @@ def parse_args():
         help="max length for source and target sentence")
 
     parser.add_argument(
-        "--dropout", type=float, default=0.2, help="drop probability")
-
-    parser.add_argument(
         "--max_grad_norm",
         type=float,
         default=5.0,

@@ -25,11 +25,6 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本模型中，在编码器方面，我们采用了基于LSTM的多层的RNN encoder；在解码器方面，我们使用了带注意力（Attention）机制的RNN decoder，在预测时我们使用柱搜索（beam search）算法来生对联的下联。
 
-## 环境安装
-
-```shell
-pip install paddlenlp==2.0.0a0
-```
 
 ## 数据介绍
 
@@ -39,7 +34,7 @@ pip install paddlenlp==2.0.0a0
 
 ## 模型训练
 
-执行以下命令即可训练带有注意力机制的Seq2Seq机器翻译模型：
+执行以下命令即可训练带有注意力机制的Seq2Seq模型：
 
 ```sh
 python train.py \

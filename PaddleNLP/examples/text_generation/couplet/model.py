@@ -34,12 +34,7 @@ class CrossEntropyCriterion(nn.Layer):
 
 
 class Seq2SeqEncoder(nn.Layer):
-    def __init__(self,
-                 vocab_size,
-                 embed_dim,
-                 hidden_size,
-                 num_layers,
-                 dropout_prob=0.):
+    def __init__(self, vocab_size, embed_dim, hidden_size, num_layers):
         super(Seq2SeqEncoder, self).__init__()
         self.embedder = nn.Embedding(vocab_size, embed_dim)
 
@@ -47,8 +42,7 @@ class Seq2SeqEncoder(nn.Layer):
             input_size=embed_dim,
             hidden_size=hidden_size,
             num_layers=num_layers,
-            direction="forward",
-            dropout=dropout_prob if num_layers > 1 else 0.)
+            dropout=0.2 if num_layers > 1 else 0.)
 
     def forward(self, sequence, sequence_length):
         inputs = self.embedder(sequence)
@@ -81,13 +75,9 @@ class AttentionLayer(nn.Layer):
 
 
 class Seq2SeqDecoderCell(nn.RNNCellBase):
-    def __init__(self, num_layers, input_size, hidden_size, dropout_prob=0.):
+    def __init__(self, num_layers, input_size, hidden_size):
         super(Seq2SeqDecoderCell, self).__init__()
-        if dropout_prob > 0.0:
-            self.dropout = nn.Dropout(dropout_prob)
-        else:
-            self.dropout = None
-
+        self.dropout = nn.Dropout(0.2)
         self.lstm_cells = nn.LayerList([
             nn.LSTMCell(
                 input_size=input_size + hidden_size if i == 0 else hidden_size,
@@ -106,11 +96,7 @@ class Seq2SeqDecoderCell(nn.RNNCellBase):
         step_input = paddle.concat([step_input, input_feed], 1)
         for i, lstm_cell in enumerate(self.lstm_cells):
             out, new_lstm_state = lstm_cell(step_input, lstm_states[i])
-            if self.dropout:
-                step_input = self.dropout(out)
-            else:
-                step_input = out
-
+            step_input = self.dropout(out)
             new_lstm_states.append(new_lstm_state)
         out = self.attention_layer(step_input, encoder_output,
                                    encoder_padding_mask)
@@ -118,18 +104,11 @@ class Seq2SeqDecoderCell(nn.RNNCellBase):
 
 
 class Seq2SeqDecoder(nn.Layer):
-    def __init__(self,
-                 vocab_size,
-                 embed_dim,
-                 hidden_size,
-                 num_layers,
-                 dropout_prob=0.):
+    def __init__(self, vocab_size, embed_dim, hidden_size, num_layers):
         super(Seq2SeqDecoder, self).__init__()
         self.embedder = nn.Embedding(vocab_size, embed_dim)
-        self.lstm_attention = nn.RNN(Seq2SeqDecoderCell(
-            num_layers, embed_dim, hidden_size, dropout_prob),
-                                     is_reverse=False,
-                                     time_major=False)
+        self.lstm_attention = nn.RNN(
+            Seq2SeqDecoderCell(num_layers, embed_dim, hidden_size))
         self.output_layer = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, trg, decoder_initial_states, encoder_output,
@@ -147,12 +126,7 @@ class Seq2SeqDecoder(nn.Layer):
 
 
 class Seq2SeqAttnModel(nn.Layer):
-    def __init__(self,
-                 vocab_size,
-                 embed_dim,
-                 hidden_size,
-                 num_layers,
-                 dropout_prob=0.,
+    def __init__(self, vocab_size, embed_dim, hidden_size, num_layers,
                  eos_id=1):
         super(Seq2SeqAttnModel, self).__init__()
         self.hidden_size = hidden_size
@@ -160,9 +134,9 @@ class Seq2SeqAttnModel(nn.Layer):
         self.num_layers = num_layers
         self.INF = 1e9
         self.encoder = Seq2SeqEncoder(vocab_size, embed_dim, hidden_size,
-                                      num_layers, dropout_prob)
+                                      num_layers)
         self.decoder = Seq2SeqDecoder(vocab_size, embed_dim, hidden_size,
-                                      num_layers, dropout_prob)
+                                      num_layers)
 
     def forward(self, src, src_length, trg):
         encoder_output, encoder_final_state = self.encoder(src, src_length)
@@ -196,7 +170,6 @@ class Seq2SeqAttnInferModel(Seq2SeqAttnModel):
                  embed_dim,
                  hidden_size,
                  num_layers,
-                 dropout_prob=0.,
                  bos_id=0,
                  eos_id=1,
                  beam_size=4,
@@ -205,9 +178,8 @@ class Seq2SeqAttnInferModel(Seq2SeqAttnModel):
         self.beam_size = beam_size
         self.max_out_len = max_out_len
         self.num_layers = num_layers
-        super(Seq2SeqAttnInferModel, self).__init__(vocab_size, embed_dim,
-                                                    hidden_size, num_layers,
-                                                    dropout_prob, eos_id)
+        super(Seq2SeqAttnInferModel, self).__init__(
+            vocab_size, embed_dim, hidden_size, num_layers, eos_id)
 
         # Dynamic decoder for inference
         self.beam_search_decoder = nn.BeamSearchDecoder(

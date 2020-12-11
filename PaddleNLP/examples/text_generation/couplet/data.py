@@ -22,39 +22,25 @@ import paddle
 from paddle.utils.download import get_path_from_url
 from paddlenlp.data import Vocab, Pad
 from paddlenlp.data import SamplerHelper
-
-DATA_HOME = "/root/.paddlenlp/datasets"
+from paddlenlp.utils.env import DATA_HOME
 
 
 def create_train_loader(batch_size=128):
-    train_ds, dev_ds = CoupletDataset.get_datasets(["train", "dev"])
+    train_ds = CoupletDataset.get_datasets(["train"])
 
     vocab = CoupletDataset.build_vocab()
     pad_id = vocab[CoupletDataset.eos_token]
 
-    key = (lambda x, data_source: len(data_source[x][0]))
-
-    train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
-        key=key, buffer_size=batch_size * 20).batch(
-            batch_size=batch_size, drop_last=True).shard()
-
-    dev_batch_sampler = SamplerHelper(dev_ds).shuffle().sort(
-        key=key, buffer_size=batch_size * 20).batch(
-            batch_size=batch_size, drop_last=True).shard()
+    train_batch_sampler = SamplerHelper(train_ds).shuffle().batch(
+        batch_size=batch_size, drop_last=True).shard()
 
     train_loader = paddle.io.DataLoader(
         train_ds,
         batch_sampler=train_batch_sampler,
         collate_fn=partial(
-            prepare_train_input, pad_id=pad_id))
+            prepare_input, pad_id=pad_id))
 
-    dev_loader = paddle.io.DataLoader(
-        dev_ds,
-        batch_sampler=dev_batch_sampler,
-        collate_fn=partial(
-            prepare_train_input, pad_id=pad_id))
-
-    return train_loader, dev_loader, len(vocab), pad_id
+    return train_loader, len(vocab), pad_id
 
 
 def create_infer_loader(batch_size=128):
@@ -72,12 +58,11 @@ def create_infer_loader(batch_size=128):
         test_ds,
         batch_sampler=test_batch_sampler,
         collate_fn=partial(
-            prepare_train_input, pad_id=pad_id))
+            prepare_input, pad_id=pad_id))
     return test_loader, len(vocab), pad_id, bos_id, eos_id
 
 
-def prepare_train_input(insts, pad_id):
-    # add eos, pad_id
+def prepare_input(insts, pad_id):
     src, src_length = Pad(pad_val=pad_id, ret_length=True)(
         [inst[0] for inst in insts])
     tgt, tgt_length = Pad(pad_val=pad_id, ret_length=True)(
