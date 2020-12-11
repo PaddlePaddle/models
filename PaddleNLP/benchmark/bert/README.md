@@ -34,8 +34,7 @@ fleetrun --gpus 0,1,2,3 ./run_pretrain.py \
     --output_dir ./tmp2/ \
     --logging_steps 1 \
     --save_steps 20000 \
-    --max_steps 1000000 \
-    --use_amp True
+    --max_steps 1000000
 
 2. 如果是需要多单机多卡/多机多卡训练，则使用下面的命令进行训练
 export CUDA_VISIBLE_DEVICES=0
@@ -52,8 +51,7 @@ python ./run_pretrain_single.py \
     --output_dir ./tmp2/ \
     --logging_steps 1 \
     --save_steps 20000 \
-    --max_steps 1000000 \
-    --use_amp True
+    --max_steps 1000000
 ```
 
 ### 训练速度对比
@@ -62,9 +60,10 @@ python ./run_pretrain_single.py \
 - 48 CPU(s), Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz
 - Memory 500G
 - Ubuntu 16.04.4 LTS (GNU/Linux 4.4.0-116-generic x86_64)
-- CUDA Version: 10.2, Driver Version: 440.33.01
-- PaddlePaddle version: paddlepadle-gpu==2.0.0rc1
-- PaddleNLP version: paddlenlp==2.0.0a2
+- CUDA Version: 10.2, Driver API Version: 10.2, Driver Version: 440.33.01
+- cuDNN Version: 7.6
+- PaddlePaddle version: paddlepadle-gpu >= 2.0.0rc1
+- PaddleNLP version: paddlenlp >= 2.0.0a2
 
 速度统计方式是统计每秒预训练模型能处理的样本数量，其中
 - batch_size=64
