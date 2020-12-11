@@ -211,6 +211,9 @@ class BLEU(paddle.metric.Metric):
         bleu = bp * math.exp(logs)
         return bleu
 
+    def score(self):
+        return self.accumulate()
+
     def name(self):
         return self._name
 

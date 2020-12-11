@@ -123,6 +123,9 @@ class RougeL(paddle.metric.Metric):
         '''
         return 1. * sum(self.inst_scores) / len(self.inst_scores)
 
+    def score(self):
+        return self.accumulate()
+
     def reset(self):
         self.inst_scores = []
 
