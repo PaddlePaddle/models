@@ -72,8 +72,6 @@ python ./run_pretrain_single.py \
 下面是具体速度对比情况:
 | node num | node num | gpu num/node | gpu num | batch_size/gpu |Throughput | Speedup |
 |----------| -------- | -------------| ------- | --------       | ----------| ------- |
-|PadlePaddle| 1 | 8 | 1 | 32 | 530 | 1 |  
-| OneFlow   | 1 | 8 | 1 | 32 | 583 | 1 |
 
 
 ## Fine-tuning任务训练
