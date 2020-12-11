@@ -21,5 +21,3 @@ from .ptb import *
 from .squad import *
 from .translation import *
 from .dureader import *
-from .dureaderrobust import *
-from .dureaderyesno import *

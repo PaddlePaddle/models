@@ -145,7 +145,8 @@ def do_train(args):
     set_seed(args)
 
     train_ds, dev_ds, test_ds = ppnlp.datasets.DuReaderYesNo.get_datasets(
-        ['train', 'dev', 'test'], [args.data_path] * 3)
+        ['train', 'dev', 'test'])
+
     trans_func = partial(
         convert_example,
         tokenizer=tokenizer,

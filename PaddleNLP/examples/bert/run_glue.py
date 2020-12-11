@@ -318,15 +318,6 @@ def do_train(args):
 
     metric = metric_class()
 
-    ### TODO: use hapi
-    # trainer = paddle.hapi.Model(model)
-    # trainer.prepare(optimizer, criterion, paddle.metric.Accuracy())
-    # trainer.fit(train_data_loader,
-    #             dev_data_loader,
-    #             log_freq=args.logging_steps,
-    #             epochs=args.num_train_epochs,
-    #             save_dir=args.output_dir)
-
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):

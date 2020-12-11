@@ -116,13 +116,13 @@ def do_train(args):
     root = args.data_path
     set_seed(args)
 
-    train_ds, dev_ds, test_ds = ppnlp.datasets.DuReaderRobust.get_datasets(
-        tokenizer=[tokenizer] * 3,
-        root=[root] * 3,
-        doc_stride=[args.doc_stride] * 3,
-        max_query_length=[args.max_query_length] * 3,
-        max_seq_length=[args.max_seq_length] * 3,
-        segment=['train', 'dev', 'test'])
+    train_ds = ppnlp.datasets.DuReaderRobust(
+        tokenizer=tokenizer,
+        root=root,
+        doc_stride=args.doc_stride,
+        max_query_length=args.max_query_length,
+        max_seq_length=args.max_seq_length,
+        segment='train')
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True)
@@ -141,6 +141,14 @@ def do_train(args):
         collate_fn=train_batchify_fn,
         return_list=True)
 
+    dev_ds = ppnlp.datasets.DuReaderRobust(
+        tokenizer=tokenizer,
+        root=root,
+        doc_stride=args.doc_stride,
+        max_query_length=args.max_query_length,
+        max_seq_length=args.max_seq_length,
+        segment='dev')
+
     dev_batch_sampler = paddle.io.BatchSampler(
         dev_ds, batch_size=args.batch_size, shuffle=False)
 
@@ -156,19 +164,21 @@ def do_train(args):
         collate_fn=dev_batchify_fn,
         return_list=True)
 
+    test_ds = ppnlp.datasets.DuReaderRobust(
+        tokenizer=tokenizer,
+        root=root,
+        doc_stride=args.doc_stride,
+        max_query_length=args.max_query_length,
+        max_seq_length=args.max_seq_length,
+        segment='test')
+
     test_batch_sampler = paddle.io.BatchSampler(
         test_ds, batch_size=args.batch_size, shuffle=False)
-
-    test_batchify_fn = lambda samples, fn=Tuple(
-        Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
-        Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
-        Stack()  # unipue_id
-    ): fn(samples)
 
     test_data_loader = DataLoader(
         dataset=test_ds,
         batch_sampler=test_batch_sampler,
-        collate_fn=test_batchify_fn,
+        collate_fn=dev_batchify_fn,
         return_list=True)
 
     model = model_class.from_pretrained(args.model_name_or_path)
