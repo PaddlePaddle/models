@@ -11,9 +11,11 @@
 本项目针对中文文本分类问题，开源了一系列模型，供用户可配置地使用：
 
 + BERT([Bidirectional Encoder Representations from Transformers](https://arxiv.org/abs/1810.04805))中文模型，简写`bert-base-chinese`， 其由12层Transformer网络组成。
-+ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie`）和ERNIE Tiny中文模型（简写`ernie_tiny`)。
++ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie_tiny`)。
    其中`ernie`由12层Transformer网络组成，`ernie_tiny`由3层Transformer网络组成。
 + RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
++ Electra([ELECTRA: Pre-training Text Encoders as Discriminators Rather Than Generators](https://arxiv.org/abs/2003.10555)), 支持hidden_size=256的`chinese-electra-discriminator-small`和
+  hidden_size=768的`chinese-electra-discriminator-base`
 
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
@@ -63,24 +65,24 @@ pretrained_models/
 我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
 # 设置使用的GPU卡号
-export CUDA_VISIBLE_DEVICES=0
+CUDA_VISIBLE_DEVICES=0
 python train.py --model_type ernie --model_name ernie_tiny --n_gpu 1 --save_dir ./checkpoints
 ```
 
 可支持配置的参数：
 
-* model_type：必选，模型类型，可以选择bert，ernie，roberta。
-* model_name： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie_tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
+* `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
+* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie_tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
    `model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`和`roberta-wwm-ext`。
-* save_dir：必选，保存训练模型的目录。
-* max_seq_length：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
-* batch_size：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
-* learning_rate：可选，Fine-tune的最大学习率；默认为5e-5。
-* weight_decay：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
-* warmup_proption：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
-* init_from_ckpt：可选，模型参数路径，热启动模型训练；默认为None。
-* seed：可选，随机种子，默认为1000.
-* n_gpu：可选，训练过程中使用GPU卡数量，默认为1。若n_gpu=0，则使用CPU训练。
+* `save_dir`：必选，保存训练模型的目录。
+* `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
+* `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
+* `learning_rate`：可选，Fine-tune的最大学习率；默认为5e-5。
+* `weight_decay`：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
+* `warmup_proption`：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
+* `init_from_ckpt`：可选，模型参数路径，热启动模型训练；默认为None。
+* `seed`：可选，随机种子，默认为1000.
+* `n_gpu`：可选，训练过程中使用GPU卡数量，默认为1。若n_gpu=0，则使用CPU训练。
 
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。
