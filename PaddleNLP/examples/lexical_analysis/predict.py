@@ -27,7 +27,7 @@ from model import BiGruCrf
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--base_path", type=str, default=None, help="The folder where the dataset is located.")
+parser.add_argument("--root", type=str, default=None, help="The folder where the dataset is located.")
 parser.add_argument("--init_checkpoint", type=str, default=None, help="Path to init model.")
 parser.add_argument("--batch_size", type=int, default=300, help="The number of sequences contained in a mini-batch.")
 parser.add_argument("--max_seq_len", type=int, default=64, help="Number of words of the longest seqence.")
@@ -43,7 +43,7 @@ def infer(args):
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     # create dataset.
-    infer_dataset = LacDataset(args.base_path, mode='infer')
+    infer_dataset = LacDataset(args.root, mode='infer')
 
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=0),  # word_ids

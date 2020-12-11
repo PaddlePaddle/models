@@ -59,21 +59,21 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 
 ```bash
 python -m paddle.distributed.launch train.py \
-        --base_path ./lexical_analysis_dataset_tiny \
+        --root ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
         --use_gpu True
 ```
 
-其中 base_path 是数据集所在文件夹路径，word_dict_path 是输入文本的词典路径，label_dict_path 是标记标签的词典路径，word_rep_dict_path 是对输入文本中特殊字符进行转换的字典路径。
+其中 root 是数据集所在文件夹路径。
 
 ### 2.4 模型评估
 
 通过加载训练保存的模型，可以对测试集数据进行验证，启动方式如下：
 
 ```bash
-python eval.py --base_path ./lexical_analysis_dataset_tiny \
+python eval.py --root ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
@@ -86,7 +86,7 @@ python eval.py --base_path ./lexical_analysis_dataset_tiny \
 对无标签数据可以启动模型预测：
 
 ```bash
-python predict.py --base_path ./lexical_analysis_dataset_tiny \
+python predict.py --root ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True

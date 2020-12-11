@@ -29,9 +29,9 @@ __all__ = ['MSRA_NER']
 class MSRA_NER(TSVDataset):
     URL = "https://bj.bcebos.com/paddlehub-dataset/msra_ner.tar.gz"
     MD5 = None
-    SEGMENT_INFO = collections.namedtuple(
+    META_INFO = collections.namedtuple(
         'SEGMENT_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
-    SEGMENTS = {
+    SPLITS = {
         'train': SEGMENT_INFO(
             os.path.join('msra_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
@@ -49,7 +49,7 @@ class MSRA_NER(TSVDataset):
             1, ),
     }
 
-    def __init__(self, segment='train', root=None, **kwargs):
+    def __init__(self, mode='train', root=None, **kwargs):
         default_root = os.path.join(DATA_HOME, 'msra')
         filename, data_hash, field_indices, num_discard_samples = self.SEGMENTS[
             segment]
