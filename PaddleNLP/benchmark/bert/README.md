@@ -76,7 +76,7 @@ python ./run_pretrain_single.py \
 | OneFlow   | 1 | 8 | 1 | 32 | 583 | 1 |
 
 
-## NLP 任务的 Fine-tuning
+## Fine-tuning任务训练
 
 在完成 BERT 模型的预训练后，即可利用预训练参数在特定的 NLP 任务上做 Fine-tuning。以下利用开源的预训练模型，示例如何进行分类任务的 Fine-tuning。
 
@@ -95,6 +95,7 @@ python -u ./run_glue.py \
     --logging_steps 1 \
     --save_steps 500 \
     --output_dir ./tmp/$TASK_NAME/
+```
 
 其中参数释义如下：
 - `model_type` 指示了模型类型，当前仅支持BERT模型。
