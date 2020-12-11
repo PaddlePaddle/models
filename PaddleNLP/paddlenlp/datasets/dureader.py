@@ -165,7 +165,7 @@ class DuReader(SQuAD):
 
             examples.append(example)
 
-        self.examples = examples[:2000]
+        self.examples = examples
 
 
 class DuReaderRobust(SQuAD):

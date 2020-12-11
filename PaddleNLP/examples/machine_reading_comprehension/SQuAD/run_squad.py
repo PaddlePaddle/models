@@ -90,7 +90,7 @@ def evaluate(model, data_loader, args):
                     end_logits=end_logits))
 
     all_predictions, all_nbest_json, scores_diff_json = compute_predictions(
-        data_loader.dataset.examples, data_loader.dataset.data, all_results,
+        data_loader.dataset.examples, data_loader.dataset.features, all_results,
         args.n_best_size, args.max_answer_length, args.do_lower_case,
         args.version_2_with_negative, args.null_score_diff_threshold,
         args.verbose, data_loader.dataset.tokenizer)
