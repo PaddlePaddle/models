@@ -19,7 +19,7 @@ swda: 使用SwDAC (Switchboard Dialogue Act Corpus) 数据集完成对话行为�
 
 DGU模型中的6个任务，分别采用不同的评估指标在test集上进行评估，结果如下：
 
-<table  border="1">
+<table>
     <tr><th style="text-align:center">任务</th><th style="text-align:center">评估指标</th><th style="text-align:center">DGU</th></tr>
     <tr align="center"><td rowspan="3" style="vertical-align:middle;">udc</td><td>R1@10</td><td>81.04%</td></tr>
     <tr align="center"><td>R2@10</td><td>89.85%</td></tr>
@@ -69,7 +69,7 @@ DGU模型中的6个任务，分别采用不同的评估指标在test集上进行
 下载数据集压缩包并解压后，DGU_datasets目录下共存在6个目录，分别对应每个任务的训练集train.txt、评估集dev.txt和测试集test.txt。
 
 ```shell
-wget wget https://paddlenlp.bj.bcebos.com/datasets/DGU_datasets.tar.gz
+wget https://paddlenlp.bj.bcebos.com/datasets/DGU_datasets.tar.gz
 tar -zxf DGU_datasets.tar.gz
 ```
 
