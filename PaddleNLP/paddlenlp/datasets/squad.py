@@ -66,40 +66,36 @@ class InputFeatures(object):
 
 
 class SQuAD(Dataset):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
 
     DEV_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v2.0.json'
-    DEV_DATA_MD5_V2 = '7ab59a1b04bd7cb773f98a0717106c9b'
     TRAIN_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v2.0.json'
-    TRAIN_DATA_MD5_V2 = '793daf7b6224281e75fe61c1f80afe35'
 
     DEV_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v1.1.json'
-    DEV_DATA_MD5_V1 = '7ab59a1b04bd7cb773f98a0717106c9b'
     TRAIN_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v1.1.json'
-    TRAIN_DATA_MD5_V1 = '793daf7b6224281e75fe61c1f80afe35'
 
-    SEGMENTS = {
+    SPLITS = {
         '1.1': {
-            'train': SEGMENT_INFO(
-                os.path.join('v1', 'train.json'),
-                'dc2dac669a113866a6480a0b10cd50bf'),
-            'dev': SEGMENT_INFO(
-                os.path.join('v1', 'dev.json'),
-                '185958e46ba556b38c6a7cc63f3a2135')
+            'train': META_INFO(
+                os.path.join('v1', 'train-v1.1.json'),
+                '981b29407e0affa3b1b156f72073b945'),
+            'dev': META_INFO(
+                os.path.join('v1', 'dev-v1.1.json'),
+                '3e85deb501d4e538b6bc56f786231552')
         },
         '2.0': {
-            'train': SEGMENT_INFO(
-                os.path.join('v2', 'train.json'),
-                'dc2dac669a113866a6480a0b10cd50bf'),
-            'dev': SEGMENT_INFO(
-                os.path.join('v2', 'dev.json'),
-                '185958e46ba556b38c6a7cc63f3a2135')
+            'train': META_INFO(
+                os.path.join('v2', 'train-v2.0.json'),
+                '62108c273c268d70893182d5cf8df740'),
+            'dev': META_INFO(
+                os.path.join('v2', 'dev-v2.0.json'),
+                '246adae8b7002f8679c027697b0b7cf8')
         }
     }
 
     def __init__(self,
                  tokenizer,
-                 segment='train',
+                 mode='train',
                  version_2_with_negative=True,
                  root=None,
                  doc_stride=128,
@@ -108,7 +104,7 @@ class SQuAD(Dataset):
                  **kwargs):
 
         self.version_2_with_negative = version_2_with_negative
-        self._get_data(root, segment, **kwargs)
+        self._get_data(root, mode, **kwargs)
         self.tokenizer = tokenizer
         self.doc_stride = doc_stride
         self.max_query_length = max_query_length
@@ -116,26 +112,26 @@ class SQuAD(Dataset):
 
         self._transform_func = None
 
-        if segment == 'train':
+        if mode == 'train':
             self.is_training = True
         else:
             self.is_training = False
 
         self._read()
 
-        self.data = self.convert_examples_to_feature(
+        self.features = self.convert_examples_to_feature(
             self.examples,
             tokenizer=self.tokenizer,
             doc_stride=self.doc_stride,
             max_query_length=self.max_query_length,
             max_seq_length=self.max_seq_length)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, root, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'SQuAD')
         if self.version_2_with_negative:
-            filename, data_hash = self.SEGMENTS['2.0'][segment]
+            filename, data_hash = self.SPLITS['2.0'][mode]
         else:
-            filename, data_hash = self.SEGMENTS['1.1'][segment]
+            filename, data_hash = self.SPLITS['1.1'][mode]
         fullname = os.path.join(default_root,
                                 filename) if root is None else os.path.join(
                                     os.path.expanduser(root), filename)
@@ -145,7 +141,7 @@ class SQuAD(Dataset):
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
-            if segment == 'train':
+            if mode == 'train':
                 if self.version_2_with_negative:
                     fullname = get_path_from_url(
                         self.TRAIN_DATA_URL_V2,
@@ -154,7 +150,7 @@ class SQuAD(Dataset):
                     fullname = get_path_from_url(
                         self.TRAIN_DATA_URL_V1,
                         os.path.join(default_root, 'v1'))
-            elif segment == 'dev':
+            elif mode == 'dev':
                 if self.version_2_with_negative:
                     fullname = get_path_from_url(
                         self.DEV_DATA_URL_V2, os.path.join(default_root, 'v2'))
@@ -425,7 +421,7 @@ class SQuAD(Dataset):
                         if self.version_2_with_negative:
                             is_impossible = qa["is_impossible"]
                         orig_answer_text = []
-                        if not is_impossible:
+                        if not is_impossible and 'answers' in qa.keys():
                             answers = qa["answers"]
                             for answer in answers:
                                 orig_answer_text.append(answer["text"])
@@ -446,10 +442,10 @@ class SQuAD(Dataset):
         self.examples = examples
 
     def __len__(self):
-        return len(self.data)
+        return len(self.features)
 
     def __getitem__(self, idx):
-        feature = self.data[idx]
+        feature = self.features[idx]
 
         if self.is_training:
             return feature.input_ids, feature.segment_ids, feature.unique_id, feature.start_position, feature.end_position

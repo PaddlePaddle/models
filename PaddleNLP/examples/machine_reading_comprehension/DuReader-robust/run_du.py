@@ -16,19 +16,19 @@ import collections
 import os
 import random
 import time
-import json
+
 from functools import partial
 import numpy as np
 import paddle
 
 from paddle.io import DataLoader
 from args import parse_args
-import io
+import json
 import paddlenlp as ppnlp
 
 from paddlenlp.data import Pad, Stack, Tuple
 from paddlenlp.transformers import BertForQuestionAnswering, BertTokenizer, ErnieForQuestionAnswering, ErnieTokenizer
-from paddlenlp.metrics.dureader import dureader_evaluate, compute_predictions
+from paddlenlp.metrics.squad import squad_evaluate, compute_predictions
 
 MODEL_CLASSES = {
     "bert": (BertForQuestionAnswering, BertTokenizer),
@@ -62,7 +62,7 @@ class CrossEntropyLossForSQuAD(paddle.nn.Layer):
         return loss
 
 
-def evaluate(model, data_loader, args, predict=False):
+def evaluate(model, data_loader, args, tokenizer, do_pred=False):
     model.eval()
 
     RawResult = collections.namedtuple(
@@ -89,22 +89,24 @@ def evaluate(model, data_loader, args, predict=False):
                     start_logits=start_logits,
                     end_logits=end_logits))
 
-    all_predictions_eval, all_predictions_test = compute_predictions(
-        data_loader.dataset.examples, data_loader.dataset.data, all_results,
-        args.n_best_size, args.max_answer_length, args.do_lower_case,
-        args.verbose, data_loader.dataset.tokenizer)
-
-    if predict:
+    all_predictions, _, scores_diff_json = compute_predictions(
+        data_loader.dataset.examples, data_loader.dataset.features, all_results,
+        args.n_best_size, args.max_answer_length, args.do_lower_case, False,
+        0.0, args.verbose, tokenizer)
+    if do_pred:
         with open('prediction.json', "w") as writer:
-            for pred in all_predictions_test:
-                writer.write(json.dumps(pred, ensure_ascii=False) + "\n")
+            writer.write(
+                json.dumps(
+                    all_predictions, ensure_ascii=False, indent=4) + "\n")
     else:
-        dureader_evaluate(data_loader.dataset.examples, all_predictions_eval)
+        squad_evaluate(data_loader.dataset.examples, all_predictions,
+                       scores_diff_json, 1.0)
 
     model.train()
 
 
 def do_train(args):
+    paddle.set_device("gpu" if args.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
@@ -112,19 +114,18 @@ def do_train(args):
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     root = args.data_path
-
     set_seed(args)
 
-    train_dataset = ppnlp.datasets.DuReader(
+    train_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        doc_stride=args.doc_stride,
         root=root,
+        doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        mode="train")
+        segment='train')
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
-        train_dataset, batch_size=args.batch_size, shuffle=True)
+        train_ds, batch_size=args.batch_size, shuffle=True)
 
     train_batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
@@ -135,21 +136,21 @@ def do_train(args):
     ): [data for i, data in enumerate(fn(samples)) if i != 2]
 
     train_data_loader = DataLoader(
-        dataset=train_dataset,
+        dataset=train_ds,
         batch_sampler=train_batch_sampler,
         collate_fn=train_batchify_fn,
         return_list=True)
 
-    dev_dataset = ppnlp.datasets.DuReader(
+    dev_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        doc_stride=args.doc_stride,
         root=root,
+        doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        mode="dev")
+        segment='dev')
 
     dev_batch_sampler = paddle.io.BatchSampler(
-        dev_dataset, batch_size=args.batch_size, shuffle=False)
+        dev_ds, batch_size=args.batch_size, shuffle=False)
 
     dev_batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
@@ -158,8 +159,25 @@ def do_train(args):
     ): fn(samples)
 
     dev_data_loader = DataLoader(
-        dataset=dev_dataset,
+        dataset=dev_ds,
         batch_sampler=dev_batch_sampler,
+        collate_fn=dev_batchify_fn,
+        return_list=True)
+
+    test_ds = ppnlp.datasets.DuReaderRobust(
+        tokenizer=tokenizer,
+        root=root,
+        doc_stride=args.doc_stride,
+        max_query_length=args.max_query_length,
+        max_seq_length=args.max_seq_length,
+        segment='test')
+
+    test_batch_sampler = paddle.io.BatchSampler(
+        test_ds, batch_size=args.batch_size, shuffle=False)
+
+    test_data_loader = DataLoader(
+        dataset=test_ds,
+        batch_sampler=test_batch_sampler,
         collate_fn=dev_batchify_fn,
         return_list=True)
 
@@ -172,7 +190,7 @@ def do_train(args):
         args.learning_rate,
         lambda current_step, warmup_proportion=args.warmup_proportion,
         num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_dataset.examples)//args.batch_size*args.num_train_epochs): float(
+        (len(train_ds.examples)//args.batch_size*args.num_train_epochs): float(
             current_step) / float(max(1, warmup_proportion*num_training_steps))
         if current_step < warmup_proportion*num_training_steps else max(
             0.0,
@@ -194,14 +212,13 @@ def do_train(args):
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
-            global_step += 1 * args.n_gpu
+            global_step += 1
             input_ids, segment_ids, start_positions, end_positions = batch
 
             logits = model(input_ids=input_ids, token_type_ids=segment_ids)
             loss = criterion(logits, (start_positions, end_positions))
 
-            if global_step % args.logging_steps == 0 and paddle.distributed.get_rank(
-            ) == 0:
+            if global_step % args.logging_steps == 0:
                 print(
                     "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
                     % (global_step, epoch, step, loss,
@@ -212,21 +229,24 @@ def do_train(args):
             lr_scheduler.step()
             optimizer.clear_gradients()
 
-            if global_step % args.save_steps == 0 and paddle.distributed.get_rank(
-            ) == 0:
-                output_dir = os.path.join(args.output_dir,
-                                          "model_%d" % global_step)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                # need better way to get inner model of DataParallel
-                model_to_save = model._layers if isinstance(
-                    model, paddle.DataParallel) else model
-                model_to_save.save_pretrained(output_dir)
-                tokenizer.save_pretrained(output_dir)
-                print('Saving checkpoint to:', output_dir)
+            if global_step % args.save_steps == 0:
+                if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+                    output_dir = os.path.join(args.output_dir,
+                                              "model_%d" % global_step)
+                    if not os.path.exists(output_dir):
+                        os.makedirs(output_dir)
+                    # need better way to get inner model of DataParallel
+                    model_to_save = model._layers if isinstance(
+                        model, paddle.DataParallel) else model
+                    model_to_save.save_pretrained(output_dir)
+                    tokenizer.save_pretrained(output_dir)
+                    print('Saving checkpoint to:', output_dir)
 
-        if paddle.distributed.get_rank() == 0:
-            evaluate(model, dev_data_loader, args)
+        if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+            evaluate(model, dev_data_loader, args, tokenizer)
+
+    if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+        evaluate(model, test_data_loader, args, tokenizer, True)
 
 
 if __name__ == "__main__":

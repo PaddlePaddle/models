@@ -30,19 +30,19 @@ class MSRA_NER(TSVDataset):
     URL = "https://bj.bcebos.com/paddlehub-dataset/msra_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple(
-        'SEGMENT_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
+        'META_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
     SPLITS = {
-        'train': SEGMENT_INFO(
+        'train': META_INFO(
             os.path.join('msra_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
             (0, 1),
             1, ),
-        'dev': SEGMENT_INFO(
+        'dev': META_INFO(
             os.path.join('msra_ner', 'dev.tsv'),
             'ec772f3ba914bca5269f6e785bb3375d',
             (0, 1),
             1, ),
-        'test': SEGMENT_INFO(
+        'test': META_INFO(
             os.path.join('msra_ner', 'test.tsv'),
             '2f27ae68b5f61d6553ffa28bb577c8a7',
             (0, 1),
@@ -51,8 +51,8 @@ class MSRA_NER(TSVDataset):
 
     def __init__(self, mode='train', root=None, **kwargs):
         default_root = os.path.join(DATA_HOME, 'msra')
-        filename, data_hash, field_indices, num_discard_samples = self.SEGMENTS[
-            segment]
+        filename, data_hash, field_indices, num_discard_samples = self.SPLITS[
+            mode]
         fullname = os.path.join(default_root,
                                 filename) if root is None else os.path.join(
                                     os.path.expanduser(root), filename)
