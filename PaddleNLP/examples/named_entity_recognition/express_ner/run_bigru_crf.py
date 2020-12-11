@@ -18,7 +18,6 @@ import paddle.nn as nn
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.layers import LinearChainCrf, ViterbiDecoder, LinearChainCrfLoss
 from paddlenlp.metrics import ChunkEvaluator
-# from paddlenlp.embeddings import TokenEmbedding
 
 
 def parse_decodes(ds, decodes, lens):
@@ -44,7 +43,8 @@ def parse_decodes(ds, decodes, lens):
                 words += s
         if len(sent_out) < len(tags_out):
             sent_out.append(words)
-        outputs.append(''.join([str((s, t)) for s, t in zip(sent_out, tags_out)]))
+        outputs.append(''.join(
+            [str((s, t)) for s, t in zip(sent_out, tags_out)]))
     return outputs
 
 
@@ -77,39 +77,46 @@ class ExpressDataset(paddle.io.Dataset):
                 words, labels = line.strip('\n').split('\t')
                 words = words.split('\002')
                 labels = labels.split('\002')
-                sub_word_ids = convert_tokens_to_ids(words, self.word_vocab, 'OOV')
-                sub_label_ids = convert_tokens_to_ids(labels, self.label_vocab, 'O')
+                sub_word_ids = convert_tokens_to_ids(words, self.word_vocab,
+                                                     'OOV')
+                sub_label_ids = convert_tokens_to_ids(labels, self.label_vocab,
+                                                      'O')
                 self.word_ids.append(sub_word_ids)
                 self.label_ids.append(sub_label_ids)
         self.word_num = max(self.word_vocab.values()) + 1
         self.label_num = max(self.label_vocab.values()) + 1
+
     def __len__(self):
         return len(self.word_ids)
+
     def __getitem__(self, index):
-        return self.word_ids[index], len(self.word_ids[index]), self.label_ids[index]
+        return self.word_ids[index], len(self.word_ids[index]), self.label_ids[
+            index]
 
 
 class BiGRUWithCRF(nn.Layer):
     def __init__(self, emb_size, hidden_size, word_num, label_num):
-        super(BiGRUWithCRF, self).__init__() 
+        super(BiGRUWithCRF, self).__init__()
         self.word_emb = nn.Embedding(word_num, emb_size)
-        # self.word_emb = TokenEmbedding(extended_vacab_path='./conf/word.dic', unknown_token='OOV')
-        self.gru = nn.GRU(emb_size, hidden_size, num_layers=2, direction='bidirectional')
-        self.fc = nn.Linear(hidden_size * 2, label_num + 2) # BOS EOS
+        self.gru = nn.GRU(emb_size,
+                          hidden_size,
+                          num_layers=2,
+                          direction='bidirectional')
+        self.fc = nn.Linear(hidden_size * 2, label_num + 2)  # BOS EOS
         self.crf = LinearChainCrf(label_num)
         self.decoder = ViterbiDecoder(self.crf.transitions)
 
     def forward(self, x, lens):
         embs = self.word_emb(x)
-        output, _  = self.gru(embs)
+        output, _ = self.gru(embs)
         output = self.fc(output)
         _, pred = self.decoder(output, lens)
         return output, lens, pred
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     paddle.set_device('gpu')
-    
+
     train_ds = ExpressDataset('./data/train.txt')
     dev_ds = ExpressDataset('./data/dev.txt')
     test_ds = ExpressDataset('./data/test.txt')
@@ -145,7 +152,8 @@ if __name__ == '__main__':
     network = BiGRUWithCRF(300, 300, train_ds.word_num, train_ds.label_num)
     model = paddle.Model(network)
 
-    optimizer = paddle.optimizer.Adam(learning_rate=0.002, parameters=model.parameters())
+    optimizer = paddle.optimizer.Adam(
+        learning_rate=0.002, parameters=model.parameters())
     crf_loss = LinearChainCrfLoss(network.crf.transitions)
     chunk_evaluator = ChunkEvaluator((train_ds.label_num + 2) // 2, 'IOB')
     model.prepare(optimizer, crf_loss, chunk_evaluator)

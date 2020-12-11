@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
 from functools import partial
 
 import paddle
 from paddlenlp.data import Stack, Tuple, Pad
-from paddlenlp.transformers import ErnieTokenizer, ErniePretrainedModel
+from paddlenlp.transformers import ErnieTokenizer, ErniePretrainedModel, ErnieForTokenClassification
 from paddlenlp.metrics import ChunkEvaluator
 
 
@@ -42,32 +41,35 @@ def parse_decodes(ds, decodes, lens):
                 words += s
         if len(sent_out) < len(tags_out):
             sent_out.append(words)
-        outputs.append(''.join([str((s, t)) for s, t in zip(sent_out, tags_out)]))
+        outputs.append(''.join(
+            [str((s, t)) for s, t in zip(sent_out, tags_out)]))
     return outputs
 
 
-def evaluate(model, loss_fn, metric, data_loader, label_num):
+@paddle.no_grad()
+def evaluate(model, metric, data_loader):
     model.eval()
     metric.reset()
     for input_ids, seg_ids, lens, labels in data_loader:
         logits = model(input_ids, seg_ids)
-        loss = loss_fn(logits.reshape([-1, label_num]), labels.reshape([-1]))
-        loss = paddle.mean(loss)
         preds = paddle.argmax(logits, axis=-1)
         n_infer, n_label, n_correct = metric.compute(None, lens, preds, labels)
         metric.update(n_infer.numpy(), n_label.numpy(), n_correct.numpy())
         precision, recall, f1_score = metric.accumulate()
-        yield (preds, lens)
-    print("eval loss: %f - precision: %f - recall: %f - f1: %f" %
-          (loss, precision, recall, f1_score))
+    print("eval precision: %f - recall: %f - f1: %f" %
+          (precision, recall, f1_score))
 
 
-def predict(model, loss_fn, metric, data_loader, ds):
-    outputs = evaluate(model, loss_fn, metric, data_loader, ds.label_num)
-    decodes = [x[0] for x in outputs]
-    lens = [x[1] for x in outputs]
-    preds = parse_decodes(ds, decodes, lens)
-    return preds
+def predict(model, data_loader, ds):
+    pred_list = []
+    len_list = []
+    for input_ids, seg_ids, lens, labels in data_loader:
+        logits = model(input_ids, seg_ids)
+        pred = paddle.argmax(logits, axis=-1)
+        pred_list.append(pred.numpy())
+        len_list.append(lens.numpy())
+    preds = parse_decodes(ds, pred_list, len_list)
+    print('\n'.join(preds[:10]))
 
 
 def convert_example(example, tokenizer, label_vocab):
@@ -105,8 +107,10 @@ class ExpressDataset(paddle.io.Dataset):
                 self.label_ids.append(labels)
         self.word_num = max(self.word_vocab.values()) + 1
         self.label_num = max(self.label_vocab.values()) + 1
+
     def __len__(self):
         return len(self.word_ids)
+
     def __getitem__(self, index):
         return self.word_ids[index], self.label_ids[index]
 
@@ -118,13 +122,11 @@ if __name__ == '__main__':
     dev_ds = ExpressDataset('./data/dev.txt')
     test_ds = ExpressDataset('./data/test.txt')
 
-    tokenizer = ErnieTokenizer.from_pretrained('ernie')
+    tokenizer = ErnieTokenizer.from_pretrained('ernie-1.0')
     trans_func = partial(
-        convert_example,
-        tokenizer=tokenizer,
-        label_vocab=train_ds.label_vocab)
+        convert_example, tokenizer=tokenizer, label_vocab=train_ds.label_vocab)
 
-    ignore_label = -100
+    ignore_label = -1
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),
@@ -149,34 +151,30 @@ if __name__ == '__main__':
         return_list=True,
         collate_fn=batchify_fn)
 
-    model = BertForTokenClassification.from_pretrained(
-        args.model_name_or_path, num_classes=label_num)
+    model = ErnieForTokenClassification.from_pretrained(
+        "ernie-1.0", num_classes=train_ds.label_num)
 
     metric = ChunkEvaluator((train_ds.label_num + 2) // 2, "IOB")
     loss_fn = paddle.nn.loss.CrossEntropyLoss(ignore_index=ignore_label)
-    optimizer = paddle.optimizer.AdamW(learning_rate=2e-5,parameters=model.parameters())
+    optimizer = paddle.optimizer.AdamW(
+        learning_rate=2e-5, parameters=model.parameters())
 
-
-    tic_time = time.time()
-
-    step_count = 0
+    step = 0
     for epoch in range(10):
-
-        print('Epoch [{}/{}]'.format(epoch, 10))
         model.train()
-        for idx, (input_ids, segment_ids, length, labels) in enumerate(train_loader):
-            logits = model(input_ids, segment_ids).reshape([-1, train_ds.label_num])
+        for idx, (input_ids, segment_ids, length,
+                  labels) in enumerate(train_loader):
+            logits = model(input_ids, segment_ids).reshape(
+                [-1, train_ds.label_num])
             loss = paddle.mean(loss_fn(logits, labels.reshape([-1])))
             loss.backward()
             optimizer.step()
             optimizer.clear_gradients()
-            step_count += 1
-            print("step [%d/%d] - loss: %f - speed: %.2f step/s" 
-                  % (idx, len(train_loader), loss, 1 / (time.time() - tic_time)))
-            tic_time = time.time()
-            evaluate(model, loss_fn, metric, dev_loader, train_ds.label_num)
-        paddle.save(model.state_dict(), './ernie_result/model_%d.pdparams' % step_count)
-        
-    pred = predict(model, loss_fn, metric, test_loader, test_ds)
-    print('\n'.join(pred[:10]))
+            step += 1
+            print("epoch:%d - step:%d - loss: %f" % (epoch, step, loss))
+        evaluate(model, metric, dev_loader)
 
+        paddle.save(model.state_dict(),
+                    './ernie_result/model_%d.pdparams' % step)
+
+    pred = predict(model, test_loader, test_ds)
