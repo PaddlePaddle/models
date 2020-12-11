@@ -27,10 +27,7 @@ from pgl.contrib.imperative.graph_tensor import GraphTensor
 
 from models import ErnieSageForLinkPrediction
 from data import GraphDataset, TrainData, PredictData, GraphDataLoader
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.utils.log import logger
 
 
 def set_seed(config):
