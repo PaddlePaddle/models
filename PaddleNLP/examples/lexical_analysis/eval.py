@@ -20,20 +20,16 @@ import argparse
 
 import paddle
 import numpy as np
+from paddlenlp.data import Pad, Tuple, Stack
+from paddlenlp.metrics import ChunkEvaluator
 
-from data import load_kv_dict, batch_padding_fn, LacDataset
-from model import BiGruCrf, ViterbiDecoder, ChunkEvaluator
+from data import LacDataset
+from model import BiGruCrf
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--base_path", type=str, default=None,
                     help="The folder where the dataset is located.")
-parser.add_argument("--word_dict_path", type=str, default=None,
-                    help="The path of the word dictionary.")
-parser.add_argument("--label_dict_path", type=str, default=None,
-                    help="The path of the label dictionary.")
-parser.add_argument("--word_rep_dict_path", type=str, default=None,
-                    help="The path of the word replacement Dictionary")
 parser.add_argument("--init_checkpoint", type=str, default=None,
                     help="Path to init model.")
 parser.add_argument("--batch_size", type=int, default=300,
@@ -55,14 +51,15 @@ def evaluate(args):
     place = paddle.CUDAPlace(0) if args.use_gpu else paddle.CPUPlace()
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
-    # Load vocab to create dataset.
-    word_vocab = load_kv_dict(
-        args.word_dict_path, value_func=np.int64, reverse=True)
-    label_vocab = load_kv_dict(
-        args.label_dict_path, value_func=np.int64, reverse=True)
-    word_rep_dict = load_kv_dict(args.word_rep_dict_path)
+    # create dataset.
     test_dataset = LacDataset(
-        args.base_path, word_vocab, label_vocab, word_rep_dict, mode='test')
+        args.base_path, mode='test')
+    
+    batchify_fn = lambda samples, fn=Tuple(
+        Pad(axis=0, pad_val=0),  # word_ids
+        Stack(),    # length
+        Pad(axis=0, pad_val=0),  # label_ids
+    ): fn(samples)
 
     # Create sampler for dataloader
     test_sampler = paddle.io.BatchSampler(
@@ -75,7 +72,7 @@ def evaluate(args):
         batch_sampler=test_sampler,
         places=place,
         return_list=True,
-        collate_fn=batch_padding_fn(args.max_seq_len))
+        collate_fn=batchify_fn)
 
     # Define the model network and metric evaluator
     network = BiGruCrf(args.emb_dim, args.hidden_size, test_dataset.vocab_size,

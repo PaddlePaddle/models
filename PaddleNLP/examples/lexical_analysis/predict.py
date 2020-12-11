@@ -19,16 +19,16 @@ import argparse
 
 import numpy as np
 import paddle
+from paddlenlp.data import Pad, Tuple, Stack
+from paddlenlp.metrics import ChunkEvaluator
 
-from data import load_kv_dict, batch_padding_fn, LacDataset, parse_lac_result
-from model import BiGruCrf, ViterbiDecoder, ChunkEvaluator
+from data import LacDataset, parse_lac_result
+from model import BiGruCrf
+
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--base_path", type=str, default=None, help="The folder where the dataset is located.")
-parser.add_argument("--word_dict_path", type=str, default=None, help="The path of the word dictionary.")
-parser.add_argument("--label_dict_path", type=str, default=None, help="The path of the label dictionary.")
-parser.add_argument("--word_rep_dict_path", type=str, default=None, help="The path of the word replacement Dictionary")
 parser.add_argument("--init_checkpoint", type=str, default=None, help="Path to init model.")
 parser.add_argument("--batch_size", type=int, default=300, help="The number of sequences contained in a mini-batch.")
 parser.add_argument("--max_seq_len", type=int, default=64, help="Number of words of the longest seqence.")
@@ -43,14 +43,14 @@ def infer(args):
     place = paddle.CUDAPlace(0) if args.use_gpu else paddle.CPUPlace()
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
-    # Load vocab to create dataset.
-    word_vocab = load_kv_dict(
-        args.word_dict_path, value_func=np.int64, reverse=True)
-    label_vocab = load_kv_dict(
-        args.label_dict_path, value_func=np.int64, reverse=True)
-    word_rep_dict = load_kv_dict(args.word_rep_dict_path)
+    # create dataset.
     infer_dataset = LacDataset(
-        args.base_path, word_vocab, label_vocab, word_rep_dict, mode='infer')
+        args.base_path, mode='infer')
+
+    batchify_fn = lambda samples, fn=Tuple(
+        Pad(axis=0, pad_val=0),  # word_ids
+        Stack(),    # length
+    ): fn(samples)
 
     # Create sampler for dataloader
     infer_sampler = paddle.io.BatchSampler(
@@ -63,7 +63,7 @@ def infer(args):
         batch_sampler=infer_sampler,
         places=place,
         return_list=True,
-        collate_fn=batch_padding_fn(args.max_seq_len))
+        collate_fn=batchify_fn)
 
     # Define the model network
     network = BiGruCrf(args.emb_dim, args.hidden_size, infer_dataset.vocab_size,
@@ -82,7 +82,7 @@ def infer(args):
         [pred for batch_pred in crf_decodes for pred in batch_pred])
 
     results = parse_lac_result(infer_dataset.word_ids, preds, lengths,
-                               word_vocab, label_vocab)
+                               infer_dataset.word_vocab, infer_dataset.label_vocab)
 
     sent_tags = []
     for sent, tags in results:
