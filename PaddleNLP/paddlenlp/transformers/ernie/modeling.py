@@ -93,7 +93,7 @@ class ErniePretrainedModel(PretrainedModel):
 
     model_config_file = "model_config.json"
     pretrained_init_configuration = {
-        "ernie": {
+        "ernie-1.0": {
             "attention_probs_dropout_prob": 0.1,
             "hidden_act": "relu",
             "hidden_dropout_prob": 0.1,
@@ -120,7 +120,7 @@ class ErniePretrainedModel(PretrainedModel):
             "vocab_size": 50006,
             "pad_token_id": 0,
         },
-        "ernie_v2_eng_base": {
+        "ernie-2.0-en": {
             "attention_probs_dropout_prob": 0.1,
             "hidden_act": "gelu",
             "hidden_dropout_prob": 0.1,
@@ -133,9 +133,9 @@ class ErniePretrainedModel(PretrainedModel):
             "vocab_size": 30522,
             "pad_token_id": 0,
         },
-        "ernie_v2_eng_large": {
+        "ernie-2.0-large-en": {
             "attention_probs_dropout_prob": 0.1,
-            "intermediate_size": 4096,  # special for ernie_v2_eng_large
+            "intermediate_size": 4096,  # special for ernie-2.0-large-en
             "hidden_act": "gelu",
             "hidden_dropout_prob": 0.1,
             "hidden_size": 1024,
@@ -151,14 +151,14 @@ class ErniePretrainedModel(PretrainedModel):
     resource_files_names = {"model_state": "model_state.pdparams"}
     pretrained_resource_files_map = {
         "model_state": {
-            "ernie":
+            "ernie-1.0":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie/ernie_v1_chn_base.pdparams",
             "ernie_tiny":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/ernie_tiny.pdparams",
-            "ernie_v2_eng_base":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/ernie_v2_eng_base.pdparams",
-            "ernie_v2_eng_large":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/ernie_v2_eng_large.pdparams",
+            "ernie-2.0-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/ernie-2.0-en.pdparams",
+            "ernie-2.0-large-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/ernie-2.0-large-en.pdparams",
         }
     }
     base_model_prefix = "ernie"
@@ -271,18 +271,23 @@ class ErnieForSequenceClassification(ErniePretrainedModel):
 
 
 class ErnieForQuestionAnswering(ErniePretrainedModel):
-    def __init__(self, ernie, dropout=None):
+    def __init__(self, ernie):
         super(ErnieForQuestionAnswering, self).__init__()
         self.ernie = ernie  # allow ernie to be config
         self.classifier = nn.Linear(self.ernie.config["hidden_size"], 2)
         self.apply(self.init_weights)
 
-    def forward(self, input_ids, token_type_ids=None):
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None):
         sequence_output, _ = self.ernie(
             input_ids,
             token_type_ids=token_type_ids,
-            position_ids=None,
-            attention_mask=None)
+            position_ids=position_ids,
+            attention_mask=attention_mask)
+
         logits = self.classifier(sequence_output)
         logits = paddle.transpose(logits, perm=[2, 0, 1])
         start_logits, end_logits = paddle.unstack(x=logits, axis=0)

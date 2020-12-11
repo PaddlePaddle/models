@@ -12,10 +12,7 @@ import paddle.distributed as dist
 
 import reader
 from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion, position_encoding_init
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.utils.log import logger
 
 
 def parse_args():
