@@ -11,6 +11,7 @@
 
 - 支持 BERT GPU 单机、分布式预训练
 - 支持 BERT GPU 多卡 Fine-tuning
+- 支持 BERT XPU 单机 Fine-tuning
 - 提供 BERT 预测接口 demo, 方便多硬件设备生产环境的部署
 
 2）支持 FP16/FP32 混合精度训练和 Fine-tuning，节省显存开销、加速训练过程；
@@ -105,6 +106,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 如果采用 CPU 多核的方式进行预训练，则需要通过环境设置所用 CPU 的核数，例如 `export CPU_NUM=5`，否则会占据所有的CPU。
 
+
 这里需要特别说明的是，参数 `generate_neg_sample` 为 `True` 表示在预训练过程中，`Next Sentence Prediction` 任务的负样本是根据训练数据中的正样本动态生成的，我们给出的样例训练数据 [`demo_wiki_train.gz`](data/train/demo_wiki_train.gz) 只包含 `Next Sentence Prediction` 任务的正样本；如果已事先构造了 `Next Sentence Prediction` 任务的正负样本，则需要将 `generate_neg_sample` 置为 `False`。
 
 预训练任务进行的过程中会输出当前学习率、训练数据所经过的轮数、当前迭代的总步数、训练误差、训练速度等信息，根据 `--validation_steps ${N}` 的配置，每间隔 `N` 步输出模型在验证集的各种指标:
@@ -165,6 +167,47 @@ python -u run_classifier.py --task_name ${TASK_NAME} \
                    --do_val true \
                    --do_test true \
                    --batch_size 32 \
+                   --in_tokens false \
+                   --init_pretraining_params ${BERT_BASE_PATH}/params \
+                   --data_dir ${DATA_PATH} \
+                   --vocab_path ${BERT_BASE_PATH}/vocab.txt \
+                   --checkpoints ${CKPT_PATH} \
+                   --save_steps 1000 \
+                   --weight_decay  0.01 \
+                   --warmup_proportion 0.1 \
+                   --validation_steps 100 \
+                   --epoch 3 \
+                   --max_seq_len 128 \
+                   --bert_config_path ${BERT_BASE_PATH}/bert_config.json \
+                   --learning_rate 5e-5 \
+                   --skip_steps 10 \
+                   --num_iteration_per_drop_scope 10 \
+                   --verbose true
+```
+
+以 XNLI 任务为例，启动 XPU Fine-tuning 的方式如下：
+
+```shell
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export FLAGS_selected_xpus=0
+export XPUSIM_DEVICE_MODEL=KUNLUN1
+export XPU_PADDLE_TRAIN_L3_SIZE=13631488
+export XPU_PADDLE_MAIN_STREAM=0
+
+BERT_BASE_PATH="chinese_L-12_H-768_A-12"
+TASK_NAME='XNLI'
+DATA_PATH=/path/to/xnli/data/
+CKPT_PATH=/path/to/save/checkpoints/
+
+python -u run_classifier.py --task_name ${TASK_NAME} \
+                   --use_cuda false \
+                   --use_xpu true \
+                   --do_train true \
+                   --do_val true \
+                   --do_test true \
+                   --batch_size 16 \
                    --in_tokens false \
                    --init_pretraining_params ${BERT_BASE_PATH}/params \
                    --data_dir ${DATA_PATH} \
