@@ -25,7 +25,7 @@ import paddle.nn.functional as F
 from paddlenlp.data import Stack, Tuple, Pad
 import paddlenlp as ppnlp
 
-from model import SentenceTransformers
+from model import SentenceTransformer
 
 MODEL_CLASSES = {
     "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
@@ -43,14 +43,14 @@ def parse_args():
     parser.add_argument(
         "--model_type",
         default='ernie',
-        # required=True,
+        required=True,
         type=str,
         help="Model type selected in the list: " +
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
         default='ernie-1.0',
-        # required=True,
+        required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
         + ", ".join(
@@ -61,7 +61,7 @@ def parse_args():
     parser.add_argument(
         "--save_dir",
         default='./checkpoint',
-        # required=True,
+        required=True,
         type=str,
         help="The output directory where the model checkpoints will be written.")
 
@@ -107,7 +107,7 @@ def parse_args():
     parser.add_argument(
         "--n_gpu",
         type=int,
-        default=4,
+        default=1,
         help="Number of GPUs to use, 0 for CPU.")
     args = parser.parse_args()
     return args
@@ -289,7 +289,7 @@ def do_train(args):
         trans_fn=trans_func)
 
     pretrained_model = model_class.from_pretrained(args.model_name)
-    model = SentenceTransformers(pretrained_model)
+    model = SentenceTransformer(pretrained_model)
 
     if args.init_from_ckpt and os.path.isfile(args.init_from_ckpt):
         state_dict = paddle.load(args.init_from_ckpt)

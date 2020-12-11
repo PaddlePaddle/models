@@ -101,24 +101,24 @@ sentence_transformers/
 我们以中文文本匹配公开数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
 # 设置使用的GPU卡号
-export CUDA_VISIBLE_DEVICES=0
+CUDA_VISIBLE_DEVICES=0
 python train.py --model_type ernie --model_name ernie-1.0 --n_gpu 1 --save_dir ./checkpoints
 ```
 
 可支持配置的参数：
 
-* model_type：必选，模型类型，可以选择bert，ernie，roberta。
-* model_name： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie_tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
+* `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
+* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie_tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
    `model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`和`roberta-wwm-ext`。
-* save_dir：必选，保存训练模型的目录。
-* max_seq_length：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
-* batch_size：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
-* learning_rate：可选，Fine-tune的最大学习率；默认为5e-5。
-* weight_decay：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
-* warmup_proption：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
-* init_from_ckpt：可选，模型参数路径，热启动模型训练；默认为None。
-* seed：可选，随机种子，默认为1000.
-* n_gpu：可选，训练过程中使用GPU卡数量，默认为1。若n_gpu=0，则使用CPU训练。
+* `save_dir`：必选，保存训练模型的目录。
+* `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
+* `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
+* `learning_rate`：可选，Fine-tune的最大学习率；默认为5e-5。
+* `weight_decay`：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
+* `warmup_proption`：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
+* `init_from_ckpt`：可选，模型参数路径，热启动模型训练；默认为None。
+* `seed`：可选，随机种子，默认为1000.
+* `n_gpu`：可选，训练过程中使用GPU卡数量，默认为1。若n_gpu=0，则使用CPU训练。
 
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。
@@ -141,16 +141,16 @@ checkpoints/
 
 启动预测：
 ```shell
-export CUDA_VISIBLE_DEVICES=0
+CUDA_VISIBLE_DEVICES=0
 python predict.py --model_type ernie --model_name ernie_tiny --params_path checkpoints/model_400/model_state.pdparams
 ```
 
 将待预测数据如以下示例：
 
 ```text
-这个宾馆比较陈旧了，特价的房间也很一般。总体来说一般
-怀着十分激动的心情放映，可是看着看着发现，在放映完毕后，出现一集米老鼠的动画片
-作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。
+世界上什么东西最小   世界上什么东西最小？
+光眼睛大就好看吗  眼睛好看吗？
+小蝌蚪找妈妈怎么样   小蝌蚪找妈妈是谁画的
 ```
 
 可以直接调用`predict`函数即可输出预测结果。
@@ -158,7 +158,50 @@ python predict.py --model_type ernie --model_name ernie_tiny --params_path check
 如
 
 ```text
-Data: 这个宾馆比较陈旧了，特价的房间也很一般。总体来说一般      Label: negative
-Data: 怀着十分激动的心情放映，可是看着看着发现，在放映完毕后，出现一集米老鼠的动画片      Label: negative
-Data: 作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。      Label: positive
+Data: ['世界上什么东西最小', '世界上什么东西最小？']      Label: similar
+Data: ['光眼睛大就好看吗', '眼睛好看吗？']      Label: dissimilar
+Data: ['小蝌蚪找妈妈怎么样', '小蝌蚪找妈妈是谁画的']      Label: dissimilar
+```
+
+
+## 引用
+
+关于Sentence Transformer更多信息参考[www.SBERT.net](https://www.sbert.net)以及论文：
+- [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084) (EMNLP 2019)
+- [Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation](https://arxiv.org/abs/2004.09813) (EMNLP 2020)
+- [Augmented SBERT: Data Augmentation Method for Improving Bi-Encoders for Pairwise Sentence Scoring Tasks](https://arxiv.org/abs/2010.08240) (arXiv 2020)
+
+```
+@inproceedings{reimers-2019-sentence-bert,
+    title = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+    author = "Reimers, Nils and Gurevych, Iryna",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing",
+    month = "11",
+    year = "2019",
+    publisher = "Association for Computational Linguistics",
+    url = "https://arxiv.org/abs/1908.10084",
+}
+```
+
+```
+@inproceedings{reimers-2020-multilingual-sentence-bert,
+    title = "Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation",
+    author = "Reimers, Nils and Gurevych, Iryna",
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing",
+    month = "11",
+    year = "2020",
+    publisher = "Association for Computational Linguistics",
+    url = "https://arxiv.org/abs/2004.09813",
+}
+```
+
+```
+@article{thakur-2020-AugSBERT,
+    title = "Augmented SBERT: Data Augmentation Method for Improving Bi-Encoders for Pairwise Sentence Scoring Tasks",
+    author = "Thakur, Nandan and Reimers, Nils and Daxenberger, Johannes and  Gurevych, Iryna",
+    journal= "arXiv preprint arXiv:2010.08240",
+    month = "10",
+    year = "2020",
+    url = "https://arxiv.org/abs/2010.08240",
+}
 ```

@@ -37,7 +37,7 @@ class SentenceTransformer(nn.Layer):
         query_token_embedding, _ = self.ptm(
             query_input_ids, query_token_type_ids, query_position_ids,
             query_attention_mask)
-        # query_token_embedding = self.dropout(query_token_embedding)
+        query_token_embedding = self.dropout(query_token_embedding)
         query_attention_mask = paddle.unsqueeze(
             (query_input_ids != self.ptm.pad_token_id
              ).astype(self.ptm.pooler.dense.weight.dtype),
@@ -51,7 +51,7 @@ class SentenceTransformer(nn.Layer):
         title_token_embedding, _ = self.ptm(
             title_input_ids, title_token_type_ids, title_position_ids,
             title_attention_mask)
-        # title_token_embedding = self.dropout(title_token_embedding)
+        title_token_embedding = self.dropout(title_token_embedding)
         title_attention_mask = paddle.unsqueeze(
             (title_input_ids != self.ptm.pad_token_id
              ).astype(self.ptm.pooler.dense.weight.dtype),

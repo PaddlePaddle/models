@@ -94,25 +94,29 @@ wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
 ```
 
 我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
-```shell
-# CPU启动
-python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
 
-# GPU启动
-# CUDA_VSIBLE_DEVICES指定想要利用的GPU卡号，可以是单卡，也可以多卡
+CPU 启动：
+
+```shell
+python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
+```
+
+GPU 启动：
+
+```shell
 # CUDA_VISIBLE_DEVICES=0 python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network_name=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
 ```
 
 以上参数表示：
 
-* vocab_path: 词汇表文件路径。
-* use_gpu: 是否使用GPU进行训练， 默认为`False`。
-* network_name: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
-* lr: 学习率， 默认为5e-4。
-* batch_size: 运行一个batch大小，默认为64。
-* epochs: 训练轮次，默认为5。
-* save_dir: 训练保存模型的文件路径。
-* init_from_ckpt: 恢复模型训练的断点路径。
+* `vocab_path`: 词汇表文件路径。
+* `use_gpu`: 是否使用GPU进行训练， 默认为`False`。
+* `network_name`: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
+* `lr`: 学习率， 默认为5e-4。
+* `batch_size`: 运行一个batch大小，默认为64。
+* `epochs`: 训练轮次，默认为5。
+* `save_dir`: 训练保存模型的文件路径。
+* `init_from_ckpt`: 恢复模型训练的断点路径。
 
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。
@@ -132,13 +136,17 @@ checkpoints/
 ### 模型预测
 
 启动预测：
-```shell
-# CPU启动
-python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --params_path=checkpoints/final.pdparams
 
-# GPU启动
-# CUDA_VSIBLE_DEVICES指定想要利用的GPU卡号，可以是单卡，也可以多卡
-# CUDA_VISIBLE_DEVICES=0 python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network_name=bilstm --params_path='./checkpoints/final.pdparams'
+CPU启动：
+
+```shell
+python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --params_path=checkpoints/final.pdparams
+```
+
+GPU启动：
+
+```shell
+CUDA_VISIBLE_DEVICES=0 python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network_name=bilstm --params_path='./checkpoints/final.pdparams'
 ```
 
 将待预测数据分词完毕后，如以下示例：
