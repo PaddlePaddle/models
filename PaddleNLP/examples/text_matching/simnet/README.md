@@ -1,4 +1,4 @@
-# 使用传统SimNet完成pointwise文本匹配任务
+# 使用SimNet完成pointwise文本匹配任务
 
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，

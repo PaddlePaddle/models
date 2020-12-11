@@ -320,7 +320,7 @@ def do_train(args):
         ])
 
     criterion = paddle.nn.loss.CrossEntropyLoss()
-    metric = paddle.metric.Accuracy(name='acc_accumulation')
+    metric = paddle.metric.Accuracy()
 
     global_step = 0
     tic_train = time.time()

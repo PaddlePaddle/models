@@ -26,4 +26,4 @@ pairwise，每一个样本通常由三个文本组成（query，positive_title, 
 
 ## Pretrained Model (PTMs)
 
-[SentenceBert](./sentence_bert) 展示了如何使用以ERNIE为代表的模型Fine-tune完成pointwise文本匹配任务。
+[Sentence Transformers](./sentence_transformers) 展示了如何使用以ERNIE为代表的模型Fine-tune完成pointwise文本匹配任务。
