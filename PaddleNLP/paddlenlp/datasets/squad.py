@@ -66,7 +66,7 @@ class InputFeatures(object):
 
 
 class SQuAD(Dataset):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    MODE_INFO = collections.namedtuple('MODE_INFO', ('file', 'md5'))
 
     DEV_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v2.0.json'
     TRAIN_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v2.0.json'
@@ -74,20 +74,20 @@ class SQuAD(Dataset):
     DEV_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v1.1.json'
     TRAIN_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v1.1.json'
 
-    SEGMENTS = {
+    MODES = {
         '1.1': {
-            'train': SEGMENT_INFO(
+            'train': MODE_INFO(
                 os.path.join('v1', 'train-v1.1.json'),
                 '981b29407e0affa3b1b156f72073b945'),
-            'dev': SEGMENT_INFO(
+            'dev': MODE_INFO(
                 os.path.join('v1', 'dev-v1.1.json'),
                 '3e85deb501d4e538b6bc56f786231552')
         },
         '2.0': {
-            'train': SEGMENT_INFO(
+            'train': MODE_INFO(
                 os.path.join('v2', 'train-v2.0.json'),
                 '62108c273c268d70893182d5cf8df740'),
-            'dev': SEGMENT_INFO(
+            'dev': MODE_INFO(
                 os.path.join('v2', 'dev-v2.0.json'),
                 '246adae8b7002f8679c027697b0b7cf8')
         }
@@ -95,16 +95,16 @@ class SQuAD(Dataset):
 
     def __init__(self,
                  tokenizer,
-                 segment='train',
+                 mode='train',
                  version_2_with_negative=True,
-                 root=None,
+                 data_file=None,
                  doc_stride=128,
                  max_query_length=64,
                  max_seq_length=512,
                  **kwargs):
 
         self.version_2_with_negative = version_2_with_negative
-        self._get_data(root, segment, **kwargs)
+        self._get_data(data_file, mode, **kwargs)
         self.tokenizer = tokenizer
         self.doc_stride = doc_stride
         self.max_query_length = max_query_length
@@ -112,7 +112,7 @@ class SQuAD(Dataset):
 
         self._transform_func = None
 
-        if segment == 'train':
+        if mode == 'train':
             self.is_training = True
         else:
             self.is_training = False
@@ -126,22 +126,22 @@ class SQuAD(Dataset):
             max_query_length=self.max_query_length,
             max_seq_length=self.max_seq_length)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, data_file, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'SQuAD')
         if self.version_2_with_negative:
-            filename, data_hash = self.SEGMENTS['2.0'][segment]
+            filename, data_hash = self.MODES['2.0'][mode]
         else:
-            filename, data_hash = self.SEGMENTS['1.1'][segment]
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+            filename, data_hash = self.MODES['1.1'][mode]
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
-            if segment == 'train':
+            if mode == 'train':
                 if self.version_2_with_negative:
                     fullname = get_path_from_url(
                         self.TRAIN_DATA_URL_V2,
@@ -150,7 +150,7 @@ class SQuAD(Dataset):
                     fullname = get_path_from_url(
                         self.TRAIN_DATA_URL_V1,
                         os.path.join(default_root, 'v1'))
-            elif segment == 'dev':
+            elif mode == 'dev':
                 if self.version_2_with_negative:
                     fullname = get_path_from_url(
                         self.DEV_DATA_URL_V2, os.path.join(default_root, 'v2'))

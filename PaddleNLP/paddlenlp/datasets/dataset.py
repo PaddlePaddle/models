@@ -40,17 +40,17 @@ def get_datasets(cls, *args, **kwargs):
         .. code-block:: python
             from paddlenlp.datasets import GlueQNLI
             train_dataset, dev_dataset, test_dataset = GlueQNLI.get_datasets(['train', 'dev', 'test'])
-            train_dataset, dev_dataset, test_dataset = GlueQNLI.get_datasets(segment=['train', 'dev', 'test'])
+            train_dataset, dev_dataset, test_dataset = GlueQNLI.get_datasets(mode=['train', 'dev', 'test'])
             train_dataset = GlueQNLI.get_datasets('train')
             train_dataset = GlueQNLI.get_datasets(['train'])
-            train_dataset = GlueQNLI.get_datasets(segment='train')
+            train_dataset = GlueQNLI.get_datasets(mode='train')
     """
     if not args and not kwargs:
         try:
-            args = cls.SEGMENTS.keys()
+            args = cls.MODES.keys()
         except:
             raise AttributeError(
-                'Dataset must have SEGMENTS attridute to use get_dataset if configs is None.'
+                'Dataset must have MODES attridute to use get_dataset if configs is None.'
             )
 
         datasets = tuple(MapDatasetWrapper(cls(arg)) for arg in args)

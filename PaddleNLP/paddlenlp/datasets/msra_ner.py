@@ -29,36 +29,36 @@ __all__ = ['MSRA_NER']
 class MSRA_NER(TSVDataset):
     URL = "https://bj.bcebos.com/paddlehub-dataset/msra_ner.tar.gz"
     MD5 = None
-    SEGMENT_INFO = collections.namedtuple(
-        'SEGMENT_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    MODE_INFO = collections.namedtuple(
+        'MODE_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
+    MODES = {
+        'train': MODE_INFO(
             os.path.join('msra_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
             (0, 1),
             1, ),
-        'dev': SEGMENT_INFO(
+        'dev': MODE_INFO(
             os.path.join('msra_ner', 'dev.tsv'),
             'ec772f3ba914bca5269f6e785bb3375d',
             (0, 1),
             1, ),
-        'test': SEGMENT_INFO(
+        'test': MODE_INFO(
             os.path.join('msra_ner', 'test.tsv'),
             '2f27ae68b5f61d6553ffa28bb577c8a7',
             (0, 1),
             1, ),
     }
 
-    def __init__(self, segment='train', root=None, **kwargs):
+    def __init__(self, mode='train', data_file=None, **kwargs):
         default_root = os.path.join(DATA_HOME, 'msra')
-        filename, data_hash, field_indices, num_discard_samples = self.SEGMENTS[
-            segment]
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+        filename, data_hash, field_indices, num_discard_samples = self.MODES[
+            mode]
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))

@@ -38,44 +38,44 @@ class LCQMC(TSVDataset):
 
     URL = "https://bj.bcebos.com/paddlehub-dataset/lcqmc.tar.gz"
     MD5 = "62a7ba36f786a82ae59bbde0b0a9af0c"
-    SEGMENT_INFO = collections.namedtuple(
-        'SEGMENT_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    MODE_INFO = collections.namedtuple(
+        'MODE_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
+    MODES = {
+        'train': MODE_INFO(
             os.path.join('lcqmc', 'train.tsv'),
             '2193c022439b038ac12c0ae918b211a1', (0, 1, 2), 1),
-        'dev': SEGMENT_INFO(
+        'dev': MODE_INFO(
             os.path.join('lcqmc', 'dev.tsv'),
             'c5dcba253cb4105d914964fd8b3c0e94', (0, 1, 2), 1),
-        'test': SEGMENT_INFO(
+        'test': MODE_INFO(
             os.path.join('lcqmc', 'test.tsv'),
             '8f4b71e15e67696cc9e112a459ec42bd', (0, 1, 2), 1)
     }
 
     def __init__(self,
-                 segment='train',
-                 root=None,
+                 mode='train',
+                 data_file=None,
                  return_all_fields=False,
                  **kwargs):
         if return_all_fields:
-            segments = copy.deepcopy(self.__class__.SEGMENTS)
-            segment_info = list(segments[segment])
-            segment_info[2] = None
-            segments[segment] = self.SEGMENT_INFO(*segment_info)
-            self.SEGMENTS = segments
+            segments = copy.deepcopy(self.__class__.MODES)
+            mode_info = list(modes[mode])
+            mode_info[2] = None
+            modes[mode] = self.MODE_INFO(*mode_info)
+            self.MODES = segments
 
-        self._get_data(root, segment, **kwargs)
+        self._get_data(data_file, mode, **kwargs)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, data_file, mode, **kwargs):
         default_root = DATA_HOME
-        filename, data_hash, field_indices, num_discard_samples = self.SEGMENTS[
-            segment]
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+        filename, data_hash, field_indices, num_discard_samples = self.MODES[
+            mode]
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))

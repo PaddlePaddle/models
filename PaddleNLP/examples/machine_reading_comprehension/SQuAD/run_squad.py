@@ -116,11 +116,11 @@ def do_train(args):
     train_dataset = ppnlp.datasets.SQuAD(
         tokenizer=tokenizer,
         doc_stride=args.doc_stride,
-        root=root,
+        data_file=root,
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        segment="train")
+        mode="train")
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_dataset, batch_size=args.batch_size, shuffle=True)
@@ -142,11 +142,11 @@ def do_train(args):
     dev_dataset = ppnlp.datasets.SQuAD(
         tokenizer=tokenizer,
         doc_stride=args.doc_stride,
-        root=root,
+        data_file=root,
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        segment="dev")
+        mode="dev")
 
     dev_batch_sampler = paddle.io.BatchSampler(
         dev_dataset, batch_size=args.batch_size, shuffle=False)

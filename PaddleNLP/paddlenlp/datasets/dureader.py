@@ -38,24 +38,24 @@ class DuReaderExample(object):
 
 
 class DuReader(SQuAD):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    MODE_INFO = collections.namedtuple('MODE_INFO', ('file', 'md5'))
 
     DATA_URL = 'https://dataset-bj.cdn.bcebos.com/dureader/dureader_preprocessed.zip'
 
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    MODES = {
+        'train': MODE_INFO(
             os.path.join('preprocessed', 'trainset', 'zhidao.train.json'),
             None),
-        'dev': SEGMENT_INFO(
+        'dev': MODE_INFO(
             os.path.join('preprocessed', 'devset', 'zhidao.dev.json'), None),
-        'test': SEGMENT_INFO(
+        'test': MODE_INFO(
             os.path.join('preprocessed', 'testset', 'zhidao.test.json'), None)
     }
 
     def __init__(self,
                  tokenizer,
-                 segment='train',
-                 root=None,
+                 mode='train',
+                 data_file=None,
                  doc_stride=128,
                  max_query_length=64,
                  max_seq_length=512,
@@ -63,24 +63,24 @@ class DuReader(SQuAD):
 
         super(DuReader, self).__init__(
             tokenizer=tokenizer,
-            segment=segment,
-            root=root,
+            mode=mode,
+            data_file=data_file,
             doc_stride=doc_stride,
             max_query_length=max_query_length,
             max_seq_length=max_seq_length,
             **kwargs)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, data_file, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'DuReader')
 
-        filename, data_hash = self.SEGMENTS[segment]
+        filename, data_hash = self.MODES[mode]
 
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
@@ -169,27 +169,27 @@ class DuReader(SQuAD):
 
 
 class DuReaderRobust(SQuAD):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    MODE_INFO = collections.namedtuple('MODE_INFO', ('file', 'md5'))
 
     DATA_URL = 'https://dataset-bj.cdn.bcebos.com/qianyan/dureader_robust-data.tar.gz'
 
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    MODES = {
+        'train': MODE_INFO(
             os.path.join('dureader_robust-data', 'train.json'),
             '800a3dcb742f9fdf9b11e0a83433d4be'),
-        'dev': SEGMENT_INFO(
+        'dev': MODE_INFO(
             os.path.join('dureader_robust-data', 'dev.json'),
             'ae73cec081eaa28a735204c4898a2222'),
-        'test': SEGMENT_INFO(
+        'test': MODE_INFO(
             os.path.join('dureader_robust-data', 'test.json'),
             'e0e8aa5c7b6d11b6fc3935e29fc7746f')
     }
 
     def __init__(self,
                  tokenizer,
-                 segment='train',
+                 mode='train',
                  version_2_with_negative=True,
-                 root=None,
+                 data_file=None,
                  doc_stride=128,
                  max_query_length=64,
                  max_seq_length=512,
@@ -197,25 +197,25 @@ class DuReaderRobust(SQuAD):
 
         super(DuReaderRobust, self).__init__(
             tokenizer=tokenizer,
-            segment=segment,
+            mode=mode,
             version_2_with_negative=False,
-            root=root,
+            data_file=data_file,
             doc_stride=doc_stride,
             max_query_length=max_query_length,
             max_seq_length=max_seq_length,
             **kwargs)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, data_file, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'DuReader')
 
-        filename, data_hash = self.SEGMENTS[segment]
+        filename, data_hash = self.MODES[mode]
 
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
@@ -226,45 +226,45 @@ class DuReaderRobust(SQuAD):
 
 
 class DuReaderYesNo(Dataset):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    MODE_INFO = collections.namedtuple('MODE_INFO', ('file', 'md5'))
 
     DATA_URL = 'https://dataset-bj.cdn.bcebos.com/qianyan/dureader_yesno-data.tar.gz'
 
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    MODES = {
+        'train': MODE_INFO(
             os.path.join('dureader_yesno-data', 'train.json'),
             'c469a0ef3f975cfd705e3553ddb27cc1'),
-        'dev': SEGMENT_INFO(
+        'dev': MODE_INFO(
             os.path.join('dureader_yesno-data', 'dev.json'),
             'c38544f8b5a7b567492314e3232057b5'),
-        'test': SEGMENT_INFO(
+        'test': MODE_INFO(
             os.path.join('dureader_yesno-data', 'test.json'),
             '1c7a1a3ea5b8992eeaeea017fdc2d55f')
     }
 
-    def __init__(self, segment='train', root=None, **kwargs):
+    def __init__(self, mode='train', data_file=None, **kwargs):
 
-        self._get_data(root, segment, **kwargs)
+        self._get_data(data_file, mode, **kwargs)
         self._transform_func = None
 
-        if segment == 'train':
+        if mode == 'train':
             self.is_training = True
         else:
             self.is_training = False
 
         self._read()
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, data_file, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'DuReader')
 
-        filename, data_hash = self.SEGMENTS[segment]
+        filename, data_hash = self.MODES[mode]
 
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
+        fullname = os.path.join(
+            default_root, filename) if data_file is None else os.path.join(
+                os.path.expanduser(data_file), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
+            if data_file is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
