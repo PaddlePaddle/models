@@ -170,41 +170,29 @@ class SamplerHelper(object):
 
         return type(self)(self.data_source, _impl)
 
-    def batch(self,
-              batch_size,
-              drop_last=False,
-              batch_size_fn=None,
-              cmp_fn=None):
+    def batch(self, batch_size, drop_last=False, batch_size_fn=None, key=None):
         """
         To produce a BatchSampler.
         Args:
             batch_size (int): Batch size.
             drop_last (bool): Whether to drop the last mini batch. Default:
                 False.
-            batch_size_fn (callable, optional): Return the state of mini batch
-                so far. The argument should be `idx`, `len(minibatch)`,
-                `size_so_far` and `data_source`. Default: None.
-            cmp_fn (callable, optional): By comparing `size_so_far` and
-                `batch_size`, return whether the current mini batch has formed
-                a complete batch. The return value `0` means `minibatch` could
-                be yielded, and the return value `1` means `minibatch[:-1]`
-                could be yielded, and the return value -1 means `minibatch`
-                should be added more samples. Default: None.
+            batch_size_fn (callable, optional): Return the size of mini batch
+                so far. Actually, the returned value can be anything and would
+                used as argument size_so_far in `key`. If None, it would return
+                the length of mini match. Default: None.
+            key (callable, optional): Return what to be compared with
+                `batch_size`. If None, only the size of mini batch so far would
+                be compared with `batch_size`. Default: None.
         Returns:
             SamplerHelper
         """
-
-        def _cmp_fn(size_so_far, batch_size, minibatch_len):
-            if size_so_far == batch_size:
-                return 0
-            elif size_so_far > batch_size:
-                return 1
-            return -1
+        _key = lambda size_so_far, minibatch_len: size_so_far
 
         ori_batch_size_fn = batch_size_fn
         if batch_size_fn is None:
             batch_size_fn = lambda new, count, sofar, data_source: count
-        cmp_fn = _cmp_fn if cmp_fn is None else cmp_fn
+        key = _key if key is None else key
 
         def _impl():
             data_source = self.data_source
@@ -214,10 +202,10 @@ class SamplerHelper(object):
                 size_so_far = batch_size_fn(idx,
                                             len(minibatch), size_so_far,
                                             data_source)
-                if cmp_fn(size_so_far, batch_size, len(minibatch)) == 0:
+                if key(size_so_far, len(minibatch)) == batch_size:
                     yield minibatch
                     minibatch, size_so_far = [], 0
-                elif cmp_fn(size_so_far, batch_size, len(minibatch)) == 1:
+                elif key(size_so_far, len(minibatch)) > batch_size:
                     if len(minibatch) == 1:
                         raise ValueError(
                             "Please increase the value of `batch_size`, or limit the max length of batch."
