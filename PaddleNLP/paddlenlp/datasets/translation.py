@@ -142,7 +142,7 @@ class TranslationDataset(paddle.io.Dataset):
         if not os.path.exists(root):
             os.makedirs(root)
             print("IWSLT will be downloaded at ", root)
-            get_path_from_url(self.URL, root)
+            get_path_from_url(cls.URL, root)
             print("Downloaded success......")
         else:
             filename_list = [
@@ -155,7 +155,7 @@ class TranslationDataset(paddle.io.Dataset):
                 if not os.path.exists(file_path):
                     print(
                         "The dataset is incomplete and will be re-downloaded.")
-                    get_path_from_url(self.URL, root)
+                    get_path_from_url(cls.URL, root)
                     print("Downloaded success......")
                     break
         return data_dir
@@ -245,13 +245,13 @@ class IWSLT15(TranslationDataset):
     eos_token = '</s>'
     dataset_dirname = "iwslt15.en-vi"
 
-    def __init__(self, segment='train', root=None, transform_func=None):
+    def __init__(self, mode='train', root=None, transform_func=None):
         # Input check
         segment_select = ('train', 'dev', 'test')
-        if segment not in segment_select:
+        if mode not in segment_select:
             raise TypeError(
                 '`train`, `dev` or `test` is supported but `{}` is passed in'.
-                format(segment))
+                format(mode))
         if transform_func is not None:
             if len(transform_func) != 2:
                 raise ValueError("`transform_func` must have length of two for"
@@ -259,7 +259,7 @@ class IWSLT15(TranslationDataset):
         # Download data
         data_path = IWSLT15.get_data(root)
         dataset = setup_datasets(self.train_filenames, self.valid_filenames,
-                                 self.test_filenames, [segment], data_path)[0]
+                                 self.test_filenames, [mode], data_path)[0]
         self.data = dataset.data
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
