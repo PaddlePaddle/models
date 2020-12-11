@@ -15,10 +15,10 @@ class PTBDataset(Dataset):
     DATA_URL = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
     DATA_PATH = os.path.join('simple-examples', 'data')
 
-    def __init__(self, batch_size, num_steps, mode='train', data_file=None):
+    def __init__(self, batch_size, num_steps, mode='train', root=None):
         super(PTBDataset, self).__init__()
 
-        self._get_data(data_file=data_file, mode=mode)
+        self._get_data(root=root, mode=mode)
         train_data, valid_data, test_data = self.get_ptb_data(self.data_path)
         if mode == 'train':
             raw_data = train_data
@@ -35,10 +35,10 @@ class PTBDataset(Dataset):
         index = dist.get_rank()
         self.shard(num_shards=self.num_shards, index=index)
 
-    def _get_data(self, data_file, mode):
+    def _get_data(self, root, mode):
         default_root = os.path.join(DATA_HOME, 'lm')
-        self.data_path = os.path.join(
-            default_root, self.DATA_PATH) if data_file is None else data_file
+        self.data_path = os.path.join(default_root,
+                                      self.DATA_PATH) if root is None else root
         if not os.path.exists(self.data_path):
             path = get_path_from_url(self.DATA_URL, default_root)
             self.data_path = os.path.join(default_root, self.DATA_PATH)

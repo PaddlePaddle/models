@@ -118,7 +118,7 @@ def do_train(args):
 
     train_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
@@ -143,7 +143,7 @@ def do_train(args):
 
     dev_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
@@ -166,7 +166,7 @@ def do_train(args):
 
     test_ds = ppnlp.datasets.DuReaderRobust(
         tokenizer=tokenizer,
-        data_file=root,
+        root=root,
         doc_stride=args.doc_stride,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,

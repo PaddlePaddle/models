@@ -66,7 +66,7 @@ class InputFeatures(object):
 
 
 class SQuAD(Dataset):
-    MODE_INFO = collections.namedtuple('MODE_INFO', ('file', 'md5'))
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
 
     DEV_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v2.0.json'
     TRAIN_DATA_URL_V2 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v2.0.json'
@@ -74,20 +74,20 @@ class SQuAD(Dataset):
     DEV_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/dev-v1.1.json'
     TRAIN_DATA_URL_V1 = 'https://paddlenlp.bj.bcebos.com/datasets/squad/train-v1.1.json'
 
-    MODES = {
+    SPLITS = {
         '1.1': {
-            'train': MODE_INFO(
+            'train': META_INFO(
                 os.path.join('v1', 'train-v1.1.json'),
                 '981b29407e0affa3b1b156f72073b945'),
-            'dev': MODE_INFO(
+            'dev': META_INFO(
                 os.path.join('v1', 'dev-v1.1.json'),
                 '3e85deb501d4e538b6bc56f786231552')
         },
         '2.0': {
-            'train': MODE_INFO(
+            'train': META_INFO(
                 os.path.join('v2', 'train-v2.0.json'),
                 '62108c273c268d70893182d5cf8df740'),
-            'dev': MODE_INFO(
+            'dev': META_INFO(
                 os.path.join('v2', 'dev-v2.0.json'),
                 '246adae8b7002f8679c027697b0b7cf8')
         }
@@ -97,14 +97,14 @@ class SQuAD(Dataset):
                  tokenizer,
                  mode='train',
                  version_2_with_negative=True,
-                 data_file=None,
+                 root=None,
                  doc_stride=128,
                  max_query_length=64,
                  max_seq_length=512,
                  **kwargs):
 
         self.version_2_with_negative = version_2_with_negative
-        self._get_data(data_file, mode, **kwargs)
+        self._get_data(root, mode, **kwargs)
         self.tokenizer = tokenizer
         self.doc_stride = doc_stride
         self.max_query_length = max_query_length
@@ -126,18 +126,18 @@ class SQuAD(Dataset):
             max_query_length=self.max_query_length,
             max_seq_length=self.max_seq_length)
 
-    def _get_data(self, data_file, mode, **kwargs):
+    def _get_data(self, root, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'SQuAD')
         if self.version_2_with_negative:
-            filename, data_hash = self.MODES['2.0'][mode]
+            filename, data_hash = self.SPLITS['2.0'][mode]
         else:
-            filename, data_hash = self.MODES['1.1'][mode]
-        fullname = os.path.join(
-            default_root, filename) if data_file is None else os.path.join(
-                os.path.expanduser(data_file), filename)
+            filename, data_hash = self.SPLITS['1.1'][mode]
+        fullname = os.path.join(default_root,
+                                filename) if root is None else os.path.join(
+                                    os.path.expanduser(root), filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-            if data_file is not None:  # not specified, and no need to warn
+            if root is not None:  # not specified, and no need to warn
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))

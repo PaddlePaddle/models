@@ -47,10 +47,10 @@ def get_datasets(cls, *args, **kwargs):
     """
     if not args and not kwargs:
         try:
-            args = cls.MODES.keys()
+            args = cls.SPLITS.keys()
         except:
             raise AttributeError(
-                'Dataset must have MODES attridute to use get_dataset if configs is None.'
+                'Dataset must have SPLITS attridute to use get_dataset if configs is None.'
             )
 
         datasets = tuple(MapDatasetWrapper(cls(arg)) for arg in args)

@@ -48,7 +48,7 @@ def setup_datasets(train_filenames,
                    valid_filenames,
                    test_filenames,
                    data_select,
-                   data_file=None):
+                   root=None):
     # Input check
     target_select = ('train', 'dev', 'test')
     if isinstance(data_select, str):
@@ -58,7 +58,7 @@ def setup_datasets(train_filenames,
             'A subset of data selection {} is supported but {} is passed in'.
             format(target_select, data_select))
 
-    raw_data = get_raw_data(data_file, train_filenames, valid_filenames,
+    raw_data = get_raw_data(root, train_filenames, valid_filenames,
                             test_filenames, data_select)
 
     datasets = []
@@ -121,11 +121,11 @@ class TranslationDataset(paddle.io.Dataset):
         return len(self.data)
 
     @classmethod
-    def get_data(cls, data_file=None):
+    def get_data(cls, root=None):
         """
         Download dataset if any data file doesn't exist.
         Args:
-            data_file (str, optional): data directory to save dataset. If not
+            root (str, optional): data directory to save dataset. If not
                 provided, dataset will be saved in
                 `/root/.paddlenlp/datasets/machine_translation`. Default: None.
         Returns:
@@ -136,13 +136,13 @@ class TranslationDataset(paddle.io.Dataset):
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
-        if data_file is None:
-            data_file = os.path.join(DATA_HOME, 'machine_translation')
-            data_dir = os.path.join(data_file, cls.dataset_dirname)
-        if not os.path.exists(data_file):
-            os.makedirs(data_file)
-            print("IWSLT will be downloaded at ", data_file)
-            get_path_from_url(self.URL, data_file)
+        if root is None:
+            root = os.path.join(DATA_HOME, 'machine_translation')
+            data_dir = os.path.join(root, cls.dataset_dirname)
+        if not os.path.exists(root):
+            os.makedirs(root)
+            print("IWSLT will be downloaded at ", root)
+            get_path_from_url(cls.URL, root)
             print("Downloaded success......")
         else:
             filename_list = [
@@ -155,19 +155,19 @@ class TranslationDataset(paddle.io.Dataset):
                 if not os.path.exists(file_path):
                     print(
                         "The dataset is incomplete and will be re-downloaded.")
-                    get_path_from_url(self.URL, data_file)
+                    get_path_from_url(cls.URL, root)
                     print("Downloaded success......")
                     break
         return data_dir
 
     @classmethod
-    def get_vocab(cls, data_file=None):
+    def get_vocab(cls, root=None):
         """
         Load vocab from vocab files. It vocab files don't exist, the will
         be downloaded.
 
         Args:
-            data_file (str, optional): Data directory to save dataset. If not provided,
+            root (str, optional): Data directory to save dataset. If not provided,
                 dataset will be save in `/root/.paddlenlp/datasets/machine_translation`.
                 If vocab files exist, they won't be overwritten. Default: None.
         Returns:
@@ -179,7 +179,7 @@ class TranslationDataset(paddle.io.Dataset):
                 (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
 
         """
-        data_path = cls.get_data(data_file)
+        data_path = cls.get_data(root)
 
         # Get vocab_func
         src_file_path = os.path.join(data_path, cls.src_vocab_filename)
@@ -193,10 +193,10 @@ class TranslationDataset(paddle.io.Dataset):
         return (src_vocab, tgt_vocab)
 
     @classmethod
-    def get_default_transform_func(cls, data_file=None):
+    def get_default_transform_func(cls, root=None):
         """Get default transform function, which transforms raw data to id.
         Args:
-            data_file(str, optional): Data directory of dataset.
+            root(str, optional): Data directory of dataset.
         Returns:
             tuple: Two transform functions, for source and target data. 
         Examples:
@@ -210,7 +210,7 @@ class TranslationDataset(paddle.io.Dataset):
         src_text_vocab_transform = sequential_transforms(src_tokenizer)
         tgt_text_vocab_transform = sequential_transforms(tgt_tokenizer)
 
-        (src_vocab, tgt_vocab) = cls.get_vocab(data_file)
+        (src_vocab, tgt_vocab) = cls.get_vocab(root)
         src_text_transform = sequential_transforms(
             src_text_vocab_transform, vocab_func(src_vocab, cls.unk_token))
         tgt_text_transform = sequential_transforms(
@@ -245,7 +245,7 @@ class IWSLT15(TranslationDataset):
     eos_token = '</s>'
     dataset_dirname = "iwslt15.en-vi"
 
-    def __init__(self, mode='train', data_file=None, transform_func=None):
+    def __init__(self, mode='train', root=None, transform_func=None):
         # Input check
         segment_select = ('train', 'dev', 'test')
         if mode not in segment_select:
@@ -257,7 +257,7 @@ class IWSLT15(TranslationDataset):
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target")
         # Download data
-        data_path = IWSLT15.get_data(data_file)
+        data_path = IWSLT15.get_data(root)
         dataset = setup_datasets(self.train_filenames, self.valid_filenames,
                                  self.test_filenames, [mode], data_path)[0]
         self.data = dataset.data

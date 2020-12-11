@@ -116,7 +116,7 @@ def do_train(args):
     train_dataset = ppnlp.datasets.SQuAD(
         tokenizer=tokenizer,
         doc_stride=args.doc_stride,
-        data_file=root,
+        root=root,
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
@@ -142,7 +142,7 @@ def do_train(args):
     dev_dataset = ppnlp.datasets.SQuAD(
         tokenizer=tokenizer,
         doc_stride=args.doc_stride,
-        data_file=root,
+        root=root,
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
