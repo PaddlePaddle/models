@@ -25,6 +25,7 @@ import numpy as np
 #              p-B\002p-I\002r-B\002v-B\002v-I\002m-B\002m-I\002m-I\002ORG-B\002ORG-I\002n-B\002n-I\002
 CHAR_DELIMITER = "\002"
 
+
 class LacDataset(paddle.io.Dataset):
     """Load the dataset and convert all the texts to ids.
 
@@ -36,16 +37,16 @@ class LacDataset(paddle.io.Dataset):
             mode (str, optional): The load mode, "train", "test" or "infer". Defaults to 'train', meaning load the train dataset.
         """
 
-    def __init__(self,
-                 base_path,
-                 mode='train'):
+    def __init__(self, base_path, mode='train'):
         self.mode = mode
         self.base_path = base_path
         word_dict_path = os.path.join(self.base_path, 'word.dic')
         label_dict_path = os.path.join(self.base_path, 'tag.dic')
         word_rep_dict_path = os.path.join(self.base_path, 'q2b.dic')
-        self.word_vocab = self._load_kv_dict(word_dict_path, value_func=np.int64, reverse=True)
-        self.label_vocab = self._load_kv_dict(label_dict_path, value_func=np.int64, reverse=True)
+        self.word_vocab = self._load_kv_dict(
+            word_dict_path, value_func=np.int64, reverse=True)
+        self.label_vocab = self._load_kv_dict(
+            label_dict_path, value_func=np.int64, reverse=True)
         self.word_replace_dict = self._load_kv_dict(word_rep_dict_path)
 
         # Calculate vocab size and labels number, note: vocab value strats from 0.
@@ -68,8 +69,10 @@ class LacDataset(paddle.io.Dataset):
         if self.mode == "infer":
             return [self.word_ids[index], len(self.word_ids[index])]
         else:
-            return [self.word_ids[index], len(self.word_ids[index]), self.label_ids[index]]
-
+            return [
+                self.word_ids[index], len(self.word_ids[index]),
+                self.label_ids[index]
+            ]
 
     def _read_file(self):
         self.word_ids = []
@@ -106,11 +109,12 @@ class LacDataset(paddle.io.Dataset):
 
                 self.total += 1
 
-    def _load_kv_dict(self,dict_path,
-                    delimiter="\t",
-                    key_func=None,
-                    value_func=None,
-                    reverse=False):
+    def _load_kv_dict(self,
+                      dict_path,
+                      delimiter="\t",
+                      key_func=None,
+                      value_func=None,
+                      reverse=False):
         """
         Load key-value dict from file
         """
@@ -132,7 +136,11 @@ class LacDataset(paddle.io.Dataset):
             vocab[key] = value
         return vocab
 
-    def _convert_tokens_to_ids(self,tokens, vocab, oov_replace=None, token_replace=None):
+    def _convert_tokens_to_ids(self,
+                               tokens,
+                               vocab,
+                               oov_replace=None,
+                               token_replace=None):
         """convert tokens to token indexs"""
         token_ids = []
         oov_replace_token = vocab.get(oov_replace) if oov_replace else None
@@ -144,7 +152,8 @@ class LacDataset(paddle.io.Dataset):
 
         return token_ids
 
-def parse_lac_result(words, preds, lengths, word_vocab,label_vocab):
+
+def parse_lac_result(words, preds, lengths, word_vocab, label_vocab):
     """ parse padding result """
     batch_out = []
     id2word_dict = dict(zip(word_vocab.values(), word_vocab.keys()))

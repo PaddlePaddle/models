@@ -28,21 +28,13 @@ from model import BiGruCrf
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--base_path", type=str, default=None,
-                    help="The folder where the dataset is located.")
-parser.add_argument("--init_checkpoint", type=str, default=None,
-                    help="Path to init model.")
-parser.add_argument("--batch_size", type=int, default=300,
-                    help="The number of sequences contained in a mini-batch.")
-parser.add_argument("--max_seq_len", type=int, default=64,
-                    help="Number of words of the longest seqence.")
-parser.add_argument("--use_gpu", type=ast.literal_eval,
-                    default=True, help="If set, use GPU for training.")
-parser.add_argument("--emb_dim", type=int,
-                    default=128,
-                    help="The dimension in which a word is embedded.")
-parser.add_argument("--hidden_size", type=int, default=128,
-                    help="The number of hidden nodes in the GRU layer.")
+parser.add_argument("--base_path", type=str, default=None, help="The folder where the dataset is located.")
+parser.add_argument("--init_checkpoint", type=str, default=None, help="Path to init model.")
+parser.add_argument("--batch_size", type=int, default=300, help="The number of sequences contained in a mini-batch.")
+parser.add_argument("--max_seq_len", type=int, default=64, help="Number of words of the longest seqence.")
+parser.add_argument("--use_gpu", type=ast.literal_eval, default=True, help="If set, use GPU for training.")
+parser.add_argument("--emb_dim", type=int, default=128, help="The dimension in which a word is embedded.")
+parser.add_argument("--hidden_size", type=int, default=128, help="The number of hidden nodes in the GRU layer.")
 args = parser.parse_args()
 # yapf: enable
 
@@ -52,12 +44,10 @@ def evaluate(args):
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     # create dataset.
-    test_dataset = LacDataset(
-        args.base_path, mode='test')
-    
+    test_dataset = LacDataset(args.base_path, mode='test')
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=0),  # word_ids
-        Stack(),    # length
+        Stack(),  # length
         Pad(axis=0, pad_val=0),  # label_ids
     ): fn(samples)
 

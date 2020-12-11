@@ -20,7 +20,7 @@ import argparse
 import numpy as np
 import paddle
 
-from data import  LacDataset
+from data import LacDataset
 from model import BiGruCrf
 from paddlenlp.data import Pad, Tuple, Stack
 from paddlenlp.layers.crf import LinearChainCrfLoss, ViterbiDecoder
@@ -51,14 +51,12 @@ def train(args):
         paddle.set_device("cpu")
 
     # create dataset.
-    train_dataset = LacDataset(
-        args.base_path, mode='train')
-    test_dataset = LacDataset(
-        args.base_path, mode='test')
-    
+    train_dataset = LacDataset(args.base_path, mode='train')
+    test_dataset = LacDataset(args.base_path, mode='test')
+
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=0),  # word_ids
-        Stack(),    # length
+        Stack(),  # length
         Pad(axis=0, pad_val=0),  # label_ids
     ): fn(samples)
 
@@ -104,7 +102,7 @@ def train(args):
         model.load(args.init_checkpoint)
 
     # Start training
-    callback = paddle.callbacks.ProgBarLogger(log_freq=10,verbose=3)
+    callback = paddle.callbacks.ProgBarLogger(log_freq=10, verbose=3)
     model.fit(train_data=train_loader,
               eval_data=test_loader,
               batch_size=args.batch_size,

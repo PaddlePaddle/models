@@ -25,7 +25,6 @@ from paddlenlp.metrics import ChunkEvaluator
 from data import LacDataset, parse_lac_result
 from model import BiGruCrf
 
-
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--base_path", type=str, default=None, help="The folder where the dataset is located.")
@@ -44,12 +43,11 @@ def infer(args):
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     # create dataset.
-    infer_dataset = LacDataset(
-        args.base_path, mode='infer')
+    infer_dataset = LacDataset(args.base_path, mode='infer')
 
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=0),  # word_ids
-        Stack(),    # length
+        Stack(),  # length
     ): fn(samples)
 
     # Create sampler for dataloader
@@ -82,7 +80,8 @@ def infer(args):
         [pred for batch_pred in crf_decodes for pred in batch_pred])
 
     results = parse_lac_result(infer_dataset.word_ids, preds, lengths,
-                               infer_dataset.word_vocab, infer_dataset.label_vocab)
+                               infer_dataset.word_vocab,
+                               infer_dataset.label_vocab)
 
     sent_tags = []
     for sent, tags in results:
