@@ -838,7 +838,7 @@ class AdaptiveEmbedding(nn.Layer):
                 if indices_i.numel() == 0:
                     continue
 
-                inp_i = paddle.index_select(inp_flat, indices_i, 0) - l_idx
+                inp_i = paddle.gather(inp_flat, indices_i, axis=0) - l_idx
                 emb_i = self.emb_layers[i](inp_i)
                 emb_i = F.linear(emb_i, self.emb_projs[i])
 
