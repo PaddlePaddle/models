@@ -23,7 +23,7 @@ class CrossEntropyCriterion(nn.Layer):
     def __init__(self):
         super(CrossEntropyCriterion, self).__init__()
 
-    def forward(self, predict, trg_mask, label):
+    def forward(self, predict, label, trg_mask):
         cost = F.softmax_with_cross_entropy(
             logits=predict, label=label, soft_label=False)
         cost = paddle.squeeze(cost, axis=[2])
@@ -215,8 +215,8 @@ class Seq2SeqAttnModel(nn.Layer):
 
         predict = self.decoder(trg, decoder_initial_states, encoder_output,
                                encoder_padding_mask)
-        trg_mask = (trg != self.eos_id).astype(paddle.get_default_dtype())
-        return predict, trg_mask
+        # trg_mask = (trg != self.eos_id).astype(paddle.get_default_dtype())
+        return predict  #, trg_mask
 
 
 class Seq2SeqAttnInferModel(Seq2SeqAttnModel):
