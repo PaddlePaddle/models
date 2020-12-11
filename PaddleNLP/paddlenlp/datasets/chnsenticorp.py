@@ -37,38 +37,38 @@ class ChnSentiCorp(TSVDataset):
 
     URL = "https://bj.bcebos.com/paddlehub-dataset/chnsenticorp.tar.gz"
     MD5 = "fbb3217aeac76a2840d2d5cd19688b07"
-    SEGMENT_INFO = collections.namedtuple(
-        'SEGMENT_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    META_INFO = collections.namedtuple(
+        'META_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
+    SPLITS = {
+        'train': META_INFO(
             os.path.join('chnsenticorp', 'train.tsv'),
             '689360c4a4a9ce8d8719ed500ae80907', (1, 0), 1),
-        'dev': SEGMENT_INFO(
+        'dev': META_INFO(
             os.path.join('chnsenticorp', 'dev.tsv'),
             '05e4b02561c2a327833e05bbe8156cec', (1, 0), 1),
-        'test': SEGMENT_INFO(
+        'test': META_INFO(
             os.path.join('chnsenticorp', 'test.tsv'),
             '917dfc6fbce596bb01a91abaa6c86f9e', (1, 0), 1)
     }
 
     def __init__(self,
-                 segment='train',
+                 mode='train',
                  root=None,
                  return_all_fields=False,
                  **kwargs):
         if return_all_fields:
-            segments = copy.deepcopy(self.__class__.SEGMENTS)
-            segment_info = list(segments[segment])
-            segment_info[2] = None
-            segments[segment] = self.SEGMENT_INFO(*segment_info)
-            self.SEGMENTS = segments
+            splits = copy.deepcopy(self.__class__.SPLITS)
+            mode_info = list(splits[mode])
+            mode_info[2] = None
+            splits[mode] = self.META_INFO(*mode_info)
+            self.SPLITS = splits
 
-        self._get_data(root, segment, **kwargs)
+        self._get_data(root, mode, **kwargs)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, root, mode, **kwargs):
         default_root = DATA_HOME
-        filename, data_hash, field_indices, num_discard_samples = self.SEGMENTS[
-            segment]
+        filename, data_hash, field_indices, num_discard_samples = self.SPLITS[
+            mode]
         fullname = os.path.join(default_root,
                                 filename) if root is None else os.path.join(
                                     os.path.expanduser(root), filename)

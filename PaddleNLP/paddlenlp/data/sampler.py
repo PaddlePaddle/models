@@ -177,13 +177,16 @@ class SamplerHelper(object):
             batch_size (int): Batch size.
             drop_last (bool): Whether to drop the last mini batch. Default:
                 False.
-            batch_size_fn (callable, optional): Return the size of mini batch
-                so far. Actually, the returned value can be anything and would
-                used as argument size_so_far in `key`. If None, it would return
-                the length of mini match. Default: None.
-            key (callable, optional): Return what to be compared with
-                `batch_size`. If None, only the size of mini batch so far would
-                be compared with `batch_size`. Default: None.
+            batch_size_fn (callable, optional): It accepts four arguments: 
+                index of data source, the length of minibatch, the size of
+                minibatch so far and data source, and it returns the size of
+                mini batch so far. Actually, the returned value can be anything
+                and would used as argument size_so_far in `key`. If None, it
+                would return the length of mini match. Default: None.
+            key (callable, optional): It accepts the size of minibatch so far
+                and the length of minibatch, and returns what to be compared
+                with `batch_size`. If None, only the size of mini batch so far
+                would be compared with `batch_size`. Default: None.
         Returns:
             SamplerHelper
         """
