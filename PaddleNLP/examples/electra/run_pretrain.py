@@ -413,13 +413,12 @@ def do_train(args):
     pretrained_models = list(tokenizer_class.pretrained_init_configuration.keys(
     ))
     if args.model_name_or_path in pretrained_models:
-        tokenizer = tokenizer_class.from_pretrained("./")
-        #tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
+        tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
         generator = ElectraGenerator(
-            ElectraModel(**ElectraModel.pretrained_init_configuration[
+            ElectraModel(**model_class.pretrained_init_configuration[
                 args.model_name_or_path + "-generator"]))
         discriminator = ElectraDiscriminator(
-            ElectraModel(**ElectraModel.pretrained_init_configuration[
+            ElectraModel(**model_class.pretrained_init_configuration[
                 args.model_name_or_path + "-discriminator"]))
         model = model_class(generator, discriminator)
     else:

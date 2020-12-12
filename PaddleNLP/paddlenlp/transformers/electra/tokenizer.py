@@ -48,11 +48,11 @@ class ElectraTokenizer(PretrainedTokenizer):
     pretrained_resource_files_map = {
         "vocab_file": {
             "electra-small":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-small-vocab.txt",
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-small-vocab.txt",
             "electra-base":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-base-vocab.txt",
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-base-vocab.txt",
             "electra-large":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-large-vocab.txt",
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-large-vocab.txt",
             "chinese-electra-base":
             "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-base/vocab.txt",
             "chinese-electra-small":
