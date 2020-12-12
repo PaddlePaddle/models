@@ -14,8 +14,6 @@
 + ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie-tiny`)。
    其中`ernie`由12层Transformer网络组成，`ernie-tiny`由3层Transformer网络组成。
 + RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
-+ Electra([ELECTRA: Pre-training Text Encoders as Discriminators Rather Than Generators](https://arxiv.org/abs/2003.10555)), 支持hidden_size=256的`chinese-electra-discriminator-small`和
-  hidden_size=768的`chinese-electra-discriminator-base`
 
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
@@ -28,8 +26,6 @@
 | roberta-wwm-ext-large | 0.95250 | 0.95333 |
 | rbt3 | 0.92583 | 0.93250 |
 | rbtl3 | 0.9341 | 0.93583 |
-| chinese-electra-base | 0.94500 | 0.94500 |
-| chinese-electra-small | 0.92417 | 0.93417 |
 
 ## 快速开始
 
