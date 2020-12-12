@@ -28,6 +28,8 @@ src_vocab_fpath: "gen_data/wmt14_ende_data_bpe/vocab_all.bpe.33708"
 trg_vocab_fpath: "gen_data/wmt14_ende_data_bpe/vocab_all.bpe.33708"
 # The <bos>, <eos> and <unk> tokens in the dictionary.
 special_token: ["<s>", "<e>", "<unk>"]
+# The directory to store data.
+root: "./"
 
 # Whether to use cuda
 use_gpu: True

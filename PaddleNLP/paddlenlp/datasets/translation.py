@@ -1,6 +1,7 @@
 import os
 import io
 import collections
+import warnings
 
 from functools import partial
 import numpy as np
@@ -12,7 +13,7 @@ from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.utils.env import DATA_HOME
 from paddle.dataset.common import md5file
 
-__all__ = ['TranslationDataset', 'IWSLT15']
+__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14']
 
 
 def vocab_func(vocab, unk_token):
@@ -37,8 +38,8 @@ def get_default_tokenizer():
     """Only support split tokenizer
     """
 
-    def _split_tokenizer(x):
-        return x.split()
+    def _split_tokenizer(x, delimiter=None):
+        return x.split(delimiter)
 
     return _split_tokenizer
 
@@ -57,6 +58,10 @@ class TranslationDataset(paddle.io.Dataset):
     URL = None
     MD5 = None
     VOCAB_INFO = None
+    UNK_TOKEN = None
+    PAD_TOKEN = None
+    BOS_TOKEN = None
+    EOS_TOKEN = None
 
     def __init__(self, data):
         self.data = data
@@ -83,7 +88,8 @@ class TranslationDataset(paddle.io.Dataset):
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
-        default_root = os.path.join(DATA_HOME, 'machine_translation')
+        default_root = os.path.join(DATA_HOME, 'machine_translation',
+                                    cls.__name__)
         src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
             mode]
 
@@ -107,13 +113,13 @@ class TranslationDataset(paddle.io.Dataset):
                 if root is not None:  # not specified, and no need to warn
                     warnings.warn(
                         'md5 check failed for {}, download {} data to {}'.
-                        format(filename, self.__class__.__name__, default_root))
+                        format(filename, cls.__name__, default_root))
                 path = get_path_from_url(cls.URL, default_root, cls.MD5)
                 break
         return root if root is not None else default_root
 
     @classmethod
-    def build_vocab(cls, root=None):
+    def get_vocab(cls, root=None):
         """
         Load vocab from vocab files. It vocab files don't exist, the will
         be downloaded.
@@ -128,7 +134,7 @@ class TranslationDataset(paddle.io.Dataset):
         Examples:
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
-                (src_vocab, tgt_vocab) = IWSLT15.build_vocab()
+                (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
 
         """
         root = cls.get_data(root=root)
@@ -137,11 +143,19 @@ class TranslationDataset(paddle.io.Dataset):
         src_file_path = os.path.join(root, src_vocab_filename)
         tgt_file_path = os.path.join(root, tgt_vocab_filename)
 
-        src_vocab = Vocab.load_vocabulary(src_file_path, cls.UNK_TOKEN,
-                                          cls.BOS_TOKEN, cls.EOS_TOKEN)
+        src_vocab = Vocab.load_vocabulary(
+            filepath=src_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
 
-        tgt_vocab = Vocab.load_vocabulary(tgt_file_path, cls.UNK_TOKEN,
-                                          cls.BOS_TOKEN, cls.EOS_TOKEN)
+        tgt_vocab = Vocab.load_vocabulary(
+            filepath=tgt_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
         return (src_vocab, tgt_vocab)
 
     def read_raw_data(self, data_dir, mode):
@@ -182,7 +196,7 @@ class TranslationDataset(paddle.io.Dataset):
         src_text_vocab_transform = sequential_transforms(src_tokenizer)
         tgt_text_vocab_transform = sequential_transforms(tgt_tokenizer)
 
-        (src_vocab, tgt_vocab) = cls.build_vocab(root)
+        (src_vocab, tgt_vocab) = cls.get_vocab(root)
         src_text_transform = sequential_transforms(
             src_text_vocab_transform, vocab_func(src_vocab, cls.UNK_TOKEN))
         tgt_text_transform = sequential_transforms(
@@ -249,6 +263,55 @@ class IWSLT15(TranslationDataset):
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
+
+
+class WMT14(TranslationDataset):
+    """
+    """
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
+    SPLITS = {
+        'train': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "train.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "train.tok.bpe.33708.de"),
+            "3fed338a671328085a937449cd8601e0",
+            "9959f6eef859638bc1f2dfb4d8e5a8d4"),
+        'dev': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.de"),
+            "aa4228a4bedb6c45d67525fbfbcee75e",
+            "9b1eeaff43a6d5e78a381a9b03170501"),
+        'test': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "newstest2014.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "newstest2014.tok.bpe.33708.de"),
+            "c9403eacf623c6e2d9e5a1155bdff0b5",
+            "0058855b55e37c4acfcb8cffecba1050")
+    }
+    VOCAB_INFO = (os.path.join("WMT14.en-de", "vocab_all.bpe.33708"),
+                  os.path.join("WMT14.en-de", "vocab_all.bpe.33708"),
+                  "2fc775b7df37368e936a8e1f63846bb0",
+                  "2fc775b7df37368e936a8e1f63846bb0")
+    UNK_TOKEN = "<unk>"
+    BOS_TOKEN = "<s>"
+    EOS_TOKEN = "<e>"
+
+    MD5 = "c37fed22998182ff09d0f6ee0fcaedbb"
+
+    def __init__(self, mode="train", root=None, transform_func=None):
+        if mode not in ("train", "dev", "test"):
+            raise TypeError(
+                '`train`, `dev` or `test` is supported but `{}` is passed in'.
+                format(mode))
+        if transform_func is not None and len(transform_func) != 2:
+            if len(transform_func) != 2:
+                raise ValueError("`transform_func` must have length of two for"
+                                 "source and target.")
+
+        root = WMT14.get_data(root=root)
+        self.data = self.read_raw_data(root, mode)
+        if transform_func is not None:
+            self.data = [(transform_func[0](data[0]),
+                          transform_func[1](data[1])) for data in self.data]
+        super(WMT14, self).__init__(self.data)
 
 
 # For test, not API
