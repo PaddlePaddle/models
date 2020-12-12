@@ -28,8 +28,8 @@
 | roberta-wwm-ext-large | 0.95250 | 0.95333 |
 | rbt3 | 0.92583 | 0.93250 |
 | rbtl3 | 0.9341 | 0.93583 |
-| chinese-electra-discriminator-base | 0.94500 | 0.94500 |
-| chinese-electra-discriminator-small | 0.92417 | 0.93417 |
+| chinese-electra-base | 0.94500 | 0.94500 |
+| chinese-electra-small | 0.92417 | 0.93417 |
 
 ## 快速开始
 
@@ -72,7 +72,7 @@ python train.py --model_type ernie --model_name ernie-tiny --n_gpu 1 --save_dir 
 可支持配置的参数：
 
 * `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
-* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie-tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
+* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
    `model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`和`roberta-wwm-ext`。
 * `save_dir`：必选，保存训练模型的目录。
 * `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
