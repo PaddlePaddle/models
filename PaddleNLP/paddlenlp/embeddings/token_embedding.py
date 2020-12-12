@@ -24,8 +24,8 @@ from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import _get_sub_home, MODEL_HOME
 from paddlenlp.utils.log import logger
 from paddlenlp.data import Vocab, get_idx_from_word
-from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN, PAD_IDX, \
-                      UNK_IDX, EMBEDDING_NAME_LIST
+from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN,\
+                      EMBEDDING_NAME_LIST
 
 EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
 

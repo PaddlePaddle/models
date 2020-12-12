@@ -21,7 +21,20 @@ EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
 PAD_TOKEN = '[PAD]'
 UNK_TOKEN = '[UNK]'
 
-PAD_IDX = 0
-UNK_IDX = 1
-
-EMBEDDING_NAME_LIST = ["w2v.baidu_encyclopedia.target.word-word.dim300"]
+EMBEDDING_NAME_LIST = [
+    # baidu_encyclopedia
+    "w2v.baidu_encyclopedia.target.word-word.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-1.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-4.dim300",
+    "w2v.baidu_encyclopedia.target.bigram-char.dim300",
+    "w2v.baidu_encyclopedia.context.word-word.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-1.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-4.dim300",
+    # wikipedia
+    "w2v.wiki.target.bigram-char.dim300",
+    "w2v.wiki.target.word-char.dim300",
+    "w2v.wiki.target.word-word.dim300",
+    "w2v.wiki.target.word-bigram.dim300",
+]
