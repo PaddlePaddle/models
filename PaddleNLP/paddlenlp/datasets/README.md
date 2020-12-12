@@ -8,6 +8,7 @@
 | 序列标注| lexical_analysis_dataset | 词法分析数据集|[lexical_analysis](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/lexical_analysis) |
 | 序列标注| Conll05 | 语义角色标注数据集| paddle.text.datasets.Conll05st|
 | 序列标注| MSRA_NER | MSRA 命名实体识别数据集| paddlenlp.datasets.MSRA_NER|
+| 序列标注| express_ner | 快递单命名实体识别数据集| [express_ner](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/named_entity_recognition/express_ner/data)|
 | 机器翻译| IWSLT15 | IWSLT'15 English-Vietnamese data 英语-越南语翻译数据集| paddlenlp.datasets.IWSLT15|
 | 机器翻译| WMT | WMT EN-DE 英语-德语翻译数据集| paddlenlp.datasets|
 | 文本分类| CoLA | 单句分类任务，二分类，判断句子是否合法| paddlenlp.datasets.GlueCoLA|
