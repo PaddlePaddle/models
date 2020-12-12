@@ -118,7 +118,7 @@ class TranslationDataset(paddle.io.Dataset):
         return root if root is not None else default_root
 
     @classmethod
-    def build_vocab(cls, root=None):
+    def build_vocab(cls, root=None, reverse=False):
         """
         Load vocab from vocab files. It vocab files don't exist, the will
         be downloaded.
@@ -154,7 +154,9 @@ class TranslationDataset(paddle.io.Dataset):
             pad_token=cls.PAD_TOKEN,
             bos_token=cls.BOS_TOKEN,
             eos_token=cls.EOS_TOKEN)
-        return (src_vocab, tgt_vocab)
+        return (src_vocab._token_to_idx,
+                tgt_vocab._token_to_idx) if not reverse else (
+                    src_vocab._token_to_idx, tgt_vocab._idx_to_token)
 
     def read_raw_data(self, data_dir, mode):
         src_filename, tgt_filename, _, _ = self.SPLITS[mode]

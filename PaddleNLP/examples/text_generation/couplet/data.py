@@ -33,7 +33,7 @@ def create_train_loader(batch_size=128):
     pad_id = vocab[CoupletDataset.EOS_TOKEN]
 
     train_batch_sampler = SamplerHelper(train_ds).shuffle().batch(
-        batch_size=batch_size, drop_last=True).shard()
+        batch_size=batch_size).shard()
 
     train_loader = paddle.io.DataLoader(
         train_ds,
@@ -53,7 +53,7 @@ def create_infer_loader(batch_size=128):
     eos_id = vocab[CoupletDataset.EOS_TOKEN]
 
     test_batch_sampler = SamplerHelper(test_ds).batch(
-        batch_size=batch_size, drop_last=True).shard()
+        batch_size=batch_size).shard()
 
     test_loader = paddle.io.DataLoader(
         test_ds,
@@ -73,7 +73,7 @@ def prepare_input(insts, pad_id):
 
 
 class CoupletDataset(TranslationDataset):
-    URL = "https://bj.bcebos.com/paddlehub-dataset/couplet.tar.gz"
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz"
     SPLITS = {
         'train': TranslationDataset.META_INFO(
             os.path.join("couplet", "train_src.tsv"),
@@ -87,7 +87,7 @@ class CoupletDataset(TranslationDataset):
             "3bc3b300b19d170923edfa8491352951"),
         'test': TranslationDataset.META_INFO(
             os.path.join("couplet", "test_src.tsv"),
-            os.path.join("couplet", "test.tgt.tsv"),
+            os.path.join("couplet", "test_tgt.tsv"),
             "f0a7366dfa0acac884b9f4901aac2cc1",
             "56664bff3f2edfd7a751a55a689f90c2")
     }

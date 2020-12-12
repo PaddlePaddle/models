@@ -43,7 +43,7 @@ def do_predict(args):
 
     test_loader, vocab_size, pad_id, bos_id, eos_id = create_infer_loader(
         args.batch_size)
-    trg_idx2word = CoupletDataset.build_vocab(reverse=True)
+    trg_idx2word, _ = CoupletDataset.build_vocab(reverse=True)
 
     model = paddle.Model(
         Seq2SeqAttnInferModel(
@@ -51,7 +51,6 @@ def do_predict(args):
             args.hidden_size,
             args.hidden_size,
             args.num_layers,
-            args.dropout,
             bos_id=bos_id,
             eos_id=eos_id,
             beam_size=args.beam_size,
@@ -76,7 +75,7 @@ def do_predict(args):
                 for beam_idx, beam in enumerate(ins):
                     id_list = post_process_seq(beam, bos_id, eos_id)
                     word_list = [trg_idx2word[id] for id in id_list]
-                    sequence = " ".join(word_list) + "\n"
+                    sequence = "\x02".join(word_list) + "\n"
                     f.write(sequence)
                     break
 
