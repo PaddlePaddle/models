@@ -32,8 +32,7 @@ MODEL_CLASSES = {
     'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
     'roberta': (ppnlp.transformers.RobertaModel,
                 ppnlp.transformers.RobertaTokenizer),
-    # 'electra': (ppnlp.transformers.Electra,
-    #             ppnlp.transformers.ElectraTokenizer)
+    'electra': (ppnlp.transformers.Electra, ppnlp.transformers.ElectraTokenizer)
 }
 
 
