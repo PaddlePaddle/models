@@ -49,7 +49,6 @@ class LinearChainCrf(nn.Layer):
             dtype='float32')
         self.with_start_stop_tag = with_start_stop_tag
 
-        self.max_seq_len = 0
         self._initial_alpha = None
         self._start_tensor = None
         self._stop_tensor = None
@@ -226,16 +225,14 @@ class LinearChainCrf(nn.Layer):
         return self._batch_index
 
     def _get_seq_index(self, length):
-        if self._seq_index is None or length > self.max_seq_len:
-            self.max_seq_len = length
-            self._seq_index = paddle.arange(end=self.max_seq_len, dtype="int64")
+        if self._seq_index is None or length > self._seq_index.shape[0]:
+            self._seq_index = paddle.arange(end=length, dtype="int64")
         return self._seq_index[:length]
 
     def _get_batch_seq_index(self, batch_size, length):
-        if self._batch_seq_index is None or length > self.max_seq_len:
-            self.max_seq_len = length
+        if self._batch_seq_index is None or length > self._batch_seq_index.shape[1]:
             self._batch_seq_index = paddle.cumsum(
-                paddle.ones([batch_size, self.max_seq_len + 2], "int64"),
+                paddle.ones([batch_size, length + 2], "int64"),
                 axis=1) - 1
         if self.with_start_stop_tag:
             return self._batch_seq_index[:, :length + 2]

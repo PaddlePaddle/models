@@ -90,7 +90,7 @@ def evaluate(model, data_loader, args):
                     end_logits=end_logits))
 
     all_predictions, all_nbest_json, scores_diff_json = compute_predictions(
-        data_loader.dataset.examples, data_loader.dataset.data, all_results,
+        data_loader.dataset.examples, data_loader.dataset.features, all_results,
         args.n_best_size, args.max_answer_length, args.do_lower_case,
         args.version_2_with_negative, args.null_score_diff_threshold,
         args.verbose, data_loader.dataset.tokenizer)
@@ -120,7 +120,7 @@ def do_train(args):
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        segment="train")
+        mode="train")
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_dataset, batch_size=args.batch_size, shuffle=True)
@@ -146,7 +146,7 @@ def do_train(args):
         version_2_with_negative=args.version_2_with_negative,
         max_query_length=args.max_query_length,
         max_seq_length=args.max_seq_length,
-        segment="dev")
+        mode="dev")
 
     dev_batch_sampler = paddle.io.BatchSampler(
         dev_dataset, batch_size=args.batch_size, shuffle=False)

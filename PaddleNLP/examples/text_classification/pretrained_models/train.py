@@ -94,7 +94,7 @@ def parse_args():
         help="Total number of training epochs to perform.")
     parser.add_argument(
         "--warmup_proption",
-        default=0.1,
+        default=0.0,
         type=float,
         help="Linear warmup proption over the training process.")
     parser.add_argument(
@@ -304,7 +304,7 @@ def do_train(args):
         ])
 
     criterion = paddle.nn.loss.CrossEntropyLoss()
-    metric = paddle.metric.Accuracy(name='acc_accumulation')
+    metric = paddle.metric.Accuracy()
 
     global_step = 0
     tic_train = time.time()

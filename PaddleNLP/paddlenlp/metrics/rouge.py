@@ -14,8 +14,13 @@
 
 import numpy as np
 
+import paddle
+from .utils import default_trans_func
 
-class RougeL(object):
+__all__ = ['RougeL', 'RougeLForDuReader']
+
+
+class RougeL(paddle.metric.Metric):
     r'''
     Rouge-L is Recall-Oriented Understudy for Gisting Evaluation based on Longest Common Subsequence (LCS).
     Longest common subsequence problem takes into account sentence level structure
@@ -34,13 +39,31 @@ class RougeL(object):
 
     Args:
         gamma (float): A hyperparameter to decide the weight of recall. Default: 1.2.
+    
+    Examples:(TODO: liujiaqi)
+        1. Using as a general evaluation object.
+        2. Using as an instance of `paddle.metric.Metric`.
+
     '''
 
-    def __init__(self, gamma=1.2):
+    def __init__(self,
+                 trans_func=None,
+                 vocab=None,
+                 gamma=1.2,
+                 name="rouge-l",
+                 *args,
+                 **kwargs):
+        super(RougeL, self).__init__(*args, **kwargs)
         self.gamma = gamma
         self.inst_scores = []
+        self._name = name
+        self.vocab = vocab
+        self.trans_func = trans_func
 
     def lcs(self, string, sub):
+        """
+        Calculate the length of longest common subsequence of string and sub.
+        """
         if len(string) < len(sub):
             sub, string = string, sub
         lengths = np.zeros((len(string) + 1, len(sub) + 1))
@@ -78,11 +101,36 @@ class RougeL(object):
             score = 0.0
         self.inst_scores.append(score)
 
-    def score(self):
+    def update(self, output, label, seq_mask=None):
+        if self.trans_func is None:
+            if self.vocab is None:
+                raise AttributeError(
+                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing RougeL."
+                )
+            cand_list, ref_list = default_trans_func(output, label, seq_mask,
+                                                     self.vocab)
+        else:
+            cand_list, ref_list = self.trans_func(output, label, seq_mask)
+        if len(cand_list) != len(ref_list):
+            raise ValueError(
+                "Length error! Please check the output of network.")
+        for i in range(len(cand_list)):
+            self.add_inst(cand_list[i], ref_list[i])
+
+    def accumulate(self):
         '''
         Calculate the final rouge-l metric.
         '''
         return 1. * sum(self.inst_scores) / len(self.inst_scores)
+
+    def score(self):
+        return self.accumulate()
+
+    def reset(self):
+        self.inst_scores = []
+
+    def name(self):
+        return self._name
 
 
 class RougeLForDuReader(RougeL):

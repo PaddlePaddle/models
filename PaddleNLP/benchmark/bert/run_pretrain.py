@@ -39,6 +39,11 @@ MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--select_device",
+        default="gpu",
+        type=str,
+        help="The device that selecting for the training, must be gpu/xpu.")
+    parser.add_argument(
         "--model_type",
         default=None,
         type=str,
@@ -200,7 +205,7 @@ class WorkerInitObj(object):
 def do_train(args):
     # Initialize the paddle and paddle fleet execute enviroment
     paddle.enable_static()
-    place = paddle.CUDAPlace(int(os.environ.get('FLAGS_selected_gpus', 0)))
+    place = paddle.set_device(args.select_device)
     fleet.init(is_collective=True)
 
     # Create the random seed for the worker
