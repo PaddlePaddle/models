@@ -83,7 +83,7 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 ## Tutorials
 
-Please refer to our official AIStudio account for more interactive tutorials: [PaddleNLP AIStudio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
+Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
 ## Community
 

@@ -28,7 +28,7 @@ from paddlenlp.metrics import ChunkEvaluator
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--root", type=str, default=None, help="The folder where the dataset is located.")
+parser.add_argument("--data_dir", type=str, default=None, help="The folder where the dataset is located.")
 parser.add_argument("--init_checkpoint", type=str, default=None, help="Path to init model.")
 parser.add_argument("--model_save_dir", type=str, default=None, help="The model will be saved in this path.")
 parser.add_argument("--epochs", type=int, default=10, help="Corpus iteration num.")
@@ -51,8 +51,8 @@ def train(args):
         paddle.set_device("cpu")
 
     # create dataset.
-    train_dataset = LacDataset(args.root, mode='train')
-    test_dataset = LacDataset(args.root, mode='test')
+    train_dataset = LacDataset(args.data_dir, mode='train')
+    test_dataset = LacDataset(args.data_dir, mode='test')
 
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=0),  # word_ids
