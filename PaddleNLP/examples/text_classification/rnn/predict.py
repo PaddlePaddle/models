@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--use_gpu", type=eval, default=False, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
 parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The path to vocabulary.")
-parser.add_argument('--network_name', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
+parser.add_argument('--network', type=str, default="bilstm_attn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
 parser.add_argument("--params_path", type=str, default='./chekpoints/final.pdparams', help="The path of model parameter to be loaded.")
 args = parser.parse_args()
 # yapf: enable
@@ -82,9 +82,7 @@ if __name__ == "__main__":
 
     # Constructs the newtork.
     model = ppnlp.models.Senta(
-        network_name=args.network_name,
-        vocab_size=len(vocab),
-        num_classes=len(label_map))
+        network=args.network, vocab_size=len(vocab), num_classes=len(label_map))
 
     # Loads model parameters.
     state_dict = paddle.load(args.params_path)
