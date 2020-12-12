@@ -5,9 +5,6 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
-from readers.nsp_reader import NSPReader
-from utils.args import parse_args
-
 
 def post_process_context(token_ids, reader, merge=True):
     """Post-process the context sequence."""
@@ -268,6 +265,7 @@ class NSP(nn.Layer):
 
 class Plato2InferModel(nn.Layer):
     def __init__(self,
+                 nsp_reader,
                  vocab_size=8001,
                  type_size=2,
                  latent_type_size=20,
@@ -282,6 +280,7 @@ class Plato2InferModel(nn.Layer):
                  topk=10):
         super(Plato2InferModel, self).__init__()
 
+        self.nsp_reader = nsp_reader
         self.num_layers = num_layers
         self.latent_type_size = latent_type_size
         self.max_dec_len = max_dec_len
@@ -314,8 +313,6 @@ class Plato2InferModel(nn.Layer):
 
         self.gelu_layer = nn.GELU()
         self.softmax = nn.Softmax()
-
-        self.data_reader = self.get_reader()
 
     @paddle.no_grad()
     def forward(self, inputs):
@@ -393,7 +390,10 @@ class Plato2InferModel(nn.Layer):
             sums = paddle.sum(topk_probs, axis=-1, keepdim=True)
             new_probs = probs * mask / sums
             # [-1, 1]
-            sampling_ids = paddle.multinomial(new_probs)
+            #sampling_ids = paddle.multinomial(new_probs)
+            sampling_ids = paddle.fluid.layers.sampling_id(
+                new_probs, dtype="int", seed=2019)
+            sampling_ids = paddle.unsqueeze(sampling_ids, axis=-1)
 
             step = step + 1
             tgt_ids = sampling_ids
@@ -401,20 +401,19 @@ class Plato2InferModel(nn.Layer):
             predictions = paddle.concat([predictions, tgt_ids], axis=1)
         return predictions
 
-    def get_reader(self):
-        parser = argparse.ArgumentParser()
-        NSPReader.add_cmdline_args(parser)
-        args = parse_args(parser)
-        args.batch_size = self.batch_size * self.latent_type_size
-        args.tokenized_input = True
-        import json
-        print(json.dumps(args, indent=4))
-        reader = NSPReader(args)
-        return reader
-
     def gen_nsp_input(self, token_ids, pred_ids):
         token_ids = token_ids.numpy()
         pred_ids = pred_ids.numpy()
+        """
+        import pickle
+        with open('/docker/Knover/plato-2/output/plato_outputs.pickle', 'rb') as fin:
+            predictions = pickle.load(fin)
+        token_ids = []
+        pred_ids = []
+        for info in predictions:
+            token_ids.append(info['context_token_ids'])
+            pred_ids.append(info['response_token_ids'])
+        """
 
         def __reader__():
             headers = ["src", "tgt", "data_id"]
@@ -423,9 +422,9 @@ class Plato2InferModel(nn.Layer):
 
             for i, (raw, pred) in enumerate(zip(token_ids, pred_ids)):
                 context = post_process_context(
-                    raw, self.data_reader, merge=False)
+                    raw, self.nsp_reader, merge=False)
                 _, response = post_process_response(
-                    pred, self.data_reader, merge=False)
+                    pred, self.nsp_reader, merge=False)
                 context_tokenized_input = " [SEP] ".join(" ".join(utt)
                                                          for utt in context)
                 response_tokenized_input = " ".join(response)
@@ -433,20 +432,24 @@ class Plato2InferModel(nn.Layer):
                     src=context_tokenized_input,
                     tgt=response_tokenized_input,
                     data_id=i)
-                data = self.data_reader._convert_example_to_record(
+                data = self.nsp_reader._convert_example_to_record(
                     example, is_infer=True)
                 yield data
             return
 
-        generator = self.data_reader.data_generator(
+        generator = self.nsp_reader.data_generator(
             reader=__reader__,
             is_infer=True,
             phase="test", )
         inputs = next(generator())
+
+        #print('\nnsp_inputs:')
         for key in inputs:
             inputs[key] = paddle.to_tensor(inputs[key])
             if key in ['token_ids', 'type_ids', 'pos_ids']:
                 inputs[key] = paddle.squeeze(inputs[key], axis=-1)
+            #print(key, inputs[key].shape)
+            #print(inputs[key])
         return inputs
 
     def get_results(self, data_id, token_ids, pred_ids, probs):
@@ -454,16 +457,28 @@ class Plato2InferModel(nn.Layer):
         token_ids = token_ids.numpy()
         pred_ids = pred_ids.numpy()
         probs = probs.numpy()
+        """
+        import pickle
+        with open('/docker/Knover/plato-2/output/plato_outputs.pickle', 'rb') as fin:
+            predictions = pickle.load(fin)
+        token_ids = []
+        pred_ids = []
+        data_id = []
+        for info in predictions:
+            token_ids.append(info['context_token_ids'])
+            pred_ids.append(info['response_token_ids'])
+            data_id.append(info['data_id'])
+        """
 
         infos = []
         for raw, pred, prob in zip(token_ids, pred_ids, probs):
-            tokens = post_process_context(raw, self.data_reader)
-            pred_token_ids, pred_tokens = post_process_response(
-                pred, self.data_reader)
+            tokens = post_process_context(raw, self.nsp_reader)
+            pred_token_ids, pred_tokens = post_process_response(pred,
+                                                                self.nsp_reader)
             info = {}
             info['response'] = ' '.join(pred_tokens)
             cross_turn_repetition = get_cross_turn_repetition(
-                tokens, pred_tokens, self.data_reader.eos_id, self.is_cn)
+                tokens, pred_tokens, self.nsp_reader.eos_id, self.is_cn)
             in_turn_repetition = max(
                 get_in_turn_repetition(pred_tokens, self.is_cn),
                 get_in_turn_repetition(pred_token_ids))
@@ -495,42 +510,3 @@ class Plato2InferModel(nn.Layer):
             result['data_id'] = pre_idx
             results.append(result)
         return results
-
-
-if __name__ == '__main__':
-    import pickle
-    import numpy as np
-    with open('./data/inputs.pickle', 'rb') as fin:
-        inputs = pickle.load(fin)
-    """
-    token_ids (200, 120, 1)
-    type_ids (200, 120, 1)
-    pos_ids (200, 120, 1)
-    generation_mask (200, 121, 121)
-    init_score -> List (200, 1)
-    tgt_ids -> List (200, 1, 1)
-    tgt_pos -> List (200, 1, 1)
-    parent_idx (200,)
-    tgt_generation_mask (200, 1, 121)
-    data_id (200, 1)
-    latent_id (200, 1)
-    """
-    for key in inputs:
-        inputs[key] = paddle.to_tensor(inputs[key])
-        if key in [
-                'token_ids', 'type_ids', 'pos_ids', 'tgt_ids', 'tgt_pos',
-                'data_id'
-        ]:
-            inputs[key] = paddle.squeeze(inputs[key], axis=-1)
-        #print(key, inputs[key].shape, inputs[key].dtype)
-
-    model = Plato2InferModel()
-
-    ckpt_path = './data/pretrain.pdparams'
-    state_dict = paddle.load(ckpt_path)
-    model.set_state_dict(state_dict)
-
-    model.eval()
-
-    results = model(inputs)
-    print(results)
