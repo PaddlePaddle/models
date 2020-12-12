@@ -6,7 +6,7 @@
 class paddlenlp.models.Ernie(model_name, num_classes, task=None, **kwargs):
     """
     预训练模型ERNIE。
-    更多信息参考：[ERNIE: Enhanced Representation through Knowledge Integration](https://arxiv.org/abs/1904.09223)
+    更多信息参考：ERNIE: Enhanced Representation through Knowledge Integration(https://arxiv.org/abs/1904.09223)
 
     参数：
         `model_name (obj:`str`)`： 模型名称，如`ernie-1.0`，`ernie-tiny`，`ernie-2.0-en`， `ernie-2.0-large-en`。
