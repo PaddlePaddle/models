@@ -49,7 +49,7 @@ def parse_args():
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
-        default='ernie_tiny',
+        default='ernie-tiny',
         required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
