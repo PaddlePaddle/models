@@ -86,13 +86,13 @@ class TokenEmbedding(nn.Embedding):
 
     def _init_without_extend_vocab(self, vector_np, pad_vector, unk_vector):
         self._idx_to_word = list(vector_np['vocab'])
-        self._idx_to_word.insert(PAD_IDX, PAD_TOKEN)
-        self._idx_to_word.insert(UNK_IDX, self.unknown_token)
+        self._idx_to_word.append(self.unknown_token)
+        self._idx_to_word.append(PAD_TOKEN)
         self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         # insert unk, pad embedding
-        embedding_table = np.insert(
-            vector_np['embedding'], [0], [pad_vector, unk_vector],
-            axis=0).astype(paddle.get_default_dtype())
+        embedding_table = np.append(
+            vector_np['embedding'], [unk_vector, pad_vector], axis=0)
+
         return embedding_table
 
     def _read_vocab_list_from_file(self, extended_vocab_path):
@@ -114,22 +114,11 @@ class TokenEmbedding(nn.Embedding):
         extend_vocab_set = set(extend_vocab_list)
         # update idx_to_word
         self._idx_to_word = extend_vocab_list
+        self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         embedding_table = np.random.normal(
             scale=0.02,
             size=(len(self._idx_to_word),
                   self.embedding_dim)).astype(paddle.get_default_dtype())
-
-        self._idx_to_word.append(PAD_TOKEN)
-        embedding_table = np.append(embedding_table, [pad_vector], axis=0)
-
-        if self.unknown_token not in extend_vocab_set:
-            self._idx_to_word.append(self.unknown_token)
-            embedding_table = np.append(embedding_table, [unk_vector], axis=0)
-            self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
-        else:
-            self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
-            unk_idx = self._word_to_idx[self.unknown_token]
-            embedding_table[unk_idx] = unk_vector
 
         pretrained_idx_to_word = list(vector_np['vocab'])
         pretrained_word_to_idx = self._construct_word_to_idx(
@@ -164,6 +153,18 @@ class TokenEmbedding(nn.Embedding):
             embedding_table,
             pretrained_embedding_table[pretrained_vocab_subtract_index],
             axis=0)
+
+        if self.unknown_token not in extend_vocab_set:
+            self._idx_to_word.append(self.unknown_token)
+            self._word_to_idx[self.unknown_token] = len(self._idx_to_word) - 1
+            embedding_table = np.append(embedding_table, [unk_vector], axis=0)
+        else:
+            unk_idx = self._word_to_idx[self.unknown_token]
+            embedding_table[unk_idx] = unk_vector
+
+        self._idx_to_word.append(PAD_TOKEN)
+        self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
+        embedding_table = np.append(embedding_table, [pad_vector], axis=0)
 
         logger.info("Finish extending vocab.")
         return embedding_table
@@ -221,13 +222,12 @@ class TokenEmbedding(nn.Embedding):
 
     def __repr__(self):
         s = "Object   type: {}\
-             \nPadding index: {}\
-             \nPadding token: {}\
              \nUnknown index: {}\
              \nUnknown token: {}\
+             \nPadding index: {}\
+             \nPadding token: {}\
              \n{}".format(
             super(TokenEmbedding, self).__repr__(),
-            self._word_to_idx[PAD_TOKEN], PAD_TOKEN,
             self._word_to_idx[self.unknown_token], self.unknown_token,
-            self.weight)
+            self._word_to_idx[PAD_TOKEN], PAD_TOKEN, self.weight)
         return s
