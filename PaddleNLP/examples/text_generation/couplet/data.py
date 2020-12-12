@@ -28,8 +28,7 @@ from paddlenlp.datasets import TranslationDataset
 
 def create_train_loader(batch_size=128):
     train_ds = CoupletDataset.get_datasets(["train"])
-
-    vocab, _ = CoupletDataset.build_vocab()
+    vocab, _ = CoupletDataset.get_vocab()
     pad_id = vocab[CoupletDataset.EOS_TOKEN]
 
     train_batch_sampler = SamplerHelper(train_ds).shuffle().batch(
@@ -47,7 +46,7 @@ def create_train_loader(batch_size=128):
 def create_infer_loader(batch_size=128):
     test_ds = CoupletDataset.get_datasets(["test"])
 
-    vocab, _ = CoupletDataset.build_vocab()
+    vocab, _ = CoupletDataset.get_vocab()
     pad_id = vocab[CoupletDataset.EOS_TOKEN]
     bos_id = vocab[CoupletDataset.BOS_TOKEN]
     eos_id = vocab[CoupletDataset.EOS_TOKEN]
@@ -107,8 +106,8 @@ class CoupletDataset(TranslationDataset):
                 format(mode))
         # Download data
         root = CoupletDataset.get_data(root=root)
-        self.data = self.read_raw_data(root, mode)
-        self.vocab, _ = CoupletDataset.build_vocab(root)
+        self.data = CoupletDataset.read_raw_data(root, mode)
+        self.vocab, _ = CoupletDataset.get_vocab(root)
         self.transform()
 
     def transform(self):

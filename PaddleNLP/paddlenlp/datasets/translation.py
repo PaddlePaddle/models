@@ -1,6 +1,7 @@
 import os
 import io
 import collections
+import warnings
 
 from functools import partial
 import numpy as np
@@ -13,15 +14,6 @@ from paddlenlp.utils.env import DATA_HOME
 from paddle.dataset.common import md5file
 
 __all__ = ['TranslationDataset', 'IWSLT15']
-
-
-def vocab_func(vocab, unk_token):
-    def func(tok_iter):
-        return [
-            vocab[tok] if tok in vocab else vocab[unk_token] for tok in tok_iter
-        ]
-
-    return func
 
 
 def sequential_transforms(*transforms):
@@ -112,13 +104,13 @@ class TranslationDataset(paddle.io.Dataset):
                 if root is not None:  # not specified, and no need to warn
                     warnings.warn(
                         'md5 check failed for {}, download {} data to {}'.
-                        format(filename, self.__class__.__name__, default_root))
+                        format(filename, cls.__name__, default_root))
                 path = get_path_from_url(cls.URL, default_root, cls.MD5)
                 break
         return root if root is not None else default_root
 
     @classmethod
-    def build_vocab(cls, root=None, reverse=False):
+    def get_vocab(cls, root=None):
         """
         Load vocab from vocab files. It vocab files don't exist, the will
         be downloaded.
@@ -133,7 +125,7 @@ class TranslationDataset(paddle.io.Dataset):
         Examples:
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
-                (src_vocab, tgt_vocab) = IWSLT15.build_vocab()
+                (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
 
         """
         root = cls.get_data(root=root)
@@ -154,12 +146,11 @@ class TranslationDataset(paddle.io.Dataset):
             pad_token=cls.PAD_TOKEN,
             bos_token=cls.BOS_TOKEN,
             eos_token=cls.EOS_TOKEN)
-        return (src_vocab._token_to_idx,
-                tgt_vocab._token_to_idx) if not reverse else (
-                    src_vocab._token_to_idx, tgt_vocab._idx_to_token)
+        return (src_vocab, tgt_vocab)
 
-    def read_raw_data(self, data_dir, mode):
-        src_filename, tgt_filename, _, _ = self.SPLITS[mode]
+    @classmethod
+    def read_raw_data(cls, data_dir, mode):
+        src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
 
         def read_raw_files(corpus_path):
             """Read raw files, return raw data"""
@@ -196,11 +187,11 @@ class TranslationDataset(paddle.io.Dataset):
         src_text_vocab_transform = sequential_transforms(src_tokenizer)
         tgt_text_vocab_transform = sequential_transforms(tgt_tokenizer)
 
-        (src_vocab, tgt_vocab) = cls.build_vocab(root)
-        src_text_transform = sequential_transforms(
-            src_text_vocab_transform, vocab_func(src_vocab, cls.UNK_TOKEN))
-        tgt_text_transform = sequential_transforms(
-            tgt_text_vocab_transform, vocab_func(tgt_vocab, cls.UNK_TOKEN))
+        (src_vocab, tgt_vocab) = cls.get_vocab(root)
+        src_text_transform = sequential_transforms(src_text_vocab_transform,
+                                                   src_vocab)
+        tgt_text_transform = sequential_transforms(tgt_text_vocab_transform,
+                                                   tgt_vocab)
         return (src_text_transform, tgt_text_transform)
 
 
@@ -258,7 +249,7 @@ class IWSLT15(TranslationDataset):
                                  "source and target.")
         # Download data
         root = IWSLT15.get_data(root=root)
-        self.data = self.read_raw_data(root, mode)
+        self.data = IWSLT15.read_raw_data(root, mode)
 
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
