@@ -57,6 +57,10 @@ class TranslationDataset(paddle.io.Dataset):
     URL = None
     MD5 = None
     VOCAB_INFO = None
+    UNK_TOKEN = None
+    BOS_TOKEN = None
+    EOS_TOKEN = None
+    PAD_TOKEN = None
 
     def __init__(self, data):
         self.data = data
@@ -83,7 +87,8 @@ class TranslationDataset(paddle.io.Dataset):
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
-        default_root = os.path.join(DATA_HOME, 'machine_translation')
+        default_root = os.path.join(DATA_HOME, 'machine_translation',
+                                    cls.__name__)
         src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
             mode]
 
@@ -132,16 +137,23 @@ class TranslationDataset(paddle.io.Dataset):
 
         """
         root = cls.get_data(root=root)
-        # Get vocab_func
         src_vocab_filename, tgt_vocab_filename, _, _ = cls.VOCAB_INFO
         src_file_path = os.path.join(root, src_vocab_filename)
         tgt_file_path = os.path.join(root, tgt_vocab_filename)
 
-        src_vocab = Vocab.load_vocabulary(src_file_path, cls.UNK_TOKEN,
-                                          cls.BOS_TOKEN, cls.EOS_TOKEN)
+        src_vocab = Vocab.load_vocabulary(
+            src_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
 
-        tgt_vocab = Vocab.load_vocabulary(tgt_file_path, cls.UNK_TOKEN,
-                                          cls.BOS_TOKEN, cls.EOS_TOKEN)
+        tgt_vocab = Vocab.load_vocabulary(
+            tgt_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
         return (src_vocab, tgt_vocab)
 
     def read_raw_data(self, data_dir, mode):

@@ -37,12 +37,10 @@ def do_train(args):
 
     optimizer = paddle.optimizer.Adam(
         learning_rate=args.learning_rate, parameters=model.parameters())
-
     ppl_metric = Perplexity()
     model.prepare(optimizer, CrossEntropyCriterion(), ppl_metric)
 
     print(args)
-
     model.fit(train_data=train_loader,
               epochs=args.max_epoch,
               eval_freq=1,
