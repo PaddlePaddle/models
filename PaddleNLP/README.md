@@ -77,7 +77,7 @@ roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
+For more pretrained model selection, please refer to [Pretrained-Models](./docs/transformers.md)
 
 ## API Usage
 
