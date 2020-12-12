@@ -1,4 +1,4 @@
-# 使用预训练模型Fine-tune完成pointwise中文文本匹配任务
+# 使用预训练模型Fine-tune完成中文文本匹配任务
 
 随着深度学习的发展，模型参数的数量飞速增长。为了训练这些参数，需要更大的数据集来避免过拟合。然而，对于大部分NLP任务来说，构建大规模的标注数据集非常困难（成本过高），特别是对于句法和语义相关的任务。相比之下，大规模的未标注语料库的构建则相对容易。为了利用这些数据，我们可以先从其中学习到一个好的表示，再将这些表示应用到其他任务中。最近的研究表明，基于大规模未标注语料库的预训练模型（Pretrained Models, PTM) 在NLP任务上取得了很好的表现。
 
@@ -8,7 +8,7 @@
 
 <center> <img width="600px" src="https://ai-studio-static-online.cdn.bcebos.com/d96c602338044ee8bcd4171f38ea6d49506d1f3253f3496b802ec56cb654ecf5" /> </center>
 
-使用预训练模型ERNIE完成pointwise文本匹配任务，大家可能会想到将query和title文本拼接，之后输入ERNIE中，取`CLS`特征（pooled_output），之后输出全连接层，进行二分类。如下图ERNIE用于句对分类任务的用法：
+使用预训练模型ERNIE完成文本匹配任务，大家可能会想到将query和title文本拼接，之后输入ERNIE中，取`CLS`特征（pooled_output），之后输出全连接层，进行二分类。如下图ERNIE用于句对分类任务的用法：
 
 <p align="center">
 <img src="https://ai-studio-static-online.cdn.bcebos.com/45440029c07240ad89d665c5b176e63297e9584e1da24e02b79dd54fb990f74a" width='30%'/> <br />
@@ -42,23 +42,18 @@ PaddleNLP提供了丰富的预训练模型，并且可以便捷地获取PaddlePa
 + ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie-tiny`)。
    其中`ernie`由12层Transformer网络组成，`ernie-tiny`由3层Transformer网络组成。
 + RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
-+ Electra([ELECTRA: Pre-training Text Encoders as Discriminators Rather Than Generators](https://arxiv.org/abs/2003.10555)), 支持hidden_size=256的`chinese-electra-discriminator-small`和
-  hidden_size=768的`chinese-electra-discriminator-base`
 
 ## TODO 增加模型效果
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
 | bert-base-chinese  | 0.86537 | 0.84440 |
 | bert-wwm-chinese | 0.86333 | 0.84128 |
-| bert-wwm-ext-chinese |  |  |
+| bert-wwm-ext-chinese | 0.86049 | 0.83848 |
 | ernie  | 0.87480  | 0.84760  |
 | ernie-tiny  | 0.86071 | 0.83352 |
-| roberta-wwm-ext  |  |  |
-| roberta-wwm-ext-large | |  |
-| rbt3 |  |  |
-| rbtl3 |  | |
-| chinese-electra-discriminator-base | |  |
-| chinese-electra-discriminator-small |  |  |
+| roberta-wwm-ext  | 0.87526 | 0.84904 |
+| rbt3 | 0.85367 | 0.83464 |
+| rbtl3 | 0.85174 | 0.83744 |
 
 ## 快速开始
 
