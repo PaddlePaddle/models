@@ -73,18 +73,23 @@ roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 
 For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
 
+## API Usage
+
+* [Transformer API](./docs/transformers.md)
+* [Dataset API](./docs/datasets.md)
+* [Embedding API](./docs/embeddings.md)
+* [Metrics API](./docs/embeddings.md)
+* [Models API](./docs/models.md)
+
 ## Tutorials
 
-List our notebook tutorials based on AI Studio.
-TBD
+Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
 ## Community
 
 * SIG for Pretrained Model Contribution
 * SIG for Dataset Integration
-TBD
-
-## FAQ
+* SIG for Tutorial Writing
 
 ## License
 

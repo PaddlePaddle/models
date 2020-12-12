@@ -17,7 +17,6 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 
 from paddlenlp.transformers import *
-import paddlenlp as nlp
 
 
 class Ernie(nn.Layer):

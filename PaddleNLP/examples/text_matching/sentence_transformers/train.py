@@ -25,15 +25,15 @@ import paddle.nn.functional as F
 from paddlenlp.data import Stack, Tuple, Pad
 import paddlenlp as ppnlp
 
+from model import SentenceTransformer
+
 MODEL_CLASSES = {
-    "bert": (ppnlp.transformers.BertForSequenceClassification,
-             ppnlp.transformers.BertTokenizer),
-    'ernie': (ppnlp.transformers.ErnieForSequenceClassification,
-              ppnlp.transformers.ErnieTokenizer),
-    'roberta': (ppnlp.transformers.RobertaForSequenceClassification,
+    "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
+    'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
+    'roberta': (ppnlp.transformers.RobertaModel,
                 ppnlp.transformers.RobertaTokenizer),
-    'electra': (ppnlp.transformers.ElectraForSequenceClassification,
-                ppnlp.transformers.ElectraTokenizer)
+    # 'electra': (ppnlp.transformers.Electra,
+    #             ppnlp.transformers.ElectraTokenizer)
 }
 
 
@@ -49,7 +49,7 @@ def parse_args():
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
-        default='ernie_tiny',
+        default='ernie-1.0',
         required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
@@ -120,6 +120,7 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
+@paddle.no_grad()
 def evaluate(model, criterion, metric, data_loader):
     """
     Given a dataset, it evals model and computes the metric.
@@ -134,11 +135,15 @@ def evaluate(model, criterion, metric, data_loader):
     metric.reset()
     losses = []
     for batch in data_loader:
-        input_ids, segment_ids, labels = batch
-        logits = model(input_ids, segment_ids)
-        loss = criterion(logits, labels)
+        query_input_ids, query_segment_ids, title_input_ids, title_segment_ids, labels = batch
+        probs = model(
+            query_input_ids,
+            title_input_ids,
+            query_token_type_ids=query_segment_ids,
+            title_token_type_ids=title_segment_ids)
+        loss = criterion(probs, labels)
         losses.append(loss.numpy())
-        correct = metric.compute(logits, labels)
+        correct = metric.compute(probs, labels)
         metric.update(correct)
         accu = metric.accumulate()
     print("eval loss: %.5f, accu: %.5f" % (np.mean(losses), accu))
@@ -170,7 +175,7 @@ def convert_example(example,
 
 
     Args:
-        example(obj:`list[str]`): List of input data, containing text and label if it have label.
+        example(obj:`list[str]`): List of input data, containing query, title and label if it have label.
         tokenizer(obj:`PretrainedTokenizer`): This tokenizer inherits from :class:`~paddlenlp.transformers.PretrainedTokenizer` 
             which contains most of the methods. Users should refer to the superclass for more information regarding methods.
         label_list(obj:`list[str]`): All the labels that the data has.
@@ -179,26 +184,35 @@ def convert_example(example,
         is_test(obj:`False`, defaults to `False`): Whether the example contains label or not.
 
     Returns:
-        input_ids(obj:`list[int]`): The list of token ids.
-        segment_ids(obj: `list[int]`): List of sequence pair mask.
+        query_input_ids(obj:`list[int]`): The list of query token ids.
+        query_segment_ids(obj: `list[int]`): List of query sequence pair mask.
+        title_input_ids(obj:`list[int]`): The list of title token ids.
+        title_segment_ids(obj: `list[int]`): List of title sequence pair mask.
         label(obj:`numpy.array`, data type of int64, optional): The input label if not is_test.
     """
-    text, label = example
-    encoded_inputs = tokenizer.encode(text=text, max_seq_len=max_seq_length)
-    input_ids = encoded_inputs["input_ids"]
-    segment_ids = encoded_inputs["segment_ids"]
+    query, title = example[0], example[1]
+
+    query_encoded_inputs = tokenizer.encode(
+        text=query, max_seq_len=max_seq_length)
+    query_input_ids = query_encoded_inputs["input_ids"]
+    query_segment_ids = query_encoded_inputs["segment_ids"]
+
+    title_encoded_inputs = tokenizer.encode(
+        text=title, max_seq_len=max_seq_length)
+    title_input_ids = title_encoded_inputs["input_ids"]
+    title_segment_ids = title_encoded_inputs["segment_ids"]
 
     if not is_test:
-        #create label maps if classification task
-        if label_list:
-            label_map = {}
-            for (i, l) in enumerate(label_list):
-                label_map[l] = i
-            label = label_map[label]
+        # create label maps if classification task
+        label = example[-1]
+        label_map = {}
+        for (i, l) in enumerate(label_list):
+            label_map[l] = i
+        label = label_map[label]
         label = np.array([label], dtype="int64")
-        return input_ids, segment_ids, label
+        return query_input_ids, query_segment_ids, title_input_ids, title_segment_ids, label
     else:
-        return input_ids, segment_ids
+        return query_input_ids, query_segment_ids, title_input_ids, title_segment_ids
 
 
 def create_dataloader(dataset,
@@ -234,7 +248,7 @@ def do_train(args):
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    train_dataset, dev_dataset, test_dataset = ppnlp.datasets.ChnSentiCorp.get_datasets(
+    train_dataset, dev_dataset, test_dataset = ppnlp.datasets.LCQMC.get_datasets(
         ['train', 'dev', 'test'])
     if args.model_name == 'ernie_tiny':
         # ErnieTinyTokenizer is special for ernie_tiny pretained model.
@@ -249,8 +263,10 @@ def do_train(args):
         label_list=train_dataset.get_labels(),
         max_seq_length=args.max_seq_length)
     batchify_fn = lambda samples, fn=Tuple(
-        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # input
-        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
+        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_input
+        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_segment
+        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # title_input
+        Pad(axis=0, pad_val=tokenizer.pad_token_id),  # tilte_segment
         Stack(dtype="int64")  # label
     ): [data for data in fn(samples)]
     train_data_loader = create_dataloader(
@@ -272,8 +288,8 @@ def do_train(args):
         batchify_fn=batchify_fn,
         trans_fn=trans_func)
 
-    model = model_class.from_pretrained(
-        args.model_name, num_classes=len(train_dataset.get_labels()))
+    pretrained_model = model_class.from_pretrained(args.model_name)
+    model = SentenceTransformer(pretrained_model)
 
     if args.init_from_ckpt and os.path.isfile(args.init_from_ckpt):
         state_dict = paddle.load(args.init_from_ckpt)
@@ -310,10 +326,13 @@ def do_train(args):
     tic_train = time.time()
     for epoch in range(1, args.epochs + 1):
         for step, batch in enumerate(train_data_loader, start=1):
-            input_ids, segment_ids, labels = batch
-            logits = model(input_ids, segment_ids)
-            loss = criterion(logits, labels)
-            probs = F.softmax(logits, axis=1)
+            query_input_ids, query_segment_ids, title_input_ids, title_segment_ids, labels = batch
+            probs = model(
+                query_input_ids,
+                title_input_ids,
+                query_token_type_ids=query_segment_ids,
+                title_token_type_ids=title_segment_ids)
+            loss = criterion(probs, labels)
             correct = metric.compute(probs, labels)
             metric.update(correct)
             acc = metric.accumulate()
@@ -334,7 +353,8 @@ def do_train(args):
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 evaluate(model, criterion, metric, dev_data_loader)
-                model._layers.save_pretrained(save_dir)
+                save_param_path = os.path.join(save_dir, 'model_state.pdparams')
+                paddle.save(model.state_dict(), save_param_path)
                 tokenizer.save_pretrained(save_dir)
 
     if paddle.distributed.get_rank() == 0:
