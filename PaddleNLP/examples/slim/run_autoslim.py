@@ -23,22 +23,27 @@ import numpy as np
 import paddle
 import paddle.nn.functional as F
 from paddle.io import DataLoader
+from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.datasets import GlueQNLI, GlueSST2
+from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertModel, BertForSequenceClassification, BertTokenizer
+from paddlenlp.utils.log import logger
+from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 from paddleslim.nas.ofa.utils import compute_neuron_head_importance, reorder_head, reorder_neuron, set_state_dict
 from paddleslim.nas.ofa import OFA, DistillConfig
 from paddleslim.nas.ofa.convert_super import Convert, supernet
 
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
-
 TASK_CLASSES = {
-    "qnli": (GlueQNLI, paddle.metric.Accuracy),  # (dataset, metric)
-    "sst-2": (GlueSST2, paddle.metric.Accuracy),
+    "cola": (GlueCoLA, Mcc),
+    "sst-2": (GlueSST2, Accuracy),
+    "mrpc": (GlueMRPC, AccuracyAndF1),
+    "sts-b": (GlueSTSB, PearsonAndSpearman),
+    "qqp": (GlueQQP, AccuracyAndF1),
+    "mnli": (GlueMNLI, Accuracy),
+    "qnli": (GlueQNLI, Accuracy),
+    "rte": (GlueRTE, Accuracy),
 }
 
 MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer), }
@@ -164,22 +169,37 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def evaluate(model, loss_fct, metric, data_loader, width_mult=1.0):
-    model.eval()
-    metric.reset()
-    for batch in data_loader:
-        input_ids, segment_ids, labels = batch
-        logits = model(input_ids, segment_ids, attention_mask=[None, None])
-        if isinstance(logits, tuple):
-            logits = logits[0]
-        loss = loss_fct(logits, labels)
-        correct = metric.compute(logits, labels)
-        metric.update(correct)
-        accu = metric.accumulate()
-    print("width_mult: %f, eval loss: %f, accu: %f" %
-          (width_mult, loss.numpy(), accu))
-    model.train()
-    return accu
+def evaluate(model,
+             criterion,
+             metric,
+             data_loader,
+             width_mult=1.0,
+             teacher_model=False,
+             acc=True):
+    with paddle.no_grad():
+        model.eval()
+        metric.reset()
+        for batch in data_loader:
+            input_ids, segment_ids, labels = batch
+            logits = model(input_ids, segment_ids, attention_mask=[None, None])
+            if isinstance(logits, tuple):
+                logits = logits[0]
+            loss = criterion(logits, labels)
+            correct = metric.compute(logits, labels)
+            metric.update(correct)
+            if acc == True:
+                accu = metric.accumulate()
+            else:
+                accu, prec, recall, f1, out = metric.accumulate()
+        if acc == True:
+            print("width_mult: %f, eval loss: %f, accu: %f" %
+                  (width_mult, loss.numpy(), accu))
+        else:
+            print("width_mult: %f, eval loss: %f, accu: %f, f1: %f" %
+                  (width_mult, loss.numpy(), accu, f1))
+        if not teacher_model:
+            model.train()
+        return accu
 
 
 def bert_forward(self,
@@ -339,13 +359,12 @@ def do_train(args):
 
     set_seed(args)
 
-    #width_mult_list = [1.0, 0.75, 0.5, 0.25]
     args.task_name = args.task_name.lower()
     dataset_class, metric_class = TASK_CLASSES[args.task_name]
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
+    train_ds = dataset_class.get_datasets(['train'])
 
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     trans_func = partial(
@@ -370,27 +389,51 @@ def do_train(args):
         collate_fn=batchify_fn,
         num_workers=0,
         return_list=True)
+    if args.task_name == "mnli":
+        dev_dataset_matched, dev_dataset_mismatched = dataset_class.get_datasets(
+            ["dev_matched", "dev_mismatched"])
+        dev_dataset_matched = dev_dataset_matched.apply(trans_func, lazy=True)
+        dev_dataset_mismatched = dev_dataset_mismatched.apply(
+            trans_func, lazy=True)
+        dev_batch_sampler_matched = paddle.io.BatchSampler(
+            dev_dataset_matched, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader_matched = DataLoader(
+            dataset=dev_dataset_matched,
+            batch_sampler=dev_batch_sampler_matched,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
+        dev_batch_sampler_mismatched = paddle.io.BatchSampler(
+            dev_dataset_mismatched, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader_mismatched = DataLoader(
+            dataset=dev_dataset_mismatched,
+            batch_sampler=dev_batch_sampler_mismatched,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
+    else:
+        dev_dataset = dataset_class.get_datasets(["dev"])
+        dev_dataset = dev_dataset.apply(trans_func, lazy=True)
+        dev_batch_sampler = paddle.io.BatchSampler(
+            dev_dataset, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader = DataLoader(
+            dataset=dev_dataset,
+            batch_sampler=dev_batch_sampler,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
 
-    dev_ds = dev_ds.apply(trans_func, lazy=True)
-    # dev_batch_sampler = SamplerHelper(dev_ds).batch(
-    #     batch_size=args.batch_size)
-    dev_batch_sampler = paddle.io.BatchSampler(
-        dev_ds, batch_size=args.batch_size, shuffle=False)
-    dev_data_loader = DataLoader(
-        dataset=dev_ds,
-        batch_sampler=dev_batch_sampler,
-        collate_fn=batchify_fn,
-        num_workers=0,
-        return_list=True)
+    num_labels = 1 if train_ds.get_labels() == None else len(
+        train_ds.get_labels())
 
     model = model_class.from_pretrained(
-        args.model_name_or_path, num_classes=len(train_ds.get_labels()))
+        args.model_name_or_path, num_classes=num_labels)
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
     origin_weights = {}
     for name, param in model.named_parameters():
-        origin_weights[name] = param  #.numpy()
+        origin_weights[name] = param
 
     sp_config = supernet(expand_ratio=args.width_mult_list)
     model = Convert(sp_config).convert(model)
@@ -416,6 +459,9 @@ def do_train(args):
     ofa_model = OFA(model,
                     distill_config=distill_config,
                     elastic_order=['width'])
+
+    if args.task_name == "mnli":
+        dev_data_loader = (dev_data_loader_matched, dev_data_loader_mismatched)
 
     head_importance, neuron_importance = compute_neuron_head_importance(
         args.task_name,
@@ -446,14 +492,18 @@ def do_train(args):
             if not any(nd in n for nd in ["bias", "norm"])
         ])
 
-    loss_fct = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
+    criterion = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
     ) else paddle.nn.loss.MSELoss()
 
     metric = metric_class()
 
+    task_acc = True
+    if args.task_name == "qqp" or args.task_name == "mrpc":
+        task_acc = False
+
     global_step = 0
     tic_train = time.time()
-    best_acc = [-1.0, -1.0, -1.0]
+    best_acc = [-1.0, -1.0, -1.0, -1.0]
     for epoch in range(args.num_train_epochs):
         ofa_model.set_epoch(epoch)
         ofa_model.set_task('width')
@@ -461,10 +511,6 @@ def do_train(args):
         for step, batch in enumerate(train_data_loader):
             global_step += 1
             input_ids, segment_ids, labels = batch
-
-            accumulate_gradients = dict()
-            for param in optimizer._parameter_list:
-                accumulate_gradients[param.name] = 0.0
 
             for width_mult in args.width_mult_list:
                 net_config = apply_config(ofa_model, width_mult)
@@ -475,15 +521,7 @@ def do_train(args):
                 logit_loss = soft_cross_entropy(logits, teacher_logits.detach())
                 loss = rep_loss + args.lambda_logit * logit_loss
                 loss.backward()
-                param_grads = optimizer.backward(loss)
-                for param in optimizer._parameter_list:
-                    accumulate_gradients[param.name] += param.gradient()
-
-            for k, v in param_grads:
-                assert k.name in accumulate_gradients.keys(
-                ), "{} not in accumulate_gradients".format(k.name)
-                v.set_value(accumulate_gradients[k.name])
-            adamw_step(optimizer, params_grads=param_grads)
+            optimizer.step()
             lr_scheduler.step()
             ofa_model.model.clear_gradients()
 
@@ -497,21 +535,55 @@ def do_train(args):
 
             if global_step % args.save_steps == 0:
                 saved = False
-                evaluate(
-                    teacher_model,
-                    loss_fct,
-                    metric,
-                    dev_data_loader,
-                    width_mult=100)
+                if args.task_name == "mnli":
+                    evaluate(
+                        teacher_model,
+                        criterion,
+                        metric,
+                        dev_data_loader_matched,
+                        width_mult=100,
+                        teacher_model=True)
+                    evaluate(
+                        teacher_model,
+                        criterion,
+                        metric,
+                        dev_data_loader_mismatched,
+                        width_mult=100,
+                        teacher_model=True)
+                else:
+                    evaluate(
+                        teacher_model,
+                        criterion,
+                        metric,
+                        dev_data_loader,
+                        width_mult=100,
+                        teacher_model=True,
+                        acc=task_acc)
                 for idx, width_mult in enumerate(args.width_mult_list):
                     net_config = apply_config(ofa_model, width_mult)
                     ofa_model.set_net_config(net_config)
-                    acc = evaluate(ofa_model, loss_fct, metric, dev_data_loader,
-                                   width_mult)
+                    tic_eval = time.time()
+                    if args.task_name == "mnli":
+                        acc = evaluate(ofa_model, criterion, metric,
+                                       dev_data_loader_matched, width_mult)
+                        evaluate(ofa_model, criterion, metric,
+                                 dev_data_loader_mismatched, width_mult)
+                        print("eval done total : %s s" %
+                              (time.time() - tic_eval))
+                    else:
+                        acc = evaluate(
+                            ofa_model,
+                            criterion,
+                            metric,
+                            dev_data_loader,
+                            width_mult,
+                            acc=task_acc)
+                        print("eval done total : %s s" %
+                              (time.time() - tic_eval))
 
                     if acc > best_acc[idx] and saved == False:
-                        saved = True
                         best_acc[idx] = acc
+                        saved = True
                         if (not args.n_gpu > 1
                             ) or paddle.distributed.get_rank() == 0:
                             output_dir = os.path.join(args.output_dir,
@@ -519,9 +591,8 @@ def do_train(args):
                             if not os.path.exists(output_dir):
                                 os.makedirs(output_dir)
                             # need better way to get inner model of DataParallel
-                            model_to_save = ofa_model.model._layers if isinstance(
-                                ofa_model.model,
-                                paddle.DataParallel) else ofa_model.model
+                            model_to_save = model._layers if isinstance(
+                                model, paddle.DataParallel) else model
                             model_to_save.save_pretrained(output_dir)
                             tokenizer.save_pretrained(output_dir)
 
