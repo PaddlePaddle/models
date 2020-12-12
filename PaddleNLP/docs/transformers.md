@@ -4,7 +4,7 @@
 
 ## Transformer 类模型汇总
 
-Model | Tokenizer | SupportedTask| Pretrained Weight
+Model | Tokenizer | Supported Task| Pretrained Weight
 ---|---|---|---
  [BERT](https://arxiv.org/abs/1810.04805) | BertTokenizer|BertModel,<br> BertForQuestionAnswering,<br> BertForSequenceClassification,<br>BertForTokenClassification| `bert-base-uncased`,<br> `bert-large-uncased`, <br>`bert-base-multilingual-uncased`, <br>`bert-base-cased`,<br> `bert-base-chinese`,<br> `bert-base-multilingual-cased`,<br> `bert-large-cased`,<br> `bert-wwm-chinese`,<br> `bert-wwm-ext-chinese`
 [ELECTRA](https://arxiv.org/abs/2003.10555) |ElectraTokenizer| ElectraModel,<br>ElectraForSequenceClassification,<br>ElectraForTokenClassification<br>|`electra-small`,<br> `electra-base`,<br> `electra-large`,<br> `chinese-electra-small`,<br> `chinese-electra-base`
