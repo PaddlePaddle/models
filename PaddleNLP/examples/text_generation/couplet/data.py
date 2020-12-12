@@ -45,7 +45,6 @@ def create_train_loader(batch_size=128):
 
 def create_infer_loader(batch_size=128):
     test_ds = CoupletDataset.get_datasets(["test"])
-
     vocab, _ = CoupletDataset.get_vocab()
     pad_id = vocab[CoupletDataset.EOS_TOKEN]
     bos_id = vocab[CoupletDataset.BOS_TOKEN]
@@ -105,26 +104,15 @@ class CoupletDataset(TranslationDataset):
                 '`train`, `dev` or `test` is supported but `{}` is passed in'.
                 format(mode))
         # Download data
-        root = CoupletDataset.get_data(root=root)
-        self.data = CoupletDataset.read_raw_data(root, mode)
-        self.vocab, _ = CoupletDataset.get_vocab(root)
+        root = self.get_data(root=root)
+        self.data = self.read_raw_data(root, mode)
+        self.vocab, _ = self.get_vocab(root)
         self.transform()
 
     def transform(self):
-        def vocab_func(vocab, unk_token):
-            def func(tok_iter):
-                return [
-                    vocab[tok] if tok in vocab else vocab[unk_token]
-                    for tok in tok_iter
-                ]
-
-            return func
-
         eos_id = self.vocab[self.EOS_TOKEN]
         bos_id = self.vocab[self.BOS_TOKEN]
         self.data = [(
-            [bos_id] + vocab_func(
-                self.vocab, self.UNK_TOKEN)(data[0].split("\x02")) + [eos_id],
-            [bos_id] + vocab_func(
-                self.vocab, self.UNK_TOKEN)(data[1].split("\x02")) + [eos_id])
+            [bos_id] + self.vocab.to_indices(data[0].split("\x02")) + [eos_id],
+            [bos_id] + self.vocab.to_indices(data[1].split("\x02")) + [eos_id])
                      for data in self.data]

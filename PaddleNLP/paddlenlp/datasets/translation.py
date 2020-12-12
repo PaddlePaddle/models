@@ -248,8 +248,8 @@ class IWSLT15(TranslationDataset):
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target.")
         # Download data
-        root = IWSLT15.get_data(root=root)
-        self.data = IWSLT15.read_raw_data(root, mode)
+        root = self.get_data(root=root)
+        self.data = self.read_raw_data(root, mode)
 
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
