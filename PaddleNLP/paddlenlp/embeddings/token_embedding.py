@@ -83,6 +83,15 @@ class TokenEmbedding(nn.Embedding):
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
         logger.info("Finish loading embedding vector.")
+        s = "Token Embedding brief:\
+             \nUnknown index: {}\
+             \nUnknown token: {}\
+             \nPadding index: {}\
+             \nPadding token: {}\
+             \nShape :{}".format(
+            self._word_to_idx[self.unknown_token], self.unknown_token,
+            self._word_to_idx[PAD_TOKEN], PAD_TOKEN, self.weight.shape)
+        logger.info(s)
 
     def _init_without_extend_vocab(self, vector_np, pad_vector, unk_vector):
         self._idx_to_word = list(vector_np['vocab'])
@@ -100,10 +109,7 @@ class TokenEmbedding(nn.Embedding):
         vocab_list = []
         with open(extended_vocab_path, "r", encoding="utf-8") as f:
             for line in f.readlines():
-                line = line.strip()
-                if line == "":
-                    break
-                vocab = line.split()[0]
+                vocab = line.rstrip("\n").split("\t")[0]
                 vocab_list.append(vocab)
         return vocab_list
 
