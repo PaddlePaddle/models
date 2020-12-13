@@ -1,3 +1,5 @@
+简体中文 | [English] (./README_en.md)
+
 # PaddleNLP
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
@@ -8,7 +10,7 @@
 
 PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
-** This project is still UNDER ACTIVE DEVELOPMENT. **
+**This project is still UNDER ACTIVE DEVELOPMENT.**
 
 ## Features
 
@@ -29,7 +31,7 @@ PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-t
 * paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp==2.0.0a
+pip install paddlenlp>=2.0.0a
 ```
 
 ## Quick Start
@@ -37,54 +39,71 @@ pip install paddlenlp==2.0.0a
 ### Quick Dataset Loading
 
 ```python
-
 from paddlenlp.datasets import ChnSentiCrop
+
 train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
+
+For more Dataset API usage, please refer to [Dataset API](./docs/datasets.md).
 
 ### Chinese Text Emebdding Loading
 
 ```python
 
 from paddlenlp.embeddings import TokenEmbedding
-wordemb = TokenEmbedding("word2vec.baike.300d")
-print(wordemb.search("中国"))
->>> [0.260801, 0.1047, 0.129453 ... 0.096542, 0.0092513]
 
+wordemb = TokenEmbedding("w2v.baidu_encyclopedia.target.word-word.dim300")
+print(wordemb.cosine_sim("国王", "王后"))
+>>> 0.63395125
+wordemb.cosine_sim("艺术", "火车")
+>>> 0.14792643
 ```
+
+For more token embedding usage, please refer to [examples/word_embedding](./example/../examples/word_embedding/README.md).
 
 ### One-Line Classical Model Building
 
 ```python
-from paddlenlp.models import Ernie
-ernie = Ernie(Ernie.Task.SeqCls)
-ernie.forward(input_ids, segment_ids)
+from paddlenlp.models import Ernie, Senta, SimNet
+
+ernie = Ernie("ernie-1.0", num_classes=2, task="seq-cls")
+
+senta = Senta(network="bow", vocab_size=1024, num_classes=2)
+
+simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
+
 ```
 
 ### Rich Chinsese Pre-trained Models
 
 ```python
 from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
+
 ernie = ErnieModel.from_pretrained('ernie-1.0')
-bert = BertModel.from_pretrained('bert-wwm-ext-large')
-electra = ElectraModel.from_pretrained('eclectra-chinese')
+bert = BertModel.from_pretrained('bert-wwm-chinese')
 roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
+electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
+For more pretrained model selection, please refer to [Pretrained-Models](./docs/transformers.md)
+
+## API Usage
+
+* [Transformer API](./docs/transformers.md)
+* [Dataset API](./docs/datasets.md)
+* [Embedding API](./docs/embeddings.md)
+* [Metrics API](./docs/embeddings.md)
+* [Models API](./docs/models.md)
 
 ## Tutorials
 
-List our notebook tutorials based on AI Studio.
-TBD
+Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
 ## Community
 
 * SIG for Pretrained Model Contribution
 * SIG for Dataset Integration
-TBD
-
-## FAQ
+* SIG for Tutorial Writing
 
 ## License
 

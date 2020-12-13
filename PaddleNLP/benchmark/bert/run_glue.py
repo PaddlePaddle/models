@@ -45,6 +45,11 @@ def parse_args():
 
     # Required parameters
     parser.add_argument(
+        "--select_device",
+        default="gpu",
+        type=str,
+        help="The device that selecting for the training, must be gpu/xpu.")
+    parser.add_argument(
         "--task_name",
         default=None,
         type=str,
@@ -253,7 +258,7 @@ def convert_example(example,
 def do_train(args):
     # Set the paddle execute enviroment
     paddle.enable_static()
-    place = paddle.CUDAPlace(0)
+    place = paddle.set_device(args.select_device)
     set_seed(args)
 
     # Create the main_program for the training and dev_program for the validation 

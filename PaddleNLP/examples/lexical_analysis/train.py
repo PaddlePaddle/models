@@ -20,17 +20,15 @@ import argparse
 import numpy as np
 import paddle
 
-from data import load_kv_dict, batch_padding_fn, LacDataset
+from data import LacDataset
 from model import BiGruCrf
+from paddlenlp.data import Pad, Tuple, Stack
 from paddlenlp.layers.crf import LinearChainCrfLoss, ViterbiDecoder
-from paddlenlp.metrics.chunk_evaluator import ChunkEvaluator
+from paddlenlp.metrics import ChunkEvaluator
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--base_path", type=str, default=None, help="The folder where the dataset is located.")
-parser.add_argument("--word_dict_path", type=str, default=None, help="The path of the word dictionary.")
-parser.add_argument("--label_dict_path", type=str, default=None, help="The path of the label dictionary.")
-parser.add_argument("--word_rep_dict_path", type=str, default=None, help="The path of the word replacement Dictionary")
+parser.add_argument("--data_dir", type=str, default=None, help="The folder where the dataset is located.")
 parser.add_argument("--init_checkpoint", type=str, default=None, help="Path to init model.")
 parser.add_argument("--model_save_dir", type=str, default=None, help="The model will be saved in this path.")
 parser.add_argument("--epochs", type=int, default=10, help="Corpus iteration num.")
@@ -52,16 +50,15 @@ def train(args):
         place = paddle.CPUPlace()
         paddle.set_device("cpu")
 
-    # Load vocab to create dataset.
-    word_vocab = load_kv_dict(
-        args.word_dict_path, value_func=np.int64, reverse=True)
-    label_vocab = load_kv_dict(
-        args.label_dict_path, value_func=np.int64, reverse=True)
-    word_rep_dict = load_kv_dict(args.word_rep_dict_path)
-    train_dataset = LacDataset(
-        args.base_path, word_vocab, label_vocab, word_rep_dict, mode='train')
-    test_dataset = LacDataset(
-        args.base_path, word_vocab, label_vocab, word_rep_dict, mode='test')
+    # create dataset.
+    train_dataset = LacDataset(args.data_dir, mode='train')
+    test_dataset = LacDataset(args.data_dir, mode='test')
+
+    batchify_fn = lambda samples, fn=Tuple(
+        Pad(axis=0, pad_val=0),  # word_ids
+        Stack(),  # length
+        Pad(axis=0, pad_val=0),  # label_ids
+    ): fn(samples)
 
     # Create sampler for dataloader
     train_sampler = paddle.io.DistributedBatchSampler(
@@ -74,7 +71,7 @@ def train(args):
         batch_sampler=train_sampler,
         places=place,
         return_list=True,
-        collate_fn=batch_padding_fn(args.max_seq_len))
+        collate_fn=batchify_fn)
 
     test_sampler = paddle.io.BatchSampler(
         dataset=test_dataset,
@@ -86,7 +83,7 @@ def train(args):
         batch_sampler=test_sampler,
         places=place,
         return_list=True,
-        collate_fn=batch_padding_fn(args.max_seq_len))
+        collate_fn=batchify_fn)
 
     # Define the model netword and its loss
     network = BiGruCrf(args.emb_dim, args.hidden_size, train_dataset.vocab_size,
@@ -105,17 +102,18 @@ def train(args):
         model.load(args.init_checkpoint)
 
     # Start training
+    callback = paddle.callbacks.ProgBarLogger(log_freq=10, verbose=3)
     model.fit(train_data=train_loader,
               eval_data=test_loader,
               batch_size=args.batch_size,
               epochs=args.epochs,
               eval_freq=1,
-              log_freq=1,
+              log_freq=10,
               save_dir=args.model_save_dir,
               save_freq=1,
-              verbose=2,
               drop_last=True,
-              shuffle=True)
+              shuffle=True,
+              callbacks=callback)
 
 
 if __name__ == "__main__":

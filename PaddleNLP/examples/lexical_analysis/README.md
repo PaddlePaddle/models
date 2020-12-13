@@ -4,7 +4,7 @@
 
 词法分析任务的输入是一个字符串（我们后面使用『句子』来指代它），而输出是句子中的词边界和词性、实体类别。序列标注是词法分析的经典建模方式，我们使用基于 GRU 的网络结构学习特征，将学习到的特征接入 CRF 解码层完成序列标注。模型结构如下所示：<br />
 
-![GRU-CRF-MODEL](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/lexical_analysis/gru-crf-model.png)
+![GRU-CRF-MODEL](https://paddlenlp.bj.bcebos.com/imgs/gru-crf-model.png)
 
 1. 输入采用 one-hot 方式表示，每个字以一个 id 表示
 2. one-hot 序列通过字表，转换为实向量表示的字向量序列；
@@ -18,15 +18,17 @@
 
 - Python >= 3.6
 
-- PaddlePaddle >= 2.0.0，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- PaddlePaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+
+- PaddleNLP >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
 
 ### 2.2 数据准备
 
 我们提供了少数样本用以示例输入数据格式。执行以下命令，下载并解压示例数据集：
 
 ```bash
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-2.0.0.tar.gz
-tar xvf lexical_analysis-dataset-2.0.0.tar.gz
+wget --no-check-certificate https://paddlenlp.bj.bcebos.com/data/lexical_analysis_dataset_tiny.tar.gz
+tar xvf lexical_analysis_dataset_tiny.tar.gz
 ```
 
 训练使用的数据可以由用户根据实际的应用场景，自己组织数据。除了第一行是 `text_a\tlabel` 固定的开头，后面的每行数据都是由两列组成，以制表符分隔，第一列是 utf-8 编码的中文文本，以 `\002` 分割，第二列是对应每个字的标注，以 `\002` 分隔。我们采用 IOB2 标注体系，即以 X-B 作为类型为 X 的词的开始，以 X-I 作为类型为 X 的词的持续，以 O 表示不关注的字（实际上，在词性、专名联合标注中，不存在 O ）。示例如下：
@@ -59,55 +61,37 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 
 ```bash
 python -m paddle.distributed.launch train.py \
-        --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+        --data_dir ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
-        --use_gpu True
+        --use_gpu True \
+        # --init_checkpoint ./save_dir/final
 ```
 
-其中 base_path 是数据集所在文件夹路径，word_dict_path 是输入文本的词典路径，label_dict_path 是标记标签的词典路径，word_rep_dict_path 是对输入文本中特殊字符进行转换的字典路径。
+其中 data_dir 是数据集所在文件夹路径，init_checkpoint 是模型加载路径，通过设置init_checkpoint可以启动增量训练。
 
 ### 2.4 模型评估
 
 通过加载训练保存的模型，可以对测试集数据进行验证，启动方式如下：
 
 ```bash
-python eval.py --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+python eval.py --data_dir ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
 ```
-
-其中 init_checkpoint 是模型加载路径。
 
 ### 2.5 模型预测
 
 对无标签数据可以启动模型预测：
 
 ```bash
-python predict.py --base_path ./data \
-        --word_dict_path ./conf/word.dic \
-        --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
+python predict.py --data_dir ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
 ```
-
-### 预训练模型
-
-我们提供了在大规模数据集中预训练得到的模型：
-
-|       模型       | Precision | Recall | F1-score |
-| :--------------: | :-------: | :----: | :------: |
-| [BiGRU + CRF](链接)      |   89.2%   | 89.4%  |  89.3%   |
 
 
 ### 如何贡献代码

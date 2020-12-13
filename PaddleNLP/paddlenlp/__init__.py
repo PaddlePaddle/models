@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '2.0.0a0'
+__version__ = '2.0.0a2'
 
 from . import data
 from . import datasets
 from . import embeddings
 from . import layers
-#from . import losses
 from . import metrics
 from . import models
 from . import seq2vec
