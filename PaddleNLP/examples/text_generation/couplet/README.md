@@ -28,7 +28,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 ## 数据介绍
 
-本教程使用[couplet数据集](https://bj.bcebos.com/paddlehub-dataset/couplet.tar.gz)数据集作为训练语料，train.tsv作为训练集，dev.tsv数据作为开发集，test.tsv数据作为测试集
+本教程使用[couplet数据集](https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz)数据集作为训练语料，train_src.tsv及train_tgt.tsv为训练集，dev_src.tsv及test_tgt.tsv为开发集，test_src.tsv及test_tgt.tsv为测试集。
 
 数据集会在`CoupletDataset`初始化时自动下载
 
@@ -48,6 +48,7 @@ python train.py \
 
 各参数的具体说明请参阅 `args.py` 。训练程序会在每个epoch训练结束之后，save一次模型。
 
+**NOTE:** 如需恢复模型训练，则`init_from_ckpt`只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=couplet_models/19`即可，程序会自动加载模型参数`couplet_models/19.pdparams`，也会自动加载优化器状态`couplet_models/19.pdopt`。
 
 ## 模型预测
 
@@ -62,27 +63,30 @@ python predict.py \
     --infer_output_file infer_output.txt \
     --beam_size 10 \
     --use_gpu True
-
 ```
 
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
 ## 生成对联样例
 
-崖悬风雨骤  月落水云寒
+上联：崖悬风雨骤				下联：月落水云寒
 
-约春章柳下  邀月醉花间
 
-箬笠红尘外  扁舟明月中
+上联：约春章柳下				下联：邀月醉花间
 
-书香醉倒窗前月    烛影摇红梦里人
 
-踏雪寻梅求雅趣    临风把酒觅知音
+上联：箬笠红尘外				下联：扁舟明月中
 
-未出南阳天下论    先登北斗汉中书
 
-朱联妙语千秋颂    赤胆忠心万代传
+上联：书香醉倒窗前月		下联：烛影摇红梦里人
 
-月半举杯圆月下    花间对酒醉花间
 
-挥笔如剑倚麓山豪气干云揽月去   落笔似龙飞沧海龙吟破浪乘风来
+上联：踏雪寻梅求雅趣		下联：临风把酒觅知音
+
+上联：未出南阳天下论		下联：先登北斗汉中书
+
+上联：朱联妙语千秋颂    	下联：赤胆忠心万代传
+
+上联：月半举杯圆月下    	下联：花间对酒醉花间
+
+上联：挥笔如剑倚麓山豪气干云揽月去   	下联：落笔似龙飞沧海龙吟破浪乘风来
