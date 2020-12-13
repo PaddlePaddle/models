@@ -91,7 +91,7 @@ class GlueCoLA(_GlueDataset):
     Each example is a sequence of words annotated with whether it is a
     grammatical English sentence. From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
             Default: False.
@@ -135,7 +135,7 @@ class GlueSST2(_GlueDataset):
     from movie reviews and human annotations of their sentiment.
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
             Default: False.
@@ -181,7 +181,7 @@ class GlueMRPC(_GlueDataset):
     From https://gluebenchmark.com/tasks
     Args:
         root (str): Path to temp folder for storing data.
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
     Example:
         .. code-block:: python
             from paddle.incubate.hapi.text.glue import  GlueMRPC
@@ -234,7 +234,7 @@ class GlueMRPC(_GlueDataset):
                 warnings.warn(
                     'md5 check failed for {}, download {} data to {}'.format(
                         filename, self.__class__.__name__, default_root))
-            if segment in ('train', 'dev'):
+            if mode in ('train', 'dev'):
                 dev_id_path = get_path_from_url(
                     self.DEV_ID_URL,
                     os.path.join(default_root, 'MRPC'), self.DEV_ID_MD5)
@@ -297,7 +297,7 @@ class GlueSTSB(_GlueDataset):
     with a similarity score from 1 to 5.
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset mode. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset. Default: False.
     Example:
@@ -340,7 +340,7 @@ class GlueQQP(_GlueDataset):
     community question-answering website Quora.
     From https://gluebenchmark.com/tasks
     Args:
-        segment ({'train', 'dev', 'test'}): Dataset segment. Default: 'train'.
+        mode ({'train', 'dev', 'test'}): Dataset mode. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
             Default: False.
@@ -380,7 +380,7 @@ class GlueQQP(_GlueDataset):
     def __init__(self, mode='train', root=None, return_all_fields=False):
         # QQP may include broken samples
         super(GlueQQP, self).__init__(
-            segment, root, return_all_fields, allow_missing=True)
+            mode, root, return_all_fields, allow_missing=True)
 
     def get_labels(self):
         """
@@ -396,7 +396,7 @@ class GlueMNLI(_GlueDataset):
     annotations.
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev_matched'|'dev_mismatched'|'test_matched'|
+        mode ('train'|'dev_matched'|'dev_mismatched'|'test_matched'|
             'test_mismatched'): Dataset segment. Default: ‘train’.
         root (str, default '$MXNET_HOME/datasets/glue_mnli'): Path to temp
             folder for storing data.
@@ -452,7 +452,7 @@ class GlueQNLI(_GlueDataset):
     Answering Dataset (Rajpurkar et al. 2016).
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Dataset segment.
+        mode ('train'|'dev'|'test'): Dataset segment.
             Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
@@ -506,7 +506,7 @@ class GlueRTE(_GlueDataset):
     annual textual entailment challenges (RTE1, RTE2, RTE3, and RTE5).
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
             Default: False.
@@ -556,7 +556,7 @@ class GlueWNLI(_GlueDataset):
     Challenge (Levesque et al., 2011).
     From https://gluebenchmark.com/tasks
     Args:
-        segment ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
+        mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
         root (str): Path to temp folder for storing data.
         return_all_fields (bool): Return all fields available in the dataset.
             Default: False.
