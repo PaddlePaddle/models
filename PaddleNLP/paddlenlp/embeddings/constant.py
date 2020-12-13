@@ -37,4 +37,19 @@ EMBEDDING_NAME_LIST = [
     "w2v.wiki.target.word-char.dim300",
     "w2v.wiki.target.word-word.dim300",
     "w2v.wiki.target.word-bigram.dim300",
+    # people_daily
+    "w2v.people_daily.target.bigram-char.dim300",
+    "w2v.people_daily.target.word-char.dim300",
+    "w2v.people_daily.target.word-word.dim300",
+    "w2v.people_daily.target.word-bigram.dim300",
+    # weibo 
+    "w2v.weibo.target.bigram-char.dim300",
+    "w2v.weibo.target.word-char.dim300",
+    "w2v.weibo.target.word-word.dim300",
+    "w2v.weibo.target.word-bigram.dim300",
+    # sougou
+    "w2v.sougou.target.bigram-char.dim300",
+    "w2v.sougou.target.word-char.dim300",
+    "w2v.sougou.target.word-word.dim300",
+    "w2v.sougou.target.word-bigram.dim300"
 ]
