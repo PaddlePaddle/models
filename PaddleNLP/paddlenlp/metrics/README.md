@@ -1,4 +1,4 @@
-# paddlenlp.metrics API
+# paddlenlp.metrics
 
 目前paddlenlp提供以下评价指标：
 
