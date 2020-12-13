@@ -47,7 +47,7 @@ parser.add_argument(
 parser.add_argument(
     "--vocab_path",
     type=str,
-    default="./senta_word_dict.txt",
+    default="./dict.txt",
     help="The directory to dataset.")
 parser.add_argument(
     "--init_from_ckpt",
@@ -58,7 +58,15 @@ parser.add_argument(
     "--use_token_embedding",
     type=eval,
     default=True,
-    help="The path of checkpoint to be loaded.")
+    help="Whether use pretrained embedding")
+parser.add_argument(
+    "--embedding_name",
+    type=str,
+    default="w2v.baidu_encyclopedia.target.word-word.dim300",
+    help="The name of pretrained embedding")
+parser.add_argument(
+    "--vdl_dir", type=str, default="vdl_dir/", help="VisualDL directory")
+
 args = parser.parse_args()
 
 
@@ -122,7 +130,8 @@ class BoWModel(nn.Layer):
                  use_token_embedding=True):
         super().__init__()
         if use_token_embedding:
-            self.embedder = TokenEmbedding(extended_vocab_path=vocab_path)
+            self.embedder = TokenEmbedding(
+                args.embedding_name, extended_vocab_path=vocab_path)
             emb_dim = self.embedder.embedding_dim
         else:
             padding_idx = vocab_size - 1
@@ -131,6 +140,7 @@ class BoWModel(nn.Layer):
         self.bow_encoder = nlp.seq2vec.BoWEncoder(emb_dim)
         self.fc1 = nn.Linear(self.bow_encoder.get_output_dim(), hidden_size)
         self.fc2 = nn.Linear(hidden_size, fc_hidden_size)
+        self.dropout = nn.Dropout(p=0.3, axis=1)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len=None):
@@ -139,6 +149,7 @@ class BoWModel(nn.Layer):
 
         # Shape: (batch_size, embedding_dim)
         summed = self.bow_encoder(embedded_text)
+        summed = self.dropout(summed)
         encoded_text = paddle.tanh(summed)
 
         # Shape: (batch_size, hidden_size)
@@ -220,10 +231,10 @@ if __name__ == '__main__':
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
-    log_dir = 'log_dir'
+    log_dir = 'use_normal_embedding'
     if args.use_token_embedding:
-        log_dir = 'use_token_embedding_log_dir'
-    log_dir = osp.join("visualdl_log_dir", log_dir)
+        log_dir = 'use_token_embedding'
+    log_dir = osp.join(args.vdl_dir, log_dir)
     callback = paddle.callbacks.VisualDL(log_dir=log_dir)
     model.fit(train_loader,
               dev_loader,
@@ -232,5 +243,5 @@ if __name__ == '__main__':
               callbacks=callback)
 
     # Finally tests model.
-    results = model.evaluate(test_loader=test_loader, callbacks=callback)
+    results = model.evaluate(test_loader, callbacks=callback)
     print("Finally test acc: %.5f" % results['acc'])

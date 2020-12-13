@@ -27,6 +27,7 @@ EMBEDDING_NAME_LIST = [
     "w2v.baidu_encyclopedia.target.word-character.char1-1.dim300",
     "w2v.baidu_encyclopedia.target.word-character.char1-2.dim300",
     "w2v.baidu_encyclopedia.target.word-character.char1-4.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300",
     "w2v.baidu_encyclopedia.target.bigram-char.dim300",
     "w2v.baidu_encyclopedia.context.word-word.dim300",
     "w2v.baidu_encyclopedia.context.word-character.char1-1.dim300",
@@ -51,5 +52,20 @@ EMBEDDING_NAME_LIST = [
     "w2v.sougou.target.bigram-char.dim300",
     "w2v.sougou.target.word-char.dim300",
     "w2v.sougou.target.word-word.dim300",
-    "w2v.sougou.target.word-bigram.dim300"
+    "w2v.sougou.target.word-bigram.dim300",
+    # zhihu
+    "w2v.zhihu.target.bigram-char.dim300",
+    "w2v.zhihu.target.word-char.dim300",
+    "w2v.zhihu.target.word-word.dim300",
+    "w2v.zhihu.target.word-bigram.dim300",
+    # finacial
+    "w2v.financial.target.bigram-char.dim300",
+    "w2v.financial.target.word-char.dim300",
+    "w2v.financial.target.word-word.dim300",
+    "w2v.financial.target.word-bigram.dim300",
+    # literature
+    "w2v.literature.target.bigram-char.dim300",
+    "w2v.literature.target.word-char.dim300",
+    "w2v.literature.target.word-word.dim300",
+    "w2v.literature.target.word-bigram.dim300"
 ]
