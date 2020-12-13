@@ -11,11 +11,9 @@
 本项目针对中文文本分类问题，开源了一系列模型，供用户可配置地使用：
 
 + BERT([Bidirectional Encoder Representations from Transformers](https://arxiv.org/abs/1810.04805))中文模型，简写`bert-base-chinese`， 其由12层Transformer网络组成。
-+ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie_tiny`)。
-   其中`ernie`由12层Transformer网络组成，`ernie_tiny`由3层Transformer网络组成。
++ ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie-tiny`)。
+   其中`ernie`由12层Transformer网络组成，`ernie-tiny`由3层Transformer网络组成。
 + RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
-+ Electra([ELECTRA: Pre-training Text Encoders as Discriminators Rather Than Generators](https://arxiv.org/abs/2003.10555)), 支持hidden_size=256的`chinese-electra-discriminator-small`和
-  hidden_size=768的`chinese-electra-discriminator-base`
 
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
@@ -28,8 +26,6 @@
 | roberta-wwm-ext-large | 0.95250 | 0.95333 |
 | rbt3 | 0.92583 | 0.93250 |
 | rbtl3 | 0.9341 | 0.93583 |
-| chinese-electra-discriminator-base | 0.94500 | 0.94500 |
-| chinese-electra-discriminator-small | 0.92417 | 0.93417 |
 
 ## 快速开始
 
@@ -66,13 +62,13 @@ pretrained_models/
 ```shell
 # 设置使用的GPU卡号
 CUDA_VISIBLE_DEVICES=0
-python train.py --model_type ernie --model_name ernie_tiny --n_gpu 1 --save_dir ./checkpoints
+python train.py --model_type ernie --model_name ernie-tiny --n_gpu 1 --save_dir ./checkpoints
 ```
 
 可支持配置的参数：
 
 * `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
-* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie`和`ernie_tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
+* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
    `model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`和`roberta-wwm-ext`。
 * `save_dir`：必选，保存训练模型的目录。
 * `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
@@ -99,14 +95,14 @@ checkpoints/
 
 **NOTE:**
 * 如需恢复模型训练，则可以设置`init_from_ckpt`， 如`init_from_ckpt=checkpoints/model_100/model_state.pdparams`。
-* 如需使用ernie_tiny模型，则需要提前先安装sentencepiece依赖，如`pip install sentencepiece`
+* 如需使用ernie-tiny模型，则需要提前先安装sentencepiece依赖，如`pip install sentencepiece`
 
 ### 模型预测
 
 启动预测：
 ```shell
 export CUDA_VISIBLE_DEVICES=0
-python predict.py --model_type ernie --model_name ernie_tiny --params_path checkpoints/model_400/model_state.pdparams
+python predict.py --model_type ernie --model_name ernie-tiny --params_path checkpoints/model_400/model_state.pdparams
 ```
 
 将待预测数据如以下示例：

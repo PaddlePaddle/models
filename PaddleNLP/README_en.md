@@ -1,4 +1,4 @@
-简体中文 | [English](./README_en.md)
+English | [简体中文] (./README.md)
 
 # PaddleNLP
 
@@ -44,8 +44,6 @@ from paddlenlp.datasets import ChnSentiCrop
 train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
 
-For more Dataset API usage, please refer to [Dataset API](./docs/datasets.md).
-
 ### Chinese Text Emebdding Loading
 
 ```python
@@ -59,19 +57,13 @@ wordemb.cosine_sim("艺术", "火车")
 >>> 0.14792643
 ```
 
-For more token embedding usage, please refer to [examples/word_embedding](./example/../examples/word_embedding/README.md).
-
 ### One-Line Classical Model Building
 
 ```python
-from paddlenlp.models import Ernie, Senta, SimNet
+from paddlenlp.models import Ernie
 
-ernie = Ernie("ernie-1.0", num_classes=2, task="seq-cls")
-
-senta = Senta(network="bow", vocab_size=1024, num_classes=2)
-
-simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
-
+ernie = Ernie(Ernie.Task.SeqCls)
+ernie.forward(input_ids, segment_ids)
 ```
 
 ### Rich Chinsese Pre-trained Models
@@ -85,7 +77,7 @@ roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [Pretrained-Models](./docs/transformers.md)
+For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
 
 ## API Usage
 

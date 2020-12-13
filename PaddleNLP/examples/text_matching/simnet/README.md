@@ -1,4 +1,4 @@
-# 使用SimNet完成pointwise文本匹配任务
+# 使用SimNet完成文本匹配任务
 
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，
@@ -21,10 +21,10 @@ SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MM
 ## TBD 增加模型效果
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
-| BoW  |  |  |
-| CNN  |  |  |
-| GRU  |  |  |
-| LSTM  |  |  |
+| BoW  | 0.7290 | 0.75232 |
+| CNN  | 0.7042 | 0.73760 |
+| GRU  | 0.7781 | 0.77808 |
+| LSTM  | 0.73760 | 0.77320 |
 
 
 
@@ -91,7 +91,7 @@ query title label
 wget https://paddlenlp.bj.bcebos.com/data/simnet_word_dict.txt
 ```
 
-我们以中文pointwise文本匹配数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
+我们以中文文本匹配数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 
 CPU启动：
 
