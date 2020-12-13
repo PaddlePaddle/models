@@ -15,11 +15,11 @@
 |[ELECTRA](https://arxiv.org/abs/2003.10555) |ElectraTokenizer| ElectraModel<br>ElectraForSequenceClassification<br>ElectraForTokenClassification<br>|`electra-small`<br> `electra-base`<br> `electra-large`<br> `chinese-electra-small`<br> `chinese-electra-base`<br>|
 |[Transformer](https://arxiv.org/abs/1706.03762) |- | TransformerModel | - |
 
-注：其中中文的预训练模型有 `bert-base-chinese, bert-wwm-chinese, bert-wwm-ext-chinese, ernie, ernie-tiny, roberta-wwm-ext, roberta-wwm-ext-large, rbt3, rbtl3, chinese-electra-base, chinese-electra-small`。
+注：其中中文的预训练模型有 `bert-base-chinese, bert-wwm-chinese, bert-wwm-ext-chinese, ernie-1.0, ernie-tiny, roberta-wwm-ext, roberta-wwm-ext-large, rbt3, rbtl3, chinese-electra-base, chinese-electra-small`。
 
 ## 预训练模型使用方法
 
-PaddleNLP在提丰富预训练模型的同时，也降低了用户使大规模预训练模型难度。只需轻松十几行代码，用户即可加载模型，完成下游finetune任务。
+PaddleNLP在提丰富预训练模型的同时，也降低了用户的使用难度。只需轻松十几行代码，用户即可完成加载模型，fine-tune下游任务。
 
 ```python
 import paddle
@@ -34,7 +34,7 @@ model = BertForSequenceClassification.from_pretrained(
 
 tokenizer = BertTokenizer.from_pretrained("bert-wwm-chinese")
 
-# please define your dataloader form dataset and tokenizer
+# please define your dataloader from dataset and tokenizer
 
 optimizer = paddle.optimizer.AdamW(learning_rate=0.001,
                                    parameters=model.parameters())
@@ -50,11 +50,11 @@ for batch in train_data_loader:
     optimizer.clear_gradients()
 ```
 
-上面的代码给出使用模型的简要示例，更完整详细的示例代码，可以参考[使用预训练模型Fine-tune完成中文文本分类任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_classification/pretrained_models)。
+上面的代码给出使用预训练模型的简要示例，更完整详细的示例代码，可以参考[使用预训练模型Fine-tune完成中文文本分类任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_classification/pretrained_models)。
 
 1. 加载数据集：PaddleNLP内置了多种数据集，用户可以一键导入所需的数据集。
 2. 加载预训练模型：PaddleNLP的预训练模型可以很容易地通过`from_pretrained`方法加载。第一个参数是汇总表中对应的 `Pretrained Weight`，可加载对应的预训练权重。`BertForSequenceClassification`初始化`__init__`所需的其他参数，如`num_classes`等，也是通过`from_pretrained`传入。`Tokenizer`使用同样的`from_pretrained`方法加载。
-3. 使用tokenier将dataset处理成输入的token。此部分可以参考前述的详细示例代码。
-4. 定义训练所需的优化器，loss函数等，就可以开始进行模型训练任务。
+3. 使用tokenier将dataset处理成模型的输入。此部分可以参考前述的详细示例代码。
+4. 定义训练所需的优化器，loss函数等，就可以开始进行模型fine-tune任务。
 
 更多详细使用方法，请参考[examples](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples)。
