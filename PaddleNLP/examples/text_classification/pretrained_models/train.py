@@ -40,15 +40,15 @@ def parse_args():
     # Required parameters
     parser.add_argument(
         "--model_type",
-        default='ernie',
-        required=True,
+        default='roberta',
+        # required=True,
         type=str,
         help="Model type selected in the list: " +
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
-        default='ernie-tiny',
-        required=True,
+        default='roberta-wwm-ext-large',
+        # required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
         + ", ".join(
@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument(
         "--save_dir",
         default='./checkpoint',
-        required=True,
+        # required=True,
         type=str,
         help="The output directory where the model checkpoints will be written.")
 
@@ -118,6 +118,7 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
+@paddle.no_grad()
 def evaluate(model, criterion, metric, data_loader):
     """
     Given a dataset, it evals model and computes the metric.
