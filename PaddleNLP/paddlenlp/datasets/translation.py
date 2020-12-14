@@ -275,6 +275,18 @@ class IWSLT15(TranslationDataset):
 
 class WMT14ende(TranslationDataset):
     """
+    WMT14 English to German translation dataset.
+
+    Args:
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
+        root(str, optional): If None, dataset will be downloaded in
+            `/root/.paddlenlp/datasets/machine_translation/WMT14ende/`. Default: None.
+        transform_func(callable, optional): If not None, it transforms raw data
+            to index data. Default: None.
+    Examples:
+        .. code-block:: python
+            from paddlenlp.datasets import WMT14ende
+            train_dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
     """
     URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
     SPLITS = {
