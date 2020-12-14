@@ -22,7 +22,7 @@ from functools import partial
 import numpy as np
 from paddle.io import BatchSampler, DataLoader, Dataset
 from paddlenlp.data import Pad
-from paddlenlp.datasets import WMT14
+from paddlenlp.datasets import WMT14ende
 from paddlenlp.data.sampler import SamplerHelper
 
 
@@ -35,17 +35,19 @@ def min_max_filer(data, max_len, min_len=0):
 
 def create_data_loader(args):
     root = None if args.root == "None" else args.root
-    transform_func = WMT14.get_default_transform_func(root=root)
+    (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+    args.src_vocab_size, args.trg_vocab_size = len(src_vocab), len(trg_vocab)
+    transform_func = WMT14ende.get_default_transform_func(root=root)
     datasets = [
-        WMT14.get_datasets(
+        WMT14ende.get_datasets(
             mode=m, transform_func=transform_func) for m in ["train", "dev"]
     ]
 
-    def token_size_fn(current_idx, current_batch_size, tokens_sofar,
+    def _max_token_fn(current_idx, current_batch_size, tokens_sofar,
                       data_source):
         return max(tokens_sofar,
-                   len(data_source[current_idx][0]),
-                   len(data_source[current_idx][1]))
+                   len(data_source[current_idx][0]) + 1,
+                   len(data_source[current_idx][1]) + 1)
 
     def _key(size_so_far, minibatch_len):
         return size_so_far * minibatch_len
@@ -54,7 +56,7 @@ def create_data_loader(args):
     for i, dataset in enumerate(datasets):
         sampler = SamplerHelper(
             dataset.filter(partial(
-                min_max_filer, max_len=args.max_length)))  # .shuffle()
+                min_max_filer, max_len=args.max_length))).shuffle()
 
         if args.sort_type == SortType.GLOBAL or args.sort_type == SortType.POOL:
             # else for SortType.GLOBAL
@@ -69,7 +71,7 @@ def create_data_loader(args):
         batch_sampler = sampler.batch(
             batch_size=args.batch_size,
             drop_last=False,
-            batch_size_fn=token_size_fn,
+            batch_size_fn=_max_token_fn,
             key=_key).shard()
 
         data_loader = DataLoader(
@@ -88,14 +90,16 @@ def create_data_loader(args):
 
 def create_infer_loader(args):
     root = None if args.root == "None" else args.root
-    (src_vocab, tgt_vocab) = WMT14.get_vocab(root=root)
-    transform_func = WMT14.get_default_transform_func(root=root)
-    dataset = WMT14.get_datasets(
+    (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+    args.src_vocab_size, args.trg_vocab_size = len(src_vocab), len(trg_vocab)
+    transform_func = WMT14ende.get_default_transform_func(root=root)
+    dataset = WMT14ende.get_datasets(
         mode="test", transform_func=transform_func).filter(
             partial(
                 min_max_filer, max_len=args.max_length))
-    batch_sampler = SamplerHelper(dataset).shuffle().batch(
-        batch_size=args.batch_size, drop_last=False).shard()
+
+    batch_sampler = SamplerHelper(dataset).batch(
+        batch_size=args.infer_batch_size, drop_last=False)
 
     data_loader = DataLoader(
         dataset=dataset,
@@ -108,7 +112,7 @@ def create_infer_loader(args):
         num_workers=0,
         return_list=True)
     data_loaders = (data_loader, batch_sampler.__len__)
-    return data_loaders, tgt_vocab
+    return data_loaders, trg_vocab.to_tokens
 
 
 def prepare_train_input(insts, bos_idx, eos_idx, pad_idx):

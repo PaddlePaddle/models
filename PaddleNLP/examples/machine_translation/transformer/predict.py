@@ -48,8 +48,7 @@ def do_predict(args):
     paddle.set_device(place)
 
     # Define data loader
-    (test_loader,
-     test_steps_fn), trg_idx2word = reader.create_infer_loader(args)
+    (test_loader, test_steps_fn), to_tokens = reader.create_infer_loader(args)
 
     # Define model
     transformer = InferTransformerModel(
@@ -95,7 +94,7 @@ def do_predict(args):
                     if beam_idx >= args.n_best:
                         break
                     id_list = post_process_seq(beam, args.bos_idx, args.eos_idx)
-                    word_list = [trg_idx2word[id] for id in id_list]
+                    word_list = to_tokens(id_list)
                     sequence = " ".join(word_list) + "\n"
                     f.write(sequence)
 

@@ -13,7 +13,7 @@ from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.utils.env import DATA_HOME
 from paddle.dataset.common import md5file
 
-__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14']
+__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14ende']
 
 
 def sequential_transforms(*transforms):
@@ -266,14 +266,14 @@ class IWSLT15(TranslationDataset):
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target.")
         # Download data and read data
-        self.data = self.get_data(root=root)
+        self.data = self.get_data(mode=mode, root=root)
 
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
 
 
-class WMT14(TranslationDataset):
+class WMT14ende(TranslationDataset):
     """
     """
     URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
@@ -314,12 +314,11 @@ class WMT14(TranslationDataset):
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target.")
 
-        root = WMT14.get_data(root=root)
-        self.data = self.read_raw_data(root, mode)
+        self.data = WMT14ende.get_data(mode=mode, root=root)
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
-        super(WMT14, self).__init__(self.data)
+        super(WMT14ende, self).__init__(self.data)
 
 
 # For test, not API

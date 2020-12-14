@@ -52,8 +52,7 @@ def do_predict(args):
     paddle.set_device(place)
 
     # Define data loader
-    (test_loader,
-     test_steps_fn), trg_idx2word = reader.create_infer_loader(args)
+    (test_loader, test_steps_fn), to_tokens = reader.create_infer_loader(args)
 
     # Define model
     transformer = InferTransformerModel(
@@ -90,17 +89,18 @@ def do_predict(args):
     transformer.eval()
 
     f = open(args.output_file, "w")
-    for (src_word, ) in test_loader:
-        finished_seq = transformer(src_word=src_word)
-        finished_seq = finished_seq.numpy().transpose([0, 2, 1])
-        for ins in finished_seq:
-            for beam_idx, beam in enumerate(ins):
-                if beam_idx >= args.n_best:
-                    break
-                id_list = post_process_seq(beam, args.bos_idx, args.eos_idx)
-                word_list = [trg_idx2word[id] for id in id_list]
-                sequence = " ".join(word_list) + "\n"
-                f.write(sequence)
+    with paddle.no_grad():
+        for (src_word, ) in test_loader:
+            finished_seq = transformer(src_word=src_word)
+            finished_seq = finished_seq.numpy().transpose([0, 2, 1])
+            for ins in finished_seq:
+                for beam_idx, beam in enumerate(ins):
+                    if beam_idx >= args.n_best:
+                        break
+                    id_list = post_process_seq(beam, args.bos_idx, args.eos_idx)
+                    word_list = to_tokens(id_list)
+                    sequence = " ".join(word_list) + "\n"
+                    f.write(sequence)
 
 
 if __name__ == "__main__":
