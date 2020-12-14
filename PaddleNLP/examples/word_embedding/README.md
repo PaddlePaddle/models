@@ -69,7 +69,7 @@ nohup python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=5e-4 --batch
 
 * `save_dir`: 模型保存目录。
 * `init_from_ckpt`: 恢复模型训练的断点路径。
-* `embedding_name`: 预训练Embedding名称，默认为`w2v.baidu_encyclopedia.target.word-word.dim300`. 支持的预训练Embedding可参考[Embedding 模型汇总](../../../../docs/embeddings.md)。
+* `embedding_name`: 预训练Embedding名称，默认为`w2v.baidu_encyclopedia.target.word-word.dim300`. 支持的预训练Embedding可参考[Embedding 模型汇总](../../docs/embeddings.md)。
 
 ### 启动VisualDL
 
@@ -87,8 +87,8 @@ nohup visualdl --logdir ./vdl_dir --port 8888 --host 0.0.0.0 &
 
 Eval Acc：
 
-![eval acc](https://paddlenlp.bj.bcebos.com/images/embeddings/eval_acc.png)
+![eval acc](https://user-images.githubusercontent.com/10826371/102055579-0a743780-3e26-11eb-9025-99ffd06ecb68.png)
 
 Eval Loss：
 
-![eval loss](https://paddlenlp.bj.bcebos.com/images/embeddings/eval_loss.png)
+![eval loss](https://user-images.githubusercontent.com/10826371/102055669-28da3300-3e26-11eb-8034-ee902931b7cf.png)
