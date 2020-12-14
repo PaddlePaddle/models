@@ -21,19 +21,19 @@ import paddle.nn as nn
 from paddlenlp.metrics import Perplexity
 
 from seq2seq_attn import Seq2SeqAttnModel, CrossEntropyCriterion
-from data import create_data_loader
+from data import create_train_loader
 
 
 def do_train(args):
     device = paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     # Define dataloader
-    (train_loader, eval_loader), eos_id = create_data_loader(args, device)
+    train_loader, eval_loader, src_vocab_size, tgt_vocab_size, eos_id = create_train_loader(
+        args.batch_size)
 
     model = paddle.Model(
-        Seq2SeqAttnModel(args.src_vocab_size, args.trg_vocab_size,
-                         args.hidden_size, args.hidden_size, args.num_layers,
-                         args.dropout, eos_id))
+        Seq2SeqAttnModel(src_vocab_size, tgt_vocab_size, args.hidden_size, args.
+                         hidden_size, args.num_layers, args.dropout, eos_id))
 
     grad_clip = nn.ClipGradByGlobalNorm(args.max_grad_norm)
     optimizer = paddle.optimizer.Adam(

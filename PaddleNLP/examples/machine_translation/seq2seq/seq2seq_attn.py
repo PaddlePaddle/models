@@ -200,7 +200,6 @@ class Seq2SeqAttnModel(nn.Layer):
             (encoder_final_state[0][i], encoder_final_state[1][i])
             for i in range(self.num_layers)
         ]
-
         # Construct decoder initial states: use input_feed and the shape is
         # [[h,c] * num_layers, input_feed], consistent with Seq2SeqDecoderCell.states
         decoder_initial_states = [
@@ -215,8 +214,8 @@ class Seq2SeqAttnModel(nn.Layer):
 
         predict = self.decoder(trg, decoder_initial_states, encoder_output,
                                encoder_padding_mask)
-        # trg_mask = (trg != self.eos_id).astype(paddle.get_default_dtype())
-        return predict  #, trg_mask
+        # import pdb; pdb.set_trace()
+        return predict
 
 
 class Seq2SeqAttnInferModel(Seq2SeqAttnModel):

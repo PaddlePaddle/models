@@ -95,7 +95,6 @@ class TranslationDataset(paddle.io.Dataset):
                                     filename) if root is None else os.path.join(
                                         os.path.expanduser(root), filename)
             fullname_list.append(fullname)
-            # print(fullname)
 
         data_hash_list = [
             src_data_hash, tgt_data_hash, cls.VOCAB_INFO[2], cls.VOCAB_INFO[3]
@@ -108,9 +107,8 @@ class TranslationDataset(paddle.io.Dataset):
                     warnings.warn(
                         'md5 check failed for {}, download {} data to {}'.
                         format(filename, cls.__name__, default_root))
-                path = get_path_from_url(cls.URL, root, cls.MD5)
-
-                break
+                path = get_path_from_url(cls.URL, default_root, cls.MD5)
+                return default_root
         return root if root is not None else default_root
 
     @classmethod
@@ -163,7 +161,6 @@ class TranslationDataset(paddle.io.Dataset):
             list: Raw data list.
         
         """
-        # print(root)
         src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
 
         def read_raw_files(corpus_path):
@@ -177,7 +174,6 @@ class TranslationDataset(paddle.io.Dataset):
 
         src_path = os.path.join(root, src_filename)
         tgt_path = os.path.join(root, tgt_filename)
-        print(src_path, tgt_path)
         src_data = read_raw_files(src_path)
         tgt_data = read_raw_files(tgt_path)
 
