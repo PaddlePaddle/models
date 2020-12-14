@@ -38,8 +38,7 @@ def create_train_loader(batch_size=128):
         [trans_func_tuple, trans_func_tuple])
 
     key = (lambda x, data_source: len(data_source[x][0]))
-    # batch_size_fn = lambda idx, minibatch_len, size_so_far, data_source: max(size_so_far, len(data_source[idx][0]))
-    # batch_key = lambda size_so_far, minibatch_len: size_so_far * minibatch_len
+
     train_ds = MapDatasetWrapper(train_ds).filter(
         lambda data: (len(data[0]) > 0))
     dev_ds = MapDatasetWrapper(dev_ds).filter(lambda data: len(data[0]) > 0)

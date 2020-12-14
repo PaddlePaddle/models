@@ -214,7 +214,6 @@ class Seq2SeqAttnModel(nn.Layer):
 
         predict = self.decoder(trg, decoder_initial_states, encoder_output,
                                encoder_padding_mask)
-        # import pdb; pdb.set_trace()
         return predict
 
 
