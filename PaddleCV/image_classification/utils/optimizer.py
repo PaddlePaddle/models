@@ -160,9 +160,7 @@ class Optimizer(object):
         self.decay_epochs = args.decay_epochs
         self.decay_rate = args.decay_rate
         self.total_images = args.total_images
-        self.multi_precision = args.multi_precision
-        self.rescale_grad = (1.0 / (args.batch_size / len(fluid.cuda_places()))
-            if args.use_pure_fp16 else 1.0)
+        self.multi_precision = args.use_pure_fp16
 
         self.step = int(math.ceil(float(self.total_images) / self.batch_size))
 
@@ -179,8 +177,7 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision,
-            rescale_grad=self.rescale_grad)
+            multi_precision=self.multi_precision)
         return optimizer
 
     def cosine_decay(self):
@@ -198,8 +195,7 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision,
-            rescale_grad=self.rescale_grad)
+            multi_precision=self.multi_precision)
         return optimizer
 
     def cosine_decay_warmup(self):
@@ -218,8 +214,7 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision,
-            rescale_grad=self.rescale_grad)
+            multi_precision=self.multi_precision)
         return optimizer
 
     def exponential_decay_warmup(self):
@@ -257,8 +252,7 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision,
-            rescale_grad=self.rescale_grad)
+            multi_precision=self.multi_precision)
 
         return optimizer
 
@@ -301,8 +295,7 @@ class Optimizer(object):
             learning_rate=self.lr,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision,
-            rescale_grad=self.rescale_grad)
+            multi_precision=self.multi_precision)
         return optimizer
 
 

@@ -4,13 +4,10 @@ export FLAGS_conv_workspace_size_limit=4000 #MB
 export FLAGS_cudnn_exhaustive_search=1
 export FLAGS_cudnn_batchnorm_spatial_persistent=1
 
-
 DATA_DIR="Your image dataset path, e.g. /work/datasets/ILSVRC2012/"
-
 DATA_FORMAT="NHWC"
 USE_AMP=true #whether to use amp
-USE_PURE_FP16=false
-MULTI_PRECISION=${USE_PURE_FP16}
+USE_PURE_FP16=true
 USE_DALI=true
 USE_ADDTO=true
 
@@ -34,7 +31,6 @@ python train.py \
        --lr_strategy=piecewise_decay \
        --use_amp=${USE_AMP} \
        --use_pure_fp16=${USE_PURE_FP16} \
-       --multi_precision=${MULTI_PRECISION} \
        --scale_loss=128.0 \
        --use_dynamic_loss_scaling=true \
        --data_format=${DATA_FORMAT} \
@@ -48,6 +44,5 @@ python train.py \
        --reader_thread=10 \
        --reader_buf_size=4000 \
        --use_dali=${USE_DALI} \
-       --lr=0.1 \
-       --random_seed=2020
+       --lr=0.1
 
