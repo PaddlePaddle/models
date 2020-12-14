@@ -118,6 +118,7 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
+@paddle.no_grad()
 def evaluate(model, criterion, metric, data_loader):
     """
     Given a dataset, it evals model and computes the metric.
