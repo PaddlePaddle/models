@@ -17,7 +17,6 @@ import csv
 from collections import namedtuple
 from contextlib import contextmanager
 import gzip
-import os
 
 import numpy as np
 

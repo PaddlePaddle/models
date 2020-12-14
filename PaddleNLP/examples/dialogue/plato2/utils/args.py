@@ -15,7 +15,6 @@
 
 import argparse
 import json
-import sys
 
 
 def str2bool(v):

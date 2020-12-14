@@ -14,13 +14,10 @@
 """Tokenization classes."""
 
 import collections
-import json
 import sentencepiece as spm
 import unicodedata
 
 from utils.args import str2bool
-
-SPIECE_UNDERLINE = u"▁".encode("utf-8")
 
 
 def clean_text(text):

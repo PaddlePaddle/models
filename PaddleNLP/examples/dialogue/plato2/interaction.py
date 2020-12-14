@@ -5,7 +5,6 @@ from termcolor import colored, cprint
 
 import paddle
 
-#from tasks.dialog_generation import DialogGeneration
 from utils.args import parse_args, str2bool
 from utils import gen_inputs
 from readers.nsp_reader import NSPReader
@@ -14,9 +13,7 @@ from model import Plato2InferModel
 
 
 def setup_args():
-    """
-    Setup arguments.
-    """
+    """Setup arguments."""
     parser = argparse.ArgumentParser()
     group = parser.add_argument_group("Model")
     group.add_argument("--init_from_ckpt", type=str, default="")
@@ -43,9 +40,7 @@ def load_params(model, init_from_ckpt):
 
 
 def interact(args):
-    """
-    Inference main function.
-    """
+    """Inference main function."""
     plato_reader = PlatoReader(args)
     nsp_reader = NSPReader(args)
 
@@ -56,9 +51,8 @@ def interact(args):
         n_head = 32
         hidden_size = 2048
     else:
-        raise ValueError(
-            'The pre-trained model only support 24 or 32 layers, but received num_layers=%d.'
-            % args.num_layers)
+        raise ValueError('The pre-trained model only support 24 or 32 layers, '
+                         'but received num_layers=%d.' % args.num_layers)
 
     model = Plato2InferModel(nsp_reader, args.num_layers, n_head, hidden_size)
     load_params(model, args.init_from_ckpt)

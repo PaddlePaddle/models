@@ -15,8 +15,6 @@
 
 import numpy as np
 
-import utils
-
 
 def mask(batch_tokens,
          vocab_size,

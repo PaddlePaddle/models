@@ -1,4 +1,3 @@
-import argparse
 from collections import namedtuple
 
 import paddle
@@ -209,14 +208,6 @@ class NSP(nn.Layer):
         self.softmax = nn.Softmax()
 
     def forward(self, inputs):
-        """
-        token_ids (20, 108, 1)
-        type_ids (20, 108, 1)
-        pos_ids (20, 108, 1)
-        attention_mask (20, 108, 108)
-        label_pos (20, 1)
-        data_id (20, 1)
-        """
         token_ids = inputs['token_ids']
         type_ids = inputs['type_ids']
         pos_ids = inputs['pos_ids']

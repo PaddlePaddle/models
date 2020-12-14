@@ -14,9 +14,6 @@
 """Utils."""
 
 from itertools import chain
-import os
-import time
-
 import numpy as np
 import paddle
 
