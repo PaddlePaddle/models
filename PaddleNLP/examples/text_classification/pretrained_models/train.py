@@ -41,14 +41,14 @@ def parse_args():
     parser.add_argument(
         "--model_type",
         default='ernie',
-        # required=True,
+        required=True,
         type=str,
         help="Model type selected in the list: " +
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
         default='ernie-tiny',
-        # required=True,
+        required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
         + ", ".join(
@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument(
         "--save_dir",
         default='./checkpoint',
-        # required=True,
+        required=True,
         type=str,
         help="The output directory where the model checkpoints will be written.")
 
