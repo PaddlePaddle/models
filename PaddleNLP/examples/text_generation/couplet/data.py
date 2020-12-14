@@ -104,8 +104,8 @@ class CoupletDataset(TranslationDataset):
                 '`train`, `dev` or `test` is supported but `{}` is passed in'.
                 format(mode))
         # Download data
-        root = self.get_data(root=root)
-        self.data = self.read_raw_data(root, mode)
+        self.data = self.get_data(root=root)
+        # self.data = self.read_raw_data(mode, root)
         self.vocab, _ = self.get_vocab(root)
         self.transform()
 
