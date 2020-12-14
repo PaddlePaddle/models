@@ -266,13 +266,13 @@ class NSP(nn.Layer):
 class Plato2InferModel(nn.Layer):
     def __init__(self,
                  nsp_reader,
+                 num_layers,
+                 n_head,
+                 hidden_size,
                  vocab_size=8001,
                  type_size=2,
                  latent_type_size=20,
                  max_position_seq_len=256,
-                 num_layers=24,
-                 n_head=16,
-                 hidden_size=1024,
                  act_dropout=0.1,
                  attn_dropout=0.1,
                  max_dec_len=64,
@@ -390,10 +390,7 @@ class Plato2InferModel(nn.Layer):
             sums = paddle.sum(topk_probs, axis=-1, keepdim=True)
             new_probs = probs * mask / sums
             # [-1, 1]
-            #sampling_ids = paddle.multinomial(new_probs)
-            sampling_ids = paddle.fluid.layers.sampling_id(
-                new_probs, dtype="int", seed=2019)
-            sampling_ids = paddle.unsqueeze(sampling_ids, axis=-1)
+            sampling_ids = paddle.multinomial(new_probs)
 
             step = step + 1
             tgt_ids = sampling_ids
@@ -404,16 +401,6 @@ class Plato2InferModel(nn.Layer):
     def gen_nsp_input(self, token_ids, pred_ids):
         token_ids = token_ids.numpy()
         pred_ids = pred_ids.numpy()
-        """
-        import pickle
-        with open('/docker/Knover/plato-2/output/plato_outputs.pickle', 'rb') as fin:
-            predictions = pickle.load(fin)
-        token_ids = []
-        pred_ids = []
-        for info in predictions:
-            token_ids.append(info['context_token_ids'])
-            pred_ids.append(info['response_token_ids'])
-        """
 
         def __reader__():
             headers = ["src", "tgt", "data_id"]
@@ -457,18 +444,6 @@ class Plato2InferModel(nn.Layer):
         token_ids = token_ids.numpy()
         pred_ids = pred_ids.numpy()
         probs = probs.numpy()
-        """
-        import pickle
-        with open('/docker/Knover/plato-2/output/plato_outputs.pickle', 'rb') as fin:
-            predictions = pickle.load(fin)
-        token_ids = []
-        pred_ids = []
-        data_id = []
-        for info in predictions:
-            token_ids.append(info['context_token_ids'])
-            pred_ids.append(info['response_token_ids'])
-            data_id.append(info['data_id'])
-        """
 
         infos = []
         for raw, pred, prob in zip(token_ids, pred_ids, probs):

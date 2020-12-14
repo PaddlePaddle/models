@@ -22,6 +22,7 @@ def setup_args():
     group.add_argument("--init_from_ckpt", type=str, default="")
     group.add_argument("--vocab_size", type=int, default=8001)
     group.add_argument("--latent_type_size", type=int, default=20)
+    group.add_argument("--num_layers", type=int, default=24)
 
     group = parser.add_argument_group("Task")
     group.add_argument("--is_cn", type=str2bool, default=False)
@@ -36,8 +37,8 @@ def setup_args():
     return args
 
 
-def load_params(model, init_ckpt_path):
-    state_dict = paddle.load(init_ckpt_path)
+def load_params(model, init_from_ckpt):
+    state_dict = paddle.load(init_from_ckpt)
     model.set_state_dict(state_dict)
 
 
@@ -48,7 +49,18 @@ def interact(args):
     plato_reader = PlatoReader(args)
     nsp_reader = NSPReader(args)
 
-    model = Plato2InferModel(nsp_reader)
+    if args.num_layers == 24:
+        n_head = 16
+        hidden_size = 1024
+    elif args.num_layers == 32:
+        n_head = 32
+        hidden_size = 2048
+    else:
+        raise ValueError(
+            'The pre-trained model only support 24 or 32 layers, but received num_layers=%d.'
+            % args.num_layers)
+
+    model = Plato2InferModel(nsp_reader, args.num_layers, n_head, hidden_size)
     load_params(model, args.init_from_ckpt)
     model.eval()
 
