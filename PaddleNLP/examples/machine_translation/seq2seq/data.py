@@ -42,14 +42,14 @@ def create_train_loader(batch_size=128):
     # batch_key = lambda size_so_far, minibatch_len: size_so_far * minibatch_len
     train_ds = MapDatasetWrapper(train_ds).filter(
         lambda data: (len(data[0]) > 0))
+    dev_ds = MapDatasetWrapper(dev_ds).filter(lambda data: len(data[0]) > 0)
     train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
         key=key,
         buffer_size=batch_size * 20).batch(batch_size=batch_size).shard()
 
-    dev_batch_sampler = SamplerHelper(
-        MapDatasetWrapper(dev_ds).filter(lambda data: len(data[0]) > 0)).sort(
-            key=key,
-            buffer_size=batch_size * 20).batch(batch_size=batch_size).shard()
+    dev_batch_sampler = SamplerHelper(dev_ds).sort(
+        key=key,
+        buffer_size=batch_size * 20).batch(batch_size=batch_size).shard()
 
     train_loader = paddle.io.DataLoader(
         train_ds,
