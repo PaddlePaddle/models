@@ -98,20 +98,20 @@ wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
 CPU 启动：
 
 ```shell
-python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
+python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
 ```
 
 GPU 启动：
 
 ```shell
-# CUDA_VISIBLE_DEVICES=0 python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network_name=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
+# CUDA_VISIBLE_DEVICES=0 python train.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network=bilstm --lr=5e-4 --batch_size=64 --epochs=5 --save_dir='./checkpoints'
 ```
 
 以上参数表示：
 
 * `vocab_path`: 词汇表文件路径。
 * `use_gpu`: 是否使用GPU进行训练， 默认为`False`。
-* `network_name`: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
+* `network`: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
 * `lr`: 学习率， 默认为5e-4。
 * `batch_size`: 运行一个batch大小，默认为64。
 * `epochs`: 训练轮次，默认为5。
@@ -140,13 +140,13 @@ checkpoints/
 CPU启动：
 
 ```shell
-python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network_name=bilstm --params_path=checkpoints/final.pdparams
+python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=False --network=bilstm --params_path=checkpoints/final.pdparams
 ```
 
 GPU启动：
 
 ```shell
-CUDA_VISIBLE_DEVICES=0 python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network_name=bilstm --params_path='./checkpoints/final.pdparams'
+CUDA_VISIBLE_DEVICES=0 python predict.py --vocab_path='./senta_word_dict.txt' --use_gpu=True --network=bilstm --params_path='./checkpoints/final.pdparams'
 ```
 
 将待预测数据分词完毕后，如以下示例：
