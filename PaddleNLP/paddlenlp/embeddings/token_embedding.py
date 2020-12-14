@@ -168,9 +168,12 @@ class TokenEmbedding(nn.Embedding):
             unk_idx = self._word_to_idx[self.unknown_token]
             embedding_table[unk_idx] = unk_vector
 
-        self._idx_to_word.append(PAD_TOKEN)
-        self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
-        embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+        if PAD_TOKEN not in extend_vocab_set:
+            self._idx_to_word.append(PAD_TOKEN)
+            self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
+            embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+        else:
+            embedding_table[self._word_to_idx[PAD_TOKEN]] = pad_vector
 
         logger.info("Finish extending vocab.")
         return embedding_table

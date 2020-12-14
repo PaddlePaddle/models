@@ -19,7 +19,6 @@ tokenizer = jieba
 
 def set_tokenizer(vocab):
     global tokenizer
-    #v = Vocab.from_dict(vocab, unk_token="[UNK]", pad_token="[PAD]")
     if vocab is not None:
         tokenizer = JiebaTokenizer(vocab=vocab)
 
@@ -33,18 +32,6 @@ def load_vocab(vocab_file):
         token = token.rstrip("\n").split("\t")[0]
         vocab[token] = index
     return vocab
-
-
-def convert_ids_to_tokens(wids, inversed_vocab):
-    """ Converts a token string (or a sequence of tokens) in a single integer id
-        (or a sequence of ids), using the vocabulary.
-    """
-    tokens = []
-    for wid in wids:
-        wstr = inversed_vocab.get(wid, None)
-        if wstr:
-            tokens.append(wstr)
-    return tokens
 
 
 def convert_tokens_to_ids(tokens, vocab):
@@ -129,34 +116,6 @@ def generate_batch(batch, pad_token_id=0, return_label=True):
         return texts, seq_lens, labels
     else:
         return texts, seq_lens
-
-
-def convert_example(example, vocab, unk_token_id=1, is_test=False):
-    """
-    Builds model inputs from a sequence for sequence classification tasks. 
-    It use `jieba.cut` to tokenize text.
-    Args:
-        example(obj:`list[str]`): List of input data, containing text and label if it have label.
-        vocab(obj:`dict`): The vocabulary.
-        unk_token_id(obj:`int`, defaults to 1): The unknown token id.
-        is_test(obj:`False`, defaults to `False`): Whether the example contains label or not.
-    Returns:
-        input_ids(obj:`list[int]`): The list of token ids.s
-        valid_length(obj:`int`): The input sequence valid length.
-        label(obj:`numpy.array`, data type of int64, optional): The input label if not is_test.
-    """
-
-    input_ids = []
-    for token in tokenizer.cut(example[0]):
-        token_id = vocab.get(token, unk_token_id)
-        input_ids.append(token_id)
-    valid_length = len(input_ids)
-
-    if not is_test:
-        label = np.array(example[-1], dtype="int64")
-        return input_ids, valid_length, label
-    else:
-        return input_ids, valid_length
 
 
 def preprocess_prediction_data(data, vocab):

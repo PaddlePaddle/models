@@ -22,11 +22,11 @@ import paddlenlp as nlp
 from paddlenlp.datasets import ChnSentiCorp
 from paddlenlp.embeddings import TokenEmbedding
 from paddlenlp.data import JiebaTokenizer, Vocab
-from utils import load_vocab, generate_batch, convert_example, set_tokenizer
+import data
 
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument(
-    "--epochs", type=int, default=3, help="Number of epoches for training.")
+    "--epochs", type=int, default=5, help="Number of epoches for training.")
 parser.add_argument(
     '--use_gpu',
     type=eval,
@@ -65,7 +65,7 @@ parser.add_argument(
     default="w2v.baidu_encyclopedia.target.word-word.dim300",
     help="The name of pretrained embedding")
 parser.add_argument(
-    "--vdl_dir", type=str, default="vdl_dir/", help="VisualDL directory")
+    "--vdl_dir", type=str, default="vdl_dir/", help="VisualDL log directory")
 
 args = parser.parse_args()
 
@@ -90,18 +90,14 @@ def create_dataloader(dataset,
     if trans_fn:
         dataset = dataset.apply(trans_fn, lazy=True)
 
-    if mode == 'train' and use_gpu:
-        sampler = paddle.io.DistributedBatchSampler(
-            dataset=dataset, batch_size=batch_size, shuffle=True)
-    else:
-        shuffle = True if mode == 'train' else False
-        sampler = paddle.io.BatchSampler(
-            dataset=dataset, batch_size=batch_size, shuffle=shuffle)
+    shuffle = True if mode == 'train' else False
+    sampler = paddle.io.BatchSampler(
+        dataset=dataset, batch_size=batch_size, shuffle=shuffle)
     dataloader = paddle.io.DataLoader(
         dataset,
         batch_sampler=sampler,
         return_list=True,
-        collate_fn=lambda batch: generate_batch(batch, pad_token_id=pad_token_id))
+        collate_fn=lambda batch: data.generate_batch(batch, pad_token_id=pad_token_id))
     return dataloader
 
 
@@ -168,32 +164,33 @@ if __name__ == '__main__':
     if not os.path.exists(args.vocab_path):
         raise RuntimeError('The vocab_path  can not be found in the path %s' %
                            args.vocab_path)
-    vocab = load_vocab(args.vocab_path)
-    if not args.use_token_embedding:
+    vocab = data.load_vocab(args.vocab_path)
+
+    if '[PAD]' not in vocab:
         vocab['[PAD]'] = len(vocab)
     # Loads dataset.
     train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(
         ['train', 'dev', 'test'])
 
     # Constructs the newtork.
-    label_list = train_ds.get_labels()
+    num_classes = len(train_ds.get_labels())
     model = BoWModel(
         vocab_size=len(vocab),
-        num_classes=len(label_list),
+        num_classes=num_classes,
         vocab_path=args.vocab_path,
         use_token_embedding=args.use_token_embedding)
     if args.use_token_embedding:
         vocab = model.embedder.vocab
-        set_tokenizer(vocab)
+        data.set_tokenizer(vocab)
         vocab = vocab.token_to_idx
     else:
         v = Vocab.from_dict(vocab, unk_token="[UNK]", pad_token="[PAD]")
-        set_tokenizer(v)
+        data.set_tokenizer(v)
     model = paddle.Model(model)
 
     # Reads data and generates mini-batches.
     trans_fn = partial(
-        convert_example,
+        data.convert_example,
         vocab=vocab,
         unk_token_id=vocab['[UNK]'],
         is_test=False)

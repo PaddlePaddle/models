@@ -15,7 +15,7 @@
 from enum import Enum
 import os.path as osp
 
-URL_ROOT = "https://bj.bcebos.com/paddlenlp"
+URL_ROOT = "https://paddlenlp.bj.bcebos.com"
 EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
 
 PAD_TOKEN = '[PAD]'
@@ -43,16 +43,16 @@ EMBEDDING_NAME_LIST = [
     "w2v.people_daily.target.word-char.dim300",
     "w2v.people_daily.target.word-word.dim300",
     "w2v.people_daily.target.word-bigram.dim300",
-    # weibo 
+    # weibo
     "w2v.weibo.target.bigram-char.dim300",
     "w2v.weibo.target.word-char.dim300",
     "w2v.weibo.target.word-word.dim300",
     "w2v.weibo.target.word-bigram.dim300",
-    # sougou
-    "w2v.sougou.target.bigram-char.dim300",
-    "w2v.sougou.target.word-char.dim300",
-    "w2v.sougou.target.word-word.dim300",
-    "w2v.sougou.target.word-bigram.dim300",
+    # sogou
+    "w2v.sogou.target.bigram-char.dim300",
+    "w2v.sogou.target.word-char.dim300",
+    "w2v.sogou.target.word-word.dim300",
+    "w2v.sogou.target.word-bigram.dim300",
     # zhihu
     "w2v.zhihu.target.bigram-char.dim300",
     "w2v.zhihu.target.word-char.dim300",
@@ -67,5 +67,8 @@ EMBEDDING_NAME_LIST = [
     "w2v.literature.target.bigram-char.dim300",
     "w2v.literature.target.word-char.dim300",
     "w2v.literature.target.word-word.dim300",
-    "w2v.literature.target.word-bigram.dim300"
+    "w2v.literature.target.word-bigram.dim300",
+    # siku
+    "w2v.sikuquanshu.target.word-word.dim300",
+    "w2v.sikuquanshu.target.word-bigram.dim300"
 ]
