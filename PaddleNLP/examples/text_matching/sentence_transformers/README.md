@@ -41,7 +41,7 @@ PaddleNLP提供了丰富的预训练模型，并且可以便捷地获取PaddlePa
 + BERT([Bidirectional Encoder Representations from Transformers](https://arxiv.org/abs/1810.04805))中文模型，简写`bert-base-chinese`， 其由12层Transformer网络组成。
 + ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))，支持ERNIE 1.0中文模型（简写`ernie-1.0`）和ERNIE Tiny中文模型（简写`ernie-tiny`)。
    其中`ernie`由12层Transformer网络组成，`ernie-tiny`由3层Transformer网络组成。
-+ RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持24层Transformer网络的`roberta-wwm-ext-large`和12层Transformer网络的`roberta-wwm-ext`。
++ RoBERTa([A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692))，支持12层Transformer网络的`roberta-wwm-ext`。
 
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
