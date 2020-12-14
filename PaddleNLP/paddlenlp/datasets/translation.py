@@ -95,7 +95,6 @@ class TranslationDataset(paddle.io.Dataset):
                                     filename) if root is None else os.path.join(
                                         os.path.expanduser(root), filename)
             fullname_list.append(fullname)
-            # print(fullname)
 
         data_hash_list = [
             src_data_hash, tgt_data_hash, cls.VOCAB_INFO[2], cls.VOCAB_INFO[3]
@@ -162,7 +161,6 @@ class TranslationDataset(paddle.io.Dataset):
             list: Raw data list.
         
         """
-        # print(root)
         src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
 
         def read_raw_files(corpus_path):
@@ -176,7 +174,6 @@ class TranslationDataset(paddle.io.Dataset):
 
         src_path = os.path.join(root, src_filename)
         tgt_path = os.path.join(root, tgt_filename)
-        print(src_path, tgt_path)
         src_data = read_raw_files(src_path)
         tgt_data = read_raw_files(tgt_path)
 
@@ -277,10 +274,10 @@ class WMT14(TranslationDataset):
     URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
     SPLITS = {
         'train': TranslationDataset.META_INFO(
-            os.path.join("WMT14.en-de", "train.tok.bpe.33708.en"),
-            os.path.join("WMT14.en-de", "train.tok.bpe.33708.de"),
-            "3fed338a671328085a937449cd8601e0",
-            "9959f6eef859638bc1f2dfb4d8e5a8d4"),
+            os.path.join("WMT14.en-de", "train.tok.clean.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "train.tok.clean.bpe.33708.de"),
+            "c7c0b77e672fc69f20be182ae37ff62c",
+            "1865ece46948fda1209d3b7794770a0a"),
         'dev': TranslationDataset.META_INFO(
             os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.en"),
             os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.de"),

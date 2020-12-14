@@ -36,20 +36,25 @@ def min_max_filer(data, max_len, min_len=0):
 def create_data_loader(args):
     root = None if args.root == "None" else args.root
     transform_func = WMT14.get_default_transform_func(root=root)
-    datasets = WMT14(transform_func=transform_func).get_datasets(
-        ["train", "dev"])
+    datasets = [
+        WMT14.get_datasets(
+            mode=m, transform_func=transform_func) for m in ["train", "dev"]
+    ]
 
     def token_size_fn(current_idx, current_batch_size, tokens_sofar,
                       data_source):
-        return tokens_sofar + (max(
-            len(data_source[current_idx][0]), len(data_source[current_idx][1]))
-                               + 1) * current_batch_size
+        return max(tokens_sofar,
+                   len(data_source[current_idx][0]),
+                   len(data_source[current_idx][1]))
+
+    def _key(size_so_far, minibatch_len):
+        return size_so_far * minibatch_len
 
     data_loaders = [(None, None)] * 2
     for i, dataset in enumerate(datasets):
         sampler = SamplerHelper(
             dataset.filter(partial(
-                min_max_filer, max_len=args.max_length))).shuffle()
+                min_max_filer, max_len=args.max_length)))  # .shuffle()
 
         if args.sort_type == SortType.GLOBAL or args.sort_type == SortType.POOL:
             # else for SortType.GLOBAL
@@ -64,7 +69,8 @@ def create_data_loader(args):
         batch_sampler = sampler.batch(
             batch_size=args.batch_size,
             drop_last=False,
-            batch_size_fn=token_size_fn).shard()
+            batch_size_fn=token_size_fn,
+            key=_key).shard()
 
         data_loader = DataLoader(
             dataset=dataset,
@@ -84,9 +90,10 @@ def create_infer_loader(args):
     root = None if args.root == "None" else args.root
     (src_vocab, tgt_vocab) = WMT14.get_vocab(root=root)
     transform_func = WMT14.get_default_transform_func(root=root)
-    dataset = WMT14(transform_func=transform_func).get_datasets(
-        ["test"]).filter(partial(
-            min_max_filer, max_len=args.max_length))
+    dataset = WMT14.get_datasets(
+        mode="test", transform_func=transform_func).filter(
+            partial(
+                min_max_filer, max_len=args.max_length))
     batch_sampler = SamplerHelper(dataset).shuffle().batch(
         batch_size=args.batch_size, drop_last=False).shard()
 

@@ -29,7 +29,7 @@ trg_vocab_fpath: "gen_data/wmt14_ende_data_bpe/vocab_all.bpe.33708"
 # The <bos>, <eos> and <unk> tokens in the dictionary.
 special_token: ["<s>", "<e>", "<unk>"]
 # The directory to store data.
-root: "./"
+root: None
 
 # Whether to use cuda
 use_gpu: True
@@ -38,7 +38,7 @@ use_gpu: True
 token_delimiter: " "
 use_token_batch: True
 pool_size: 200000
-sort_type: "pool"
+sort_type: "global"
 shuffle: True
 shuffle_batch: True
 batch_size: 4096
