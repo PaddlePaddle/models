@@ -46,12 +46,10 @@ def create_train_loader(batch_size=128):
         lambda data: len(data[0]) > 0 and len(data[0]) < 50 and len(data[1]) > 0 and len(data[1]) < 50
     )
     train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
-        key=key,
-        buffer_size=batch_size * 20).batch(batch_size=batch_size).shard()
+        key=key, buffer_size=batch_size * 20).batch(batch_size=batch_size)
 
     dev_batch_sampler = SamplerHelper(dev_ds).sort(
-        key=key,
-        buffer_size=batch_size * 20).batch(batch_size=batch_size).shard()
+        key=key, buffer_size=batch_size * 20).batch(batch_size=batch_size)
 
     train_loader = paddle.io.DataLoader(
         train_ds,
@@ -77,8 +75,7 @@ def create_infer_loader(batch_size=128):
     eos_id = src_vocab[src_vocab.eos_token]
     pad_id = eos_id
 
-    test_batch_sampler = SamplerHelper(test_ds).batch(
-        batch_size=batch_size).shard()
+    test_batch_sampler = SamplerHelper(test_ds).batch(batch_size=batch_size)
 
     test_loader = paddle.io.DataLoader(
         test_ds,
