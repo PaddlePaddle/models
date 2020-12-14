@@ -70,5 +70,8 @@ EMBEDDING_NAME_LIST = [
     "w2v.literature.target.word-bigram.dim300",
     # siku
     "w2v.sikuquanshu.target.word-word.dim300",
-    "w2v.sikuquanshu.target.word-bigram.dim300"
+    "w2v.sikuquanshu.target.word-bigram.dim300",
+    # Mix-large
+    "w2v.mixed-large.target.word-char.dim300",
+    "w2v.mixed-large.target.word-word.dim300"
 ]
