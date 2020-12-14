@@ -121,8 +121,13 @@ class TokenEmbedding(nn.Embedding):
         # update idx_to_word
         self._idx_to_word = extend_vocab_list
         self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
-        embedding_table = np.random.normal(
-            scale=0.02,
+
+        # use the Xavier init the embedding
+        xavier_scale = np.sqrt(
+            6.0 / float(len(self._idx_to_word) + self.embedding_dim))
+        embedding_table = np.random.uniform(
+            low=-1.0 * xavier_scale,
+            high=xavier_scale,
             size=(len(self._idx_to_word),
                   self.embedding_dim)).astype(paddle.get_default_dtype())
 
