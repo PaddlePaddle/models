@@ -105,7 +105,6 @@ class CoupletDataset(TranslationDataset):
                 format(mode))
         # Download data
         self.data = self.get_data(root=root)
-        # self.data = self.read_raw_data(mode, root)
         self.vocab, _ = self.get_vocab(root)
         self.transform()
 

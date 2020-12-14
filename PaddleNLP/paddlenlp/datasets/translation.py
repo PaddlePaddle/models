@@ -139,7 +139,6 @@ class TranslationDataset(paddle.io.Dataset):
 
         root = cls._download_data(root=root)
         src_vocab_filename, tgt_vocab_filename, _, _ = cls.VOCAB_INFO
-        print(root, src_vocab_filename)
         src_file_path = os.path.join(root, src_vocab_filename)
         tgt_file_path = os.path.join(root, tgt_vocab_filename)
 
@@ -168,10 +167,8 @@ class TranslationDataset(paddle.io.Dataset):
         Returns:
             list: Raw data list.
         """
-        # import pdb; pdb.set_trace()
         src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
 
-        # print(root, src_filename, tgt_filename)
         def read_raw_files(corpus_path):
             """Read raw files, return raw data"""
             data = []
@@ -183,7 +180,6 @@ class TranslationDataset(paddle.io.Dataset):
 
         src_path = os.path.join(root, src_filename)
         tgt_path = os.path.join(root, tgt_filename)
-        # print(src_path, tgt_path)
         src_data = read_raw_files(src_path)
         tgt_data = read_raw_files(tgt_path)
 
@@ -269,7 +265,7 @@ class IWSLT15(TranslationDataset):
             if len(transform_func) != 2:
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target.")
-        # Download data
+        # Download data and read data
         self.data = self.get_data(root=root)
 
         if transform_func is not None:
