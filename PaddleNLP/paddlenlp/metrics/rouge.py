@@ -20,6 +20,96 @@ from .utils import default_trans_func
 __all__ = ['RougeL', 'RougeLForDuReader']
 
 
+class RougeN():
+    def __init__(self, n, for_chinese=False):
+        self.n = n
+        self.for_chinese = for_chinese
+
+    def _get_ngrams(self, sentence):
+        """Calculates word n-grams for multiple sentences.
+        """
+        # words = list(sentence) if self.for_chinese else sentence.split(" ")
+        words = sentence
+        ngram_set = set()
+        max_index_ngram_start = len(words) - self.n
+        for i in range(max_index_ngram_start + 1):
+            ngram_set.add(tuple(words[i:i + self.n]))
+        return ngram_set
+
+    def score(self, evaluated_sentences, reference_sentences):
+        overlapping_count, reference_count = self.compute(evaluated_sentences,
+                                                          reference_sentences)
+        return overlapping_count / reference_count
+
+    def compute(self, evaluated_sentences, reference_sentences):
+        """
+        Args:
+            evaluated_sentences (list): the sentences predicted by the model.
+            reference_sentences (list): the referenced sentences. Its size should be same as evaluated_sentences.
+
+        Returns:
+            overlapping_count (int): the overlapping n-gram count.
+            reference_count (int): the reference sentences n-gram count. 
+        """
+        if len(evaluated_sentences) <= 0 or len(reference_sentences) <= 0:
+            raise ValueError("Collections must contain at least 1 sentence.")
+
+        reference_count = 0
+        overlapping_count = 0
+
+        for evaluated_sentence, reference_sentence in zip(evaluated_sentences,
+                                                          reference_sentences):
+            evaluated_ngrams = self._get_ngrams(evaluated_sentence)
+            reference_ngrams = self._get_ngrams(reference_sentence)
+            reference_count += len(reference_ngrams)
+
+            # Gets the overlapping ngrams between evaluated and reference
+            overlapping_ngrams = evaluated_ngrams.intersection(reference_ngrams)
+            overlapping_count += len(overlapping_ngrams)
+
+        return overlapping_count, reference_count
+
+    def accumulate(self):
+        """
+        This function returns the mean precision, recall and f1 score for all accumulated minibatches.
+
+        Returns:
+            float: mean precision, recall and f1 score.
+        """
+        rouge_score = self.overlapping_count / self.reference_count
+        return rouge_score
+
+    def reset(self):
+        """
+        Reset function empties the evaluation memory for previous mini-batches.
+        """
+        self.overlapping_count = 0
+        self.reference_count = 0
+
+    def name(self):
+        """
+        Return name of metric instance.
+        """
+        return "Rouge-%s" % self.n
+
+    def update(self, overlapping_count, reference_count):
+        """
+        Args:
+        """
+        self.overlapping_count += overlapping_count
+        self.reference_count += reference_count
+
+
+class Rouge1(RougeN):
+    def __init__(self, for_chinese=False):
+        super(Rouge1, self).__init__(n=1, for_chinese=for_chinese)
+
+
+class Rouge2(RougeN):
+    def __init__(self, for_chinese=False):
+        super(Rouge2, self).__init__(n=2, for_chinese=for_chinese)
+
+
 class RougeL(paddle.metric.Metric):
     r'''
     Rouge-L is Recall-Oriented Understudy for Gisting Evaluation based on Longest Common Subsequence (LCS).
