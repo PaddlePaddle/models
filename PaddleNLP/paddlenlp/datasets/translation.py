@@ -66,7 +66,7 @@ class TranslationDataset(paddle.io.Dataset):
     @classmethod
     def get_data(cls, mode="train", root=None):
         """
-        Download dataset if any data file doesn't exist.
+        Download dataset and read raw data.
         Args:
             mode(str, optional): Data mode to download. It could be 'train',
                 'dev' or 'test'. Default: 'train'.
@@ -74,13 +74,20 @@ class TranslationDataset(paddle.io.Dataset):
                 provided, dataset will be saved in
                 `/root/.paddlenlp/datasets/machine_translation`. Default: None.
         Returns:
-            str: All file paths of dataset.
+            list: Raw data, a list of tuple.
 
         Examples:
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
+        root = cls._download_data(mode, root)
+        data = cls.read_raw_data(mode, root)
+        return data
+
+    @classmethod
+    def _download_data(cls, mode="train", root=None):
+        """Download dataset"""
         default_root = os.path.join(DATA_HOME, 'machine_translation',
                                     cls.__name__)
         src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
@@ -128,9 +135,9 @@ class TranslationDataset(paddle.io.Dataset):
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
                 (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
-
         """
-        root = cls.get_data(root=root)
+
+        root = cls._download_data(root=root)
         src_vocab_filename, tgt_vocab_filename, _, _ = cls.VOCAB_INFO
         src_file_path = os.path.join(root, src_vocab_filename)
         tgt_file_path = os.path.join(root, tgt_vocab_filename)
@@ -151,15 +158,14 @@ class TranslationDataset(paddle.io.Dataset):
         return (src_vocab, tgt_vocab)
 
     @classmethod
-    def read_raw_data(cls, root, mode):
+    def read_raw_data(cls, mode, root):
         """Read raw data from data files
         Args:
-           root(str): Data directory of dataset.
-           mode(str): Indicates the mode to read. It could be 'train', 'dev' or
+            mode(str): Indicates the mode to read. It could be 'train', 'dev' or
                'test'.
+            root(str): Data directory of dataset.
         Returns:
             list: Raw data list.
-        
         """
         src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
 
@@ -259,9 +265,8 @@ class IWSLT15(TranslationDataset):
             if len(transform_func) != 2:
                 raise ValueError("`transform_func` must have length of two for"
                                  "source and target.")
-        # Download data
-        root = self.get_data(root=root)
-        self.data = self.read_raw_data(root, mode)
+        # Download data and read data
+        self.data = self.get_data(root=root)
 
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
