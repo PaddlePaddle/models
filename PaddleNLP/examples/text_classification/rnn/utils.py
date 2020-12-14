@@ -149,6 +149,7 @@ def convert_example(example, vocab, unk_token_id=1, is_test=False):
         token_id = vocab.get(token, unk_token_id)
         input_ids.append(token_id)
     valid_length = len(input_ids)
+    valid_length = np.array(valid_length, dtype="int64")
 
     if not is_test:
         label = np.array(example[-1], dtype="int64")
