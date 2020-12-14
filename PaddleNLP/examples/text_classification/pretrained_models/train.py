@@ -40,14 +40,14 @@ def parse_args():
     # Required parameters
     parser.add_argument(
         "--model_type",
-        default='roberta',
+        default='ernie',
         # required=True,
         type=str,
         help="Model type selected in the list: " +
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
-        default='roberta-wwm-ext-large',
+        default='ernie-tiny',
         # required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
