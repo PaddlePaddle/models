@@ -169,13 +169,7 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def evaluate(model,
-             criterion,
-             metric,
-             data_loader,
-             width_mult=1.0,
-             teacher_model=False,
-             acc=True):
+def evaluate(model, criterion, metric, data_loader, width_mult=1.0):
     with paddle.no_grad():
         model.eval()
         metric.reset()
@@ -187,21 +181,15 @@ def evaluate(model,
             loss = criterion(logits, labels)
             correct = metric.compute(logits, labels)
             metric.update(correct)
-            if acc == True:
-                accu = metric.accumulate()
-            else:
-                accu, prec, recall, f1, out = metric.accumulate()
-        if acc == True:
-            print("width_mult: %f, eval loss: %f, accu: %f" %
-                  (width_mult, loss.numpy(), accu))
-        else:
-            print("width_mult: %f, eval loss: %f, accu: %f, f1: %f" %
-                  (width_mult, loss.numpy(), accu, f1))
-        if not teacher_model:
-            model.train()
-        return accu
+        acc = metric.accumulate()
+        print(
+            "width_mult: %f, eval loss: %f, acc: %s" %
+            (width_mult, loss.numpy(), acc),
+            end='')
+        model.train()
 
 
+### monkey patch for bert forward to accept [attention_mask, head_mask] as  attention_mask
 def bert_forward(self,
                  input_ids,
                  token_type_ids=None,
@@ -225,6 +213,7 @@ def bert_forward(self,
 BertModel.forward = bert_forward
 
 
+### reorder weights according head importance and neuron importance
 def reorder_neuron_head(model, head_importance, neuron_importance):
     # reorder heads and ffn neurons
     for layer, current_importance in enumerate(neuron_importance):
@@ -238,26 +227,13 @@ def reorder_neuron_head(model, head_importance, neuron_importance):
         reorder_neuron(model.bert.encoder.layers[layer].linear2.fn, idx, dim=0)
 
 
-@paddle.no_grad()
-def adamw_step(optim, params_grads):
-    scaled_params = optim._scale_parameters(params_grads)
-    for p_grad_sgrad in scaled_params:
-        param, grad, scaled_param = p_grad_sgrad
-        with param.block.program._optimized_guard(
-            [param, grad]), paddle.static.name_scope('weight decay'):
-            updated_param = paddle.fluid.layers.elementwise_sub(
-                x=param, y=scaled_param)
-            paddle.assign(x=updated_param, output=param)
-    optim._apply_optimize(
-        loss=None, startup_program=None, params_grads=params_grads)
-
-
 def soft_cross_entropy(inp, target):
     inp_likelihood = F.log_softmax(inp, axis=-1)
     target_prob = F.softmax(target, axis=-1)
     return -1. * paddle.mean(paddle.sum(inp_likelihood * target_prob, axis=-1))
 
 
+### get certain config
 def apply_config(model, width_mult):
     new_config = dict()
 
@@ -431,14 +407,19 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
+    ### step1: init a dict to save origin weights
     origin_weights = {}
     for name, param in model.named_parameters():
         origin_weights[name] = param
 
+    ### step2: convert origin model to supernet
     sp_config = supernet(expand_ratio=args.width_mult_list)
     model = Convert(sp_config).convert(model)
+    ### set state_dict from origin weight to supernet
     set_state_dict(model, origin_weights)
 
+    ### step3: define teacher model, convert it to supernet 
+    ### and set state_dict from origin weight to supernet
     teacher_model = model_class.from_pretrained(
         args.model_name_or_path, num_classes=len(train_ds.get_labels()))
 
@@ -503,7 +484,6 @@ def do_train(args):
 
     global_step = 0
     tic_train = time.time()
-    best_acc = [-1.0, -1.0, -1.0, -1.0]
     for epoch in range(args.num_train_epochs):
         ofa_model.set_epoch(epoch)
         ofa_model.set_task('width')
@@ -534,7 +514,6 @@ def do_train(args):
                 tic_train = time.time()
 
             if global_step % args.save_steps == 0:
-                saved = False
                 if args.task_name == "mnli":
                     evaluate(
                         teacher_model,
@@ -581,20 +560,17 @@ def do_train(args):
                         print("eval done total : %s s" %
                               (time.time() - tic_eval))
 
-                    if acc > best_acc[idx] and saved == False:
-                        best_acc[idx] = acc
-                        saved = True
-                        if (not args.n_gpu > 1
-                            ) or paddle.distributed.get_rank() == 0:
-                            output_dir = os.path.join(args.output_dir,
-                                                      "model_%d" % global_step)
-                            if not os.path.exists(output_dir):
-                                os.makedirs(output_dir)
-                            # need better way to get inner model of DataParallel
-                            model_to_save = model._layers if isinstance(
-                                model, paddle.DataParallel) else model
-                            model_to_save.save_pretrained(output_dir)
-                            tokenizer.save_pretrained(output_dir)
+                    if (not args.n_gpu > 1
+                        ) or paddle.distributed.get_rank() == 0:
+                        output_dir = os.path.join(args.output_dir,
+                                                  "model_%d" % global_step)
+                        if not os.path.exists(output_dir):
+                            os.makedirs(output_dir)
+                        # need better way to get inner model of DataParallel
+                        model_to_save = model._layers if isinstance(
+                            model, paddle.DataParallel) else model
+                        model_to_save.save_pretrained(output_dir)
+                        tokenizer.save_pretrained(output_dir)
 
 
 if __name__ == "__main__":
