@@ -31,18 +31,13 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 本教程使用[IWSLT'15 English-Vietnamese data ](https://nlp.stanford.edu/projects/nmt/)数据集中的英语到越南语的数据作为训练语料，tst2012的数据作为开发集，tst2013的数据作为测试集
 
 ### 数据获取
-
-```
-python download.py
-```
+如果用户在初始化数据集时没有提供路径，数据集会自动下载到`/root/.paddlenlp/datasets/machine_translation/IWSLT15`目录下
 
 ## 模型训练
 
 执行以下命令即可训练带有注意力机制的Seq2Seq机器翻译模型：
 
 ```sh
-export CUDA_VISIBLE_DEVICES=0
-
 python train.py \
     --num_layers 2 \
     --hidden_size 512 \
@@ -64,7 +59,6 @@ python train.py \
 训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对test的数据集（由 `--infer_file` 指定）进行beam search解码，命令如下：
 
 ```sh
-export CUDA_VISIBLE_DEVICES=0
 python predict.py \
      --num_layers 2 \
      --hidden_size 512 \
@@ -72,26 +66,20 @@ python predict.py \
      --dropout 0.2 \
      --init_scale  0.1 \
      --max_grad_norm 5.0 \
-     --init_from_ckpt attention_models/11 \
+     --init_from_ckpt attention_models/8 \
+     --infer_target_file /root/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi \
      --infer_output_file infer_output.txt \
      --beam_size 10 \
      --use_gpu True
-
 ```
 
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
 ## 效果评价
+在运行`predict.py`生成翻译结果后，会打印出此次翻译结果相对于译文的BLEU指标
 
-使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，使用方法如下：
-
-```sh
-perl mosesdecoder/scripts/generic/multi-bleu.perl data/en-vi/tst2013.vi < infer_output.txt
+取第9个epoch保存的模型进行预测，取beam_size=10。效果如下：
 ```
+BLEU score is 0.6031783224609996.
 
-取第10个epoch保存的模型进行预测，取beam_size=10。效果如下：
-
-```
-tst2013 BLEU:
-25.36
 ```

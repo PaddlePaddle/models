@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import io
-from functools import partial
 import numpy as np
 
 import paddle
@@ -22,6 +21,7 @@ from args import parse_args
 from seq2seq_attn import Seq2SeqAttnInferModel
 from data import create_infer_loader
 from paddlenlp.datasets import IWSLT15
+from paddlenlp.metrics import BLEU
 
 
 def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
@@ -68,20 +68,30 @@ def do_predict(args):
         "Please set reload_model to load the infer model.")
     model.load(args.init_from_ckpt)
 
-    # TODO(guosheng): use model.predict when support variant length
+    cands = []
     with io.open(args.infer_output_file, 'w', encoding='utf-8') as f:
         for data in test_loader():
-            finished_seq = model.predict_batch(inputs=list(data))[0]
+            with paddle.no_grad():
+                finished_seq = model.predict_batch(inputs=data)[0]
             finished_seq = finished_seq[:, :, np.newaxis] if len(
                 finished_seq.shape) == 2 else finished_seq
             finished_seq = np.transpose(finished_seq, [0, 2, 1])
+
             for ins in finished_seq:
                 for beam_idx, beam in enumerate(ins):
                     id_list = post_process_seq(beam, bos_id, eos_id)
                     word_list = [trg_idx2word[id] for id in id_list]
                     sequence = " ".join(word_list) + "\n"
                     f.write(sequence)
+                    cands.append(" ".join(word_list))
                     break
+
+    bleu = BLEU()
+    with io.open(args.infer_target_file, encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            ref = line.strip()
+            bleu.add_inst(cands[i], [ref])
+    print("BLEU score is %s." % bleu.score())
 
 
 if __name__ == "__main__":

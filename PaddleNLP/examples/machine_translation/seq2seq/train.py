@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
 from args import parse_args
-import numpy as np
 
 import paddle
 import paddle.nn as nn
