@@ -97,7 +97,7 @@ class CoupletDataset(TranslationDataset):
     EOS_TOKEN = '</s>'
     MD5 = '5c0dcde8eec6a517492227041c2e2d54'
 
-    def __init__(self, mode='train', root='./'):
+    def __init__(self, mode='train', root=None):
         data_select = ('train', 'dev', 'test')
         if mode not in data_select:
             raise TypeError(
