@@ -57,7 +57,7 @@ python train.py \
 
 各参数的具体说明请参阅 `args.py` 。训练程序会在每个epoch训练结束之后，save一次模型。
 
-**NOTE:** 如需恢复模型训练，则`init_from_ckpt`只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=attention_models/11`即可，程序会自动加载模型参数`attention_models/11.pdparams`，也会自动加载优化器状态`attention_models/11.pdopt`。
+**NOTE:** 如需恢复模型训练，则`init_from_ckpt`只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=attention_models/0`即可，程序会自动加载模型参数`attention_models/0.pdparams`，也会自动加载优化器状态`attention_models/0.pdopt`。
 
 ## 模型预测
 
@@ -65,6 +65,18 @@ python train.py \
 
 ```sh
 export CUDA_VISIBLE_DEVICES=0
+python predict.py \
+     --num_layers 2 \
+     --hidden_size 512 \
+     --batch_size 128 \
+     --dropout 0.2 \
+     --init_scale  0.1 \
+     --max_grad_norm 5.0 \
+     --init_from_ckpt attention_models/11 \
+     --infer_output_file infer_output.txt \
+     --beam_size 10 \
+     --use_gpu True
+
 ```
 
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。

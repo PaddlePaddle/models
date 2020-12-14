@@ -66,12 +66,14 @@ def create_train_loader(batch_size=128):
 
 
 def create_infer_loader(batch_size=128):
-    test_ds = IWSLT15.get_datasets(["test"])
+    trans_func_tuple = IWSLT15.get_default_transform_func()
+    test_ds = IWSLT15.get_datasets(["test"], ['transform_func'],
+                                   [trans_func_tuple])
 
-    vocab = IWSLT15.get_vocab()
-    pad_id = vocab[IWSLT15.EOS_TOKEN]
-    bos_id = vocab[IWSLT15.BOS_TOKEN]
-    eos_id = vocab[IWSLT15.EOS_TOKEN]
+    src_vocab, tgt_vocab = IWSLT15.get_vocab()
+    bos_id = src_vocab[IWSLT15.BOS_TOKEN]
+    eos_id = src_vocab[IWSLT15.EOS_TOKEN]
+    pad_id = src_vocab[IWSLT15.PAD_TOKEN]
 
     test_batch_sampler = SamplerHelper(test_ds).batch(
         batch_size=batch_size).shard()
@@ -81,7 +83,7 @@ def create_infer_loader(batch_size=128):
         batch_sampler=test_batch_sampler,
         collate_fn=partial(
             prepare_input, pad_id=pad_id))
-    return test_loader, len(vocab), pad_id, bos_id, eos_id
+    return test_loader, len(src_vocab), len(tgt_vocab), bos_id, eos_id
 
 
 def prepare_input(insts, pad_id):
