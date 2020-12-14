@@ -21,46 +21,44 @@ __all__ = ['RougeL', 'RougeLForDuReader']
 
 
 class RougeN():
-    def __init__(self, n, for_chinese=False):
+    def __init__(self, n):
         self.n = n
-        self.for_chinese = for_chinese
 
-    def _get_ngrams(self, sentence):
+    def _get_ngrams(self, words):
         """Calculates word n-grams for multiple sentences.
         """
-        # words = list(sentence) if self.for_chinese else sentence.split(" ")
-        words = sentence
         ngram_set = set()
         max_index_ngram_start = len(words) - self.n
         for i in range(max_index_ngram_start + 1):
             ngram_set.add(tuple(words[i:i + self.n]))
         return ngram_set
 
-    def score(self, evaluated_sentences, reference_sentences):
-        overlapping_count, reference_count = self.compute(evaluated_sentences,
-                                                          reference_sentences)
+    def score(self, evaluated_sentences_ids, reference_sentences_ids):
+        overlapping_count, reference_count = self.compute(
+            evaluated_sentences_ids, reference_sentences_ids)
         return overlapping_count / reference_count
 
-    def compute(self, evaluated_sentences, reference_sentences):
+    def compute(self, evaluated_sentences_ids, reference_sentences_ids):
         """
         Args:
-            evaluated_sentences (list): the sentences predicted by the model.
-            reference_sentences (list): the referenced sentences. Its size should be same as evaluated_sentences.
+            evaluated_sentences (list): the sentences ids predicted by the model.
+            reference_sentences (list): the referenced sentences ids. Its size should be same as evaluated_sentences.
 
         Returns:
             overlapping_count (int): the overlapping n-gram count.
             reference_count (int): the reference sentences n-gram count. 
         """
-        if len(evaluated_sentences) <= 0 or len(reference_sentences) <= 0:
+        if len(evaluated_sentences_ids) <= 0 or len(
+                reference_sentences_ids) <= 0:
             raise ValueError("Collections must contain at least 1 sentence.")
 
         reference_count = 0
         overlapping_count = 0
 
-        for evaluated_sentence, reference_sentence in zip(evaluated_sentences,
-                                                          reference_sentences):
-            evaluated_ngrams = self._get_ngrams(evaluated_sentence)
-            reference_ngrams = self._get_ngrams(reference_sentence)
+        for evaluated_sentence_ids, reference_sentence_ids in zip(
+                evaluated_sentences_ids, reference_sentences_ids):
+            evaluated_ngrams = self._get_ngrams(evaluated_sentence_ids)
+            reference_ngrams = self._get_ngrams(reference_sentence_ids)
             reference_count += len(reference_ngrams)
 
             # Gets the overlapping ngrams between evaluated and reference
@@ -101,13 +99,13 @@ class RougeN():
 
 
 class Rouge1(RougeN):
-    def __init__(self, for_chinese=False):
-        super(Rouge1, self).__init__(n=1, for_chinese=for_chinese)
+    def __init__(self):
+        super(Rouge1, self).__init__(n=1)
 
 
 class Rouge2(RougeN):
-    def __init__(self, for_chinese=False):
-        super(Rouge2, self).__init__(n=2, for_chinese=for_chinese)
+    def __init__(self):
+        super(Rouge2, self).__init__(n=2)
 
 
 class RougeL(paddle.metric.Metric):

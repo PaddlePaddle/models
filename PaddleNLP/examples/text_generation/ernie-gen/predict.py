@@ -21,15 +21,13 @@ from decode import beam_search_infilling, post_process, greedy_search_infilling
 # yapf: disable
 parser = argparse.ArgumentParser('seq2seq model with ERNIE')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
-parser.add_argument('--max_encode_len', type=int, default=5)
-parser.add_argument('--max_decode_len', type=int, default=5)
-parser.add_argument("--batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.", )
-parser.add_argument('--beam_width', type=int, default=5)
-parser.add_argument('--noise_prob', type=float, default=0.7, help='probability of token be repalced')
-parser.add_argument('--length_penalty', type=float, default=1.0)
+parser.add_argument('--max_encode_len', type=int, default=24, help="the max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=72, help="the max decoding sentence length")
+parser.add_argument("--batch_size", default=50, type=int, help="Batch size per GPU/CPU for training.", )
+parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
+parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
 parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
 parser.add_argument('--use_gpu', action='store_true', help='if set, use gpu to excute')
-
 # yapf: enable
 
 args = parser.parse_args()
@@ -86,8 +84,8 @@ def predict():
     unk_id = vocab[tokenizer.unk_token]
     vocab_size = len(vocab)
     evaluated_sentences = []
-    reference_sentences = []
-    logger.info("Evaluating...")
+    evaluated_sentences_ids = []
+    logger.info("Predicting...")
     for data in tqdm(data_loader):
         (src_ids, src_sids, src_pids, _, _, _, _, _, _, _, _,
          raw_tgt_labels) = data  # never use target when infer
@@ -109,11 +107,14 @@ def predict():
             tgt_type_id=tgt_type_id)
 
         for ids in output_ids.tolist():
-            ostr = vocab.to_tokens(ids)
-            if '[SEP]' in ostr:
-                ostr = ostr[:ostr.index('[SEP]')]
-            ostr = ''.join(map(post_process, ostr))
-            evaluated_sentences.append(ostr)
+            if eos_id in ids:
+                ids = ids[:ids.index(eos_id)]
+            evaluated_sentences_ids.append(ids)
+
+        break
+    for ids in evaluated_sentences_ids[:5]:
+        evaluated_sentences.append(''.join(
+            map(post_process, vocab.to_tokens(ids))))
 
     for sentence in evaluated_sentences:
         print(sentence)

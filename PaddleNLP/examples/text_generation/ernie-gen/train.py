@@ -22,8 +22,8 @@ from decode import beam_search_infilling, post_process, greedy_search_infilling
 parser = argparse.ArgumentParser('seq2seq model with ERNIE')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
 parser.add_argument("--output_dir", default=None, type=str, required=True, help="The output directory where the model predictions and checkpoints will be written.",)
-parser.add_argument('--max_encode_len', type=int, default=5)
-parser.add_argument('--max_decode_len', type=int, default=5)
+parser.add_argument('--max_encode_len', type=int, default=5, help="the max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=5, help="the max decoding sentence length")
 parser.add_argument("--batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.", )
 parser.add_argument("--learning_rate", default=5e-5, type=float, help="The initial learning rate for Adam.")
 parser.add_argument("--weight_decay", default=0.1, type=float, help="Weight decay if we apply some.")
@@ -34,11 +34,11 @@ parser.add_argument("--warmup_proportion", default=0.1, type=float, help="Linear
 parser.add_argument("--logging_steps", type=int, default=1, help="Log every X updates steps.")
 parser.add_argument("--save_steps", type=int, default=100, help="Save checkpoint every X updates steps.")
 parser.add_argument("--n_gpu", type=int, default=1, help="number of gpus to use, 0 for cpu.")
-parser.add_argument('--beam_width', type=int, default=5)
+parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
 parser.add_argument('--noise_prob', type=float, default=0., help='probability of token be repalced')
 parser.add_argument('--use_random_noice', action='store_true', help='if set, replace target tokens with random token from vocabulary, else replace with `[NOISE]`')
-parser.add_argument('--label_smooth', type=float, default=0.)
-parser.add_argument('--length_penalty', type=float, default=1.0)
+parser.add_argument('--label_smooth', type=float, default=0., help="The soft label smooth rate")
+parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
 parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
 parser.add_argument('--save_dir', type=str, default=None, help='model output directory')
 # yapf: enable
@@ -80,13 +80,12 @@ def evaluate(model, data_loader, tokenizer, rouge1, rouge2, attn_id,
             tgt_type_id=tgt_type_id)
 
         for ids in output_ids.tolist():
-            ids = ids[1:]  # rm CLS prediction
             if eos_id in ids:
                 ids = ids[:ids.index(eos_id)]
             evaluated_sentences_ids.append(ids)
 
         for ids in raw_tgt_labels.numpy().tolist():
-            ids = ids[1:ids.index(eos_id)]
+            ids = ids[:ids.index(eos_id)]
             reference_sentences_ids.append(ids)
 
     score1 = rouge1.score(evaluated_sentences_ids, reference_sentences_ids)
@@ -97,9 +96,11 @@ def evaluate(model, data_loader, tokenizer, rouge1, rouge2, attn_id,
     evaluated_sentences = []
     reference_sentences = []
     for ids in reference_sentences_ids[:5]:
-        reference_sentences.append(''.join(map(post_process, ids)))
+        reference_sentences.append(''.join(
+            map(post_process, vocab.to_tokens(ids))))
     for ids in evaluated_sentences_ids[:5]:
-        evaluated_sentences.append(''.join(map(post_process, ids)))
+        evaluated_sentences.append(''.join(
+            map(post_process, vocab.to_tokens(ids))))
     logger.debug(reference_sentences)
     logger.debug(evaluated_sentences)
 
@@ -113,6 +114,9 @@ def train():
 
     model = ErnieForGeneration.from_pretrained(args.model_name_or_path)
     tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    if args.init_checkpoint:
+        model_state = paddle.load(args.init_checkpoint)
+        model.set_state_dict(model_state)
 
     train_dataset, dev_dataset = Poetry.get_datasets(['train', 'dev'])
     attn_id = tokenizer.vocab[
@@ -184,8 +188,8 @@ def train():
             if not any(nd in n for nd in ["bias", "norm"])
         ])
 
-    rouge1 = Rouge1(for_chinese=True)
-    rouge2 = Rouge2(for_chinese=True)
+    rouge1 = Rouge1()
+    rouge2 = Rouge2()
 
     global_step = 1
     tic_train = time.time()

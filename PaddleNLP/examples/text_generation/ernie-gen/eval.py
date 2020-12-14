@@ -21,15 +21,13 @@ from decode import beam_search_infilling, post_process, greedy_search_infilling
 # yapf: disable
 parser = argparse.ArgumentParser('seq2seq model with ERNIE')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
-parser.add_argument('--max_encode_len', type=int, default=5)
-parser.add_argument('--max_decode_len', type=int, default=5)
-parser.add_argument("--batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.", )
-parser.add_argument('--beam_width', type=int, default=5)
-parser.add_argument('--noise_prob', type=float, default=0.7, help='probability of token be repalced')
-parser.add_argument('--length_penalty', type=float, default=1.0)
+parser.add_argument('--max_encode_len', type=int, default=24, help="the max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=72, help="the max decoding sentence length")
+parser.add_argument("--batch_size", default=50, type=int, help="Batch size per GPU/CPU for training.", )
+parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
+parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
 parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
 parser.add_argument('--use_gpu', action='store_true', help='if set, use gpu to excute')
-
 # yapf: enable
 
 args = parser.parse_args()
@@ -74,8 +72,8 @@ def evaluate():
         num_workers=0,
         return_list=True)
 
-    rouge1 = Rouge1(for_chinese=True)
-    rouge2 = Rouge2(for_chinese=True)
+    rouge1 = Rouge1()
+    rouge2 = Rouge2()
 
     if args.init_checkpoint:
         model_state = paddle.load(args.init_checkpoint)
@@ -88,8 +86,8 @@ def evaluate():
     pad_id = vocab[tokenizer.pad_token]
     unk_id = vocab[tokenizer.unk_token]
     vocab_size = len(vocab)
-    evaluated_sentences = []
-    reference_sentences = []
+    evaluated_sentences_ids = []
+    reference_sentences_ids = []
     logger.info("Evaluating...")
     for data in tqdm(data_loader):
         (src_ids, src_sids, src_pids, _, _, _, _, _, _, _, _,
@@ -112,20 +110,18 @@ def evaluate():
             tgt_type_id=tgt_type_id)
 
         for ids in output_ids.tolist():
-            ostr = vocab.to_tokens(ids)
-            if '[SEP]' in ostr:
-                ostr = ostr[:ostr.index('[SEP]')]
-            ostr = ''.join(map(post_process, ostr))
-            evaluated_sentences.append(ostr)
+            if eos_id in ids:
+                ids = ids[:ids.index(eos_id)]
+            evaluated_sentences_ids.append(ids)
 
-        for tgt_label_ids in raw_tgt_labels.numpy().tolist():
-            ref = vocab.to_tokens(tgt_label_ids)[1:-1]
-            reference_sentences.append(''.join(map(post_process, ref)))
+        for ids in raw_tgt_labels.numpy().tolist():
+            ids = ids[:ids.index(eos_id)]
+            reference_sentences_ids.append(ids)
 
-    score1 = rouge1.score(evaluated_sentences, reference_sentences)
-    score2 = rouge2.score(evaluated_sentences, reference_sentences)
+    score1 = rouge1.score(evaluated_sentences_ids, reference_sentences_ids)
+    score2 = rouge2.score(evaluated_sentences_ids, reference_sentences_ids)
 
-    print("Rouge-1: %.5f ,Rouge-2: %.5f" % (score1 * 100, score2 * 100))
+    logger.info("Rouge-1: %.5f ,Rouge-2: %.5f" % (score1 * 100, score2 * 100))
 
 
 if __name__ == "__main__":

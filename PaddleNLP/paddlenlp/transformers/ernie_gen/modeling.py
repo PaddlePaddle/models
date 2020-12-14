@@ -13,7 +13,6 @@
 # limitations under the License.
 import os
 import io
-import json
 import copy
 import logging
 import six
@@ -400,15 +399,12 @@ class PretrainedModel(object):
                 # ernie_gen is not implemented with paddle.transformer.
                 # So, when loading the params saved by paddle.transformer, we should convert the params name.
                 # We will update ernie_gen with paddle.transformer in the future.
-                prefix_end = params_name[0].index('.')
-                with open(
-                        os.path.join(
-                            os.path.dirname(__file__),
-                            "params_map.json")) as fmap:
-                    params_map = json.load(fmap)
+                name_index_begin = params_name[0].index('.') + 1
                 for old_name in params_name:
-                    new_name = params_map.get(old_name[prefix_end + 1:],
-                                              old_name)
+                    new_name = old_name[name_index_begin:].replace("embeddings.word_embeddings","word_emb").replace("embeddings.position_embeddings","pos_emb")\
+                        .replace("embeddings.token_type_embeddings","sent_emb").replace("embeddings.layer_norm","ln").replace("encoder.layers","encoder_stack.block")\
+                            .replace("self_attn","attn").replace("k_proj","k").replace("q_proj","q").replace("v_proj","v").replace("out_proj","o")\
+                                .replace("linear1","ffn.i").replace("linear2","ffn.o").replace("norm1","ln1").replace("norm2","ln2").replace("pooler.dense","pooler")
                     m[new_name] = m.pop(old_name)
             for k, v in model.state_dict().items():
                 if k not in m:

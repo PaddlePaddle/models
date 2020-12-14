@@ -38,7 +38,7 @@ tar xvf poetry.tar.gz
 模型训练支持 CPU 和 GPU，使用 GPU 之前应指定使用的显卡卡号：
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
+export CUDA_VISIBLE_DEVICES=0,1,2 # 支持多卡训练
 ```
 
 训练启动方式如下：
@@ -46,15 +46,16 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 ```bash
 python -u ./train.py \
     --model_name_or_path ernie-1.0 \
-    --max_encode_len 32 \
-    --max_decode_len 128 \
-    --batch_size 32  \
+    --max_encode_len 24 \
+    --max_decode_len 72 \
+    --batch_size 48  \
     --learning_rate 2e-5 \
-    --num_epochs 3 \
+    --num_epochs 12 \
     --logging_steps 1 \
     --save_steps 1000 \
     --output_dir ./tmp/ \
-    --n_gpu 1
+    --n_gpu 3 \
+    # --init_checkpoint ./tmp/model_10000/model_state.pdparams
 ```
 
 参数释义如下：
@@ -68,6 +69,7 @@ python -u ./train.py \
 - `save_steps` 表示模型保存及评估间隔。
 - `output_dir` 表示模型保存路径。
 - `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `init_checkpoint` 表示模型加载路径，通过设置此参数可以开启增量训练。
 
 ### 2.4 模型评估
 
@@ -76,9 +78,9 @@ python -u ./train.py \
 ```bash
 python -u ./eval.py \
     --model_name_or_path ernie-1.0 \
-    --max_encode_len 32 \
-    --max_decode_len 128 \
-    --batch_size 32   \
+    --max_encode_len 24 \
+    --max_decode_len 72 \
+    --batch_size 48   \
     --init_checkpoint ./tmp/model_10000/model_state.pdparams \
     --use_gpu
 ```
@@ -98,9 +100,9 @@ python -u ./eval.py \
 ```bash
 python -u ./predict.py \
     --model_name_or_path ernie-1.0 \
-    --max_encode_len 32 \
-    --max_decode_len 128 \
-    --batch_size 32   \
+    --max_encode_len 24 \
+    --max_decode_len 72 \
+    --batch_size 48   \
     --init_checkpoint ./tmp/model_10000/model_state.pdparams \
     --use_gpu
 ```
