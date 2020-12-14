@@ -31,8 +31,7 @@ MODEL_CLASSES = {
     'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
     'roberta': (ppnlp.transformers.RobertaModel,
                 ppnlp.transformers.RobertaTokenizer),
-    # 'electra': (ppnlp.transformers.Electra,
-    #             ppnlp.transformers.ElectraTokenizer)
+    'electra': (ppnlp.transformers.Electra, ppnlp.transformers.ElectraTokenizer)
 }
 
 
@@ -175,10 +174,6 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
         query_segment_ids = paddle.to_tensor(query_segment_ids)
         title_input_ids = paddle.to_tensor(title_input_ids)
         title_segment_ids = paddle.to_tensor(title_segment_ids)
-
-        print(query_input_ids)
-        print(query_segment_ids)
-        print(title_segment_ids)
 
         probs = model(
             query_input_ids,
