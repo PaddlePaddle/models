@@ -24,8 +24,8 @@ from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import _get_sub_home, MODEL_HOME
 from paddlenlp.utils.log import logger
 from paddlenlp.data import Vocab, get_idx_from_word
-from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN, PAD_IDX, \
-                      UNK_IDX, EMBEDDING_NAME_LIST
+from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN,\
+                      EMBEDDING_NAME_LIST
 
 EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
 
@@ -83,6 +83,15 @@ class TokenEmbedding(nn.Embedding):
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
         logger.info("Finish loading embedding vector.")
+        s = "Token Embedding brief:\
+             \nUnknown index: {}\
+             \nUnknown token: {}\
+             \nPadding index: {}\
+             \nPadding token: {}\
+             \nShape :{}".format(
+            self._word_to_idx[self.unknown_token], self.unknown_token,
+            self._word_to_idx[PAD_TOKEN], PAD_TOKEN, self.weight.shape)
+        logger.info(s)
 
     def _init_without_extend_vocab(self, vector_np, pad_vector, unk_vector):
         self._idx_to_word = list(vector_np['vocab'])
@@ -100,10 +109,7 @@ class TokenEmbedding(nn.Embedding):
         vocab_list = []
         with open(extended_vocab_path, "r", encoding="utf-8") as f:
             for line in f.readlines():
-                line = line.strip()
-                if line == "":
-                    break
-                vocab = line.split()[0]
+                vocab = line.rstrip("\n").split("\t")[0]
                 vocab_list.append(vocab)
         return vocab_list
 
@@ -162,9 +168,12 @@ class TokenEmbedding(nn.Embedding):
             unk_idx = self._word_to_idx[self.unknown_token]
             embedding_table[unk_idx] = unk_vector
 
-        self._idx_to_word.append(PAD_TOKEN)
-        self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
-        embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+        if PAD_TOKEN not in extend_vocab_set:
+            self._idx_to_word.append(PAD_TOKEN)
+            self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
+            embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+        else:
+            embedding_table[self._word_to_idx[PAD_TOKEN]] = pad_vector
 
         logger.info("Finish extending vocab.")
         return embedding_table
