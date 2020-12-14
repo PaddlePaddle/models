@@ -151,8 +151,6 @@ def parse_args():
     parser.add_argument(
         "--seed", default=42, type=int, help="random seed for initialization")
     parser.add_argument(
-        "--eager_run", default=True, type=eval, help="Use dygraph mode.")
-    parser.add_argument(
         "--n_gpu",
         default=1,
         type=int,
@@ -255,7 +253,6 @@ def convert_example(example,
 
 
 def do_train(args):
-    paddle.enable_static() if not args.eager_run else None
     paddle.set_device("gpu" if args.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
@@ -324,10 +321,10 @@ def do_train(args):
             num_workers=0,
             return_list=True)
 
-    num_labels = 1 if train_dataset.get_labels() == None else len(
+    num_classes = 1 if train_dataset.get_labels() == None else len(
         train_dataset.get_labels())
     model = model_class.from_pretrained(
-        args.model_name_or_path, num_labels=num_labels)
+        args.model_name_or_path, num_classes=num_classes)
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
@@ -361,15 +358,6 @@ def do_train(args):
     ) else paddle.nn.loss.MSELoss()
 
     metric = metric_class()
-
-    ### TODO: use hapi
-    # trainer = paddle.hapi.Model(model)
-    # trainer.prepare(optimizer, loss_fct, paddle.metric.Accuracy())
-    # trainer.fit(train_data_loader,
-    #             dev_data_loader,
-    #             log_freq=args.logging_steps,
-    #             epochs=args.num_train_epochs,
-    #             save_dir=args.output_dir)
 
     global_step = 0
     tic_train = time.time()
