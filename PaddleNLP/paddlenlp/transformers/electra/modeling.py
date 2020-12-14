@@ -436,11 +436,11 @@ class ElectraGenerator(ElectraPretrainedModel):
 class ElectraClassificationHead(nn.Layer):
     """Head for sentence-level classification tasks."""
 
-    def __init__(self, hidden_size, hidden_dropout_prob, num_labels):
+    def __init__(self, hidden_size, hidden_dropout_prob, num_classes):
         super(ElectraClassificationHead, self).__init__()
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
-        self.out_proj = nn.Linear(hidden_size, num_labels)
+        self.out_proj = nn.Linear(hidden_size, num_classes)
 
     def forward(self, features, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
@@ -453,13 +453,13 @@ class ElectraClassificationHead(nn.Layer):
 
 
 class ElectraForSequenceClassification(ElectraPretrainedModel):
-    def __init__(self, electra, num_labels):
+    def __init__(self, electra, num_classes):
         super(ElectraForSequenceClassification, self).__init__()
-        self.num_labels = num_labels
+        self.num_classes = num_classes
         self.electra = electra
         self.classifier = ElectraClassificationHead(
             self.electra.config["hidden_size"],
-            self.electra.config["hidden_dropout_prob"], self.num_labels)
+            self.electra.config["hidden_dropout_prob"], self.num_classes)
 
         self.init_weights()
 
@@ -478,13 +478,13 @@ class ElectraForSequenceClassification(ElectraPretrainedModel):
 
 
 class ElectraForTokenClassification(ElectraPretrainedModel):
-    def __init__(self, electra, num_labels):
+    def __init__(self, electra, num_classes):
         super(ElectraForTokenClassification, self).__init__()
-        self.num_labels = num_labels
+        self.num_classes = num_classes
         self.electra = electra
         self.dropout = nn.Dropout(self.electra.config["hidden_dropout_prob"])
         self.classifier = nn.Linear(self.electra.config["hidden_size"],
-                                    self.num_labels)
+                                    self.num_classes)
         self.init_weights()
 
     def forward(self,
