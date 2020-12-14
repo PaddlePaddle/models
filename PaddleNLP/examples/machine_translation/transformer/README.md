@@ -4,13 +4,12 @@
 
 ```text
 .
-├── images               # README 文档中的图片
+├── images/              # README 文档中的图片
 ├── predict.py           # 预测脚本
 ├── reader.py            # 数据读取接口
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
-├── transformer.py       # 模型定义文件
-└── transformer.yaml     # 配置文件
+└── configs/             # 配置文件
 ```
 
 ## 模型简介
@@ -46,6 +45,15 @@
 
 公开数据集：WMT 翻译大赛是机器翻译领域最具权威的国际评测大赛，其中英德翻译任务提供了一个中等规模的数据集，这个数据集是较多论文中使用的数据集，也是 Transformer 论文中用到的一个数据集。我们也将[WMT'14 EN-DE 数据集](http://www.statmt.org/wmt14/translation-task.html)作为示例提供。
 
+要想获取训练使用的数据集，可以使用如下代码，对应的数据集将会自动下载并且解压到 `~/.paddlenlp/datasets/machine_translation/WMT14ende/`。
+
+``` python
+# 获取默认的数据处理方式
+transform_func = WMT14ende.get_default_transform_func(root=root)
+# 下载并处理 WMT14.en-de 翻译数据集
+dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
+```
+
 ### 单机训练
 
 ### 单机单卡
@@ -55,10 +63,10 @@
 ```sh
 # setting visible devices for training
 export CUDA_VISIBLE_DEVICES=0
-python train.py
+python train.py --config ./configs/transformer.base.yaml
 ```
 
-可以在 transformer.yaml 文件中设置相应的参数，比如设置控制最大迭代次数的 `max_iter` 等。
+可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中设置相应的参数。
 
 ### 单机多卡
 
@@ -66,7 +74,7 @@ python train.py
 
 ```sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py
+python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py --config ./configs/transformer.base.yaml
 ```
 
 
@@ -80,7 +88,7 @@ export CUDA_VISIBLE_DEVICES=0
 python predict.py
 ```
 
- 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `transformer.yaml` 文件中查阅注释说明并进行更改设置。需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前不能保证结果写入文件的顺序。
+ 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前不能保证结果写入文件的顺序。
 
 
 ### 模型评估
@@ -91,9 +99,9 @@ python predict.py
 # 还原 predict.txt 中的预测结果为 tokenize 后的数据
 sed -r 's/(@@ )|(@@ ?$)//g' predict.txt > predict.tok.txt
 # 若无 BLEU 评估工具，需先进行下载
-# git clone https://github.com/moses-smt/mosesdecoder.git
+git clone https://github.com/moses-smt/mosesdecoder.git
 # 以英德翻译 newstest2014 测试数据为例
-perl gen_data/mosesdecoder/scripts/generic/multi-bleu.perl gen_data/wmt14_ende_data/newstest2014.tok.de < predict.tok.txt
+perl mosesdecoder/scripts/generic/multi-bleu.perl ~/.paddlenlp/datasets/machine_translation/WMT14ende/WMT14.en-de/wmt14_ende_data/newstest2014.tok.de < predict.tok.txt
 ```
 可以看到类似如下的结果：
 ```
