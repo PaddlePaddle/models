@@ -78,13 +78,6 @@ PaddleNLP提供了丰富的预训练模型，并且可以便捷地获取PaddlePa
 
 ```text
 sentence_transformers/
-├── checkpoint
-│   ├── model_100
-│   │   ├── model_state.pdparams
-│   │   ├── tokenizer_config.json
-│   │   └── vocab.txt
-│   ├── ...
-│
 ├── model.py # Sentence Transfomer 组网文件
 ├── README.md # 文本说明
 └── train.py # 模型训练评估
@@ -102,13 +95,16 @@ python train.py --model_type ernie --model_name ernie-1.0 --n_gpu 1 --save_dir .
 可支持配置的参数：
 
 * `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
-* `model_name`： 必选，具体的模型简称。如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。`model_type=bert`，则model_name可以选择`bert-base-chinese`。
-   `model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`和`roberta-wwm-ext`。
+* `model_name`： 必选，具体的模型简称。
+   如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。
+   如`model_type=bert`，则model_name可以选择`bert-base-chinese`，`bert-wwm-chinese`，`bert-wwm-ext-chinese`。
+   如`model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`，`roberta-wwm-ext`，`rbt3`，`rbtl3`。
 * `save_dir`：必选，保存训练模型的目录。
 * `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
 * `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
 * `learning_rate`：可选，Fine-tune的最大学习率；默认为5e-5。
 * `weight_decay`：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
+* `epochs`: 训练轮次，默认为3。
 * `warmup_proption`：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
 * `init_from_ckpt`：可选，模型参数路径，热启动模型训练；默认为None。
 * `seed`：可选，随机种子，默认为1000.

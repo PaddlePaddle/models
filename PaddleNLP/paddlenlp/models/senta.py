@@ -63,7 +63,7 @@ class Senta(nn.Layer):
                 vocab_size,
                 num_classes,
                 emb_dim,
-                direction='bidrectional',
+                direction='bidirectional',
                 padding_idx=pad_token_id)
         elif network == 'cnn':
             self.model = CNNModel(

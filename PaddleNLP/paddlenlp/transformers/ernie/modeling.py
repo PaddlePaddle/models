@@ -156,9 +156,9 @@ class ErniePretrainedModel(PretrainedModel):
             "ernie-tiny":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/ernie_tiny.pdparams",
             "ernie-2.0-en":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/ernie-2.0-en.pdparams",
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/ernie_v2_eng_base.pdparams",
             "ernie-2.0-large-en":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/ernie-2.0-large-en.pdparams",
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/ernie_v2_eng_large.pdparams",
         }
     }
     base_model_prefix = "ernie"

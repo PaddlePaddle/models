@@ -52,36 +52,6 @@ def convert_tokens_to_ids(tokens, vocab):
     return ids
 
 
-def convert_example(example, vocab, unk_token_id=1, is_test=False):
-    """
-    Builds model inputs from a sequence for sequence classification tasks. 
-    It use `jieba.cut` to tokenize text.
-
-    Args:
-        example(obj:`list[str]`): List of input data, containing text and label if it have label.
-        vocab(obj:`dict`): The vocabulary.
-        unk_token_id(obj:`int`, defaults to 1): The unknown token id.
-        is_test(obj:`False`, defaults to `False`): Whether the example contains label or not.
-
-    Returns:
-        input_ids(obj:`list[int]`): The list of token ids.s
-        valid_length(obj:`int`): The input sequence valid length.
-        label(obj:`numpy.array`, data type of int64, optional): The input label if not is_test.
-    """
-
-    input_ids = []
-    for token in jieba.cut(example[0]):
-        token_id = vocab.get(token, unk_token_id)
-        input_ids.append(token_id)
-    valid_length = len(input_ids)
-
-    if not is_test:
-        label = np.array(example[-1], dtype="int64")
-        return input_ids, valid_length, label
-    else:
-        return input_ids, valid_length
-
-
 def pad_texts_to_max_seq_len(texts, max_seq_len, pad_token_id=0):
     """
     Padded the texts to the max sequence length if the length of text is lower than it.
@@ -148,8 +118,7 @@ def convert_example(example, vocab, unk_token_id=1, is_test=False):
     for token in jieba.cut(example[0]):
         token_id = vocab.get(token, unk_token_id)
         input_ids.append(token_id)
-    valid_length = len(input_ids)
-    valid_length = np.array(valid_length, dtype="int64")
+    valid_length = np.array(len(input_ids), dtype='int64')
 
     if not is_test:
         label = np.array(example[-1], dtype="int64")

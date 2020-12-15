@@ -63,8 +63,7 @@
 以下是本项目主要代码结构及说明：
 
 ```text
-.
-├── data.py # 数据读取
+rnn/
 ├── predict.py # 模型预测
 ├── utils.py # 数据处理工具
 ├── train.py # 训练模型主程序入口，包括训练、评估
@@ -80,10 +79,6 @@ from paddlenlp.datasets import ChnSentiCorp
 
 train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
-
-#### 自定义数据集
-
-训练数据由两列组成："text_a\tlabel"
 
 ### 模型训练
 
@@ -112,9 +107,9 @@ GPU 启动：
 * `vocab_path`: 词汇表文件路径。
 * `use_gpu`: 是否使用GPU进行训练， 默认为`False`。
 * `network`: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
-* `lr`: 学习率， 默认为5e-4。
+* `lr`: 学习率， 默认为5e-5。
 * `batch_size`: 运行一个batch大小，默认为64。
-* `epochs`: 训练轮次，默认为5。
+* `epochs`: 训练轮次，默认为10。
 * `save_dir`: 训练保存模型的文件路径。
 * `init_from_ckpt`: 恢复模型训练的断点路径。
 
