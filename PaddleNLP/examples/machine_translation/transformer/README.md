@@ -105,7 +105,7 @@ perl mosesdecoder/scripts/generic/multi-bleu.perl ~/.paddlenlp/datasets/machine_
 ```
 可以看到类似如下的结果：
 ```
-BLEU = 26.35, 57.7/32.1/20.0/13.0 (BP=1.000, ratio=1.013, hyp_len=63903, ref_len=63078)
+BLEU = 27.48, 58.6/33.2/21.1/13.9 (BP=1.000, ratio=1.012, hyp_len=65312, ref_len=64506)
 ```
 
 ## 进阶使用

@@ -52,27 +52,36 @@ def create_data_loader(args):
     def _key(size_so_far, minibatch_len):
         return size_so_far * minibatch_len
 
-    data_loaders = [(None, None)] * 2
+    data_loaders = [(None)] * 2
     for i, dataset in enumerate(datasets):
-        sampler = SamplerHelper(
-            dataset.filter(partial(
-                min_max_filer, max_len=args.max_length))).shuffle()
+        m = dataset.mode
+        dataset = dataset.filter(
+            partial(
+                min_max_filer, max_len=args.max_length))
+        sampler = SamplerHelper(dataset)
 
-        if args.sort_type == SortType.GLOBAL or args.sort_type == SortType.POOL:
-            # else for SortType.GLOBAL
-            buffer_size = args.pool_size if args.sort_type == SortType.POOL else -1
+        src_key = (lambda x, data_source: len(data_source[x][0]) + 1)
+        if args.sort_type == SortType.GLOBAL:
+            buffer_size = -1
             trg_key = (lambda x, data_source: len(data_source[x][1]) + 1)
-            src_key = (lambda x, data_source: len(data_source[x][0]) + 1)
             # Sort twice
             sampler = sampler.sort(
                 key=trg_key, buffer_size=buffer_size).sort(
                     key=src_key, buffer_size=buffer_size)
+        else:
+            sampler = sampler.shuffle()
+            if args.sort_type == SortType.POOL:
+                buffer_size = args.pool_size
+                sampler = sampler.sort(key=src_key, buffer_size=buffer_size)
 
         batch_sampler = sampler.batch(
             batch_size=args.batch_size,
             drop_last=False,
             batch_size_fn=_max_token_fn,
-            key=_key).shard()
+            key=_key)
+
+        if m == "train":
+            batch_sampler = batch_sampler.shard()
 
         data_loader = DataLoader(
             dataset=dataset,
@@ -84,7 +93,7 @@ def create_data_loader(args):
                 pad_idx=args.bos_idx),
             num_workers=0,
             return_list=True)
-        data_loaders[i] = (data_loader, batch_sampler.__len__)
+        data_loaders[i] = (data_loader)
     return data_loaders
 
 
@@ -111,8 +120,7 @@ def create_infer_loader(args):
             pad_idx=args.bos_idx),
         num_workers=0,
         return_list=True)
-    data_loaders = (data_loader, batch_sampler.__len__)
-    return data_loaders, trg_vocab.to_tokens
+    return data_loader, trg_vocab.to_tokens
 
 
 def prepare_train_input(insts, bos_idx, eos_idx, pad_idx):

@@ -286,40 +286,63 @@ class WMT14ende(TranslationDataset):
     Examples:
         .. code-block:: python
             from paddlenlp.datasets import WMT14ende
+            transform_func = WMT14ende.get_default_transform_func(root=root)
             train_dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
     """
     URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
     SPLITS = {
         'train': TranslationDataset.META_INFO(
-            os.path.join("WMT14.en-de", "train.tok.clean.bpe.33708.en"),
-            os.path.join("WMT14.en-de", "train.tok.clean.bpe.33708.de"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "train.tok.clean.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "train.tok.clean.bpe.33708.de"),
             "c7c0b77e672fc69f20be182ae37ff62c",
             "1865ece46948fda1209d3b7794770a0a"),
         'dev': TranslationDataset.META_INFO(
-            os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.en"),
-            os.path.join("WMT14.en-de", "newstest2013.tok.bpe.33708.de"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2013.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2013.tok.bpe.33708.de"),
             "aa4228a4bedb6c45d67525fbfbcee75e",
             "9b1eeaff43a6d5e78a381a9b03170501"),
         'test': TranslationDataset.META_INFO(
-            os.path.join("WMT14.en-de", "newstest2014.tok.bpe.33708.en"),
-            os.path.join("WMT14.en-de", "newstest2014.tok.bpe.33708.de"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2014.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2014.tok.bpe.33708.de"),
             "c9403eacf623c6e2d9e5a1155bdff0b5",
-            "0058855b55e37c4acfcb8cffecba1050")
+            "0058855b55e37c4acfcb8cffecba1050"),
+        'dev-eval': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2013.tok.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2013.tok.de"),
+            "d74712eb35578aec022265c439831b0e",
+            "6ff76ced35b70e63a61ecec77a1c418f"),
+        'test-eval': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2014.tok.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2014.tok.de"),
+            "8cce2028e4ca3d4cc039dfd33adbfb43",
+            "a1b1f4c47f487253e1ac88947b68b3b8")
     }
-    VOCAB_INFO = (os.path.join("WMT14.en-de", "vocab_all.bpe.33708"),
-                  os.path.join("WMT14.en-de", "vocab_all.bpe.33708"),
+    VOCAB_INFO = (os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                               "vocab_all.bpe.33708"),
+                  os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                               "vocab_all.bpe.33708"),
                   "2fc775b7df37368e936a8e1f63846bb0",
                   "2fc775b7df37368e936a8e1f63846bb0")
     UNK_TOKEN = "<unk>"
     BOS_TOKEN = "<s>"
     EOS_TOKEN = "<e>"
 
-    MD5 = "c37fed22998182ff09d0f6ee0fcaedbb"
+    MD5 = "5506d213dba4124121c682368257bae4"
 
     def __init__(self, mode="train", root=None, transform_func=None):
-        if mode not in ("train", "dev", "test"):
+        if mode not in ("train", "dev", "test", "dev-eval", "test-eval"):
             raise TypeError(
-                '`train`, `dev` or `test` is supported but `{}` is passed in'.
+                '`train`, `dev`, `test`, `dev-eval` or `test-eval` is supported but `{}` is passed in'.
                 format(mode))
         if transform_func is not None and len(transform_func) != 2:
             if len(transform_func) != 2:
@@ -327,6 +350,7 @@ class WMT14ende(TranslationDataset):
                                  "source and target.")
 
         self.data = WMT14ende.get_data(mode=mode, root=root)
+        self.mode = mode
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
