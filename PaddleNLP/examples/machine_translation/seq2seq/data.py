@@ -40,10 +40,8 @@ def create_train_loader(args):
         [trans_func_tuple, trans_func_tuple])
 
     key = (lambda x, data_source: len(data_source[x][0]))
-    print(len(train_ds))
     train_ds = MapDatasetWrapper(train_ds).filter(
         lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
-    print(len(train_ds))
     dev_ds = MapDatasetWrapper(dev_ds).filter(
         lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
     train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
