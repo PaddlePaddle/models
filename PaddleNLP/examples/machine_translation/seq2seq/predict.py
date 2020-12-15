@@ -86,13 +86,6 @@ def do_predict(args):
                     cands.append(" ".join(word_list))
                     break
 
-    bleu = BLEU()
-    with io.open(args.infer_target_file, encoding="utf-8") as f:
-        for i, line in enumerate(f):
-            ref = line.strip()
-            bleu.add_inst(cands[i], [ref])
-    print("BLEU score is %s." % bleu.score())
-
 
 if __name__ == "__main__":
     args = parse_args()

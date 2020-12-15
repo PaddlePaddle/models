@@ -23,9 +23,10 @@
 
 本教程使用了两个文本数据集：
 
-PTB dataset，原始下载地址为: http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz
+PTB dataset，原始下载地址为: https://dataset.bj.bcebos.com/imikolov%2Fsimple-examples.tgz
 
-yahoo，原始下载地址为：https://drive.google.com/file/d/13IsiffVjcQ-wrrbBGMwiG3sYf-DFxtXH/view?usp=sharing/
+Yahoo数据集来自[(Yang et al., 2017) Improved Variational Autoencoders for Text Modeling using Dilated Convolutions](https://arxiv.org/pdf/1702.08139.pdf)，
+通过从原始Yahoo Answer数据中采样100k个文档创建扩展卷积。平均文档长度为78，词汇量为200k。下载地址为：
 
 ### 数据获取
 

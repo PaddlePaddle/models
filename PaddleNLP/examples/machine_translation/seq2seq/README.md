@@ -56,7 +56,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对test的数据集（由 `--infer_file` 指定）进行beam search解码，命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对test的数据集进行beam search解码，其中test的译文数据由 `--infer_target_file` 指定）命令如下：
 
 ```sh
 python predict.py \
@@ -76,10 +76,15 @@ python predict.py \
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
 ## 效果评价
-在运行`predict.py`生成翻译结果后，会打印出此次翻译结果相对于译文的BLEU指标
+使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，使用方法如下：
 
-取第9个epoch保存的模型进行预测，取beam_size=10。效果如下：
-```
-BLEU score is 0.6031783224609996.
+ ```sh
+ perl mosesdecoder/scripts/generic/multi-bleu.perl data/en-vi/tst2013.vi < infer_output.txt
+ ```
+
+ 取第10个epoch保存的模型进行预测，取beam_size=10。效果如下：
+
+ ```
+ tst2013 BLEU:
 
 ```

@@ -28,7 +28,7 @@ URLLIB = urllib.request
 
 TASKS = ['ptb', 'yahoo']
 TASK2PATH = {
-    'ptb': 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz',
+    'ptb': 'https://dataset.bj.bcebos.com/imikolov%2Fsimple-examples.tgz',
     'yahoo':
     'https://drive.google.com/file/d/13IsiffVjcQ-wrrbBGMwiG3sYf-DFxtXH/view?usp=sharing/yahoo.zip',
 }
