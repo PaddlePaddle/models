@@ -39,7 +39,7 @@
 | 数据集名称  | 简介 | 调用方法 |
 | ----  | --------- | ------ |
 |  [IWSLT15](https://workshop2015.iwslt.org/) | IWSLT'15 English-Vietnamese data 英语-越南语翻译数据集| `paddlenlp.datasets.IWSLT15`|
-|  [WMT14](http://www.statmt.org/wmt14/translation-task.html) | WMT14 EN-DE 英语-德语翻译数据集| `paddlenlp.datasets.WMT14`|
+|  [WMT14](http://www.statmt.org/wmt14/translation-task.html) | WMT14 EN-DE 英语-德语翻译数据集| `paddlenlp.datasets.WMT14ende`|
 
 ## 时序预测
 

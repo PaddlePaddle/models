@@ -16,6 +16,7 @@ import collections
 import io
 import json
 import os
+import warnings
 
 
 class Vocab(object):
@@ -179,7 +180,12 @@ class Vocab(object):
 
         tokens = []
         for idx in indices:
-            if not isinstance(idx, int) or idx > max_idx:
+            if not isinstance(idx, int):
+                warnings.warn(
+                    "The type of `to_tokens()`'s input `indices` is not `int` which will be forcibly transfered to `int`. "
+                )
+                idx = int(idx)
+            if idx > max_idx:
                 raise ValueError(
                     'Token index {} in the provided `indices` is invalid.'.
                     format(idx))
