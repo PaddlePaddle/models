@@ -120,6 +120,4 @@ def prepare_train_input(insts, bos_id, eos_id, pad_id, max_len=50):
     tgt, tgt_length = Pad(pad_val=pad_id, ret_length=True)(
         [inst[1] for inst in insts])
     tgt_mask = (tgt[:, :-1] != pad_id).astype("float32")
-    import pdb
-    pdb.set_trace()
     return src, src_length, tgt[:, :-1], tgt[:, 1:, np.newaxis], tgt_mask
