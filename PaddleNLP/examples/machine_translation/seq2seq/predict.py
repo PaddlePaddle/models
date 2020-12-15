@@ -68,7 +68,6 @@ def do_predict(args):
         "Please set reload_model to load the infer model.")
     model.load(args.init_from_ckpt)
 
-    cands = []
     with io.open(args.infer_output_file, 'w', encoding='utf-8') as f:
         for data in test_loader():
             with paddle.no_grad():
@@ -83,7 +82,6 @@ def do_predict(args):
                     word_list = [trg_idx2word[id] for id in id_list]
                     sequence = " ".join(word_list) + "\n"
                     f.write(sequence)
-                    cands.append(" ".join(word_list))
                     break
 
 
