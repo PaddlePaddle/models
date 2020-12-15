@@ -46,9 +46,6 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 
 ```text
 .
-├── data
-│   ├── spm.model # sentencepiece分词预训练模型
-│   └── vocab.txt # 词表文件
 ├── interaction.py # 交互主程序入口
 ├── model.py # 模型组网
 ├── readers
@@ -60,6 +57,7 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 │   ├── args.py # 运行参数配置
 │   ├── masking.py # mask相关函数
 │   └── tokenization.py # 分词相关函数
+├── imgs # 示例图存储文件夹
 └── README.md # 说明文档
 ```
 
@@ -77,6 +75,13 @@ wget https://paddlenlp.bj.bcebos.com/models/transformers/plato2/24L.pdparams
 ```
 
 **NOTE:** PLATO-2网络参数量较大，24层网络至少需要显存16G，32层网络至少需要显存22G，用户可选择合适的网络层数及预训练模型。
+
+sentencepiece分词预训练模型和词表文件下载：
+
+```shell
+wget https://paddlenlp.bj.bcebos.com/models/transformers/plato2/data.tar.gz
+tar -zxf data.tar.gz
+```
 
 ### 人机交互
 
