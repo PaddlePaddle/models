@@ -56,6 +56,11 @@ def create_pretraining_dataset(input_file,
                 mask_token_num += 1
         # mask_token_num
         out.append(np.asarray([mask_token_num], dtype=np.float32))
+        if args.use_amp and args.use_pure_fp16:
+            # cast input_mask to fp16
+            out[2] = out[2].astype(np.float16)
+            # cast masked_lm_scale to fp16
+            out[-1] = out[-1].astype(np.float16)
         return out
 
     train_data_loader = DataLoader(

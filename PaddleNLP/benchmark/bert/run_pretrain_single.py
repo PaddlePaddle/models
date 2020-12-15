@@ -141,6 +141,11 @@ def parse_args():
         type=float,
         default=1.0,
         help="The value of scale_loss for fp16.")
+    parser.add_argument(
+        "--use_pure_fp16",
+        type=distutils.util.strtobool,
+        default=False,
+        help="Whether to use pure fp16 training.")
     args = parser.parse_args()
     return args
 
@@ -236,7 +241,8 @@ def do_train(args):
         apply_decay_param_fun=lambda x: x in [
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
-        ])
+        ],
+        multi_precision=args.use_pure_fp16)
     if args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
             custom_white_list=['layer_norm', 'softmax', 'gelu'])
@@ -244,7 +250,8 @@ def do_train(args):
             optimizer,
             amp_list,
             init_loss_scaling=args.scale_loss,
-            use_dynamic_loss_scaling=True)
+            use_dynamic_loss_scaling=True,
+            use_pure_fp16=args.use_pure_fp16)
     optimizer.minimize(loss)
 
     # Define the Executor for running the static model
@@ -255,6 +262,8 @@ def do_train(args):
     # Use the state dict to update the parameter
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
+    if args.use_amp:
+        optimizer.amp_init(place)
     # Construct the compiled program
     main_program = build_compiled_program(args, main_program, loss)
     global_step = 0
