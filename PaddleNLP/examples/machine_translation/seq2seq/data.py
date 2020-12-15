@@ -27,7 +27,9 @@ from paddlenlp.datasets import MapDatasetWrapper, IWSLT15
 trans_func_tuple = IWSLT15.get_default_transform_func()
 
 
-def create_train_loader(batch_size=128):
+def create_train_loader(args):
+    batch_size = args.batch_size
+    max_len = args.max_len
     src_vocab, tgt_vocab = IWSLT15.get_vocab()
     bos_id = src_vocab[src_vocab.bos_token]
     eos_id = src_vocab[src_vocab.eos_token]
@@ -38,13 +40,12 @@ def create_train_loader(batch_size=128):
         [trans_func_tuple, trans_func_tuple])
 
     key = (lambda x, data_source: len(data_source[x][0]))
-
+    print(len(train_ds))
     train_ds = MapDatasetWrapper(train_ds).filter(
-        lambda data: (len(data[0]) > 0 and len(data[0]) < 50 and len(data[1]) > 0 and len(data[1]) < 50)
-    )
+        lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
+    print(len(train_ds))
     dev_ds = MapDatasetWrapper(dev_ds).filter(
-        lambda data: len(data[0]) > 0 and len(data[0]) < 50 and len(data[1]) > 0 and len(data[1]) < 50
-    )
+        lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
     train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
         key=key, buffer_size=batch_size * 20).batch(batch_size=batch_size)
 
@@ -55,18 +56,28 @@ def create_train_loader(batch_size=128):
         train_ds,
         batch_sampler=train_batch_sampler,
         collate_fn=partial(
-            prepare_train_input, bos_id=bos_id, eos_id=eos_id, pad_id=pad_id))
+            prepare_train_input,
+            bos_id=bos_id,
+            eos_id=eos_id,
+            pad_id=pad_id,
+            max_len=max_len))
 
     dev_loader = paddle.io.DataLoader(
         dev_ds,
         batch_sampler=dev_batch_sampler,
         collate_fn=partial(
-            prepare_train_input, bos_id=bos_id, eos_id=eos_id, pad_id=pad_id))
+            prepare_train_input,
+            bos_id=bos_id,
+            eos_id=eos_id,
+            pad_id=pad_id,
+            max_len=max_len))
 
     return train_loader, dev_loader, len(src_vocab), len(tgt_vocab), pad_id
 
 
-def create_infer_loader(batch_size=128):
+def create_infer_loader(args):
+    batch_size = args.batch_size
+    max_len = args.max_len
     trans_func_tuple = IWSLT15.get_default_transform_func()
     test_ds = IWSLT15.get_datasets(["test"], ['transform_func'],
                                    [trans_func_tuple])
@@ -81,11 +92,15 @@ def create_infer_loader(batch_size=128):
         test_ds,
         batch_sampler=test_batch_sampler,
         collate_fn=partial(
-            prepare_infer_input, bos_id=bos_id, eos_id=eos_id, pad_id=pad_id))
+            prepare_infer_input,
+            bos_id=bos_id,
+            eos_id=eos_id,
+            pad_id=pad_id,
+            max_len=max_len))
     return test_loader, len(src_vocab), len(tgt_vocab), bos_id, eos_id
 
 
-def prepare_infer_input(insts, bos_id, eos_id, pad_id):
+def prepare_infer_input(insts, bos_id, eos_id, pad_id, max_len=50):
     insts = [([bos_id] + inst[0] + [eos_id], [bos_id] + inst[1] + [eos_id])
              for inst in insts]
     src, src_length = Pad(pad_val=pad_id, ret_length=True)(
@@ -93,12 +108,18 @@ def prepare_infer_input(insts, bos_id, eos_id, pad_id):
     return src, src_length
 
 
-def prepare_train_input(insts, bos_id, eos_id, pad_id):
+def prepare_train_input(insts, bos_id, eos_id, pad_id, max_len=50):
+    # Remove tokens that make sentences longer than max_len.
+    insts = [(inst[0][:max_len], inst[1][:max_len]) for inst in insts]
+    # Add eos token id and bos token id.
     insts = [([bos_id] + inst[0] + [eos_id], [bos_id] + inst[1] + [eos_id])
              for inst in insts]
+    # Pad sequence using eos id.
     src, src_length = Pad(pad_val=pad_id, ret_length=True)(
         [inst[0] for inst in insts])
     tgt, tgt_length = Pad(pad_val=pad_id, ret_length=True)(
         [inst[1] for inst in insts])
     tgt_mask = (tgt[:, :-1] != pad_id).astype("float32")
+    import pdb
+    pdb.set_trace()
     return src, src_length, tgt[:, :-1], tgt[:, 1:, np.newaxis], tgt_mask

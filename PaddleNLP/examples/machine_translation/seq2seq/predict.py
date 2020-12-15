@@ -44,7 +44,7 @@ def do_predict(args):
     device = paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     test_loader, src_vocab_size, tgt_vocab_size, bos_id, eos_id = create_infer_loader(
-        args.batch_size)
+        args)
     _, vocab = IWSLT15.get_vocab()
     trg_idx2word = vocab._idx_to_token
 

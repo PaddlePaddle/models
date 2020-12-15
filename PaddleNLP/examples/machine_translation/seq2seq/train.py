@@ -27,7 +27,7 @@ def do_train(args):
 
     # Define dataloader
     train_loader, eval_loader, src_vocab_size, tgt_vocab_size, eos_id = create_train_loader(
-        args.batch_size)
+        args)
 
     model = paddle.Model(
         Seq2SeqAttnModel(src_vocab_size, tgt_vocab_size, args.hidden_size, args.

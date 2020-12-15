@@ -25,8 +25,7 @@
 
 PTB dataset，原始下载地址为: https://dataset.bj.bcebos.com/imikolov%2Fsimple-examples.tgz
 
-Yahoo数据集来自[(Yang et al., 2017) Improved Variational Autoencoders for Text Modeling using Dilated Convolutions](https://arxiv.org/pdf/1702.08139.pdf)，
-通过从原始Yahoo Answer数据中采样100k个文档创建扩展卷积。平均文档长度为78，词汇量为200k。下载地址为：
+Yahoo数据集来自[(Yang et al., 2017) Improved Variational Autoencoders for Text Modeling using Dilated Convolutions](https://arxiv.org/pdf/1702.08139.pdf)，该数据集从原始Yahoo Answer数据中采样100k个文档，数据集的平均文档长度为78，词汇量为200k。下载地址为：
 
 ### 数据获取
 
