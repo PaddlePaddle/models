@@ -230,7 +230,8 @@ class LinearChainCrf(nn.Layer):
         return self._seq_index[:length]
 
     def _get_batch_seq_index(self, batch_size, length):
-        if self._batch_seq_index is None or length > self._batch_seq_index.shape[1]:
+        if self._batch_seq_index is None or length + 2 > self._batch_seq_index.shape[
+                1]:
             self._batch_seq_index = paddle.cumsum(
                 paddle.ones([batch_size, length + 2], "int64"),
                 axis=1) - 1
