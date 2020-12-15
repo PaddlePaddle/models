@@ -1,10 +1,20 @@
-# PLATO2
+# PLATO-2
 
 ## 模型简介
 
 构建高质量的开放领域（Open-Domain）的对话机器人，使得它能用自然语言与人自由地交流，这一直是自然语言处理领域终极目标之一。
 
-为了能够简易地构建一个高质量的开放域聊天机器人，本项目在Paddle2.0上实现了Plato2的预测模型，并基于终端实现了简单的人机交互。用户可以通过下载预训练模型快速构建一个开放域聊天机器人。
+为了能够简易地构建一个高质量的开放域聊天机器人，本项目在Paddle2.0上实现了PLATO-2的预测模型，并基于终端实现了简单的人机交互。用户可以通过下载预训练模型快速构建一个开放域聊天机器人。
+
+PLATO-2的网络结构及评估结果见下图：
+
+![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/network.png)
+
+![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/eval_en.png)
+
+![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/eval_cn.png)
+
+PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePaddle/Knover)
 
 ## 快速开始
 
@@ -17,7 +27,7 @@
 * PaddleNLP 安装
 
    ```shell
-   pip install paddlenlp
+   pip install paddlenlp>=2.0.0b
    ```
 
 * 环境依赖
@@ -29,9 +39,6 @@
     ```shell
     pip install sentencepiece termcolor
     ```
-
-    其它环境依赖请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/install/quick/zh/2.0rc-linux-docker) 部分的内容
-
 
 ### 代码结构说明
 
@@ -60,8 +67,8 @@
 
 您可以从以下位置下载预训练模型文件：
 
-* Plato2, 24-layers, 16-heads, 1024-hidden, EN: [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/plato2/24L.pdparams)
-* Plato2, 32-layers, 32-heads, 2048-hidden, EN: [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/plato2/32L.pdparams)
+* PLATO-2, 24-layers, 16-heads, 1024-hidden, EN: [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/plato2/24L.pdparams)
+* PLATO-2, 32-layers, 32-heads, 2048-hidden, EN: [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/plato2/32L.pdparams)
 
 以24层预训练模型为例：
 
@@ -69,7 +76,7 @@
 wget https://paddlenlp.bj.bcebos.com/models/transformers/plato2/24L.pdparams
 ```
 
-**NOTE:** Plato2网络参数量较大，本项目已在22G显存上测试可以支持24层和32层网络，用户可根据显存自行选择合适层数及预训练模型。
+**NOTE:** PLATO-2网络参数量较大，24层网络至少需要显存16G，32层网络至少需要显存22G，用户可选择合适的网络层数及预训练模型。
 
 ### 人机交互
 
@@ -84,5 +91,9 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 
 * vocab_path：词表文件路径。
 * spm_model_file：sentencepiece分词预训练模型路径。
-* num_layers：Plato2组网层数。
-* init_from_ckpt：Plato2预训练模型路径。
+* num_layers：PLATO-2组网层数。
+* init_from_ckpt：PLATO-2预训练模型路径。
+
+32层PLATO-2网络交互示例：
+
+![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/case.jpg)
