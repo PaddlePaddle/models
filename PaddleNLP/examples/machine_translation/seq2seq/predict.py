@@ -21,7 +21,6 @@ from args import parse_args
 from seq2seq_attn import Seq2SeqAttnInferModel
 from data import create_infer_loader
 from paddlenlp.datasets import IWSLT15
-from paddlenlp.metrics import BLEU
 
 
 def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
@@ -46,7 +45,7 @@ def do_predict(args):
     test_loader, src_vocab_size, tgt_vocab_size, bos_id, eos_id = create_infer_loader(
         args)
     _, vocab = IWSLT15.get_vocab()
-    trg_idx2word = vocab._idx_to_token
+    trg_idx2word = vocab.idx_to_token
 
     model = paddle.Model(
         Seq2SeqAttnInferModel(
@@ -75,7 +74,6 @@ def do_predict(args):
             finished_seq = finished_seq[:, :, np.newaxis] if len(
                 finished_seq.shape) == 2 else finished_seq
             finished_seq = np.transpose(finished_seq, [0, 2, 1])
-
             for ins in finished_seq:
                 for beam_idx, beam in enumerate(ins):
                     id_list = post_process_seq(beam, bos_id, eos_id)

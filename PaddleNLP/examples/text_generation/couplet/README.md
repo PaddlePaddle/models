@@ -30,7 +30,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本教程使用[couplet数据集](https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz)数据集作为训练语料，train_src.tsv及train_tgt.tsv为训练集，dev_src.tsv及test_tgt.tsv为开发集，test_src.tsv及test_tgt.tsv为测试集。
 
-数据集会在`CoupletDataset`初始化时自动下载,如果用户在初始化数据集时没有提供路径，数据集会自动下载到`/root/.paddlenlp/datasets/machine_translation/CoupletDataset/`目录下
+数据集会在`CoupletDataset`初始化时自动下载,如果用户在初始化数据集时没有提供路径，在linux系统下，数据集会自动下载到`/root/.paddlenlp/datasets/machine_translation/CoupletDataset/`目录下
 
 
 ## 模型训练

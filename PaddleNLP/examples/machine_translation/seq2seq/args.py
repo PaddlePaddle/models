@@ -42,9 +42,6 @@ def parse_args():
         default=100,
         help="hidden size of encoder and decoder")
 
-    parser.add_argument("--src_vocab_size", type=int, help="source vocab size")
-    parser.add_argument("--trg_vocab_size", type=int, help="target vocab size")
-
     parser.add_argument(
         "--batch_size", type=int, help="batch size of each step")
 
