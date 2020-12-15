@@ -30,7 +30,8 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本教程使用[couplet数据集](https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz)数据集作为训练语料，train_src.tsv及train_tgt.tsv为训练集，dev_src.tsv及test_tgt.tsv为开发集，test_src.tsv及test_tgt.tsv为测试集。
 
-数据集会在`CoupletDataset`初始化时自动下载
+数据集会在`CoupletDataset`初始化时自动下载,如果用户在初始化数据集时没有提供路径，在linux系统下，数据集会自动下载到`/root/.paddlenlp/datasets/machine_translation/CoupletDataset/`目录下
+
 
 ## 模型训练
 
@@ -69,24 +70,24 @@ python predict.py \
 
 ## 生成对联样例
 
-上联：崖悬风雨骤				下联：月落水云寒
+上联：崖悬风雨骤                下联：月落水云寒
 
 
-上联：约春章柳下				下联：邀月醉花间
+上联：约春章柳下                下联：邀月醉花间
 
 
-上联：箬笠红尘外				下联：扁舟明月中
+上联：箬笠红尘外                下联：扁舟明月中
 
 
-上联：书香醉倒窗前月		下联：烛影摇红梦里人
+上联：书香醉倒窗前月        下联：烛影摇红梦里人
 
 
-上联：踏雪寻梅求雅趣		下联：临风把酒觅知音
+上联：踏雪寻梅求雅趣        下联：临风把酒觅知音
 
-上联：未出南阳天下论		下联：先登北斗汉中书
+上联：未出南阳天下论        下联：先登北斗汉中书
 
-上联：朱联妙语千秋颂    	下联：赤胆忠心万代传
+上联：朱联妙语千秋颂        下联：赤胆忠心万代传
 
-上联：月半举杯圆月下    	下联：花间对酒醉花间
+上联：月半举杯圆月下        下联：花间对酒醉花间
 
-上联：挥笔如剑倚麓山豪气干云揽月去   	下联：落笔似龙飞沧海龙吟破浪乘风来
+上联：挥笔如剑倚麓山豪气干云揽月去       下联：落笔似龙飞沧海龙吟破浪乘风来

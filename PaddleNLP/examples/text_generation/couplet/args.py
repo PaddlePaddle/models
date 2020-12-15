@@ -79,9 +79,6 @@ def parse_args():
         help="The path of checkpoint to be loaded.")
 
     parser.add_argument(
-        "--infer_file", type=str, help="file name for inference")
-
-    parser.add_argument(
         "--infer_output_file",
         type=str,
         default='infer_output',

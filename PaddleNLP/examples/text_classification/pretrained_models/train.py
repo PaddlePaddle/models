@@ -118,6 +118,7 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
+@paddle.no_grad()
 def evaluate(model, criterion, metric, data_loader):
     """
     Given a dataset, it evals model and computes the metric.
@@ -234,8 +235,8 @@ def do_train(args):
 
     train_dataset, dev_dataset, test_dataset = ppnlp.datasets.ChnSentiCorp.get_datasets(
         ['train', 'dev', 'test'])
-    if args.model_name == 'ernie_tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
+    if args.model_name == 'ernie-tiny':
+        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name)
     else:
