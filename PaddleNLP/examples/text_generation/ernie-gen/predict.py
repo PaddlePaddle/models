@@ -129,7 +129,6 @@ def predict():
                 map(post_process, vocab.to_tokens(predict_ids)))
             print("source :%s\ntarget :%s\npredict:%s\n" %
                   (source_sentence, tgt_sentence, predict_ids))
-        break
 
 
 if __name__ == "__main__":
