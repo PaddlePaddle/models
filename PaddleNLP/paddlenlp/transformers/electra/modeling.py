@@ -24,8 +24,8 @@ import paddle.nn.functional as F
 from .. import PretrainedModel, register_base_model
 
 __all__ = [
-    'ElectraModel', 'ElectraForTotalPretraining', 'ElectraDiscriminator',
-    'ElectraGenerator', 'ElectraClassificationHead',
+    'ElectraModel', 'ElectraPretrainedModel', 'ElectraForTotalPretraining',
+    'ElectraDiscriminator', 'ElectraGenerator', 'ElectraClassificationHead',
     'ElectraForSequenceClassification', 'ElectraForTokenClassification',
     'ElectraPretrainingCriterion'
 ]
