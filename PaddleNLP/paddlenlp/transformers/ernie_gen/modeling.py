@@ -21,13 +21,14 @@ import json
 import paddle
 from paddle import nn
 from paddle.nn import functional as F
-from paddle.dataset.common import DATA_HOME
+from paddlenlp.utils.env import MODEL_HOME
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.log import logger
+from paddlenlp.transformers import BertPretrainedModel, ElectraPretrainedModel, RobertaPretrainedModel, ErniePretrainedModel
 
 from ..utils import InitTrackerMeta, fn_args_to_dict
 
-__all__ = ["ErnieForGeneration"]
+__all__ = ["ErnieGenPretrainedModel", "ErnieForGeneration"]
 
 
 def _build_linear(n_in, n_out, name, init):
@@ -209,9 +210,9 @@ class ErnieEncoderStack(nn.Layer):
 
 
 @six.add_metaclass(InitTrackerMeta)
-class PretrainedModel(object):
+class ErnieGenPretrainedModel(object):
     model_config_file = "model_config.json"
-    pretrained_init_configuration = {
+    ernie_gen_pretrained_init_configuration = {
         "ernie-gen-base-en": {
             "attention_probs_dropout_prob": 0.1,
             "hidden_act": "gelu",
@@ -254,63 +255,9 @@ class PretrainedModel(object):
             "vocab_size": 30522,
             "pad_token_id": 0,
         },
-        "ernie-1.0": {
-            "attention_probs_dropout_prob": 0.1,
-            "hidden_act": "relu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 768,
-            "initializer_range": 0.02,
-            "max_position_embeddings": 513,
-            "num_attention_heads": 12,
-            "num_hidden_layers": 12,
-            "type_vocab_size": 2,
-            "vocab_size": 18000,
-            "pad_token_id": 0,
-        },
-        "ernie-tiny": {
-            "attention_probs_dropout_prob": 0.1,
-            "hidden_act": "relu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 1024,
-            "initializer_range": 0.02,
-            "intermediate_size": 4096,
-            "max_position_embeddings": 600,
-            "num_attention_heads": 16,
-            "num_hidden_layers": 3,
-            "type_vocab_size": 2,
-            "vocab_size": 50006,
-            "pad_token_id": 0,
-        },
-        "ernie-2.0-en": {
-            "attention_probs_dropout_prob": 0.1,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 768,
-            "initializer_range": 0.02,
-            "max_position_embeddings": 512,
-            "num_attention_heads": 12,
-            "num_hidden_layers": 12,
-            "type_vocab_size": 4,
-            "vocab_size": 30522,
-            "pad_token_id": 0,
-        },
-        "ernie-2.0-large-en": {
-            "attention_probs_dropout_prob": 0.1,
-            "intermediate_size": 4096,  # special for ernie_v2_eng_large
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 1024,
-            "initializer_range": 0.02,
-            "max_position_embeddings": 512,
-            "num_attention_heads": 16,
-            "num_hidden_layers": 24,
-            "type_vocab_size": 4,
-            "vocab_size": 30522,
-            "pad_token_id": 0,
-        },
     }
     resource_files_names = {"model_state": "model_state.pdparams"}
-    pretrained_resource_files_map = {
+    ernie_gen_pretrained_resource_files_map = {
         "model_state": {
             "ernie-gen-base-en":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-base/ernie_gen_base.pdparams",
@@ -318,14 +265,25 @@ class PretrainedModel(object):
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-large/ernie_gen_large.pdparams",
             "ernie-gen-large-430g-en":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-large-430g/ernie_gen_large_430g.pdparams",
-            "ernie-1.0":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie/ernie_v1_chn_base.pdparams",
-            "ernie_tiny":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/ernie_tiny.pdparams",
-            "ernie-2.0-en":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/ernie_v2_eng_base.pdparams",
-            "ernie-2.0-large-en":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/ernie_v2_eng_large.pdparams",
+        }
+    }
+
+    # Support more model to warm start.
+    pretrained_init_configuration = {
+        ** ernie_gen_pretrained_init_configuration, **
+        BertPretrainedModel.pretrained_init_configuration, **
+        ElectraPretrainedModel.pretrained_init_configuration, **
+        RobertaPretrainedModel.pretrained_init_configuration, **
+        ErniePretrainedModel.pretrained_init_configuration
+    }
+    pretrained_resource_files_map = {
+        "model_state": {
+            ** ernie_gen_pretrained_resource_files_map["model_state"], **
+            BertPretrainedModel.pretrained_resource_files_map["model_state"], **
+            ElectraPretrainedModel.pretrained_resource_files_map["model_state"],
+            **
+            RobertaPretrainedModel.pretrained_resource_files_map["model_state"],
+            ** ErniePretrainedModel.pretrained_resource_files_map["model_state"]
         }
     }
 
@@ -356,7 +314,7 @@ class PretrainedModel(object):
                     "identifiers are as follows: {}".format(
                         cls.__name__, cls.pretrained_init_configuration.keys()))
 
-        default_root = os.path.join(DATA_HOME, pretrained_model_name_or_path)
+        default_root = os.path.join(MODEL_HOME, pretrained_model_name_or_path)
         resolved_resource_files = {}
         for file_id, file_path in resource_files.items():
             path = os.path.join(default_root, file_path.split('/')[-1])
@@ -437,9 +395,9 @@ class PretrainedModel(object):
                 for arg in value:
                     args.append(
                         arg.init_config
-                        if isinstance(arg, PretrainedModel) else arg)
+                        if isinstance(arg, ErnieGenPretrainedModel) else arg)
                 model_config[key] = tuple(args)
-            elif isinstance(value, PretrainedModel):
+            elif isinstance(value, ErnieGenPretrainedModel):
                 model_config[key] = value.init_config
         with io.open(model_config_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(model_config, ensure_ascii=False))
@@ -457,7 +415,7 @@ class PretrainedModel(object):
         self.config = init_dict
 
 
-class ErnieModel(nn.Layer, PretrainedModel):
+class ErnieModel(nn.Layer, ErnieGenPretrainedModel):
     def __init__(self, cfg, name=None):
         """
         Fundamental pretrained Ernie model
@@ -647,12 +605,6 @@ class ErnieForGeneration(ErnieModel):
             encoded_2d = self.mlm_ln(encoded_2d)
             logits_2d = encoded_2d.matmul(
                 self.word_emb.weight, transpose_y=True) + self.mlm_bias
-            # if len(tgt_labels.shape) == 1:
-            #     tgt_labels = paddle.reshape(tgt_labels, [-1, 1])
-
-            # loss = F.kl_div(
-            #     F.log_softmax(logits_2d),
-            #     tgt_labels)  # kl-div equals ce when one hot label is used
             if len(tgt_labels.shape) == 1:
                 tgt_labels = paddle.reshape(tgt_labels, [-1, 1])
 

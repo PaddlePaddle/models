@@ -6,10 +6,9 @@ import logging
 
 import paddle
 import paddle.nn as nn
-from tqdm import tqdm
 from paddle.io import DataLoader
 from paddlenlp.transformers import ErnieForGeneration
-from paddlenlp.transformers import ErnieTokenizer
+from paddlenlp.transformers import ErnieTokenizer, ErnieTinyTokenizer, BertTokenizer, ElectraTokenizer, RobertaTokenizer
 from paddlenlp.datasets import Poetry
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.metrics import Rouge1, Rouge2
@@ -19,15 +18,15 @@ from encode import convert_example, after_padding
 from decode import beam_search_infilling, post_process, greedy_search_infilling
 
 # yapf: disable
-parser = argparse.ArgumentParser('seq2seq model with ERNIE')
+parser = argparse.ArgumentParser('seq2seq model with ERNIE-GEN')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
-parser.add_argument('--max_encode_len', type=int, default=24, help="the max encoding sentence length")
-parser.add_argument('--max_decode_len', type=int, default=72, help="the max decoding sentence length")
+parser.add_argument('--max_encode_len', type=int, default=24, help="The max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=72, help="The max decoding sentence length")
 parser.add_argument("--batch_size", default=50, type=int, help="Batch size per GPU/CPU for training.", )
-parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
+parser.add_argument('--beam_width', type=int, default=3, help="Beam search width")
 parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
-parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
-parser.add_argument('--use_gpu', action='store_true', help='if set, use gpu to excute')
+parser.add_argument('--init_checkpoint', type=str, default=None, help='Checkpoint to warm start from')
+parser.add_argument('--use_gpu', action='store_true', help='If set, use gpu to excute')
 # yapf: enable
 
 args = parser.parse_args()
@@ -37,9 +36,18 @@ def predict():
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     model = ErnieForGeneration.from_pretrained(args.model_name_or_path)
-    tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    if "ernie-tiny" in args.model_name_or_path:
+        tokenizer = ErnieTinyTokenizer.from_pretrained(args.model_name_or_path)
+    elif "ernie" in args.model_name_or_path:
+        tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    elif "roberta" in args.model_name_or_path or "rbt" in args.model_name_or_path:
+        tokenizer = RobertaTokenizer.from_pretrained(args.model_name_or_path)
+    elif "electra" in args.model_name_or_path:
+        tokenizer = ElectraTokenizer.from_pretrained(args.model_name_or_path)
+    else:
+        tokenizer = BertTokenizer.from_pretrained(args.model_name_or_path)
 
-    test_dataset = Poetry.get_datasets(['test'])
+    dev_dataset = Poetry.get_datasets(['test'])
     attn_id = tokenizer.vocab[
         '[ATTN]'] if '[ATTN]' in tokenizer.vocab else tokenizer.vocab['[MASK]']
     tgt_type_id = model.sent_emb.weight.shape[0] - 1
@@ -62,11 +70,11 @@ def predict():
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # tgt_labels
     ): after_padding(fn(samples))
 
-    test_dataset = test_dataset.apply(trans_func, lazy=True)
+    dev_dataset = dev_dataset.apply(trans_func, lazy=True)
     test_batch_sampler = paddle.io.BatchSampler(
-        test_dataset, batch_size=args.batch_size, shuffle=False)
+        dev_dataset, batch_size=args.batch_size, shuffle=False)
     data_loader = DataLoader(
-        dataset=test_dataset,
+        dataset=dev_dataset,
         batch_sampler=test_batch_sampler,
         collate_fn=batchify_fn,
         num_workers=0,
@@ -86,7 +94,7 @@ def predict():
     evaluated_sentences = []
     evaluated_sentences_ids = []
     logger.info("Predicting...")
-    for data in tqdm(data_loader):
+    for data in data_loader:
         (src_ids, src_sids, src_pids, _, _, _, _, _, _, _, _,
          raw_tgt_labels) = data  # never use target when infer
         # Use greedy_search_infilling or beam_search_infilling to get predictions
@@ -106,18 +114,22 @@ def predict():
             length_penalty=args.length_penalty,
             tgt_type_id=tgt_type_id)
 
-        for ids in output_ids.tolist():
-            if eos_id in ids:
-                ids = ids[:ids.index(eos_id)]
-            evaluated_sentences_ids.append(ids)
-
+        for source_ids, target_ids, predict_ids in zip(
+                src_ids.numpy().tolist(),
+                raw_tgt_labels.numpy().tolist(), output_ids.tolist()):
+            if eos_id in predict_ids:
+                predict_ids = predict_ids[:predict_ids.index(eos_id)]
+            source_sentence = ''.join(
+                map(post_process,
+                    vocab.to_tokens(source_ids[1:source_ids.index(eos_id)])))
+            tgt_sentence = ''.join(
+                map(post_process,
+                    vocab.to_tokens(target_ids[1:target_ids.index(eos_id)])))
+            predict_ids = ''.join(
+                map(post_process, vocab.to_tokens(predict_ids)))
+            print("source :%s\ntarget :%s\npredict:%s\n" %
+                  (source_sentence, tgt_sentence, predict_ids))
         break
-    for ids in evaluated_sentences_ids[:5]:
-        evaluated_sentences.append(''.join(
-            map(post_process, vocab.to_tokens(ids))))
-
-    for sentence in evaluated_sentences:
-        print(sentence)
 
 
 if __name__ == "__main__":

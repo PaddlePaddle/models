@@ -9,7 +9,7 @@ import paddle.nn as nn
 from tqdm import tqdm
 from paddle.io import DataLoader
 from paddlenlp.transformers import ErnieForGeneration
-from paddlenlp.transformers import ErnieTokenizer
+from paddlenlp.transformers import ErnieTokenizer, ErnieTinyTokenizer, BertTokenizer, ElectraTokenizer, RobertaTokenizer
 from paddlenlp.datasets import Poetry
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.metrics import Rouge1, Rouge2
@@ -19,15 +19,15 @@ from encode import convert_example, after_padding
 from decode import beam_search_infilling, post_process, greedy_search_infilling
 
 # yapf: disable
-parser = argparse.ArgumentParser('seq2seq model with ERNIE')
+parser = argparse.ArgumentParser('seq2seq model with ERNIE-GEN')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
-parser.add_argument('--max_encode_len', type=int, default=24, help="the max encoding sentence length")
-parser.add_argument('--max_decode_len', type=int, default=72, help="the max decoding sentence length")
+parser.add_argument('--max_encode_len', type=int, default=24, help="The max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=72, help="The max decoding sentence length")
 parser.add_argument("--batch_size", default=50, type=int, help="Batch size per GPU/CPU for training.", )
-parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
+parser.add_argument('--beam_width', type=int, default=1, help="Beam search width")
 parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
-parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
-parser.add_argument('--use_gpu', action='store_true', help='if set, use gpu to excute')
+parser.add_argument('--init_checkpoint', type=str, default=None, help='Checkpoint to warm start from')
+parser.add_argument('--use_gpu', action='store_true', help='If set, use gpu to excute')
 # yapf: enable
 
 args = parser.parse_args()
@@ -37,7 +37,16 @@ def evaluate():
     paddle.set_device("gpu" if args.use_gpu else "cpu")
 
     model = ErnieForGeneration.from_pretrained(args.model_name_or_path)
-    tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    if "ernie-tiny" in args.model_name_or_path:
+        tokenizer = ErnieTinyTokenizer.from_pretrained(args.model_name_or_path)
+    elif "ernie" in args.model_name_or_path:
+        tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    elif "roberta" in args.model_name_or_path or "rbt" in args.model_name_or_path:
+        tokenizer = RobertaTokenizer.from_pretrained(args.model_name_or_path)
+    elif "electra" in args.model_name_or_path:
+        tokenizer = ElectraTokenizer.from_pretrained(args.model_name_or_path)
+    else:
+        tokenizer = BertTokenizer.from_pretrained(args.model_name_or_path)
 
     dev_dataset = Poetry.get_datasets(['dev'])
     attn_id = tokenizer.vocab[

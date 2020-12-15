@@ -9,7 +9,7 @@ from tqdm import tqdm
 import paddle.nn as nn
 from paddle.io import DataLoader
 from paddlenlp.transformers import ErnieForGeneration
-from paddlenlp.transformers import ErnieTokenizer
+from paddlenlp.transformers import ErnieTokenizer, ErnieTinyTokenizer, BertTokenizer, ElectraTokenizer, RobertaTokenizer
 from paddlenlp.datasets import Poetry
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.metrics import Rouge1, Rouge2
@@ -19,11 +19,11 @@ from encode import convert_example, after_padding
 from decode import beam_search_infilling, post_process, greedy_search_infilling
 
 # yapf: disable
-parser = argparse.ArgumentParser('seq2seq model with ERNIE')
+parser = argparse.ArgumentParser('seq2seq model with ERNIE-GEN')
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "+ ", ".join(list(ErnieTokenizer.pretrained_init_configuration.keys())))
 parser.add_argument("--output_dir", default=None, type=str, required=True, help="The output directory where the model predictions and checkpoints will be written.",)
-parser.add_argument('--max_encode_len', type=int, default=5, help="the max encoding sentence length")
-parser.add_argument('--max_decode_len', type=int, default=5, help="the max decoding sentence length")
+parser.add_argument('--max_encode_len', type=int, default=5, help="The max encoding sentence length")
+parser.add_argument('--max_decode_len', type=int, default=5, help="The max decoding sentence length")
 parser.add_argument("--batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.", )
 parser.add_argument("--learning_rate", default=5e-5, type=float, help="The initial learning rate for Adam.")
 parser.add_argument("--weight_decay", default=0.1, type=float, help="Weight decay if we apply some.")
@@ -33,14 +33,14 @@ parser.add_argument("--max_steps", default=-1, type=int, help="If > 0: set total
 parser.add_argument("--warmup_proportion", default=0.1, type=float, help="Linear warmup proportion.")
 parser.add_argument("--logging_steps", type=int, default=1, help="Log every X updates steps.")
 parser.add_argument("--save_steps", type=int, default=100, help="Save checkpoint every X updates steps.")
-parser.add_argument("--n_gpu", type=int, default=1, help="number of gpus to use, 0 for cpu.")
-parser.add_argument('--beam_width', type=int, default=1, help="beam search width")
-parser.add_argument('--noise_prob', type=float, default=0., help='probability of token be repalced')
-parser.add_argument('--use_random_noice', action='store_true', help='if set, replace target tokens with random token from vocabulary, else replace with `[NOISE]`')
+parser.add_argument("--n_gpu", type=int, default=1, help="Number of gpus to use, 0 for cpu.")
+parser.add_argument('--beam_width', type=int, default=1, help="Beam search width")
+parser.add_argument('--noise_prob', type=float, default=0., help='Probability of token be repalced')
+parser.add_argument('--use_random_noice', action='store_true', help='If set, replace target tokens with random token from vocabulary, else replace with `[NOISE]`')
 parser.add_argument('--label_smooth', type=float, default=0., help="The soft label smooth rate")
 parser.add_argument('--length_penalty', type=float, default=1.0, help="The length penalty during decoding")
-parser.add_argument('--init_checkpoint', type=str, default=None, help='checkpoint to warm start from')
-parser.add_argument('--save_dir', type=str, default=None, help='model output directory')
+parser.add_argument('--init_checkpoint', type=str, default=None, help='Checkpoint to warm start from')
+parser.add_argument('--save_dir', type=str, default=None, help='Model output directory')
 # yapf: enable
 
 args = parser.parse_args()
@@ -113,7 +113,16 @@ def train():
         paddle.distributed.init_parallel_env()
 
     model = ErnieForGeneration.from_pretrained(args.model_name_or_path)
-    tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    if "ernie-tiny" in args.model_name_or_path:
+        tokenizer = ErnieTinyTokenizer.from_pretrained(args.model_name_or_path)
+    elif "ernie" in args.model_name_or_path:
+        tokenizer = ErnieTokenizer.from_pretrained(args.model_name_or_path)
+    elif "roberta" in args.model_name_or_path or "rbt" in args.model_name_or_path:
+        tokenizer = RobertaTokenizer.from_pretrained(args.model_name_or_path)
+    elif "electra" in args.model_name_or_path:
+        tokenizer = ElectraTokenizer.from_pretrained(args.model_name_or_path)
+    else:
+        tokenizer = BertTokenizer.from_pretrained(args.model_name_or_path)
     if args.init_checkpoint:
         model_state = paddle.load(args.init_checkpoint)
         model.set_state_dict(model_state)

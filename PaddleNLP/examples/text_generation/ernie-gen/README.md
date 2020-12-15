@@ -12,9 +12,9 @@
 
 - Python >= 3.6
 
-- PaddlePaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- PaddleNLP >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
+- paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
 
 ### 2.2 数据准备
 
@@ -109,7 +109,7 @@ python -u ./predict.py \
 
 ## 引用
 
-您可以按下面的格式引用我们的论文:
+您可以按下面的格式引用ERNIE-Gen论文:
 
 ```
 @article{xiao2020ernie-gen,
