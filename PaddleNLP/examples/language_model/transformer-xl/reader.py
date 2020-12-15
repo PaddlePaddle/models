@@ -27,14 +27,8 @@ class LMDataset(IterableDataset):
         elif self.dataset_name in ["enwik8", "text8"]:
             self.data = self.vocab.encode_file(
                 os.path.join(path, mode + ".txt"), ordered=True, add_eos=False)
-        # TODO: different between train and valid
-        elif self.dataset_name == "lm1b":
-            pass
-            # self.train = train_paths
-            # self.valid = self.vocab.encode_file(
-            #     os.path.join(path, 'valid.txt'), ordered=False, add_double_eos=True)
-            # self.test  = self.vocab.encode_file(
-            #     os.path.join(path, 'test.txt'), ordered=False, add_double_eos=True)
+        else:
+            raise ValueError("Not supported dataset yet. ")
         self.rank = rank
         self.batch_size = batch_size
         batch_size *= nranks
@@ -115,12 +109,8 @@ def get_lm_vocab(args):
         vocab.cnt_file(os.path.join(args.data, "test.txt"))
     elif args.dataset == "wt103":
         vocab.cnt_file(os.path.join(args.data, "train.txt"))
-    elif args.dataset == "lm1b":
-        pass
-        # train_path_pattern = os.path.join(
-        #     args.data, '1-billion-word-language-modeling-benchmark-r13output',
-        #     'training-monolingual.tokenized.shuffled', 'news.en-*')
-        # train_paths = glob.glob(train_path_pattern)
+    else:
+        raise ValueError("Not supported dataset yet. ")
 
     vocab.build_vocab()
     args.ntokens = len(vocab)

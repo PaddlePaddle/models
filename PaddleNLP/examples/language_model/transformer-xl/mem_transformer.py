@@ -171,7 +171,7 @@ class ProjAdaptiveSoftmax(nn.Layer):
             logit = self._compute_logits(hidden, self.out_layers_weight[0],
                                          self.out_layers_bias[0],
                                          self.out_projs[0])
-            nll = -F.log_softmax(logit, axis=-1)
+            nll = -paddle.log(F.softmax(logit, axis=-1))
             idx = paddle.concat(
                 [
                     paddle.arange(0, nll.shape[0]).unsqueeze([1]),
@@ -1167,7 +1167,7 @@ class MemTransformerLM(nn.Layer):
             assert self.tie_weight, "tie_weight must be True if sample_softmax > 0"
             logit = sample_logits(self.word_emb, self.out_layer.bias, target,
                                   pred_hid, self.sampler)
-            loss = -F.log_softmax(logit, -1)[:, :, 0]
+            loss = -paddle.log(F.softmax(logit, axis=-1))[:, :, 0]
         else:
             loss = self.crit(
                 paddle.reshape(
