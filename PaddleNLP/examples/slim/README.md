@@ -4,7 +4,7 @@ BERT-base模型是一个迁移能力很强的通用语义表示模型，但是�
 
 ## 压缩结果
 
-基于`bert-base-uncased` 在GLUE dev数据集上的finetune结果进行压缩。压缩后模型精度和压缩前模型在GLUE dev数据集上的精度对比如下表所示, 压缩后模型相比压缩前加速约200%。
+基于`bert-base-uncased` 在GLUE dev数据集上的finetune结果进行压缩。压缩后模型精度和压缩前模型在GLUE dev数据集上的精度对比如下表所示， 压缩后模型相比压缩前加速约2倍，模型大小减小69%（从631M减少到195M）。
 
 | Task  | Metric                       | Result            | Result with PaddleSlim |
 |:-----:|:----------------------------:|:-----------------:|:----------------------:|
@@ -96,7 +96,7 @@ python -u ./run_glue_ofa.py --model_type bert \
 3. Fine-tuning之后的模型作为教师网络，超网络作为学生网络，进行知识蒸馏。
 
 <p align="center">
-<img src="ofa_bert.jpg" width="900"/><br />
+<img src="ofa_bert.jpg" width="950"/><br />
 整体流程图
 </p>
 

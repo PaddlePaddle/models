@@ -439,6 +439,11 @@ def do_train(args):
                     distill_config=distill_config,
                     elastic_order=['width'])
 
+    criterion = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
+    ) else paddle.nn.loss.MSELoss()
+
+    metric = metric_class()
+
     if args.task_name == "mnli":
         dev_data_loader = (dev_data_loader_matched, dev_data_loader_mismatched)
 
@@ -448,6 +453,7 @@ def do_train(args):
         args.task_name,
         ofa_model.model,
         dev_data_loader,
+        loss_fct=criterion,
         num_layers=model.bert.config['num_hidden_layers'],
         num_heads=model.bert.config['num_attention_heads'])
     reorder_neuron_head(ofa_model.model, head_importance, neuron_importance)
@@ -473,11 +479,6 @@ def do_train(args):
             if not any(nd in n for nd in ["bias", "norm"])
         ])
 
-    criterion = paddle.nn.loss.CrossEntropyLoss() if train_ds.get_labels(
-    ) else paddle.nn.loss.MSELoss()
-
-    metric = metric_class()
-
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
@@ -497,7 +498,11 @@ def do_train(args):
                 logits, teacher_logits = ofa_model(
                     input_ids, segment_ids, attention_mask=[None, None])
                 rep_loss = ofa_model.calc_distill_loss()
-                logit_loss = soft_cross_entropy(logits, teacher_logits.detach())
+                if args.task_name == 'sts-b':
+                    logit_loss = 0.0
+                else:
+                    logit_loss = soft_cross_entropy(logits,
+                                                    teacher_logits.detach())
                 loss = rep_loss + args.lambda_logit * logit_loss
                 loss.backward()
             optimizer.step()
