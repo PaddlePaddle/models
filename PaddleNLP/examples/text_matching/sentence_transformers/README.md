@@ -48,7 +48,7 @@ PaddleNLP提供了丰富的预训练模型，并且可以便捷地获取PaddlePa
 | bert-base-chinese  | 0.86537 | 0.84440 |
 | bert-wwm-chinese | 0.86333 | 0.84128 |
 | bert-wwm-ext-chinese | 0.86049 | 0.83848 |
-| ernie  | 0.87480  | 0.84760  |
+| ernie-1.0  | 0.87480  | 0.84760  |
 | ernie-tiny  | 0.86071 | 0.83352 |
 | roberta-wwm-ext  | 0.87526 | 0.84904 |
 | rbt3 | 0.85367 | 0.83464 |
@@ -98,7 +98,7 @@ python train.py --model_type ernie --model_name ernie-1.0 --n_gpu 1 --save_dir .
 * `model_name`： 必选，具体的模型简称。
    如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。
    如`model_type=bert`，则model_name可以选择`bert-base-chinese`，`bert-wwm-chinese`，`bert-wwm-ext-chinese`。
-   如`model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`，`roberta-wwm-ext`，`rbt3`，`rbtl3`。
+   如`model_type=roberta`，则model_name可以选择`roberta-wwm-ext`，`rbt3`，`rbtl3`。
 * `save_dir`：必选，保存训练模型的目录。
 * `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
 * `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
