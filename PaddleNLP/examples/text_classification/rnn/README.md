@@ -107,9 +107,9 @@ GPU 启动：
 * `vocab_path`: 词汇表文件路径。
 * `use_gpu`: 是否使用GPU进行训练， 默认为`False`。
 * `network`: 模型网络名称，默认为`bilstm_attn`， 可更换为bilstm, bigru, birnn，bow，lstm，rnn，gru，bilstm_attn，textcnn等。
-* `lr`: 学习率， 默认为5e-4。
+* `lr`: 学习率， 默认为5e-5。
 * `batch_size`: 运行一个batch大小，默认为64。
-* `epochs`: 训练轮次，默认为5。
+* `epochs`: 训练轮次，默认为10。
 * `save_dir`: 训练保存模型的文件路径。
 * `init_from_ckpt`: 恢复模型训练的断点路径。
 

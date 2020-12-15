@@ -104,6 +104,7 @@ python train.py --model_type ernie --model_name ernie-1.0 --n_gpu 1 --save_dir .
 * `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
 * `learning_rate`：可选，Fine-tune的最大学习率；默认为5e-5。
 * `weight_decay`：可选，控制正则项力度的参数，用于防止过拟合，默认为0.00。
+* `epochs`: 训练轮次，默认为3。
 * `warmup_proption`：可选，学习率warmup策略的比例，如果0.1，则学习率会在前10%训练step的过程中从0慢慢增长到learning_rate, 而后再缓慢衰减，默认为0.1。
 * `init_from_ckpt`：可选，模型参数路径，热启动模型训练；默认为None。
 * `seed`：可选，随机种子，默认为1000.

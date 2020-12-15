@@ -118,7 +118,7 @@ def convert_example(example, vocab, unk_token_id=1, is_test=False):
     for token in jieba.cut(example[0]):
         token_id = vocab.get(token, unk_token_id)
         input_ids.append(token_id)
-    valid_length = np.array(len(input_ids), dtype="int64")
+    valid_length = np.array(len(input_ids), dtype='int64')
 
     if not is_test:
         label = np.array(example[-1], dtype="int64")
