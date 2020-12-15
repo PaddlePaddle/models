@@ -22,7 +22,7 @@ import paddle
 from paddlenlp.data import Vocab, Pad
 from paddlenlp.data import SamplerHelper
 
-from paddlenlp.datasets import MapDatasetWrapper, IWSLT15
+from paddlenlp.datasets import IWSLT15
 
 trans_func_tuple = IWSLT15.get_default_transform_func()
 
@@ -40,10 +40,9 @@ def create_train_loader(args):
         [trans_func_tuple, trans_func_tuple])
 
     key = (lambda x, data_source: len(data_source[x][0]))
-    train_ds = MapDatasetWrapper(train_ds).filter(
+    train_ds = train_ds.filter(
         lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
-    dev_ds = MapDatasetWrapper(dev_ds).filter(
-        lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
+    dev_ds = dev_ds.filter(lambda data: (len(data[0]) > 0 and len(data[1]) > 0))
     train_batch_sampler = SamplerHelper(train_ds).shuffle().sort(
         key=key, buffer_size=batch_size * 20).batch(batch_size=batch_size)
 

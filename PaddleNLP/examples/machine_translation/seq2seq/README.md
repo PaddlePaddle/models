@@ -56,7 +56,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定），在linux系统下，默认安装路径为`/root/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi`，如果您使用的是Windows系统，需要更改路径。预测命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定），在linux系统下，默认安装路径为`/root/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi`，如果您使用的是Windows系统，需要更改下面的路径。预测命令如下：
 
 ```sh
 python predict.py \
@@ -85,6 +85,6 @@ python predict.py \
  取第10个epoch保存的模型进行预测，取beam_size=10。效果如下：
 
  ```
- tst2013 BLEU: 24.50
+ tst2013 BLEU: 24.40
 
 ```
