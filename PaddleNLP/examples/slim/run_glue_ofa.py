@@ -182,7 +182,7 @@ def evaluate(model, criterion, metric, data_loader, width_mult=1.0):
             metric.update(correct)
         acc = metric.accumulate()
         print(
-            "width_mult: %f, eval loss: %f, acc: %s" %
+            "width_mult: %f, eval loss: %f, acc: %s\n" %
             (width_mult, loss.numpy(), acc),
             end='')
         model.train()
@@ -194,11 +194,11 @@ def bert_forward(self,
                  token_type_ids=None,
                  position_ids=None,
                  attention_mask=[None, None]):
+    wtype = self.pooler.dense.fn.weight.dtype if hasattr(
+        self.pooler.dense, 'fn') else self.pooler.dense.weight.dtype
     if attention_mask[0] is None:
         attention_mask[0] = paddle.unsqueeze(
-            (input_ids == self.pad_token_id
-             ).astype(self.pooler.dense.fn.weight.dtype) * -1e9,
-            axis=[1, 2])
+            (input_ids == self.pad_token_id).astype(wtype) * -1e9, axis=[1, 2])
     embedding_output = self.embeddings(
         input_ids=input_ids,
         position_ids=position_ids,
@@ -350,8 +350,6 @@ def do_train(args):
         label_list=train_ds.get_labels(),
         max_seq_length=args.max_seq_length)
     train_ds = train_ds.apply(trans_func, lazy=True)
-    # train_batch_sampler = SamplerHelper(train_ds).shuffle().batch(
-    #     batch_size=args.batch_size).shard()
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True)
     batchify_fn = lambda samples, fn=Tuple(
@@ -408,26 +406,23 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
-    ### step1: init a dict to save origin weights
+    # Step1: Initialize a dictionary to save the weights from the origin BERT model.
     origin_weights = {}
     for name, param in model.named_parameters():
         origin_weights[name] = param
 
-    ### step2: convert origin model to supernet
+    # Step2: Convert origin model to supernet.
     sp_config = supernet(expand_ratio=args.width_mult_list)
     model = Convert(sp_config).convert(model)
-    ### set state_dict from origin weight to supernet
+    # Use weights saved in the dictionary to initialize supernet. 
     utils.set_state_dict(model, origin_weights)
-
-    ### step3: define teacher model, convert it to supernet 
-    ### and set state_dict from origin weight to supernet
-    teacher_model = model_class.from_pretrained(
-        args.model_name_or_path, num_classes=len(train_ds.get_labels()))
-
-    teacher_model = Convert(sp_config).convert(teacher_model)
-    utils.set_state_dict(teacher_model, origin_weights)
     del origin_weights
 
+    # Step3: Define teacher model.
+    teacher_model = model_class.from_pretrained(
+        args.model_name_or_path, num_classes=num_labels)
+
+    # Step4: Config about distillation.
     mapping_layers = ['bert.embeddings']
     for idx in range(model.bert.config['num_hidden_layers']):
         mapping_layers.append('bert.encoder.layers.{}'.format(idx))
@@ -438,6 +433,8 @@ def do_train(args):
         'mapping_layers': mapping_layers,
     }
     distill_config = DistillConfig(**default_distill_config)
+
+    # Step5: Config in supernet training.
     ofa_model = OFA(model,
                     distill_config=distill_config,
                     elastic_order=['width'])
@@ -445,6 +442,8 @@ def do_train(args):
     if args.task_name == "mnli":
         dev_data_loader = (dev_data_loader_matched, dev_data_loader_mismatched)
 
+    # Step6: Calculate the importance of neurons and head, 
+    # and then reorder them according to the importance.
     head_importance, neuron_importance = utils.compute_neuron_head_importance(
         args.task_name,
         ofa_model.model,
@@ -479,13 +478,10 @@ def do_train(args):
 
     metric = metric_class()
 
-    task_acc = True
-    if args.task_name == "qqp" or args.task_name == "mrpc":
-        task_acc = False
-
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
+        # Step7: Set current epoch and task.
         ofa_model.set_epoch(epoch)
         ofa_model.set_task('width')
 
@@ -494,6 +490,8 @@ def do_train(args):
             input_ids, segment_ids, labels = batch
 
             for width_mult in args.width_mult_list:
+                # Step8: Broadcast supernet config from width_mult,
+                # and use this config in supernet training.
                 net_config = apply_config(ofa_model, width_mult)
                 ofa_model.set_net_config(net_config)
                 logits, teacher_logits = ofa_model(
@@ -521,24 +519,20 @@ def do_train(args):
                         criterion,
                         metric,
                         dev_data_loader_matched,
-                        width_mult=100,
-                        teacher_model=True)
+                        width_mult=100)
                     evaluate(
                         teacher_model,
                         criterion,
                         metric,
                         dev_data_loader_mismatched,
-                        width_mult=100,
-                        teacher_model=True)
+                        width_mult=100)
                 else:
                     evaluate(
                         teacher_model,
                         criterion,
                         metric,
                         dev_data_loader,
-                        width_mult=100,
-                        teacher_model=True,
-                        acc=task_acc)
+                        width_mult=100)
                 for idx, width_mult in enumerate(args.width_mult_list):
                     net_config = apply_config(ofa_model, width_mult)
                     ofa_model.set_net_config(net_config)
@@ -551,13 +545,8 @@ def do_train(args):
                         print("eval done total : %s s" %
                               (time.time() - tic_eval))
                     else:
-                        acc = evaluate(
-                            ofa_model,
-                            criterion,
-                            metric,
-                            dev_data_loader,
-                            width_mult,
-                            acc=task_acc)
+                        acc = evaluate(ofa_model, criterion, metric,
+                                       dev_data_loader, width_mult)
                         print("eval done total : %s s" %
                               (time.time() - tic_eval))
 

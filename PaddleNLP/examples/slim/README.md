@@ -99,3 +99,8 @@ python -u ./run_glue_ofa.py --model_type bert \
 <img src="ofa_bert.jpg" width="900"/><br />
 整体流程图
 </p>
+
+## 参考论文
+
+1. Lu Hou, Zhiqi Huang, Lifeng Shang, Xin Jiang, Xiao Chen, Qun Liu. DynaBERT: Dynamic BERT with Adaptive Width and Depth.
+2. H. Cai, C. Gan, T. Wang, Z. Zhang, and S. Han. Once for all: Train one network and specialize it for efficient deployment.
