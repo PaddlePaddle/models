@@ -87,3 +87,15 @@ python -u ./run_glue_ofa.py --model_type bert \
 - `width_mult_list` 表示压缩训练过程中，对每层Transformer Block的宽度选择的范围。
 
 压缩训练之后在dev上的结果如压缩结果表格中Result with PaddleSlim那一列所示， 速度相比原始模型加速2倍。
+
+## 压缩原理
+
+1. 对Fine-tuning得到模型通过计算参数及其梯度的乘积得到参数的重要性，把模型参数根据重要性进行重排序。
+2. 超网络中最大的子网络选择和Bert-base模型网络结构一致的网络结构，其他小的子网络是对最大网络的进行不同的宽度选择来得到的，宽度选择具体指的是网络中的参数进行裁剪，所有子网络在整个训练过程中都是参数共享的。
+2. 用重排序之后的模型参数作为超网络模型的初始化参数。
+3. Fine-tuning之后的模型作为教师网络，超网络作为学生网络，进行知识蒸馏。
+
+<p align="center">
+<img src="ofa_bert.jpg" width="900"/><br />
+整体流程图
+</p>
