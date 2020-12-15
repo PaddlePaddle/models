@@ -46,14 +46,14 @@ class CnnDm(TSVDataset):
         fullname = os.path.join(default_root,
                                 filename) if root is None else os.path.join(
                                     os.path.expanduser(root), filename)
-        # if not os.path.exists(fullname) or (data_hash and
-        #                                     not md5file(fullname) == data_hash):
-        #     if root is not None:  # not specified, and no need to warn
-        #         warnings.warn(
-        #             'md5 check failed for {}, download {} data to {}'.format(
-        #                 filename, self.__class__.__name__, default_root))
-        #     path = get_path_from_url(self.URL, default_root, self.MD5)
-        #     fullname = os.path.join(default_root, filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+            if root is not None:  # not specified, and no need to warn
+                warnings.warn(
+                    'md5 check failed for {}, download {} data to {}'.format(
+                        filename, self.__class__.__name__, default_root))
+            path = get_path_from_url(self.URL, default_root, self.MD5)
+            fullname = os.path.join(default_root, filename)
         super(CnnDm, self).__init__(
             fullname,
             field_indices=field_indices,

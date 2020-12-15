@@ -456,7 +456,6 @@ class ErnieModel(nn.Layer, ErnieGenPretrainedModel):
 
         self.encoder_stack = ErnieEncoderStack(cfg,
                                                append_name(name, 'encoder'))
-        self.train()
 
     def forward(self,
                 src_ids,
