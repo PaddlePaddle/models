@@ -63,8 +63,7 @@
 以下是本项目主要代码结构及说明：
 
 ```text
-.
-├── data.py # 数据读取
+.rnn/
 ├── predict.py # 模型预测
 ├── utils.py # 数据处理工具
 ├── train.py # 训练模型主程序入口，包括训练、评估
@@ -80,10 +79,6 @@ from paddlenlp.datasets import ChnSentiCorp
 
 train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
-
-#### 自定义数据集
-
-训练数据由两列组成："text_a\tlabel"
 
 ### 模型训练
 

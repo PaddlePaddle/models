@@ -14,7 +14,9 @@
 from functools import partial
 import argparse
 import os
+import random
 
+import numpy as np
 import paddle
 import paddlenlp as ppnlp
 from paddlenlp.data import Stack, Tuple, Pad
@@ -25,15 +27,22 @@ from utils import load_vocab, convert_example
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=3, help="Number of epoches for training.")
-parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
+parser.add_argument('--use_gpu', type=eval, default=True, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate used to train.")
 parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
-parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The directory to dataset.")
-parser.add_argument('--network', type=str, default="bilstm_attn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
+parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The directory to dataset.")
+parser.add_argument('--network', type=str, default="textcnn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
 parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 args = parser.parse_args()
 # yapf: enable
+
+
+def set_seed(seed=1000):
+    """sets random seed"""
+    random.seed(seed)
+    np.random.seed(seed)
+    paddle.seed(seed)
 
 
 def create_dataloader(dataset,
@@ -79,6 +88,7 @@ def create_dataloader(dataset,
 
 
 if __name__ == "__main__":
+    set_seed()
     paddle.set_device('gpu') if args.use_gpu else paddle.set_device('cpu')
 
     # Loads vocab.
@@ -103,7 +113,7 @@ if __name__ == "__main__":
     trans_fn = partial(
         convert_example,
         vocab=vocab,
-        unk_token_id=vocab['[UNK]'],
+        unk_token_id=vocab.get('[UNK]', 1),
         is_test=False)
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=vocab['[PAD]']),  # input_ids
@@ -116,6 +126,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='train',
         use_gpu=args.use_gpu,
+        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
     dev_loader = create_dataloader(
         dev_ds,
@@ -123,6 +134,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='validation',
         use_gpu=args.use_gpu,
+        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
     test_loader = create_dataloader(
         test_ds,
@@ -130,6 +142,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='test',
         use_gpu=args.use_gpu,
+        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
 
     optimizer = paddle.optimizer.Adam(
