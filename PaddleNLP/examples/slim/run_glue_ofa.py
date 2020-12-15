@@ -25,25 +25,24 @@ import paddle.nn.functional as F
 from paddle.io import DataLoader
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertModel, BertForSequenceClassification, BertTokenizer
 from paddlenlp.utils.log import logger
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
-from paddleslim.nas.ofa.utils import compute_neuron_head_importance, reorder_head, reorder_neuron, set_state_dict
-from paddleslim.nas.ofa import OFA, DistillConfig
+import paddlenlp.datasets as datasets
+from paddleslim.nas.ofa import OFA, DistillConfig, utils
 from paddleslim.nas.ofa.convert_super import Convert, supernet
 
 TASK_CLASSES = {
-    "cola": (GlueCoLA, Mcc),
-    "sst-2": (GlueSST2, Accuracy),
-    "mrpc": (GlueMRPC, AccuracyAndF1),
-    "sts-b": (GlueSTSB, PearsonAndSpearman),
-    "qqp": (GlueQQP, AccuracyAndF1),
-    "mnli": (GlueMNLI, Accuracy),
-    "qnli": (GlueQNLI, Accuracy),
-    "rte": (GlueRTE, Accuracy),
+    "cola": (datasets.GlueCoLA, Mcc),
+    "sst-2": (datasets.GlueSST2, Accuracy),
+    "mrpc": (datasets.GlueMRPC, AccuracyAndF1),
+    "sts-b": (datasets.GlueSTSB, PearsonAndSpearman),
+    "qqp": (datasets.GlueQQP, AccuracyAndF1),
+    "mnli": (datasets.GlueMNLI, Accuracy),
+    "qnli": (datasets.GlueQNLI, Accuracy),
+    "rte": (datasets.GlueRTE, Accuracy),
 }
 
 MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer), }
@@ -219,12 +218,14 @@ def reorder_neuron_head(model, head_importance, neuron_importance):
     for layer, current_importance in enumerate(neuron_importance):
         # reorder heads
         idx = paddle.argsort(head_importance[layer], descending=True)
-        reorder_head(model.bert.encoder.layers[layer].self_attn, idx)
+        utils.reorder_head(model.bert.encoder.layers[layer].self_attn, idx)
         # reorder neurons
         idx = paddle.argsort(
             paddle.to_tensor(current_importance), descending=True)
-        reorder_neuron(model.bert.encoder.layers[layer].linear1.fn, idx, dim=1)
-        reorder_neuron(model.bert.encoder.layers[layer].linear2.fn, idx, dim=0)
+        utils.reorder_neuron(
+            model.bert.encoder.layers[layer].linear1.fn, idx, dim=1)
+        utils.reorder_neuron(
+            model.bert.encoder.layers[layer].linear2.fn, idx, dim=0)
 
 
 def soft_cross_entropy(inp, target):
@@ -416,7 +417,7 @@ def do_train(args):
     sp_config = supernet(expand_ratio=args.width_mult_list)
     model = Convert(sp_config).convert(model)
     ### set state_dict from origin weight to supernet
-    set_state_dict(model, origin_weights)
+    utils.set_state_dict(model, origin_weights)
 
     ### step3: define teacher model, convert it to supernet 
     ### and set state_dict from origin weight to supernet
@@ -424,7 +425,7 @@ def do_train(args):
         args.model_name_or_path, num_classes=len(train_ds.get_labels()))
 
     teacher_model = Convert(sp_config).convert(teacher_model)
-    set_state_dict(teacher_model, origin_weights)
+    utils.set_state_dict(teacher_model, origin_weights)
     del origin_weights
 
     mapping_layers = ['bert.embeddings']
@@ -444,7 +445,7 @@ def do_train(args):
     if args.task_name == "mnli":
         dev_data_loader = (dev_data_loader_matched, dev_data_loader_mismatched)
 
-    head_importance, neuron_importance = compute_neuron_head_importance(
+    head_importance, neuron_importance = utils.compute_neuron_head_importance(
         args.task_name,
         ofa_model.model,
         dev_data_loader,
@@ -573,8 +574,17 @@ def do_train(args):
                         tokenizer.save_pretrained(output_dir)
 
 
+def print_arguments(args):
+    """print arguments"""
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).items()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
+
+
 if __name__ == "__main__":
     args = parse_args()
+    print_arguments(args)
     if args.n_gpu > 1:
         paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_gpu)
     else:
