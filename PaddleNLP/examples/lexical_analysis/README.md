@@ -18,9 +18,9 @@
 
 - Python >= 3.6
 
-- PaddlePaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- PaddleNLP >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
+- paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
 
 ### 2.2 数据准备
 
