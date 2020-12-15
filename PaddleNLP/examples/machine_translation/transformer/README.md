@@ -103,7 +103,7 @@ git clone https://github.com/moses-smt/mosesdecoder.git
 # 以英德翻译 newstest2014 测试数据为例
 perl mosesdecoder/scripts/generic/multi-bleu.perl ~/.paddlenlp/datasets/machine_translation/WMT14ende/WMT14.en-de/wmt14_ende_data/newstest2014.tok.de < predict.tok.txt
 ```
-可以看到类似如下的结果：
+可以看到类似如下的结果，此处结果是 big model 在 newstest2014 上的结果：
 ```
 BLEU = 27.48, 58.6/33.2/21.1/13.9 (BP=1.000, ratio=1.012, hyp_len=65312, ref_len=64506)
 ```
