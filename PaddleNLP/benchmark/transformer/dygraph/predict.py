@@ -52,7 +52,7 @@ def do_predict(args):
     paddle.set_device(place)
 
     # Define data loader
-    (test_loader, test_steps_fn), to_tokens = reader.create_infer_loader(args)
+    test_loader, to_tokens = reader.create_infer_loader(args)
 
     # Define model
     transformer = InferTransformerModel(

@@ -51,8 +51,7 @@ def do_train(args):
         paddle.seed(random_seed)
 
     # Define data loader
-    (train_loader, train_steps_fn), (
-        eval_loader, eval_steps_fn) = reader.create_data_loader(args)
+    (train_loader), (eval_loader) = reader.create_data_loader(args)
 
     # Define model
     transformer = TransformerModel(
