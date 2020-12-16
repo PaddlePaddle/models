@@ -15,3 +15,4 @@
 from .collate import *
 from .vocab import *
 from .sampler import *
+from .tokenizer import *

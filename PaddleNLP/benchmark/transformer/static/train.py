@@ -63,9 +63,7 @@ def do_train(args):
         paddle.seed(random_seed)
 
     # Define data loader
-    # NOTE: To guarantee all data is involved, use world_size=1 and rank=0. 
-    (train_loader, train_steps_fn), (
-        eval_loader, eval_steps_fn) = reader.create_data_loader(args)
+    (train_loader), (eval_loader) = reader.create_data_loader(args)
 
     train_program = paddle.static.Program()
     startup_program = paddle.static.Program()

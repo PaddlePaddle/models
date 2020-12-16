@@ -113,12 +113,6 @@ def parse_args():
     return args
 
 
-def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
-
-
 def evaluate(model, loss_fct, metric, data_loader, label_num):
     model.eval()
     metric.reset()
@@ -250,8 +244,6 @@ def do_train(args):
     paddle.set_device("gpu" if args.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
-
-    set_seed(args)
 
     train_dataset, dev_dataset = ppnlp.datasets.MSRA_NER.get_datasets(
         ["train", "dev"])

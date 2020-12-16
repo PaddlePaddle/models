@@ -14,8 +14,101 @@
 
 import numpy as np
 
+import paddle
+from .utils import default_trans_func
 
-class RougeL(object):
+__all__ = ['RougeL', 'RougeLForDuReader']
+
+
+class RougeN():
+    def __init__(self, n):
+        self.n = n
+
+    def _get_ngrams(self, words):
+        """Calculates word n-grams for multiple sentences.
+        """
+        ngram_set = set()
+        max_index_ngram_start = len(words) - self.n
+        for i in range(max_index_ngram_start + 1):
+            ngram_set.add(tuple(words[i:i + self.n]))
+        return ngram_set
+
+    def score(self, evaluated_sentences_ids, reference_sentences_ids):
+        overlapping_count, reference_count = self.compute(
+            evaluated_sentences_ids, reference_sentences_ids)
+        return overlapping_count / reference_count
+
+    def compute(self, evaluated_sentences_ids, reference_sentences_ids):
+        """
+        Args:
+            evaluated_sentences (list): the sentences ids predicted by the model.
+            reference_sentences (list): the referenced sentences ids. Its size should be same as evaluated_sentences.
+
+        Returns:
+            overlapping_count (int): the overlapping n-gram count.
+            reference_count (int): the reference sentences n-gram count. 
+        """
+        if len(evaluated_sentences_ids) <= 0 or len(
+                reference_sentences_ids) <= 0:
+            raise ValueError("Collections must contain at least 1 sentence.")
+
+        reference_count = 0
+        overlapping_count = 0
+
+        for evaluated_sentence_ids, reference_sentence_ids in zip(
+                evaluated_sentences_ids, reference_sentences_ids):
+            evaluated_ngrams = self._get_ngrams(evaluated_sentence_ids)
+            reference_ngrams = self._get_ngrams(reference_sentence_ids)
+            reference_count += len(reference_ngrams)
+
+            # Gets the overlapping ngrams between evaluated and reference
+            overlapping_ngrams = evaluated_ngrams.intersection(reference_ngrams)
+            overlapping_count += len(overlapping_ngrams)
+
+        return overlapping_count, reference_count
+
+    def accumulate(self):
+        """
+        This function returns the mean precision, recall and f1 score for all accumulated minibatches.
+
+        Returns:
+            float: mean precision, recall and f1 score.
+        """
+        rouge_score = self.overlapping_count / self.reference_count
+        return rouge_score
+
+    def reset(self):
+        """
+        Reset function empties the evaluation memory for previous mini-batches.
+        """
+        self.overlapping_count = 0
+        self.reference_count = 0
+
+    def name(self):
+        """
+        Return name of metric instance.
+        """
+        return "Rouge-%s" % self.n
+
+    def update(self, overlapping_count, reference_count):
+        """
+        Args:
+        """
+        self.overlapping_count += overlapping_count
+        self.reference_count += reference_count
+
+
+class Rouge1(RougeN):
+    def __init__(self):
+        super(Rouge1, self).__init__(n=1)
+
+
+class Rouge2(RougeN):
+    def __init__(self):
+        super(Rouge2, self).__init__(n=2)
+
+
+class RougeL(paddle.metric.Metric):
     r'''
     Rouge-L is Recall-Oriented Understudy for Gisting Evaluation based on Longest Common Subsequence (LCS).
     Longest common subsequence problem takes into account sentence level structure
@@ -34,13 +127,31 @@ class RougeL(object):
 
     Args:
         gamma (float): A hyperparameter to decide the weight of recall. Default: 1.2.
+    
+    Examples:(TODO: liujiaqi)
+        1. Using as a general evaluation object.
+        2. Using as an instance of `paddle.metric.Metric`.
+
     '''
 
-    def __init__(self, gamma=1.2):
+    def __init__(self,
+                 trans_func=None,
+                 vocab=None,
+                 gamma=1.2,
+                 name="rouge-l",
+                 *args,
+                 **kwargs):
+        super(RougeL, self).__init__(*args, **kwargs)
         self.gamma = gamma
         self.inst_scores = []
+        self._name = name
+        self.vocab = vocab
+        self.trans_func = trans_func
 
     def lcs(self, string, sub):
+        """
+        Calculate the length of longest common subsequence of string and sub.
+        """
         if len(string) < len(sub):
             sub, string = string, sub
         lengths = np.zeros((len(string) + 1, len(sub) + 1))
@@ -78,11 +189,36 @@ class RougeL(object):
             score = 0.0
         self.inst_scores.append(score)
 
-    def score(self):
+    def update(self, output, label, seq_mask=None):
+        if self.trans_func is None:
+            if self.vocab is None:
+                raise AttributeError(
+                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing RougeL."
+                )
+            cand_list, ref_list = default_trans_func(output, label, seq_mask,
+                                                     self.vocab)
+        else:
+            cand_list, ref_list = self.trans_func(output, label, seq_mask)
+        if len(cand_list) != len(ref_list):
+            raise ValueError(
+                "Length error! Please check the output of network.")
+        for i in range(len(cand_list)):
+            self.add_inst(cand_list[i], ref_list[i])
+
+    def accumulate(self):
         '''
         Calculate the final rouge-l metric.
         '''
         return 1. * sum(self.inst_scores) / len(self.inst_scores)
+
+    def score(self):
+        return self.accumulate()
+
+    def reset(self):
+        self.inst_scores = []
+
+    def name(self):
+        return self._name
 
 
 class RougeLForDuReader(RougeL):

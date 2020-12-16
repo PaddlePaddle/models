@@ -38,7 +38,7 @@ import reader.cls as reader
 from model.bert import BertConfig
 from model.classifier import create_model
 from optimization import optimization
-from utils.args import ArgumentGroup, print_arguments, check_cuda, check_version
+from utils.args import ArgumentGroup, print_arguments, check_cuda, check_xpu, check_version
 from utils.init import init_pretraining_params, init_checkpoint
 from utils.cards import get_cards
 import dist_utils
@@ -100,7 +100,8 @@ run_type_g.add_arg("profiler_path",                str,    './', "the profiler o
 run_type_g.add_arg("is_profiler",                  int,    0,     "the profiler switch. (used for benchmark)")
 run_type_g.add_arg("max_iter",                     int,    0,     "the max batch nums to train. (used for benchmark)")
 
-run_type_g.add_arg("use_cuda",                     bool,   True,  "If set, use GPU for training.")
+run_type_g.add_arg("use_cuda",                     bool,   False,  "If set, use GPU for training.")
+run_type_g.add_arg("use_xpu",                      bool,   False,  "If set, use XPU for training.")
 run_type_g.add_arg("use_fast_executor",            bool,   False, "If set, use fast parallel executor (in experiment).")
 run_type_g.add_arg("shuffle",                      bool,   True,  "")
 run_type_g.add_arg("num_iteration_per_drop_scope", int,    1,     "Ihe iteration intervals to clean up temporary variables.")
@@ -148,10 +149,17 @@ def get_device_num():
 def main(args):
     bert_config = BertConfig(args.bert_config_path)
     bert_config.print_config()
+    
+    if args.use_xpu:
+        paddle.enable_static()
 
     if args.use_cuda:
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
         dev_count = get_device_num()
+    elif args.use_xpu:
+        xpu_id = int(os.getenv('FLAGS_selected_xpus', '0'))
+        place = fluid.XPUPlace(xpu_id)
+        dev_count = len([place])       
     else:
         place = fluid.CPUPlace()
         dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
@@ -311,8 +319,12 @@ def main(args):
             train_data_generator = fluid.contrib.reader.distributed_batch_reader(
                   train_data_generator)
 
-        train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
-                 loss_name=loss.name, build_strategy=build_strategy)
+        if args.use_xpu:
+            train_compiled_program = train_program
+        else:
+
+            train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
+                    loss_name=loss.name, build_strategy=build_strategy)
 
         train_data_loader.set_batch_generator(train_data_generator, place)
 
@@ -449,5 +461,6 @@ if __name__ == '__main__':
     paddle.enable_static()
     print_arguments(args)
     check_cuda(args.use_cuda)
+    check_xpu(args.use_xpu)
     check_version()
     main(args)

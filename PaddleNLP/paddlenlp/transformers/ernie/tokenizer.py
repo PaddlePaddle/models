@@ -59,6 +59,12 @@ class ErnieTokenizer(PretrainedTokenizer):
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_base/vocab.txt",
             "ernie-2.0-large-en":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_v2_large/vocab.txt",
+            "ernie-gen-base-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-base-en/vocab.txt",
+            "ernie-gen-large-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-large/vocab.txt",
+            "ernie-gen-large-430g-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/ernie-gen-large-430g/vocab.txt",
         }
     }
     pretrained_init_configuration = {
@@ -69,6 +75,15 @@ class ErnieTokenizer(PretrainedTokenizer):
             "do_lower_case": True
         },
         "ernie-2.0-large-en": {
+            "do_lower_case": True
+        },
+        "ernie-gen-base-en": {
+            "do_lower_case": True
+        },
+        "ernie-gen-large-en": {
+            "do_lower_case": True
+        },
+        "ernie-gen-large-430g-en": {
             "do_lower_case": True
         },
     }
@@ -403,7 +418,7 @@ class ErnieTinyTokenizer(PretrainedTokenizer):
     Examples:
         .. code-block:: python
             from paddlenlp.transformers import ErnieTinyTokenizer
-            tokenizer = ErnieTinyTokenizer.from_pretrained('ernie_tiny)
+            tokenizer = ErnieTinyTokenizer.from_pretrained('ernie-tiny)
             # the following line get: ['he', 'was', 'a', 'puppet', '##eer']
             tokens = tokenizer('He was a puppeteer')
             # the following line get: 'he was a puppeteer'
@@ -416,19 +431,19 @@ class ErnieTinyTokenizer(PretrainedTokenizer):
     }  # for save_pretrained
     pretrained_resource_files_map = {
         "vocab_file": {
-            "ernie_tiny":
+            "ernie-tiny":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/vocab.txt"
         },
         "sentencepiece_model_file": {
-            "ernie_tiny":
+            "ernie-tiny":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/spm_cased_simp_sampled.model"
         },
         "word_dict": {
-            "ernie_tiny":
+            "ernie-tiny":
             "https://paddlenlp.bj.bcebos.com/models/transformers/ernie_tiny/dict.wordseg.pickle"
         },
     }
-    pretrained_init_configuration = {"ernie_tiny": {"do_lower_case": True}}
+    pretrained_init_configuration = {"ernie-tiny": {"do_lower_case": True}}
 
     def __init__(self,
                  vocab_file,
@@ -553,8 +568,8 @@ class ErnieTinyTokenizer(PretrainedTokenizer):
             save_directory (str): Directory to save files into.
         """
         for name, file_name in self.resource_files_names.items():
-            ### TODO: make the name 'ernie_tiny' as a variable
-            source_path = os.path.join(MODEL_HOME, 'ernie_tiny', file_name)
+            ### TODO: make the name 'ernie-tiny' as a variable
+            source_path = os.path.join(MODEL_HOME, 'ernie-tiny', file_name)
             save_path = os.path.join(save_directory,
                                      self.resource_files_names[name])
             shutil.copyfile(source_path, save_path)

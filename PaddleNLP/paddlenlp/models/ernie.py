@@ -17,11 +17,10 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 
 from paddlenlp.transformers import *
-import paddlenlp as nlp
 
 
 class Ernie(nn.Layer):
-    def __init__(self, model_name, num_classes, task=None):
+    def __init__(self, model_name, num_classes, task=None, **kwargs):
         super().__init__()
         model_name = model_name.lower()
         self.task = task.lower()
@@ -31,20 +30,21 @@ class Ernie(nn.Layer):
             assert model_name in required_names, "model_name must be in %s, unknown %s ." (
                 required_names, model_name)
             self.model = ErnieForSequenceClassification.from_pretrained(
-                model_name, num_classes=num_classes)
+                model_name, num_classes=num_classes, **kwargs)
         elif self.task == 'token-cls':
             required_names = list(ErnieForTokenClassification.
                                   pretrained_init_configuration.keys())
             assert model_name in required_names, "model_name must be in %s, unknown %s ." (
                 required_names, model_name)
             self.model = ErnieForTokenClassification.from_pretrained(
-                model_name, num_classes=num_classes)
+                model_name, num_classes=num_classes, **kwargs)
         elif self.task == 'qa':
             required_names = list(
                 ErnieForQuestionAnswering.pretrained_init_configuration.keys())
             assert model_name in required_names, "model_name must be in %s, unknown %s ." (
                 required_names, model_name)
-            self.model = ErnieForQuestionAnswering.from_pretrained(model_name)
+            self.model = ErnieForQuestionAnswering.from_pretrained(model_name,
+                                                                   **kwargs)
         elif self.task is None:
             required_names = list(ErnieModel.pretrained_init_configuration.keys(
             ))

@@ -108,7 +108,7 @@ def parse_args():
 
 def set_default_args(args):
     args.task_name = args.task_name.lower()
-    if args.task_name == 'drs':
+    if args.task_name == 'udc':
         if not args.save_steps:
             args.save_steps = 1000
         if not args.logging_steps:
@@ -119,7 +119,7 @@ def set_default_args(args):
             args.max_seq_len = 210
         if not args.test_batch_size:
             args.test_batch_size = 100
-    elif args.task_name == 'dst':
+    elif args.task_name == 'dstc2':
         if not args.save_steps:
             args.save_steps = 400
         if not args.logging_steps:
@@ -132,14 +132,14 @@ def set_default_args(args):
             args.max_seq_len = 256
         if not args.test_max_seq_len:
             args.test_max_seq_len = 512
-    elif args.task_name == 'dsf':
+    elif args.task_name == 'atis_slot':
         if not args.save_steps:
             args.save_steps = 100
         if not args.logging_steps:
             args.logging_steps = 10
         if not args.epochs:
             args.epochs = 50
-    elif args.task_name == 'did':
+    elif args.task_name == 'atis_intent':
         if not args.save_steps:
             args.save_steps = 100
         if not args.logging_steps:

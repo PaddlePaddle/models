@@ -239,7 +239,7 @@ class BertPretrainedModel(PretrainedModel):
             "bert-base-chinese":
             "http://paddlenlp.bj.bcebos.com/models/transformers/bert/bert-base-chinese.pdparams",
             "bert-base-multilingual-cased":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/bert/bert-base-multilingual-cased.pdparamss",
+            "http://paddlenlp.bj.bcebos.com/models/transformers/bert/bert-base-multilingual-cased.pdparams",
             "bert-large-cased":
             "http://paddlenlp.bj.bcebos.com/models/transformers/bert/bert-large-cased.pdparams",
             "bert-wwm-chinese":

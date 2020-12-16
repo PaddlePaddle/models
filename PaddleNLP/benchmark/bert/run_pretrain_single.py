@@ -35,6 +35,11 @@ MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--select_device",
+        default="gpu",
+        type=str,
+        help="The device that selecting for the training, must be gpu/xpu.")
+    parser.add_argument(
         "--model_type",
         default=None,
         type=str,
@@ -174,7 +179,7 @@ def set_seed(seed):
 def do_train(args):
     # Initialize the paddle execute enviroment
     paddle.enable_static()
-    place = paddle.CUDAPlace(0)
+    place = paddle.set_device(args.select_device)
 
     # Set the random seed
     set_seed(args.seed)
@@ -228,7 +233,7 @@ def do_train(args):
         ])
     if args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
-            custom_white_list=['layer_norm', 'softmax'])
+            custom_white_list=['layer_norm', 'softmax', 'gelu'])
         optimizer = paddle.fluid.contrib.mixed_precision.decorate(
             optimizer,
             amp_list,
