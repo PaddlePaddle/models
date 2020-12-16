@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import decord as de
 import cv2
 import math
 import random
@@ -28,24 +29,31 @@ __all__ = ['KineticsDataset']
 class KineticsDataset(Dataset):
     def __init__(self, mode, cfg):
         self.mode = mode
-        self.format = cfg.MODEL.format
-        self.num_frames = cfg.MODEL.num_frames
-        self.sampling_rate = cfg.MODEL.sampling_rate
-        self.target_fps = cfg.MODEL.target_fps
-        self.slowfast_alpha = cfg.MODEL.alpha
+        self.cfg = cfg
+        self.format = cfg.DATA.format
+        self.num_frames = cfg.DATA.num_frames
+        self.sampling_rate = cfg.DATA.sampling_rate
+        self.target_fps = cfg.DATA.target_fps
+        self.slowfast_alpha = cfg.DATA.alpha
 
-        self.target_size = cfg[mode.upper()]['target_size']
-        self.img_mean = cfg.MODEL.image_mean
-        self.img_std = cfg.MODEL.image_std
+        self.img_mean = cfg.DATA.image_mean
+        self.img_std = cfg.DATA.image_std
         self.filelist = cfg[mode.upper()]['filelist']
 
+        # Multi long-short cycle
+        self.short_cycle_factors = cfg.MULTIGRID.short_cycle_factors
+        self.default_crop_size = cfg.MULTIGRID.default_crop_size
+        self.long_cycle_sampling_rate = cfg.MULTIGRID.long_cycle_sampling_rate
+
         if self.mode in ["train", "valid"]:
-            self.min_size = cfg[mode.upper()]['min_size']
-            self.max_size = cfg[mode.upper()]['max_size']
+            self.target_size = cfg.DATA.train_crop_size
+            self.min_size = cfg.DATA.min_size
+            self.max_size = cfg.DATA.max_size
             self.num_ensemble_views = 1
             self.num_spatial_crops = 1
             self._num_clips = 1
         elif self.mode in ['test', 'infer']:
+            self.target_size = cfg.DATA.test_crop_size
             self.min_size = self.max_size = self.target_size
             self.num_ensemble_views = cfg.TEST.num_ensemble_views
             self.num_spatial_crops = cfg.TEST.num_spatial_crops
@@ -78,6 +86,21 @@ class KineticsDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.mode in ["train", "valid"]:
+            # Multigrid short cycle
+            if isinstance(idx, tuple):
+                idx, short_cycle_idx = idx
+                #                print("===idx, short_cycle_idx===", idx, short_cycle_idx)
+                if short_cycle_idx in [0, 1]:
+                    self.target_size = int(
+                        round(self.short_cycle_factors[short_cycle_idx] *
+                              self.default_crop_size))
+            if self.default_crop_size > 0:
+                self.min_size = int(
+                    round(
+                        float(self.cfg.DATA.min_size) * self.target_size /
+                        self.default_crop_size))
+                # use cfg.DATA.min_size instead of self.min_size, cause self.xx will update after each call
+
             temporal_sample_index = -1
             spatial_sample_index = -1
         elif self.mode in ["test", 'infer']:
@@ -85,6 +108,16 @@ class KineticsDataset(Dataset):
                                      self.num_spatial_crops)
             spatial_sample_index = (self._spatial_temporal_idx[idx] %
                                     self.num_spatial_crops)
+
+        #Multi long cycle
+        #When multigrid training uses a fewer number of frames, we randomly
+        #increase the sampling rate so that some clips cover the original range.
+        if self.long_cycle_sampling_rate > 0:
+            assert self.long_cycle_sampling_rate >= self.sampling_rate
+            #use cfg.XXX instead of self.xx, cause self.xx will updated after each call
+            self.sampling_rate = random.randint(
+                self.cfg.DATA.sampling_rate,
+                self.cfg.MULTIGRID.long_cycle_sampling_rate)
 
         for ir in range(self._num_retries):
             mp4_path = self._path_to_videos[idx]
@@ -104,7 +137,8 @@ class KineticsDataset(Dataset):
                     slowfast_alpha=self.slowfast_alpha,
                     min_size=self.min_size,
                     max_size=self.max_size)
-            except:
+            except Exception as e:
+                print(e)
                 if ir < self._num_retries - 1:
                     logger.error(
                         'Error when loading {}, have {} trys, will try again'.
@@ -123,12 +157,15 @@ class KineticsDataset(Dataset):
                    temporal_num_clips, spatial_num_clips, num_frames,
                    sampling_rate, target_fps, target_size, img_mean, img_std,
                    slowfast_alpha, min_size, max_size):
-        frames_sample, clip_size = self.decode_sampling(
-            filepath, temporal_sample_index, temporal_num_clips, num_frames,
-            sampling_rate, target_fps)
-        frames_select = self.temporal_sampling(
-            frames_sample, clip_size, num_frames, filepath,
-            temporal_sample_index, temporal_num_clips)
+        # frames_sample, clip_size = self.decode_sampling(
+        #     filepath, temporal_sample_index, temporal_num_clips, num_frames,
+        #     sampling_rate, target_fps)
+        # frames_select = self.temporal_sampling(
+        #     frames_sample, clip_size, num_frames, filepath,
+        #     temporal_sample_index, temporal_num_clips)
+        frames_select = self.decode_sampling(filepath, temporal_sample_index,
+                                             temporal_num_clips, num_frames,
+                                             sampling_rate, target_fps)
         frames_resize = self.scale(frames_select, min_size, max_size)
         frames_crop = self.crop(frames_resize, target_size,
                                 spatial_sample_index, spatial_num_clips)
@@ -153,63 +190,90 @@ class KineticsDataset(Dataset):
         end_idx = start_idx + clip_size - 1
         return start_idx, end_idx
 
+    # def decode_sampling(self, filepath, temporal_sample_index,
+    #                     temporal_num_clips, num_frames, sampling_rate,
+    #                     target_fps):
+    #     cap = cv2.VideoCapture(filepath)
+    #     videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    #     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+    #     if int(major_ver) < 3:
+    #         fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+    #     else:
+    #         fps = cap.get(cv2.CAP_PROP_FPS)
+    #
+    #     clip_size = num_frames * sampling_rate * fps / target_fps
+    #
+    #     if filepath[-3:] != 'mp4':
+    #         start_idx, end_idx = 0, math.inf
+    #     else:
+    #         start_idx, end_idx = self.get_start_end_idx(
+    #             videolen, clip_size, temporal_sample_index, temporal_num_clips)
+    #     #print("filepath:",filepath,"start_idx:",start_idx,"end_idx:",end_idx)
+    #
+    #     frames_sample = []  #start randomly, decode clip size
+    #     start_idx = math.ceil(start_idx)
+    #     cap.set(cv2.CAP_PROP_POS_FRAMES, start_idx)
+    #     for i in range(videolen):
+    #         if i < start_idx:
+    #             continue
+    #         ret, frame = cap.read()
+    #         if ret == False:
+    #             continue
+    #         if i <= end_idx + 1:  #buffer
+    #             img = frame[:, :, ::-1]  #BGR -> RGB
+    #             frames_sample.append(img)
+    #         else:
+    #             break
+    #     return frames_sample, clip_size
+    #
+    # def temporal_sampling(self, frames_sample, clip_size, num_frames, filepath,
+    #                       temporal_sample_index, temporal_num_clips):
+    #     """ sample num_frames from clip_size """
+    #     fs_len = len(frames_sample)
+    #     assert fs_len > 0, "length of sampled frames == 0, skip this video [{}]".format(filepath)
+    #
+    #     if filepath[-3:] != 'mp4':
+    #         start_idx, end_idx = self.get_start_end_idx(
+    #             fs_len, clip_size, temporal_sample_index, temporal_num_clips)
+    #     else:
+    #         start_idx, end_idx = self.get_start_end_idx(fs_len, clip_size, 0, 1)
+    #
+    #     index = np.linspace(start_idx, end_idx, num_frames).astype("int64")
+    #     index = np.clip(index, 0, fs_len - 1)
+    #     frames_select = []
+    #     #        print("===len(frames_sample)====", len(frames_sample))
+    #     #        print("===idx===", index)
+    #     for i in range(index.shape[0]):
+    #         idx = index[i]
+    #         imgbuf = frames_sample[idx]
+    #         img = Image.fromarray(imgbuf, mode='RGB')
+    #         frames_select.append(img)
+    #
+    #     return frames_select
+
     def decode_sampling(self, filepath, temporal_sample_index,
                         temporal_num_clips, num_frames, sampling_rate,
                         target_fps):
-        cap = cv2.VideoCapture(filepath)
-        videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
-        if int(major_ver) < 3:
-            fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        else:
-            fps = cap.get(cv2.CAP_PROP_FPS)
+        vr = de.VideoReader(filepath)
+        videolen = len(vr)
 
+        fps = vr.get_avg_fps()
         clip_size = num_frames * sampling_rate * fps / target_fps
 
-        if filepath[-3:] != 'mp4':
-            start_idx, end_idx = 0, math.inf
-        else:
-            start_idx, end_idx = self.get_start_end_idx(
-                videolen, clip_size, temporal_sample_index, temporal_num_clips)
-        #print("filepath:",filepath,"start_idx:",start_idx,"end_idx:",end_idx)
-
-        frames_sample = []  #start randomly, decode clip size
-        start_idx = math.ceil(start_idx)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, start_idx)
-        for i in range(videolen):
-            if i < start_idx:
-                continue
-            ret, frame = cap.read()
-            if ret == False:
-                continue
-            if i <= end_idx + 1:  #buffer
-                img = frame[:, :, ::-1]  #BGR -> RGB
-                frames_sample.append(img)
-            else:
-                break
-        return frames_sample, clip_size
-
-    def temporal_sampling(self, frames_sample, clip_size, num_frames, filepath,
-                          temporal_sample_index, temporal_num_clips):
-        """ sample num_frames from clip_size """
-        fs_len = len(frames_sample)
-
-        if filepath[-3:] != 'mp4':
-            start_idx, end_idx = self.get_start_end_idx(
-                fs_len, clip_size, temporal_sample_index, temporal_num_clips)
-        else:
-            start_idx, end_idx = self.get_start_end_idx(fs_len, clip_size, 0, 1)
-
+        start_idx, end_idx = self.get_start_end_idx(
+            videolen, clip_size, temporal_sample_index, temporal_num_clips)
         index = np.linspace(start_idx, end_idx, num_frames).astype("int64")
-        index = np.clip(index, 0, fs_len - 1)
-        frames_select = []
-        for i in range(index.shape[0]):
-            idx = index[i]
-            imgbuf = frames_sample[idx]
-            img = Image.fromarray(imgbuf, mode='RGB')
-            frames_select.append(img)
+        index = np.clip(index, 0, videolen)
 
-        return frames_select
+        frames_select = vr.get_batch(index)  #1 for buffer
+
+        # dearray_to_img
+        np_frames = frames_select.asnumpy()
+        frames_select_list = []
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i]
+            frames_select_list.append(Image.fromarray(imgbuf, mode='RGB'))
+        return frames_select_list
 
     def scale(self, frames_select, min_size, max_size):
         size = int(round(np.random.uniform(min_size, max_size)))

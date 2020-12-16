@@ -7,6 +7,9 @@ python3.7 -m paddle.distributed.launch --log_dir=logs \
           --config=slowfast.yaml \
           --use_gpu=True \
           --use_data_parallel=1 \
+          --resume=True \
+          --last_mc_epoch=219 \
+          --resume_epoch=230    #checkpoint name 
 
 end_time=$(date +%s)
 cost_time=$[ $end_time-$start_time ]

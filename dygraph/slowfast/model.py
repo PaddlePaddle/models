@@ -12,87 +12,82 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import paddle.fluid as fluid
-from paddle.fluid.dygraph.base import to_variable
+import paddle
+import paddle.nn.functional as F
 
-from model_utils import *
+from model_utils import get_conv_init, get_bn_param_attr, ResStage, ResNetBasicHead
+from batchnorm_helper import get_norm
 
 
-class ResNetBasicStem(fluid.dygraph.Layer):
+class ResNetBasicStem(paddle.nn.Layer):
     """
     ResNe(X)t 3D stem module.
     Performs spatiotemporal Convolution, BN, and Relu following by a
         spatiotemporal pooling.
     """
 
-    def __init__(
-            self,
-            dim_in,
-            dim_out,
-            kernel,
-            stride,
-            padding,
-            eps=1e-5, ):
+    def __init__(self,
+                 dim_in,
+                 dim_out,
+                 kernel,
+                 stride,
+                 padding,
+                 eps=1e-5,
+                 norm_module=paddle.nn.BatchNorm3D):
         super(ResNetBasicStem, self).__init__()
         self.kernel = kernel
         self.stride = stride
         self.padding = padding
         self.eps = eps
+        self.norm_module = norm_module
         self._construct_stem(dim_in, dim_out)
 
     def _construct_stem(self, dim_in, dim_out):
         fan = (dim_out) * (self.kernel[0] * self.kernel[1] * self.kernel[2])
         initializer_tmp = get_conv_init(fan)
-        batchnorm_weight = 1.0
 
-        self._conv = fluid.dygraph.nn.Conv3D(
-            num_channels=dim_in,
-            num_filters=dim_out,
-            filter_size=self.kernel,
+        self._conv = paddle.nn.Conv3D(
+            in_channels=dim_in,
+            out_channels=dim_out,
+            kernel_size=self.kernel,
             stride=self.stride,
             padding=self.padding,
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
             bias_attr=False)
-        self._bn = fluid.dygraph.BatchNorm(
-            num_channels=dim_out,
+        self._bn = self.norm_module(
+            num_features=dim_out,
             epsilon=self.eps,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(batchnorm_weight),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)))
+            weight_attr=get_bn_param_attr(),
+            bias_attr=get_bn_param_attr(bn_weight=0.0))
 
     def forward(self, x):
         x = self._conv(x)
         x = self._bn(x)
-        x = fluid.layers.relu(x)
-        x = fluid.layers.pool3d(
-            input=x,
-            pool_type="max",
-            pool_size=[1, 3, 3],
-            pool_stride=[1, 2, 2],
-            pool_padding=[0, 1, 1],
+        x = F.relu(x)
+
+        x = F.max_pool3d(
+            x=x,
+            kernel_size=[1, 3, 3],
+            stride=[1, 2, 2],
+            padding=[0, 1, 1],
             data_format="NCDHW")
         return x
 
 
-class VideoModelStem(fluid.dygraph.Layer):
+class VideoModelStem(paddle.nn.Layer):
     """
     Video 3D stem module. Provides stem operations of Conv, BN, ReLU, MaxPool
     on input data tensor for slow and fast pathways.
     """
 
-    def __init__(
-            self,
-            dim_in,
-            dim_out,
-            kernel,
-            stride,
-            padding,
-            eps=1e-5, ):
+    def __init__(self,
+                 dim_in,
+                 dim_out,
+                 kernel,
+                 stride,
+                 padding,
+                 eps=1e-5,
+                 norm_module=paddle.nn.BatchNorm3D):
         """
         Args:
             dim_in (list): the list of channel dimensions of the inputs.
@@ -123,17 +118,15 @@ class VideoModelStem(fluid.dygraph.Layer):
         self.stride = stride
         self.padding = padding
         self.eps = eps
+        self.norm_module = norm_module
         self._construct_stem(dim_in, dim_out)
 
     def _construct_stem(self, dim_in, dim_out):
         for pathway in range(len(dim_in)):
-            stem = ResNetBasicStem(
-                dim_in[pathway],
-                dim_out[pathway],
-                self.kernel[pathway],
-                self.stride[pathway],
-                self.padding[pathway],
-                self.eps, )
+            stem = ResNetBasicStem(dim_in[pathway], dim_out[pathway],
+                                   self.kernel[pathway], self.stride[pathway],
+                                   self.padding[pathway], self.eps,
+                                   self.norm_module)
             self.add_sublayer("pathway{}_stem".format(pathway), stem)
 
     def forward(self, x):
@@ -143,25 +136,25 @@ class VideoModelStem(fluid.dygraph.Layer):
 
         for pathway in range(len(x)):
             m = getattr(self, "pathway{}_stem".format(pathway))
-            x[pathway] = m(to_variable(x[pathway]))
+            x[pathway] = m(paddle.to_tensor(x[pathway]))
 
         return x
 
 
-class FuseFastToSlow(fluid.dygraph.Layer):
+class FuseFastToSlow(paddle.nn.Layer):
     """
     Fuses the information from the Fast pathway to the Slow pathway. Given the
     tensors from Slow pathway and Fast pathway, fuse information from Fast to
     Slow, then return the fused tensors from Slow and Fast pathway in order.
     """
 
-    def __init__(
-            self,
-            dim_in,
-            fusion_conv_channel_ratio,
-            fusion_kernel,
-            alpha,
-            eps=1e-5, ):
+    def __init__(self,
+                 dim_in,
+                 fusion_conv_channel_ratio,
+                 fusion_kernel,
+                 alpha,
+                 eps=1e-5,
+                 norm_module=paddle.nn.BatchNorm3D):
         """
         Args:
             dim_in (int): the channel dimension of the input.
@@ -175,40 +168,33 @@ class FuseFastToSlow(fluid.dygraph.Layer):
         super(FuseFastToSlow, self).__init__()
         fan = (dim_in * fusion_conv_channel_ratio) * (fusion_kernel * 1 * 1)
         initializer_tmp = get_conv_init(fan)
-        batchnorm_weight = 1.0
 
-        self._conv_f2s = fluid.dygraph.nn.Conv3D(
-            num_channels=dim_in,
-            num_filters=dim_in * fusion_conv_channel_ratio,
-            filter_size=[fusion_kernel, 1, 1],
+        self._conv_f2s = paddle.nn.Conv3D(
+            in_channels=dim_in,
+            out_channels=dim_in * fusion_conv_channel_ratio,
+            kernel_size=[fusion_kernel, 1, 1],
             stride=[alpha, 1, 1],
             padding=[fusion_kernel // 2, 0, 0],
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
             bias_attr=False)
-        self._bn = fluid.dygraph.BatchNorm(
-            num_channels=dim_in * fusion_conv_channel_ratio,
+        self._bn = norm_module(
+            num_features=dim_in * fusion_conv_channel_ratio,
             epsilon=eps,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(batchnorm_weight),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)))
+            weight_attr=get_bn_param_attr(),
+            bias_attr=get_bn_param_attr(bn_weight=0.0))
 
     def forward(self, x):
         x_s = x[0]
         x_f = x[1]
         fuse = self._conv_f2s(x_f)
         fuse = self._bn(fuse)
-        fuse = fluid.layers.relu(fuse)
-        x_s_fuse = fluid.layers.concat(input=[x_s, fuse], axis=1, name=None)
+        fuse = F.relu(fuse)
+        x_s_fuse = paddle.concat(x=[x_s, fuse], axis=1, name=None)
 
         return [x_s_fuse, x_f]
 
 
-class SlowFast(fluid.dygraph.Layer):
+class SlowFast(paddle.nn.Layer):
     """
     SlowFast model builder for SlowFast network.
 
@@ -217,29 +203,31 @@ class SlowFast(fluid.dygraph.Layer):
     https://arxiv.org/pdf/1812.03982.pdf
     """
 
-    def __init__(self, cfg, num_classes):
+    def __init__(self, cfg):
         """
         Args:
             cfg (CfgNode): model building configs, details are in the
                 comments of the config file.
         """
         super(SlowFast, self).__init__()
-        self.num_classes = num_classes
-        self.num_frames = cfg.MODEL.num_frames  #32
-        self.alpha = cfg.MODEL.alpha  #8
-        self.beta = cfg.MODEL.beta  #8
-        self.crop_size = cfg.MODEL.crop_size  #224
+        self.cfg = cfg
+        self.num_classes = cfg.DATA.num_classes
+        self.num_frames = cfg.DATA.num_frames  #32
+        self.alpha = cfg.DATA.alpha  #8
+        self.beta = cfg.DATA.beta  #8
+        self.crop_size = cfg.DATA.train_crop_size  #use train_crop_size even in test or infer
+        self.norm_module = get_norm(cfg)
         self.num_pathways = 2
         self.res_depth = 50
         self.num_groups = 1
         self.input_channel_num = [3, 3]
         self.width_per_group = 64
         self.fusion_conv_channel_ratio = 2
-        self.fusion_kernel_sz = 5
+        self.fusion_kernel_sz = 7  #TODO NOTE: modify to 7, not 5
         self.dropout_rate = 0.5
-        self._construct_network(cfg)
+        self._construct_network()
 
-    def _construct_network(self, cfg):
+    def _construct_network(self):
         """
         Builds a SlowFast model.
         The first pathway is the Slow pathway
@@ -265,12 +253,14 @@ class SlowFast(fluid.dygraph.Layer):
             padding=[
                 [temp_kernel[0][0][0] // 2, 3, 3],
                 [temp_kernel[0][1][0] // 2, 3, 3],
-            ], )
+            ],
+            norm_module=self.norm_module)
         self.s1_fuse = FuseFastToSlow(
             dim_in=self.width_per_group // self.beta,
             fusion_conv_channel_ratio=self.fusion_conv_channel_ratio,
             fusion_kernel=self.fusion_kernel_sz,
-            alpha=self.alpha, )
+            alpha=self.alpha,
+            norm_module=self.norm_module)
 
         # ResNet backbone
         MODEL_STAGE_DEPTH = {50: (3, 4, 6, 3)}
@@ -298,13 +288,15 @@ class SlowFast(fluid.dygraph.Layer):
             num_blocks=[d2] * 2,
             num_groups=[self.num_groups] * 2,
             num_block_temp_kernel=num_block_temp_kernel[0],
-            dilation=spatial_dilations[0], )
+            dilation=spatial_dilations[0],
+            norm_module=self.norm_module)
 
         self.s2_fuse = FuseFastToSlow(
             dim_in=self.width_per_group * 4 // self.beta,
             fusion_conv_channel_ratio=self.fusion_conv_channel_ratio,
             fusion_kernel=self.fusion_kernel_sz,
-            alpha=self.alpha, )
+            alpha=self.alpha,
+            norm_module=self.norm_module, )
 
         self.s3 = ResStage(
             dim_in=[
@@ -322,13 +314,15 @@ class SlowFast(fluid.dygraph.Layer):
             num_blocks=[d3] * 2,
             num_groups=[self.num_groups] * 2,
             num_block_temp_kernel=num_block_temp_kernel[1],
-            dilation=spatial_dilations[1], )
+            dilation=spatial_dilations[1],
+            norm_module=self.norm_module, )
 
         self.s3_fuse = FuseFastToSlow(
             dim_in=self.width_per_group * 8 // self.beta,
             fusion_conv_channel_ratio=self.fusion_conv_channel_ratio,
             fusion_kernel=self.fusion_kernel_sz,
-            alpha=self.alpha, )
+            alpha=self.alpha,
+            norm_module=self.norm_module, )
 
         self.s4 = ResStage(
             dim_in=[
@@ -346,13 +340,15 @@ class SlowFast(fluid.dygraph.Layer):
             num_blocks=[d4] * 2,
             num_groups=[self.num_groups] * 2,
             num_block_temp_kernel=num_block_temp_kernel[2],
-            dilation=spatial_dilations[2], )
+            dilation=spatial_dilations[2],
+            norm_module=self.norm_module, )
 
         self.s4_fuse = FuseFastToSlow(
             dim_in=self.width_per_group * 16 // self.beta,
             fusion_conv_channel_ratio=self.fusion_conv_channel_ratio,
             fusion_kernel=self.fusion_kernel_sz,
-            alpha=self.alpha, )
+            alpha=self.alpha,
+            norm_module=self.norm_module, )
 
         self.s5 = ResStage(
             dim_in=[
@@ -370,7 +366,8 @@ class SlowFast(fluid.dygraph.Layer):
             num_blocks=[d5] * 2,
             num_groups=[self.num_groups] * 2,
             num_block_temp_kernel=num_block_temp_kernel[3],
-            dilation=spatial_dilations[3], )
+            dilation=spatial_dilations[3],
+            norm_module=self.norm_module, )
 
         self.pool_size = [[1, 1, 1], [1, 1, 1]]
         self.head = ResNetBasicHead(
@@ -379,7 +376,7 @@ class SlowFast(fluid.dygraph.Layer):
                 self.width_per_group * 32 // self.beta,
             ],
             num_classes=self.num_classes,
-            pool_size=[
+            pool_size=[None, None] if self.cfg.MULTIGRID.SHORT_CYCLE else [
                 [
                     self.num_frames // self.alpha // self.pool_size[0][0],
                     self.crop_size // 32 // self.pool_size[0][1],
@@ -393,19 +390,18 @@ class SlowFast(fluid.dygraph.Layer):
             ],
             dropout_rate=self.dropout_rate, )
 
-    def forward(self, x, training):
+    def forward(self, x):
         x = self.s1(x)  #VideoModelStem
         x = self.s1_fuse(x)  #FuseFastToSlow
         x = self.s2(x)  #ResStage
         x = self.s2_fuse(x)
 
         for pathway in range(self.num_pathways):
-            x[pathway] = fluid.layers.pool3d(
-                input=x[pathway],
-                pool_type="max",
-                pool_size=self.pool_size[pathway],
-                pool_stride=self.pool_size[pathway],
-                pool_padding=[0, 0, 0],
+            x[pathway] = F.max_pool3d(
+                x=x[pathway],
+                kernel_size=self.pool_size[pathway],
+                stride=self.pool_size[pathway],
+                padding=[0, 0, 0],
                 data_format="NCDHW")
 
         x = self.s3(x)
@@ -413,5 +409,5 @@ class SlowFast(fluid.dygraph.Layer):
         x = self.s4(x)
         x = self.s4_fuse(x)
         x = self.s5(x)
-        x = self.head(x, training)  #ResNetBasicHead
+        x = self.head(x)  #ResNetBasicHead
         return x

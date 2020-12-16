@@ -12,36 +12,44 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from paddle.fluid.initializer import MSRA
-import paddle.fluid as fluid
+import paddle
+import paddle.nn.functional as F
+from paddle.nn.initializer import KaimingNormal
 
 
 # get init parameters for conv layer
 def get_conv_init(fan_out):
-    return MSRA(uniform=False, fan_in=fan_out)
+    return KaimingNormal(fan_in=fan_out)
+
+
+def get_bn_param_attr(bn_weight=1.0, coeff=0.0):
+    param_attr = paddle.ParamAttr(
+        initializer=paddle.nn.initializer.Constant(bn_weight),
+        regularizer=paddle.regularizer.L2Decay(coeff))
+    return param_attr
 
 
 """Video models."""
 
 
-class BottleneckTransform(fluid.dygraph.Layer):
+class BottleneckTransform(paddle.nn.Layer):
     """
     Bottleneck transformation: Tx1x1, 1x3x3, 1x1x1, where T is the size of
         temporal kernel.
     """
 
-    def __init__(
-            self,
-            dim_in,
-            dim_out,
-            temp_kernel_size,
-            stride,
-            dim_inner,
-            num_groups,
-            stride_1x1=False,
-            inplace_relu=True,
-            eps=1e-5,
-            dilation=1, ):
+    def __init__(self,
+                 dim_in,
+                 dim_out,
+                 temp_kernel_size,
+                 stride,
+                 dim_inner,
+                 num_groups,
+                 stride_1x1=False,
+                 inplace_relu=True,
+                 eps=1e-5,
+                 dilation=1,
+                 norm_module=paddle.nn.BatchNorm3D):
         """
         Args:
             dim_in (int): the channel dimensions of the input.
@@ -65,6 +73,7 @@ class BottleneckTransform(fluid.dygraph.Layer):
         self._inplace_relu = inplace_relu
         self._eps = eps
         self._stride_1x1 = stride_1x1
+        self.norm_module = norm_module
         self._construct(dim_in, dim_out, stride, dim_inner, num_groups,
                         dilation)
 
@@ -74,90 +83,69 @@ class BottleneckTransform(fluid.dygraph.Layer):
 
         fan = (dim_inner) * (self.temp_kernel_size * 1 * 1)
         initializer_tmp = get_conv_init(fan)
-        batchnorm_weight = 1.0
 
-        self.a = fluid.dygraph.nn.Conv3D(
-            num_channels=dim_in,
-            num_filters=dim_inner,
-            filter_size=[self.temp_kernel_size, 1, 1],
+        self.a = paddle.nn.Conv3D(
+            in_channels=dim_in,
+            out_channels=dim_inner,
+            kernel_size=[self.temp_kernel_size, 1, 1],
             stride=[1, str1x1, str1x1],
             padding=[int(self.temp_kernel_size // 2), 0, 0],
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
             bias_attr=False)
-        self.a_bn = fluid.dygraph.BatchNorm(
-            num_channels=dim_inner,
+        self.a_bn = self.norm_module(
+            num_features=dim_inner,
             epsilon=self._eps,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(batchnorm_weight),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)))
+            weight_attr=get_bn_param_attr(),
+            bias_attr=get_bn_param_attr(bn_weight=0.0))
 
         # 1x3x3, BN, ReLU.
         fan = (dim_inner) * (1 * 3 * 3)
         initializer_tmp = get_conv_init(fan)
-        batchnorm_weight = 1.0
 
-        self.b = fluid.dygraph.nn.Conv3D(
-            num_channels=dim_inner,
-            num_filters=dim_inner,
-            filter_size=[1, 3, 3],
+        self.b = paddle.nn.Conv3D(
+            in_channels=dim_inner,
+            out_channels=dim_inner,
+            kernel_size=[1, 3, 3],
             stride=[1, str3x3, str3x3],
             padding=[0, dilation, dilation],
             groups=num_groups,
             dilation=[1, dilation, dilation],
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
             bias_attr=False)
-        self.b_bn = fluid.dygraph.BatchNorm(
-            num_channels=dim_inner,
+        self.b_bn = self.norm_module(
+            num_features=dim_inner,
             epsilon=self._eps,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(batchnorm_weight),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)))
+            weight_attr=get_bn_param_attr(),
+            bias_attr=get_bn_param_attr(bn_weight=0.0))
 
         # 1x1x1, BN.
         fan = (dim_out) * (1 * 1 * 1)
         initializer_tmp = get_conv_init(fan)
-        batchnorm_weight = 0.0
 
-        self.c = fluid.dygraph.nn.Conv3D(
-            num_channels=dim_inner,
-            num_filters=dim_out,
-            filter_size=[1, 1, 1],
+        self.c = paddle.nn.Conv3D(
+            in_channels=dim_inner,
+            out_channels=dim_out,
+            kernel_size=[1, 1, 1],
             stride=[1, 1, 1],
             padding=[0, 0, 0],
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
             bias_attr=False)
-        self.c_bn = fluid.dygraph.BatchNorm(
-            num_channels=dim_out,
+        self.c_bn = self.norm_module(
+            num_features=dim_out,
             epsilon=self._eps,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(batchnorm_weight),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0),
-                regularizer=fluid.regularizer.L2Decay(
-                    regularization_coeff=0.0)))
+            weight_attr=get_bn_param_attr(bn_weight=0.0),
+            bias_attr=get_bn_param_attr(bn_weight=0.0))
 
     def forward(self, x):
         # Branch2a.
         x = self.a(x)
         x = self.a_bn(x)
-        x = fluid.layers.relu(x)
+        x = F.relu(x)
 
         # Branch2b.
         x = self.b(x)
         x = self.b_bn(x)
-        x = fluid.layers.relu(x)
+        x = F.relu(x)
 
         # Branch2c
         x = self.c(x)
@@ -165,23 +153,23 @@ class BottleneckTransform(fluid.dygraph.Layer):
         return x
 
 
-class ResBlock(fluid.dygraph.Layer):
+class ResBlock(paddle.nn.Layer):
     """
     Residual block.
     """
 
-    def __init__(
-            self,
-            dim_in,
-            dim_out,
-            temp_kernel_size,
-            stride,
-            dim_inner,
-            num_groups=1,
-            stride_1x1=False,
-            inplace_relu=True,
-            eps=1e-5,
-            dilation=1, ):
+    def __init__(self,
+                 dim_in,
+                 dim_out,
+                 temp_kernel_size,
+                 stride,
+                 dim_inner,
+                 num_groups=1,
+                 stride_1x1=False,
+                 inplace_relu=True,
+                 eps=1e-5,
+                 dilation=1,
+                 norm_module=paddle.nn.BatchNorm3D):
         """
         ResBlock class constructs redisual blocks. More details can be found in:
             Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
@@ -209,6 +197,7 @@ class ResBlock(fluid.dygraph.Layer):
         super(ResBlock, self).__init__()
         self._inplace_relu = inplace_relu
         self._eps = eps
+        self.norm_module = norm_module
         self._construct(
             dim_in,
             dim_out,
@@ -235,27 +224,20 @@ class ResBlock(fluid.dygraph.Layer):
         if (dim_in != dim_out) or (stride != 1):
             fan = (dim_out) * (1 * 1 * 1)
             initializer_tmp = get_conv_init(fan)
-            batchnorm_weight = 1.0
-            self.branch1 = fluid.dygraph.nn.Conv3D(
-                num_channels=dim_in,
-                num_filters=dim_out,
-                filter_size=1,
+            self.branch1 = paddle.nn.Conv3D(
+                in_channels=dim_in,
+                out_channels=dim_out,
+                kernel_size=1,
                 stride=[1, stride, stride],
                 padding=0,
-                param_attr=fluid.ParamAttr(initializer=initializer_tmp),
+                weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
                 bias_attr=False,
                 dilation=1)
-            self.branch1_bn = fluid.dygraph.BatchNorm(
-                num_channels=dim_out,
+            self.branch1_bn = self.norm_module(
+                num_features=dim_out,
                 epsilon=self._eps,
-                param_attr=fluid.ParamAttr(
-                    initializer=fluid.initializer.Constant(batchnorm_weight),
-                    regularizer=fluid.regularizer.L2Decay(
-                        regularization_coeff=0.0)),
-                bias_attr=fluid.ParamAttr(
-                    initializer=fluid.initializer.Constant(0.0),
-                    regularizer=fluid.regularizer.L2Decay(
-                        regularization_coeff=0.0)))
+                weight_attr=get_bn_param_attr(),
+                bias_attr=get_bn_param_attr(bn_weight=0.0))
 
         self.branch2 = BottleneckTransform(
             dim_in,
@@ -266,23 +248,24 @@ class ResBlock(fluid.dygraph.Layer):
             num_groups,
             stride_1x1=stride_1x1,
             inplace_relu=inplace_relu,
-            dilation=dilation, )
+            dilation=dilation,
+            norm_module=self.norm_module)
 
     def forward(self, x):
         if hasattr(self, "branch1"):
             x1 = self.branch1(x)
             x1 = self.branch1_bn(x1)
             x2 = self.branch2(x)
-            x = fluid.layers.elementwise_add(x=x1, y=x2)
+            x = paddle.add(x=x1, y=x2)
         else:
             x2 = self.branch2(x)
-            x = fluid.layers.elementwise_add(x=x, y=x2)
+            x = paddle.add(x=x, y=x2)
 
-        x = fluid.layers.relu(x)
+        x = F.relu(x)
         return x
 
 
-class ResStage(fluid.dygraph.Layer):
+class ResStage(paddle.nn.Layer):
     """
     Stage of 3D ResNet. It expects to have one or more tensors as input for
         multi-pathway (SlowFast) cases.  More details can be found here:
@@ -292,19 +275,19 @@ class ResStage(fluid.dygraph.Layer):
         https://arxiv.org/pdf/1812.03982.pdf
     """
 
-    def __init__(
-            self,
-            dim_in,
-            dim_out,
-            stride,
-            temp_kernel_sizes,
-            num_blocks,
-            dim_inner,
-            num_groups,
-            num_block_temp_kernel,
-            dilation,
-            stride_1x1=False,
-            inplace_relu=True, ):
+    def __init__(self,
+                 dim_in,
+                 dim_out,
+                 stride,
+                 temp_kernel_sizes,
+                 num_blocks,
+                 dim_inner,
+                 num_groups,
+                 num_block_temp_kernel,
+                 dilation,
+                 stride_1x1=False,
+                 inplace_relu=True,
+                 norm_module=paddle.nn.BatchNorm3D):
         """
         The `__init__` method of any subclass should also contain these arguments.
         ResStage builds p streams, where p can be greater or equal to one.
@@ -352,6 +335,7 @@ class ResStage(fluid.dygraph.Layer):
             len(num_block_temp_kernel),
         }) == 1)
         self.num_pathways = len(self.num_blocks)
+        self.norm_module = norm_module
         self._construct(
             dim_in,
             dim_out,
@@ -384,7 +368,8 @@ class ResStage(fluid.dygraph.Layer):
                     num_groups[pathway],
                     stride_1x1=stride_1x1,
                     inplace_relu=inplace_relu,
-                    dilation=dilation[pathway], )
+                    dilation=dilation[pathway],
+                    norm_module=self.norm_module)
                 self.add_sublayer("pathway{}_res{}".format(pathway, i),
                                   res_block)
 
@@ -401,10 +386,7 @@ class ResStage(fluid.dygraph.Layer):
         return output
 
 
-"""ResNe(X)t Head helper."""
-
-
-class ResNetBasicHead(fluid.dygraph.Layer):
+class ResNetBasicHead(paddle.nn.Layer):
     """
     ResNe(X)t 3D head.
     This layer performs a fully-connected projection during training, when the
@@ -439,46 +421,52 @@ class ResNetBasicHead(fluid.dygraph.Layer):
         self.num_pathways = len(pool_size)
         self.pool_size = pool_size
         self.dropout_rate = dropout_rate
+        self.dropout = paddle.nn.Dropout(p=self.dropout_rate)
         fc_init_std = 0.01
-        initializer_tmp = fluid.initializer.NormalInitializer(
-            loc=0.0, scale=fc_init_std)
-        self.projection = fluid.dygraph.Linear(
-            input_dim=sum(dim_in),
-            output_dim=num_classes,
-            param_attr=fluid.ParamAttr(initializer=initializer_tmp),
-            bias_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Constant(0.0)), )
+        initializer_tmp = paddle.nn.initializer.Normal(
+            mean=0.0, std=fc_init_std)
+        self.projection = paddle.nn.Linear(
+            in_features=sum(dim_in),
+            out_features=num_classes,
+            weight_attr=paddle.ParamAttr(initializer=initializer_tmp),
+            bias_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.Constant(0.0)), )
 
-    def forward(self, inputs, training):
+    def forward(self, inputs):
         assert (
             len(inputs) == self.num_pathways
         ), "Input tensor does not contain {} pathway".format(self.num_pathways)
         pool_out = []
         for pathway in range(self.num_pathways):
-            tmp_out = fluid.layers.pool3d(
-                input=inputs[pathway],
-                pool_type="avg",
-                pool_size=self.pool_size[pathway],
-                pool_stride=1,
-                data_format="NCDHW")
+            if self.pool_size[pathway] is None:
+                tmp_out = F.adaptive_avg_pool3d(
+                    x=inputs[pathway],
+                    output_size=(1, 1, 1),
+                    data_format="NCDHW")
+            else:
+                tmp_out = F.avg_pool3d(
+                    x=inputs[pathway],
+                    kernel_size=self.pool_size[pathway],
+                    stride=1,
+                    data_format="NCDHW")
+
+#            print("====tmp_out_{}=====".format(pathway), tmp_out.shape)
             pool_out.append(tmp_out)
 
-        x = fluid.layers.concat(input=pool_out, axis=1, name=None)
-        x = fluid.layers.transpose(x=x, perm=(0, 2, 3, 4, 1))
+        x = paddle.concat(x=pool_out, axis=1)
+        x = paddle.transpose(x=x, perm=(0, 2, 3, 4, 1))
 
         # Perform dropout.
         if self.dropout_rate > 0.0:
-            x = fluid.layers.dropout(
-                x,
-                dropout_prob=self.dropout_rate,
-                dropout_implementation='upscale_in_train')
+            #            x = F.dropout(x, p=self.dropout_rate)
+            x = self.dropout(x)
 
         x = self.projection(x)
 
         # Performs fully convlutional inference.
-        if not training:
-            x = fluid.layers.softmax(x, axis=4)
-            x = fluid.layers.reduce_mean(x, dim=[1, 2, 3])
+        if not self.training:  # attr of base class
+            x = F.softmax(x, axis=4)
+            x = paddle.mean(x, axis=[1, 2, 3])
 
-        x = fluid.layers.reshape(x, shape=(x.shape[0], -1))
+        x = paddle.reshape(x, shape=(x.shape[0], -1))
         return x

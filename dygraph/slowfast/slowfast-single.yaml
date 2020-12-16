@@ -1,52 +1,82 @@
 MODEL:
     name: "SLOWFAST"
+
+MULTIGRID:
+    LONG_CYCLE: True
+    SHORT_CYCLE: True
+    default_batch_size: 0
+    default_temporal_size: 0
+    default_crop_size: 0
+    epoch_factor: 1.0  #may try 1.0
+    bn_base_size: 4  #8
+    long_cycle_sampling_rate: 0  
+    long_cycle_factors:
+        - value: [0.25, 0.7071]  # 0.5 ** 0.5
+        - value: [0.5, 0.7071]
+        - value: [0.5, 1]
+        - value: [1, 1]
+    short_cycle_factors: [0.5, 0.7071]
+
+DATA:
     format: "mp4"
-    num_classes: 400
+    num_classes: 10 #400
     num_frames: 32
     sampling_rate: 2
     target_fps: 30
-    alpha: 8
+    alpha: 4  #TODO: NOTE: changed! not 8 but 4
     beta: 8
-    crop_size: 224
+    min_size: 256
+    max_size: 320
+    train_crop_size: 224  #train and val
+    test_crop_size: 224   #test and infer
     image_mean: [0.45, 0.45, 0.45]
     image_std: [0.225, 0.225, 0.225]
 
 TRAIN:
-    epoch: 196
-    target_size: 224
-    min_size: 256
-    max_size: 320
-    batch_size: 8 
+    batch_size: 4 #8 #32 
     use_gpu: True
-    num_gpus: 1 
-    filelist: "./data/train.csv" 
-    base_lr: 0.1 
-    warmup_epochs: 34
+    num_gpus: 1 #2 
+    num_workers: 8
+    filelist: "./data/200/train.csv" 
+    bn_norm_type: "batchnorm" 
+    bn_num_splits: 1
+
+OPTIMIZER:
+    base_lr: 0.1
+    lr_policy: steps_with_relative_lrs  # cosine
+    lrs: [1, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    gamma: 0.1
+    steps: [0, 3, 6, 9] #[0, 94, 154, 196]
+    max_epoch: 10 #239  # 196
+    warmup_epochs: 1 #34.0
     warmup_start_lr: 0.01
     l2_weight_decay: 1e-4
-    momentum: 0.9
+    momentum: 0.9 
 
 VALID:
+    batch_size: 4 #8 #32  
+    num_workers: 8
+    filelist: "./data/200/val.csv"
     use_preciseBN: True
-    preciseBN_interval: 10
     num_batches_preciseBN: 200
-    target_size: 224
-    min_size: 256
-    max_size: 320
-    batch_size: 8  
-    filelist: "./data/val.csv"
+    preciseBN_interval: 10
+    valid_interval: 10
 
 TEST:
-    target_size: 256
-    batch_size: 8 
-    filelist: "./data/val.csv"
+    batch_size: 4 #8 #16 #32 
+    num_gpus: 1 #2 #4 
+    num_workers: 8
+    filelist: "./data/200/val.csv"
+    weights: "checkpoints/slowfast_epoch195"
     num_ensemble_views: 10
     num_spatial_crops: 3
 
 INFER:
-    target_size: 256
-    batch_size: 8 
-    filelist: "./data/infer.csv"
+    batch_size: 4 #8 #32 
+    num_gpus: 1 #2 
+    num_workers: 8
+    filelist: "./data/part-10cls/infer.csv"
+    weights: "checkpoints/slowfast_epoch195"
     num_ensemble_views: 10
     num_spatial_crops: 3
     save_path: "./data/results"

@@ -4,4 +4,4 @@ python3.7 -m paddle.distributed.launch \
           --config=slowfast.yaml \
           --use_gpu=True \
           --use_data_parallel=1 \
-          --weights=checkpoints/slowfast_epoch195
+          --weights=checkpoints/slowfast_epoch0_00238
