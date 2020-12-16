@@ -8,11 +8,11 @@
 
 PLATO-2的网络结构及评估结果见下图：
 
-![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/network.png)
+![image](http://paddlenlp.bj.bcebos.com/images/plato-2/network.png)
 
-![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/eval_en.png)
+![image](http://paddlenlp.bj.bcebos.com/images/plato-2/eval_en.png)
 
-![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/eval_cn.png)
+![image](http://paddlenlp.bj.bcebos.com/images/plato-2/eval_cn.png)
 
 PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePaddle/Knover)
 
@@ -57,7 +57,6 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 │   ├── args.py # 运行参数配置
 │   ├── masking.py # mask相关函数
 │   └── tokenization.py # 分词相关函数
-├── imgs # 示例图存储文件夹
 └── README.md # 说明文档
 ```
 
@@ -101,4 +100,4 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 
 32层PLATO-2网络交互示例：
 
-![image](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/dialogue/plato-2/imgs/case.jpg)
+![image](http://paddlenlp.bj.bcebos.com/images/plato-2/case.jpg)
