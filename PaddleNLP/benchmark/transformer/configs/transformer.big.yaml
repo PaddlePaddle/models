@@ -22,6 +22,10 @@ root: None
 # Whether to use cuda
 use_gpu: True
 
+# Mixed precision training
+use_amp: True
+scale_loss: 128.0
+
 # Args for reader, see reader.py for details
 pool_size: 200000
 sort_type: "global"
