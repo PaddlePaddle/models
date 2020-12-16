@@ -34,8 +34,7 @@ def infer(args):
 
     # load model
     if args.checkpoint:
-        model_dict, optimizer_dict = paddle.fluid.dygraph.load_dygraph(
-            args.checkpoint)
+        model_dict = paddle.load(os.path.join(args.checkpoint, ".pdparams"))
         deepfm.set_dict(model_dict)
         logger.info("load model {} finished.".format(args.checkpoint))
     else:
@@ -48,7 +47,7 @@ def infer(args):
         logger.info("start eval model.")
         total_step = 0
         batch_begin = time.time()
-        auc_metric_test = paddle.fluid.metrics.Auc("ROC")
+        auc_metric_test = paddle.metric.Auc("ROC")
         for data in test_reader():
             total_step += 1
             raw_feat_idx, raw_feat_value, label = zip(*data)
@@ -72,11 +71,11 @@ def infer(args):
                 logger.info(
                     "TEST --> batch: {} auc: {:.6f} speed: {:.2f} ins/s".format(
                         total_step,
-                        auc_metric_test.eval(), 100 * args.batch_size / (
+                        auc_metric_test.accumulate(), 100 * args.batch_size / (
                             time.time() - batch_begin)))
                 batch_begin = time.time()
 
-        logger.info("test auc is %.6f" % auc_metric_test.eval())
+        logger.info("test auc is %.6f" % auc_metric_test.accumulate())
 
     begin = time.time()
     eval()

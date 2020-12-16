@@ -170,22 +170,22 @@ def main():
                     batch, epoch_id=epoch_id)
                 word_count += word_num
                 loss = model(input_data_feed)
-                # print(loss.numpy()[0])
                 loss.backward()
                 optimizer.minimize(loss)
                 model.clear_gradients()
                 total_loss += loss * batch_size
+                total_loss_value = total_loss.numpy()
 
-                train_batch_cost = time.time() - batch_start
-                batch_times.append(train_batch_cost)
+                batch_times.append(time.time() - batch_start)
                 if batch_id > 0 and batch_id % 100 == 0:
                     print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s, ips: %.5f words/s"
-                        % (epoch_id, batch_id, np.exp(total_loss.numpy() /
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
+                        % (epoch_id, batch_id, np.exp(total_loss_value /
                                                       word_count),
-                           train_batch_cost, total_reader_cost / 100,
+                           (time.time() - interval_time_start) / 100,
+                           total_reader_cost / 100,
                            word_count / (time.time() - interval_time_start)))
-                    ce_ppl.append(np.exp(total_loss.numpy() / word_count))
+                    ce_ppl.append(np.exp(total_loss_value / word_count))
                     total_loss = 0.0
                     word_count = 0.0
                     total_reader_cost = 0.0
@@ -194,7 +194,7 @@ def main():
 
             train_epoch_cost = time.time() - epoch_start
             print(
-                "\nTrain epoch:[%d]; epoch_cost: %.5f s; avg_batch_cost: %.5f s/step\n"
+                "\nTrain epoch:[%d]; epoch_cost: %.5f sec; avg_batch_cost: %.5f s/step\n"
                 % (epoch_id, train_epoch_cost,
                    sum(batch_times) / len(batch_times)))
             ce_time.append(train_epoch_cost)
