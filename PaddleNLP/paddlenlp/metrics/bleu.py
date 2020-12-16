@@ -248,7 +248,7 @@ class BLEUForDuReader(BLEU):
             ref_ngram = []
             for ref_id, r in enumerate(yn_ref):
                 ref_ngram.append(get_ngram(ref_list[ref_id], n_size, label=r))
-            match_size, cand_size = self.get_match_size(cand_ngram, ref_ngram)
+            match_size, cand_size = get_match_size(cand_ngram, ref_ngram)
             self.match_ngram[n_size] += self.alpha * match_size
             self.candi_ngram[n_size] += self.alpha * match_size
 
@@ -258,6 +258,6 @@ class BLEUForDuReader(BLEU):
             ref_ngram = []
             for reff_id, r in enumerate(entity_ref):
                 ref_ngram.append(get_ngram(r, n_size, label='ENTITY'))
-            match_size, cand_size = self.get_match_size(cand_ngram, ref_ngram)
+            match_size, cand_size = get_match_size(cand_ngram, ref_ngram)
             self.match_ngram[n_size] += self.beta * match_size
             self.candi_ngram[n_size] += self.beta * match_size

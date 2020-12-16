@@ -96,7 +96,7 @@ def train(args):
     crf_loss = LinearChainCrfLoss(network.crf.transitions)
     chunk_evaluator = ChunkEvaluator(
         int(math.ceil((train_dataset.num_labels + 1) / 2.0)),
-        "IOB")  # + 1 for SOS and EOS
+        "IOB")  # + 1 for START and STOP
     model.prepare(optimizer, crf_loss, chunk_evaluator)
     if args.init_checkpoint:
         model.load(args.init_checkpoint)

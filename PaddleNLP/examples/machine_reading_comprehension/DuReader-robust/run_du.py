@@ -26,9 +26,12 @@ from args import parse_args
 import json
 import paddlenlp as ppnlp
 
+from paddlenlp.datasets import SQuAD, DuReaderRobust, CMRC, DRCD
 from paddlenlp.data import Pad, Stack, Tuple
 from paddlenlp.transformers import BertForQuestionAnswering, BertTokenizer, ErnieForQuestionAnswering, ErnieTokenizer
 from paddlenlp.metrics.squad import squad_evaluate, compute_predictions
+
+TASK_CLASSES = {"dureader-robust": DuReaderRobust, "cmrc": CMRC, "drcd": DRCD}
 
 MODEL_CLASSES = {
     "bert": (BertForQuestionAnswering, BertTokenizer),
@@ -89,18 +92,20 @@ def evaluate(model, data_loader, args, tokenizer, do_pred=False):
                     start_logits=start_logits,
                     end_logits=end_logits))
 
-    all_predictions, _, scores_diff_json = compute_predictions(
+    all_predictions, _, _ = compute_predictions(
         data_loader.dataset.examples, data_loader.dataset.features, all_results,
         args.n_best_size, args.max_answer_length, args.do_lower_case, False,
-        0.0, args.verbose, tokenizer)
+        0.0, args.verbose, tokenizer, False)
     if do_pred:
-        with open('prediction.json', "w") as writer:
+        with open('prediction.json', "w", encoding='utf-8') as writer:
             writer.write(
                 json.dumps(
                     all_predictions, ensure_ascii=False, indent=4) + "\n")
     else:
-        squad_evaluate(data_loader.dataset.examples, all_predictions,
-                       scores_diff_json, 1.0)
+        squad_evaluate(
+            examples=data_loader.dataset.examples,
+            preds=all_predictions,
+            is_whitespace_splited=False)
 
     model.train()
 
@@ -110,13 +115,16 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
+    task_name = args.task_name.lower()
+    dataset_class = TASK_CLASSES[task_name]
+
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     root = args.data_path
     set_seed(args)
 
-    train_ds = ppnlp.datasets.DuReaderRobust(
+    train_ds = dataset_class(
         tokenizer=tokenizer,
         root=root,
         doc_stride=args.doc_stride,
@@ -141,7 +149,7 @@ def do_train(args):
         collate_fn=train_batchify_fn,
         return_list=True)
 
-    dev_ds = ppnlp.datasets.DuReaderRobust(
+    dev_ds = dataset_class(
         tokenizer=tokenizer,
         root=root,
         doc_stride=args.doc_stride,
@@ -161,23 +169,6 @@ def do_train(args):
     dev_data_loader = DataLoader(
         dataset=dev_ds,
         batch_sampler=dev_batch_sampler,
-        collate_fn=dev_batchify_fn,
-        return_list=True)
-
-    test_ds = ppnlp.datasets.DuReaderRobust(
-        tokenizer=tokenizer,
-        root=root,
-        doc_stride=args.doc_stride,
-        max_query_length=args.max_query_length,
-        max_seq_length=args.max_seq_length,
-        mode='test')
-
-    test_batch_sampler = paddle.io.BatchSampler(
-        test_ds, batch_size=args.batch_size, shuffle=False)
-
-    test_data_loader = DataLoader(
-        dataset=test_ds,
-        batch_sampler=test_batch_sampler,
         collate_fn=dev_batchify_fn,
         return_list=True)
 
@@ -244,9 +235,6 @@ def do_train(args):
 
         if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
             evaluate(model, dev_data_loader, args, tokenizer)
-
-    if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
-        evaluate(model, test_data_loader, args, tokenizer, True)
 
 
 if __name__ == "__main__":

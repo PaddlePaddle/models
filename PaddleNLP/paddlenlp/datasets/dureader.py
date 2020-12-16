@@ -10,7 +10,7 @@ from paddlenlp.utils.env import DATA_HOME
 from paddle.io import Dataset
 from .squad import InputFeatures, SQuAD
 
-__all__ = ['DuReader', 'DuReaderYesNo', 'DuReaderRobust']
+__all__ = ['DuReader', 'DuReaderYesNo']
 
 
 class DuReaderExample(object):
@@ -166,63 +166,6 @@ class DuReader(SQuAD):
             examples.append(example)
 
         self.examples = examples
-
-
-class DuReaderRobust(SQuAD):
-    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
-
-    DATA_URL = 'https://dataset-bj.cdn.bcebos.com/qianyan/dureader_robust-data.tar.gz'
-
-    SPLITS = {
-        'train': META_INFO(
-            os.path.join('dureader_robust-data', 'train.json'),
-            '800a3dcb742f9fdf9b11e0a83433d4be'),
-        'dev': META_INFO(
-            os.path.join('dureader_robust-data', 'dev.json'),
-            'ae73cec081eaa28a735204c4898a2222'),
-        'test': META_INFO(
-            os.path.join('dureader_robust-data', 'test.json'),
-            'e0e8aa5c7b6d11b6fc3935e29fc7746f')
-    }
-
-    def __init__(self,
-                 tokenizer,
-                 mode='train',
-                 version_2_with_negative=True,
-                 root=None,
-                 doc_stride=128,
-                 max_query_length=64,
-                 max_seq_length=512,
-                 **kwargs):
-
-        super(DuReaderRobust, self).__init__(
-            tokenizer=tokenizer,
-            mode=mode,
-            version_2_with_negative=False,
-            root=root,
-            doc_stride=doc_stride,
-            max_query_length=max_query_length,
-            max_seq_length=max_seq_length,
-            **kwargs)
-
-    def _get_data(self, root, mode, **kwargs):
-        default_root = os.path.join(DATA_HOME, 'DuReader')
-
-        filename, data_hash = self.SPLITS[mode]
-
-        fullname = os.path.join(default_root,
-                                filename) if root is None else os.path.join(
-                                    os.path.expanduser(root), filename)
-        if not os.path.exists(fullname) or (data_hash and
-                                            not md5file(fullname) == data_hash):
-            if root is not None:  # not specified, and no need to warn
-                warnings.warn(
-                    'md5 check failed for {}, download {} data to {}'.format(
-                        filename, self.__class__.__name__, default_root))
-
-            get_path_from_url(self.DATA_URL, default_root)
-
-        self.full_path = fullname
 
 
 class DuReaderYesNo(Dataset):
