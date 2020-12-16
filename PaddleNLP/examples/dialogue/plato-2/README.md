@@ -9,15 +9,15 @@
 PLATO-2的网络结构及评估结果见下图：
 
 <p align="center">
-<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/network.png" height=400 hspace="10"/>
+<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/network.png" height=500 hspace="10"/>
 </p>
 
 <p align="center">
-<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/eval_en.png" height=200 hspace="10"/>
+<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/eval_en.png" height=250 hspace="10"/>
 </p>
 
 <p align="center">
-<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/eval_cn.png" height=200 hspace="10"/>
+<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/eval_cn.png" height=250 hspace="10"/>
 </p>
 
 PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePaddle/Knover)
@@ -106,6 +106,4 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 
 32层PLATO-2网络交互示例：
 
-<p align="center">
-<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/case.jpg" height=300 hspace="10"/>
-</p>
+<p><img src="https://paddlenlp.bj.bcebos.com/images/plato-2/case.jpg" height=400 hspace="10"/></p>
