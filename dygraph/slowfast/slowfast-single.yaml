@@ -1,0 +1,53 @@
+MODEL:
+    name: "SLOWFAST"
+    format: "mp4"
+    num_classes: 400
+    num_frames: 32
+    sampling_rate: 2
+    target_fps: 30
+    alpha: 8
+    beta: 8
+    crop_size: 224
+    image_mean: [0.45, 0.45, 0.45]
+    image_std: [0.225, 0.225, 0.225]
+
+TRAIN:
+    epoch: 196
+    target_size: 224
+    min_size: 256
+    max_size: 320
+    batch_size: 8 
+    use_gpu: True
+    num_gpus: 1 
+    filelist: "./data/train.csv" 
+    base_lr: 0.1 
+    warmup_epochs: 34
+    warmup_start_lr: 0.01
+    l2_weight_decay: 1e-4
+    momentum: 0.9
+
+VALID:
+    use_preciseBN: True
+    preciseBN_interval: 10
+    num_batches_preciseBN: 200
+    target_size: 224
+    min_size: 256
+    max_size: 320
+    batch_size: 8  
+    filelist: "./data/val.csv"
+
+TEST:
+    target_size: 256
+    batch_size: 8 
+    filelist: "./data/val.csv"
+    num_ensemble_views: 10
+    num_spatial_crops: 3
+
+INFER:
+    target_size: 256
+    batch_size: 8 
+    filelist: "./data/infer.csv"
+    num_ensemble_views: 10
+    num_spatial_crops: 3
+    save_path: "./data/results"
+

@@ -93,8 +93,8 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope,
         x_res_norm_label = x_res_label / loc_bin_size
         z_res_norm_label = z_res_label / loc_bin_size
 
-        x_bin_onehot = fluid.layers.one_hot(x_bin_label, depth=per_loc_bin_num)
-        z_bin_onehot = fluid.layers.one_hot(z_bin_label, depth=per_loc_bin_num)
+        x_bin_onehot = fluid.one_hot(x_bin_label[:, 0], depth=per_loc_bin_num)
+        z_bin_onehot = fluid.one_hot(z_bin_label[:, 0], depth=per_loc_bin_num)
 
         loss_x_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, x_res_l: x_res_r] * x_bin_onehot, dim=1, keep_dim=True), x_res_norm_label)
         loss_x_res = fluid.layers.reduce_mean(loss_x_res * fg_mask) * fg_scale
@@ -115,7 +115,7 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope,
         y_res_label = y_shift - (fluid.layers.cast(y_bin_label, dtype=y_shift.dtype) * loc_y_bin_size + loc_y_bin_size / 2.)
         y_res_norm_label = y_res_label / loc_y_bin_size
 
-        y_bin_onehot = fluid.layers.one_hot(y_bin_label, depth=per_loc_bin_num)
+        y_bin_onehot = fluid.one_hot(y_bin_label[:, 0], depth=per_loc_bin_num)
 
         loss_y_bin = fluid.layers.cross_entropy(pred_reg[:, y_bin_l: y_bin_r], y_bin_label)
         loss_y_bin = fluid.layers.reduce_mean(loss_y_bin * fg_mask) * fg_scale
@@ -169,7 +169,7 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope,
         ry_res_label = shift_angle - (fluid.layers.cast(ry_bin_label, dtype=shift_angle.dtype) * angle_per_class + angle_per_class / 2)
         ry_res_norm_label = ry_res_label / (angle_per_class / 2)
 
-    ry_bin_onehot = fluid.layers.one_hot(ry_bin_label, depth=num_head_bin)
+    ry_bin_onehot = fluid.one_hot(ry_bin_label[:, 0], depth=num_head_bin)
     loss_ry_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, ry_bin_l:ry_bin_r], ry_bin_label)
     loss_ry_bin = fluid.layers.reduce_mean(loss_ry_bin * fg_mask) * fg_scale
     loss_ry_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot, dim=1, keep_dim=True), ry_res_norm_label)

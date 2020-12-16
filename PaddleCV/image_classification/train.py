@@ -34,6 +34,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+class TimeAverager(object):
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self._cnt = 0
+        self._total_time = 0
+
+    def record(self, usetime):
+        self._cnt += 1
+        self._total_time += usetime
+
+    def get_average(self):
+        if self._cnt == 0:
+            return 0
+        return self._total_time / self._cnt
+
+
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add backward op in program accroding to different mode
 
@@ -43,7 +61,7 @@ def build_program(is_train, main_prog, startup_prog, args):
         startup_prog: strartup program
         args: arguments
 
-    Returns : 
+    Returns :
         train mode: [Loss, global_lr, data_loader]
         test mode: [Loss, data_loader]
     """
@@ -67,12 +85,12 @@ def build_program(is_train, main_prog, startup_prog, args):
             if is_train:
                 optimizer = create_optimizer(args)
                 avg_cost = loss_out[0]
-                #XXX: fetch learning rate now, better implement is required here. 
+                #XXX: fetch learning rate now, better implement is required here.
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 loss_out.append(global_lr)
 
-                if args.use_fp16:
+                if args.use_amp:
                     optimizer = fluid.contrib.mixed_precision.decorate(
                         optimizer,
                         init_loss_scaling=args.scale_loss,
@@ -102,6 +120,7 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
+
     if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) > 1:
         compiled_program = test_prog
     else:
@@ -153,9 +172,9 @@ def validate(args,
 
 def train(args):
     """Train model
-    
+
     Args:
-        args: all arguments.    
+        args: all arguments.
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -225,12 +244,16 @@ def train(args):
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
+
     #NOTE: this for benchmark
     total_batch_num = 0
+    batch_cost_averager = TimeAverager()
+    reader_cost_averager = TimeAverager()
     for pass_id in range(args.num_epochs):
         if num_trainers > 1 and not args.use_dali:
             imagenet_reader.set_shuffle_seed(pass_id + (
                 args.random_seed if args.random_seed else 0))
+
         train_batch_id = 0
         train_batch_time_record = []
         train_batch_metrics_record = []
@@ -240,29 +263,48 @@ def train(args):
             if args.validate:
                 test_iter = test_data_loader()
 
-        t1 = time.time()
+        batch_start = time.time()
         for batch in train_iter:
             #NOTE: this is for benchmark
             if args.max_iter and total_batch_num == args.max_iter:
                 return
+
+            reader_cost_averager.record(time.time() - batch_start)
+
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
                                           fetch_list=train_fetch_list)
-            t2 = time.time()
-            train_batch_elapse = t2 - t1
-            train_batch_time_record.append(train_batch_elapse)
 
             train_batch_metrics_avg = np.mean(
                 np.array(train_batch_metrics), axis=1)
             train_batch_metrics_record.append(train_batch_metrics_avg)
+
+            # Record the time for ce and benchmark
+            train_batch_elapse = time.time() - batch_start
+            train_batch_time_record.append(train_batch_elapse)
+            batch_cost_averager.record(train_batch_elapse)
+
             if trainer_id == 0:
-                print_info("batch", train_batch_metrics_avg, train_batch_elapse,
-                           pass_id, train_batch_id, args.print_step)
+                ips = float(args.batch_size) / batch_cost_averager.get_average()
+                print_info(
+                    "batch",
+                    train_batch_metrics_avg,
+                    batch_cost_averager.get_average(),
+                    pass_id,
+                    train_batch_id,
+                    args.print_step,
+                    reader_cost=reader_cost_averager.get_average(),
+                    ips=ips)
                 sys.stdout.flush()
+                if train_batch_id % args.print_step == 0:
+                    batch_cost_averager.reset()
+                    reader_cost_averager.reset()
+
             train_batch_id += 1
-            t1 = time.time()
-            #NOTE: this for benchmark profiler
             total_batch_num = total_batch_num + 1
+            batch_start = time.time()
+
+            #NOTE: this for benchmark profiler
             if args.is_profiler and pass_id == 0 and train_batch_id == args.print_step:
                 profiler.start_profiler("All")
             elif args.is_profiler and pass_id == 0 and train_batch_id == args.print_step + 5:
@@ -288,7 +330,7 @@ def train(args):
             if args.use_dali:
                 test_iter.reset()
 
-        if pass_id % args.save_step == 0:
+        if trainer_id == 0 and pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)
 
 
@@ -301,4 +343,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     main()

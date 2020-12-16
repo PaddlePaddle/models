@@ -1,0 +1,36 @@
+MODEL:
+    name: "AttentionLSTM"
+    dataset: "YouTube-8M"  #Default, don't recommand to modify it
+    bone_nework: None
+    drop_rate: 0.5
+    feature_names: ['rgb']  #rbg only, without audio
+    feature_dims: [2048] 
+    embedding_size: 1024
+    lstm_size: 512
+    num_classes: 3396 
+    topk: 20
+
+TRAIN:
+    epoch: 10
+    learning_rate: 0.000125 
+    decay_epochs: [5]
+    decay_gamma: 0.1
+    weight_decay: 0.0008
+    num_samples: 5000000  # modify it according to the number samples of your dataset
+    pretrain_base: None
+    batch_size: 128
+    use_gpu: True
+    num_gpus: 1 
+    filelist: "data/dataset/attention_lstm/train.list"
+
+VALID:
+    batch_size: 128
+    filelist: "data/dataset/attention_lstm/val.list"
+
+TEST:
+    batch_size: 128
+    filelist: "data/dataset/attention_lstm/test.list"
+
+INFER:
+    batch_size: 1
+    filelist: "data/dataset/attention_lstm/infer.list"

@@ -15,7 +15,7 @@
 import paddle.fluid as fluid
 from paddle.fluid.layer_helper import LayerHelper
 from paddle.fluid.framework import Variable
-fluid.load_op_library('models/ext_op/src/rrpn_lib.so')
+fluid.load_op_library('rrpn_lib.so')
 
 
 def rrpn_target_assign(bbox_pred,

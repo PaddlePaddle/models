@@ -5,6 +5,7 @@ from paddle import fluid
 from pytracking.libs import optimization, TensorList, operation
 from pytracking.libs.paddle_utils import PTensor, broadcast_op, n2p, static_identity
 import math
+from pytracking.libs.paddle_utils import create_var_list
 
 
 def stack_input(e):
@@ -50,29 +51,18 @@ class FactorizedConvProblem(optimization.L2Problem):
 
     def get_inputs(self, scope=''):
         if scope not in self.inputs_dict:
-            training_samples_p = TensorList([
-                fluid.layers.data(
-                    '{}training_samples_{}'.format(scope, idx),
-                    shape=[None] + list(v[0].shape),
-                    stop_gradient=False,
-                    append_batch_size=False)
-                for idx, v in enumerate(self.training_samples)
-            ])
-            y_p = TensorList([
-                fluid.layers.data(
-                    '{}y_{}'.format(scope, idx),
-                    shape=[None] + list(v[0].shape),
-                    stop_gradient=False,
-                    append_batch_size=False) for idx, v in enumerate(self.y)
-            ])
-            sample_weights_p = TensorList([
-                fluid.layers.data(
-                    '{}sample_weights_{}'.format(scope, idx),
-                    shape=[None, 1],
-                    stop_gradient=False,
-                    append_batch_size=False)
-                for idx, v in enumerate(self.sample_weights)
-            ])
+            name = scope + "training_samples"
+            vars = create_var_list(name, self.sample_weights, [None])
+            training_samples_p = TensorList(vars)
+
+            name = scope + "y"
+            vars = create_var_list(name, self.y, [None])
+            y_p = TensorList(vars)
+
+            name = scope + "sample_weights"
+            vars = create_var_list(name, self.sample_weights, [None, 1])
+            sample_weights_p = TensorList(vars)
+
             self.inputs_dict[scope] = (training_samples_p, y_p,
                                        sample_weights_p)
 
@@ -189,29 +179,18 @@ class ConvProblem(optimization.L2Problem):
 
     def get_inputs(self, scope=''):
         if scope not in self.inputs_dict:
-            training_samples_p = TensorList([
-                fluid.layers.data(
-                    '{}training_samples_{}'.format(scope, idx),
-                    shape=[None] + list(v[0].shape),
-                    stop_gradient=False,
-                    append_batch_size=False)
-                for idx, v in enumerate(self.training_samples)
-            ])
-            y_p = TensorList([
-                fluid.layers.data(
-                    '{}y_{}'.format(scope, idx),
-                    shape=[None] + list(v[0].shape),
-                    stop_gradient=False,
-                    append_batch_size=False) for idx, v in enumerate(self.y)
-            ])
-            sample_weights_p = TensorList([
-                fluid.layers.data(
-                    '{}sample_weights_{}'.format(scope, idx),
-                    shape=[None] + list(v[0].shape),
-                    stop_gradient=False,
-                    append_batch_size=False)
-                for idx, v in enumerate(self.sample_weights)
-            ])
+            name = scope + "training_samples"
+            vars = create_var_list(name, self.training_samples, [None])
+            training_samples_p = TensorList(vars)
+
+            name = scope + "y"
+            vars = create_var_list(name, self.y, [None])
+            y_p = TensorList(vars)
+
+            name = scope + "sample_weights"
+            vars = create_var_list(name, self.sample_weights, [None])
+            sample_weights_p = TensorList(vars)
+
             self.inputs_dict[scope] = (training_samples_p, y_p,
                                        sample_weights_p)
 

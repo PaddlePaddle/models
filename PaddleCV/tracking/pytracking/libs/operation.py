@@ -1,6 +1,6 @@
 from paddle import fluid
 from paddle.fluid import layers
-from pytracking.libs.Fconv2d import Fconv2d
+from pytracking.libs.Fconv2d import FConv2D
 from pytracking.libs.tensorlist import tensor_operation, TensorList
 from paddle.fluid.framework import Variable as PTensor
 
@@ -37,7 +37,7 @@ def conv2d(input: PTensor,
             raise ValueError('Unknown mode for padding.')
 
     assert bias is None
-    out = Fconv2d(
+    out = FConv2D(
         input,
         weight,
         stride=stride,
@@ -56,4 +56,4 @@ def conv1x1(input: PTensor, weight: PTensor):
     if weight is None:
         return input
 
-    return Fconv2d(input, weight)
+    return FConv2D(input, weight)

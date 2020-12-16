@@ -425,9 +425,9 @@ class CTCNReader(DataReader):
                     tmp_list = fl[i * file_num:]
                 reader_lists[i] = tmp_list
 
-            queue = multiprocessing.Queue(queue_size)
+            manager = multiprocessing.Manager()
+            queue = manager.Queue(queue_size)
             p_list = [None] * len(reader_lists)
-            # for reader_list in reader_lists:
             for i in range(len(reader_lists)):
                 reader_list = reader_lists[i]
                 p_list[i] = multiprocessing.Process(

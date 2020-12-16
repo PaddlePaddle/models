@@ -1,0 +1,5 @@
+visualdl
+jieba
+h5py
+colorlog
+colorama

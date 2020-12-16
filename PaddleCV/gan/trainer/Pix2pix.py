@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from network.Pix2pix_network import Pix2pix_model
 from util import utility
+from util import timer
 import paddle.fluid as fluid
 from paddle.fluid import profiler
 import sys
@@ -33,10 +34,10 @@ class GTrainer():
             self.infer_program = self.program.clone()
             AB = fluid.layers.concat([input_A, self.fake_B], 1)
             self.pred = model.network_D(AB, "discriminator", cfg)
+            batch = fluid.layers.shape(self.pred)[0]
             if cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred,
-                    shape=self.pred.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.g_loss_gan = fluid.layers.reduce_mean(
@@ -49,9 +50,8 @@ class GTrainer():
                     self.pred,
                     [-1, pred_shape[1] * pred_shape[2] * pred_shape[3]],
                     inplace=True)
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred,
-                    shape=self.pred.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.g_loss_gan = fluid.layers.mean(
@@ -106,10 +106,10 @@ class DTrainer():
                 self.real_AB, "discriminator", cfg=cfg)
             self.pred_fake = model.network_D(
                 self.fake_AB, "discriminator", cfg=cfg)
+            batch = fluid.layers.shape(input_A)[0]
             if cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_real.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.d_loss_real = fluid.layers.reduce_mean(
@@ -128,14 +128,12 @@ class DTrainer():
                     self.pred_fake,
                     [-1, pred_shape[1] * pred_shape[2] * pred_shape[3]],
                     inplace=True)
-                zeros = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_fake,
-                    shape=self.pred_fake.shape,
+                zeros = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_fake.shape[1:]),
                     value=0,
                     dtype='float32')
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_real.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.d_loss_real = fluid.layers.mean(
@@ -260,16 +258,16 @@ class Pix2pix(object):
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
 
-        t_time = 0
-
         total_train_batch = 0  # used for benchmark
-
+        reader_cost_averager = timer.TimeAverager()
+        batch_cost_averager = timer.TimeAverager()
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
+            batch_start = time.time()
             for tensor in loader():
                 if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
                     return
-                s_time = time.time()
+                reader_cost_averager.record(time.time() - batch_start)
 
                 # optimize the generator network
                 g_loss_gan, g_loss_l1, fake_B_tmp = exe.run(
@@ -283,7 +281,8 @@ class Pix2pix(object):
                 devices_num = utility.get_device_num(self.cfg)
                 fake_per_device = int(len(fake_B_tmp) / devices_num)
                 for dev in range(devices_num):
-                    tensor[dev]['input_fake'] = fake_B_tmp[dev * fake_per_device : (dev+1) * fake_per_device]
+                    tensor[dev]['input_fake'] = fake_B_tmp[
+                        dev * fake_per_device:(dev + 1) * fake_per_device]
 
                 # optimize the discriminator network
                 d_loss_real, d_loss_fake = exe.run(dis_trainer_program,
@@ -293,19 +292,26 @@ class Pix2pix(object):
                                                    ],
                                                    feed=tensor)
 
-                batch_time = time.time() - s_time
-                t_time += batch_time
+                batch_cost_averager.record(
+                    time.time() - batch_start, num_samples=self.cfg.batch_size)
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
-                         g_loss_gan: {}; g_loss_l1: {}; \n\
-                         d_loss_real: {}; d_loss_fake: {}; \n\
-                         Batch_time_cost: {}"
+                         g_loss_gan: {:.5f}; g_loss_l1: {:.5f}; \n\
+                         d_loss_real: {:.5f}; d_loss_fake: {:.5f}; \n\
+                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/sec"
                           .format(epoch_id, batch_id, g_loss_gan[0], g_loss_l1[
-                              0], d_loss_real[0], d_loss_fake[0], batch_time))
+                              0], d_loss_real[0], d_loss_fake[0],
+                                  batch_cost_averager.get_average(),
+                                  reader_cost_averager.get_average(),
+                                  batch_cost_averager.get_ips_average()))
+                    reader_cost_averager.reset()
+                    batch_cost_averager.reset()
 
                 sys.stdout.flush()
                 batch_id += 1
                 total_train_batch += 1  # used for benchmark
+                batch_start = time.time()
+
                 # profiler tools
                 if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
                     profiler.reset_profiler()
@@ -338,10 +344,8 @@ class Pix2pix(object):
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
-                                    "net_D")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer, "net_D")
         if self.cfg.enable_ce:
             device_num = fluid.core.get_cuda_device_count(
             ) if self.cfg.use_gpu else 1

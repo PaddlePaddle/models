@@ -15,7 +15,6 @@
 
 import sys
 import paddle
-import paddle.fluid as fluid
 
 
 def check_cuda(use_cuda, err = \
@@ -27,7 +26,7 @@ def check_cuda(use_cuda, err = \
     cpu version.
     """
     try:
-        if use_cuda == True and fluid.is_compiled_with_cuda() == False:
+        if use_cuda == True and paddle.is_compiled_with_cuda() == False:
             print(err)
             sys.exit(1)
     except Exception as e:
@@ -44,7 +43,7 @@ def check_version():
           "Please make sure the version is good with your code." \
 
     try:
-        fluid.require_version('1.6.0')
+        paddle.utils.require_version('1.6.0')
     except Exception as e:
         print(err)
         sys.exit(1)

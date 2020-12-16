@@ -87,6 +87,8 @@ def train(args):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print(args)
     utils.check_version()

@@ -144,11 +144,9 @@ class DTrainer():
             #####gan loss
             self.gan_loss_fake = 0
             for pred_i in self.pred_fake:
-                zeros = fluid.layers.fill_constant_batch_size_like(
-                    input=pred_i[-1],
-                    shape=pred_i[-1].shape,
-                    value=0,
-                    dtype='float32')
+                pred_shape = fluid.layers.shape(pred_i[-1])
+                zeros = fluid.layers.fill_constant(
+                    shape=pred_shape, value=0, dtype='float32')
                 if isinstance(pred_i, list):
                     pred_i = pred_i[-1]
                 minval = fluid.layers.elementwise_min(-1 * pred_i - 1, zeros)
@@ -158,11 +156,9 @@ class DTrainer():
 
             self.gan_loss_real = 0
             for pred_i in self.pred_real:
-                zeros = fluid.layers.fill_constant_batch_size_like(
-                    input=pred_i[-1],
-                    shape=pred_i[-1].shape,
-                    value=0,
-                    dtype='float32')
+                pred_shape = fluid.layers.shape(pred_i[-1])
+                zeros = fluid.layers.fill_constant(
+                    shape=pred_shape, value=0, dtype='float32')
                 if isinstance(pred_i, list):
                     pred_i = pred_i[-1]
                 minval = fluid.layers.elementwise_min(pred_i - 1, zeros)
@@ -298,7 +294,7 @@ class SPADE(object):
             name='input_fake', shape=data_shape, dtype='float32')
         # used for continuous evaluation
         if self.cfg.enable_ce:
-          fluid.default_startup_program().random_seed = 90
+            fluid.default_startup_program().random_seed = 90
 
         gen_trainer = GTrainer(input_A, input_B, input_C, self.cfg,
                                self.batch_num)
@@ -348,7 +344,7 @@ class SPADE(object):
         if self.cfg.enable_ce:
             gen_trainer_program.random_seed = 90
             dis_trainer_program.random_seed = 90
-        
+
         t_time = 0
 
         for epoch_id in range(self.cfg.epoch):
@@ -422,16 +418,21 @@ class SPADE(object):
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
-                                    "net_D")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer, "net_D")
             # used for continuous evaluation
             if self.cfg.enable_ce:
-                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
-                print("kpis\tspade_g_loss_gan_card{}\t{}".format(device_num, g_loss_gan[0]))
-                print("kpis\tspade_g_loss_vgg_card{}\t{}".format(device_num,g_loss_vgg[0]))
-                print("kpis\tspade_g_loss_feat_card{}\t{}".format(device_num,g_loss_feat[0]))
-                print("kpis\tspade_d_loss_real_card{}\t{}".format(device_num,d_loss_real[0]))
-                print("kpis\tspade_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
-                print("kpis\tspade_Batch_time_cost_card{}\t{}".format(device_num,batch_time))
+                device_num = fluid.core.get_cuda_device_count(
+                ) if self.cfg.use_gpu else 1
+                print("kpis\tspade_g_loss_gan_card{}\t{}".format(device_num,
+                                                                 g_loss_gan[0]))
+                print("kpis\tspade_g_loss_vgg_card{}\t{}".format(device_num,
+                                                                 g_loss_vgg[0]))
+                print("kpis\tspade_g_loss_feat_card{}\t{}".format(
+                    device_num, g_loss_feat[0]))
+                print("kpis\tspade_d_loss_real_card{}\t{}".format(
+                    device_num, d_loss_real[0]))
+                print("kpis\tspade_d_loss_fake_card{}\t{}".format(
+                    device_num, d_loss_fake[0]))
+                print("kpis\tspade_Batch_time_cost_card{}\t{}".format(
+                    device_num, batch_time))

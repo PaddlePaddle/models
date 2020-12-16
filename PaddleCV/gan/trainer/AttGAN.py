@@ -44,11 +44,9 @@ class GTrainer():
                 self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
             #lsgan
             elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_fake,
-                    shape=self.pred_fake.shape,
-                    value=1.0,
-                    dtype='float32')
+                fake_shape = fluid.layers.shape(self.pred_fake)
+                ones = fluid.layers.fill_constant(
+                    shape=fake_shape, value=1.0, dtype='float32')
                 self.g_loss_fake = fluid.layers.mean(
                     fluid.layers.square(
                         fluid.layers.elementwise_sub(
@@ -106,11 +104,9 @@ class DTrainer():
                 self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
             #lsgan
             elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
-                    value=1.0,
-                    dtype='float32')
+                real_shape = fluid.layers.shape(self.pred_real)
+                ones = fluid.layers.fill_constant(
+                    shape=real_shape, value=1.0, dtype='float32')
                 self.d_loss_real = fluid.layers.mean(
                     fluid.layers.square(
                         fluid.layers.elementwise_sub(
@@ -145,31 +141,31 @@ class DTrainer():
 
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
+            a_shape = fluid.layers.shape(a)
             if b is None:
                 if cfg.enable_ce:
-                    beta = fluid.layers.uniform_random_batch_size_like(
-                       input=a, shape=a.shape, min=0.0, max=1.0, seed=1)
+                    beta = fluid.layers.uniform_random(
+                        shape=a_shape, min=0.0, max=1.0, seed=1)
                 else:
-                    beta = fluid.layers.uniform_random_batch_size_like(
-                       input=a, shape=a.shape, min=0.0, max=1.0)
+                    beta = fluid.layers.uniform_random(
+                        shape=a_shape, min=0.0, max=1.0)
 
                 mean = fluid.layers.reduce_mean(
-                    a, dim=list(range(len(a.shape))), keep_dim=True)
+                    a, dim=list(range(len(a.shape))))
                 input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
                 var = fluid.layers.reduce_mean(
                     fluid.layers.square(input_sub_mean),
-                    dim=list(range(len(a.shape))),
-                    keep_dim=True)
+                    dim=list(range(len(a.shape))))
                 b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
             if cfg.enable_ce:
-               alpha = fluid.layers.uniform_random_batch_size_like(
-                 input=a, shape=shape, min=0.0, max=1.0, seed=1)
+                alpha = fluid.layers.uniform_random(
+                    shape=a_shape[0], min=0.0, max=1.0, seed=1)
             else:
-               alpha = fluid.layers.uniform_random_batch_size_like(
-                 input=a, shape=shape, min=0.0, max=1.0)
+                alpha = fluid.layers.uniform_random(
+                    shape=a_shape[0], min=0.0, max=1.0)
 
-            inner = fluid.layers.elementwise_mul((b-a), alpha, axis=0) + a
+            inner = fluid.layers.elementwise_mul((b - a), alpha, axis=0) + a
             return inner
 
         x = _interpolate(real, fake)
@@ -336,7 +332,7 @@ class AttGAN(object):
         if self.cfg.enable_ce:
             gen_trainer_program.random_seed = 90
             dis_trainer_program.random_seed = 90
-        
+
         t_time = 0
 
         for epoch_id in range(self.cfg.epoch):
@@ -379,7 +375,7 @@ class AttGAN(object):
                 sys.stdout.flush()
                 batch_id += 1
                 if self.cfg.enable_ce and batch_id == 100:
-                   break
+                    break
 
             if self.cfg.run_test:
                 image_name = fluid.data(
@@ -402,17 +398,23 @@ class AttGAN(object):
                                         test_loader)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
-                                    "net_D")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer, "net_D")
             # used for continuous evaluation
             if self.cfg.enable_ce:
-                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
-                print("kpis\tattgan_g_loss_fake_card{}\t{}".format(device_num, g_loss_fake[0]))
-                print("kpis\tattgan_g_loss_rec_card{}\t{}".format(device_num, g_loss_rec[0]))
-                print("kpis\tattgan_g_loss_cls_card{}\t{}".format(device_num, g_loss_cls[0]))
-                print("kpis\tattgan_d_loss_real_card{}\t{}".format(device_num, d_loss_real[0]))
-                print("kpis\tattgan_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
-                print("kpis\tattgan_d_loss_gp_card{}\t{}".format(device_num,d_loss_gp[0]))
-                print("kpis\tattgan_Batch_time_cost_card{}\t{}".format(device_num,batch_time)) 
+                device_num = fluid.core.get_cuda_device_count(
+                ) if self.cfg.use_gpu else 1
+                print("kpis\tattgan_g_loss_fake_card{}\t{}".format(
+                    device_num, g_loss_fake[0]))
+                print("kpis\tattgan_g_loss_rec_card{}\t{}".format(
+                    device_num, g_loss_rec[0]))
+                print("kpis\tattgan_g_loss_cls_card{}\t{}".format(
+                    device_num, g_loss_cls[0]))
+                print("kpis\tattgan_d_loss_real_card{}\t{}".format(
+                    device_num, d_loss_real[0]))
+                print("kpis\tattgan_d_loss_fake_card{}\t{}".format(
+                    device_num, d_loss_fake[0]))
+                print("kpis\tattgan_d_loss_gp_card{}\t{}".format(device_num,
+                                                                 d_loss_gp[0]))
+                print("kpis\tattgan_Batch_time_cost_card{}\t{}".format(
+                    device_num, batch_time))
