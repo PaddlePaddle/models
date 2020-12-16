@@ -13,7 +13,96 @@
 | `paddlenlp.data.Vocab`          | 用于文本token和ID之间的映射 |
 | `paddlenlp.data.JiebaTokenizer` | Jieba分词 |
 
-## API使用示例
+## API使用方法
+
+### `paddlenlp.data.Stack`
+
+`paddlenlp.data.Stack`用来组建batch，它的输入必须具有相同的shape，输出便是这些输入的堆叠组成的batch数据。
+
+```python
+from paddle.data import Stack
+a = [1, 2, 3, 4]
+b = [3, 4, 5, 6]
+c = [5, 6, 7, 8]
+result = Stack()([a, b, c])
+"""
+[[1, 2, 3, 4],
+ [3, 4, 5, 6],
+ [5, 6, 7, 8]]
+"""
+```
+
+### `paddlenlp.data.Pad`
+
+`paddlenlp.data.Pad`用来组建batch，它的输入长度不同，它首先会将输入数据全部padding到最大长度，然后再堆叠组成batch数据输出。
+
+```python
+from paddle.data import Pad
+a = [1, 2, 3, 4]
+b = [5, 6, 7]
+c = [8, 9]
+result = Pad(axis=0, pad_val=0)([a, b, c])
+"""
+[[1, 2, 3, 4],
+ [5, 6, 7, 0],
+ [8, 9, 0, 0]]
+"""
+```
+
+### `paddlenlp.data.Tuple`
+
+`paddlenlp.data.Tuple`会将多个组batch的函数包装在一起。
+
+```python
+from paddle.data import Stack, Pad, Tuple
+batchify_fn = Tuple(Pad(axis=0, pad_val=0), Stack())
+```
+
+### `paddlenlp.data.SamplerHelper`
+
+`paddlenlp.data.SamplerHelper`的作用是构建用于`DataLoader`的可迭代采样器，它包含`shuffle`、`sort`、`batch`、`shard`等一系列方法，方便用户灵活使用。
+
+```python
+from paddle.data import SamplerHelper
+"""
+构建dataset
+dataset = ...
+"""
+batch_sampler = SamplerHelper(dataset).shuffle().batch(
+    batch_size=batch_size,
+    drop_last=True)
+```
+
+### `paddlenlp.data.Vocab`
+
+`paddlenlp.data.Vocab`词表类，集合了一系列文本token与ids之间映射的一系列方法，支持从文件、字典、json等一系方式构建词表。
+
+```python
+from paddle.data import Vocab
+# 从文件构建
+vocab1 = Vocab.load_vocabulary(vocab_file_path)
+# 从字典构建
+# dic = {'unk':0, 'pad':1, 'bos':2, 'eos':3, ...}
+vocab2 = Vocab.from_dict(dic)
+# 从json构建
+vocab3 = Vocab.from_json(json_str)
+vocab4 = Vocab.from_json(json_file_path)
+```
+
+### `paddlenlp.data.JiebaTokenizer`
+
+`paddlenlp.data.JiebaTokenizer`初始化需传入`paddlenlp.data.Vocab`类，包含`cut`分词方法和将句子转换为ids的`encode`方法。
+
+```python
+from paddle.data import Vocab, JiebaTokenizer
+# 从文件构建词表
+vocab = Vocab.load_vocabulary(vocab_file_path)
+tokenizer = JiebaTokenizer(vocab)
+tokens = tokenizer.cut('我爱你中国')
+ids = tokenizer.encode('我爱你中国')
+```
+
+### 综合示例
 
 ```python
 from paddlenlp.data import Vocab, JiebaTokenizer, Stack, Pad, Tuple, SamplerHelper
