@@ -101,10 +101,10 @@ class BLEU(paddle.metric.Metric):
         .. code-block:: python
             from paddlenlp.metrics import BLEU
             bleu = BLEU()
-            cand = ["Welcome","to","PaddleNLP]."
-            ref_list = [["Welcome","PaddleNLP"]]
+            cand = ["The","cat","The","cat","on","the","mat"]
+            ref_list = [["The","cat","is","on","the","mat"],["There","is","a","cat","on","the","mat"]]
             bleu.add_inst(cand, ref_list)
-            print(bleu.score()) # 0.7510186074254295
+            print(bleu.score()) # 0.4671379777282001
 
         2. Using as an instance of `paddle.metric.Metric`.
                 
@@ -204,6 +204,7 @@ class BLEU(paddle.metric.Metric):
             if _score == 0:
                 _score = sys.float_info.min
             prob_list.append(_score)
+        print(prob_list)
 
         logs = math.fsum(w_i * math.log(p_i)
                          for w_i, p_i in zip(self.weights, prob_list))
