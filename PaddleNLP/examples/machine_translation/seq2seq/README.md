@@ -79,7 +79,7 @@ python predict.py \
 使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，使用方法如下：
 
 ```sh
-perl mosesdecoder/scripts/generic/multi-bleu.perl data/en-vi/tst2013.vi < infer_output.txt
+perl mosesdecoder/scripts/generic/multi-bleu.perl /root/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi < infer_output.txt
 ```
 
 取第10个epoch保存的模型进行预测，取beam_size=10。效果如下：
