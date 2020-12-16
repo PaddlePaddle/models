@@ -106,4 +106,4 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 
 32层PLATO-2网络交互示例：
 
-<p><img src="http://paddlenlp.bj.bcebos.com/images/plato-2/case.jpg" height=400 hspace="10"/></p>
+<p><img src="./case.jpg" height=400 hspace="10"/></p>
