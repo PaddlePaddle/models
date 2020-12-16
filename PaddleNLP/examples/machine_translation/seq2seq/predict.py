@@ -21,6 +21,7 @@ from args import parse_args
 from seq2seq_attn import Seq2SeqAttnInferModel
 from data import create_infer_loader
 from paddlenlp.datasets import IWSLT15
+from paddlenlp.metrics import BLEU
 
 
 def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
@@ -67,6 +68,7 @@ def do_predict(args):
         "Please set reload_model to load the infer model.")
     model.load(args.init_from_ckpt)
 
+    cand_list = []
     with io.open(args.infer_output_file, 'w', encoding='utf-8') as f:
         for data in test_loader():
             with paddle.no_grad():
@@ -80,7 +82,15 @@ def do_predict(args):
                     word_list = [trg_idx2word[id] for id in id_list]
                     sequence = " ".join(word_list) + "\n"
                     f.write(sequence)
+                    cand_list.append(word_list)
                     break
+
+    bleu = BLEU()
+    with io.open(args.infer_target_file, encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            ref = line.strip().split()
+            bleu.add_inst(cand_list[i], [ref])
+    print("BLEU score is %s." % bleu.score())
 
 
 if __name__ == "__main__":
