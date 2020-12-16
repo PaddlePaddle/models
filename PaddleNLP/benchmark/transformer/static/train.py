@@ -96,6 +96,14 @@ def do_train(args):
             beta2=args.beta2,
             epsilon=float(args.eps),
             parameters=transformer.parameters())
+        if args.use_amp:
+            amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+                custom_white_list=['layer_norm', 'softmax'])
+            optimizer = paddle.static.amp.decorate(
+                optimizer,
+                amp_list,
+                init_loss_scaling=args.scale_loss,
+                use_dynamic_loss_scaling=True)
 
         if args.is_distributed:
             build_strategy = paddle.static.BuildStrategy()
