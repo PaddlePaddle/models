@@ -30,6 +30,8 @@ def get_default_tokenizer():
     """
 
     def _split_tokenizer(x, delimiter=None):
+        if delimiter == "":
+            return x
         return x.split(delimiter)
 
     return _split_tokenizer
