@@ -44,7 +44,7 @@ def do_predict(args):
     test_loader, vocab_size, pad_id, bos_id, eos_id = create_infer_loader(
         args.batch_size)
     vocab, _ = CoupletDataset.get_vocab()
-    trg_idx2word = vocab._idx_to_token
+    trg_idx2word = vocab.idx_to_token
 
     model = paddle.Model(
         Seq2SeqAttnInferModel(

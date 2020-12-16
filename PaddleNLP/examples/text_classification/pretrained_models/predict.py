@@ -175,8 +175,8 @@ if __name__ == "__main__":
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    if args.model_name_or_path == 'ernie_tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
+    if args.model_name_or_path == 'ernie-tiny':
+        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name_or_path)
     else:

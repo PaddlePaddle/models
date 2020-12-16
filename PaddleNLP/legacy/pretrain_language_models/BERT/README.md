@@ -202,7 +202,6 @@ DATA_PATH=/path/to/xnli/data/
 CKPT_PATH=/path/to/save/checkpoints/
 
 python -u run_classifier.py --task_name ${TASK_NAME} \
-                   --use_cuda false \
                    --use_xpu true \
                    --do_train true \
                    --do_val true \
@@ -230,6 +229,13 @@ python -u run_classifier.py --task_name ${TASK_NAME} \
 
 ```
 [dev evaluation] ave loss: 0.622958, ave acc: 0.770281, elapsed time: 8.946956 s
+```
+
+xpu训练结束后，验证集上的测试结果：
+
+```
+[dev evaluation] ave loss: 0.620479, ave acc: 0.762249, elapsed time: 70.831693 s
+[test evaluation] ave loss: 0.616955, ave acc: 0.762275, elapsed time: 142.251840 s
 ```
 
 ### 阅读理解 SQuAD
