@@ -8,7 +8,9 @@
 
 PLATO-2的网络结构及评估结果见下图：
 
-![image](https://paddlenlp.bj.bcebos.com/images/plato-2/network.png)
+<p align="center">
+<img src="https://paddlenlp.bj.bcebos.com/images/plato-2/network.png" height=400 hspace="10"/>
+</p>
 
 ![image](http://paddlenlp.bj.bcebos.com/images/plato-2/eval_en.png)
 
