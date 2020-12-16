@@ -9,7 +9,7 @@
 PLATO-2的网络结构及评估结果见下图：
 
 <p align="center">
-<img src="http://paddlenlp.bj.bcebos.com/images/plato-2/network.png" height=500 hspace="10"/>
+<img src="./network.png" height=500 hspace="10"/>
 </p>
 
 <p align="center">
@@ -106,4 +106,4 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 
 32层PLATO-2网络交互示例：
 
-<p><img src="./case.jpg" height=400 hspace="10"/></p>
+<p><img src="./case.png" height=400 hspace="10"/></p>
