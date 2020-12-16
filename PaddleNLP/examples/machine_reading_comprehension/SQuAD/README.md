@@ -26,6 +26,23 @@ SQuAD v2.0
 
 ## 1. 开始第一次模型调用
 
+### 安装说明
+
+* PaddlePaddle 安装
+
+   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+
+* PaddleNLP 安装
+
+   ```shell
+   pip install paddlenlp>=2.0.0b
+   ```
+
+* 环境依赖
+
+    Python的版本要求 3.6+
+
+
 ### 数据准备
 为了方便开发者进行测试，我们内置了数据下载脚本，用户可以通过命令行传入`--version_2_with_negative`控制所需要的SQuAD数据集版本，也可以通过`--data_path`传入本地数据集的位置，数据集需保证与SQuAD数据集格式一致。
 
