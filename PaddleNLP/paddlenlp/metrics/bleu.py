@@ -204,7 +204,6 @@ class BLEU(paddle.metric.Metric):
             if _score == 0:
                 _score = sys.float_info.min
             prob_list.append(_score)
-        print(prob_list)
 
         logs = math.fsum(w_i * math.log(p_i)
                          for w_i, p_i in zip(self.weights, prob_list))
