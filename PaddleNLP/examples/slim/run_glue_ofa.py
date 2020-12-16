@@ -146,8 +146,6 @@ def parse_args():
     parser.add_argument(
         "--seed", type=int, default=42, help="random seed for initialization")
     parser.add_argument(
-        "--eager_run", type=eval, default=True, help="Use dygraph mode.")
-    parser.add_argument(
         "--n_gpu",
         type=int,
         default=1,
@@ -180,10 +178,10 @@ def evaluate(model, criterion, metric, data_loader, width_mult=1.0):
             loss = criterion(logits, labels)
             correct = metric.compute(logits, labels)
             metric.update(correct)
-        acc = metric.accumulate()
+        results = metric.accumulate()
         print(
-            "width_mult: %f, eval loss: %f, acc: %s\n" %
-            (width_mult, loss.numpy(), acc),
+            "width_mult: %f, eval loss: %f, %s: %s\n" %
+            (width_mult, loss.numpy(), metric.name(), results),
             end='')
         model.train()
 
@@ -329,7 +327,6 @@ def convert_example(example,
 
 
 def do_train(args):
-    paddle.enable_static() if not args.eager_run else None
     paddle.set_device("gpu" if args.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
