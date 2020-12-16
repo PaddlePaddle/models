@@ -1,55 +1,61 @@
-简体中文 | [English](./README_en.md)
 
-# PaddleNLP
 
-![License](https://img.shields.io/badge/license-Apache%202-red.svg)
-![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
-![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+<p align="center">
+  <img src="./paddlenlp.png" width="450" height ="100"  align="middle" />
+</p>
 
-## Introduction
 
-PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
+基于PaddlePaddle的NLP领域深度学习框架，包含丰富的前沿模型、易学易用的高层API、覆盖主流任务的全流程、高性能代码实现。
 
-**This project is still UNDER ACTIVE DEVELOPMENT.**
 
-## Features
+ [![python version](https://camo.githubusercontent.com/4bc45421df57c3901ec5d21da412680df9b2d74fee7c297ab4e6764868e805fb/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f707974686f6e2d332e362b2d6f72616e67652e737667)](https://camo.githubusercontent.com/4bc45421df57c3901ec5d21da412680df9b2d74fee7c297ab4e6764868e805fb/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f707974686f6e2d332e362b2d6f72616e67652e737667) [![support os](https://camo.githubusercontent.com/7c97d13875070c3d1cfc86838fa87cb3db7909847a3992a33665c0a67800a33a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6f732d6c696e757825324325323077696e2532432532306d61632d79656c6c6f772e737667)](https://camo.githubusercontent.com/7c97d13875070c3d1cfc86838fa87cb3db7909847a3992a33665c0a67800a33a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6f732d6c696e757825324325323077696e2532432532306d61632d79656c6c6f772e737667)
 
-* **Rich and Powerful Model Zoo**
-  - Our Model Zoo covers mainstream NLP applications, including Lexical Analysis, Syntactic Parsing, Machine Translation, Text Classification, Text Generation, Text Matching, General Dialogue and Question Answering etc.
-* **Easy-to-use API**
-  - The API is fully integrated with PaddlePaddle high-level API system. It minimizes the number of user actions required for common use cases like data loading, text pre-processing, training and evaluation. which enables you to deal with text problems more productively.
-* **High Performance and Large-scale Training**
-  - We provide a highly optimized ditributed training implementation for BERT with Fleet API, it can fully utilize GPU clusters for large-scale model pre-training. Please refer to our [benchmark](./benchmark/bert) for more information.
-* **Detailed Tutorials and Industrial Practices**
-  - We offers detailed and interactable notebook tutorials to show you the best practices of PaddlePaddle 2.0.
 
-## Installation
 
-### Prerequisites
+# 特性
 
-* python >= 3.6
-* paddlepaddle >= 2.0.0-rc1
+- 强大的模型库
+
+  - 涵盖了NLP主流应用相关的前沿模型，包括词法和句法分析、文本向量化表示、文本分类、匹配、生成、机器翻译、通用对话、问答系统...
+
+- 易学易用的高层API
+
+  - 完美继承PaddlePaddle2.0的高层API体系，易学易用，便于开发，在数据处理、数据加载、模型构建、训练和预测等各个环节上，降低代码量，提高开发效率。
+
+- 支持大规模训练，具备高性能
+
+  - 结合Fleet API，以BERT为例，提供了高性能的分布式训练示范。能够充分利用GPU集群资源，达到性能最优。详见[benchmark](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/benchmark/bert) 。
+
+- 结合行业案例的详尽教程，从数据处理到预测部署的全流程实现
+
+  - 提供了结合行业案例的详细教程，以notebook形式展示。
+
+  
+
+# 安装
+
+- python >= 3.6
+- paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp>=2.0.0a
+pip install paddlenlp
 ```
 
-## Quick Start
 
-### Quick Dataset Loading
+
+# 快速开始
+
+## 一键加载数据集
 
 ```python
 from paddlenlp.datasets import ChnSentiCrop
 
-train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
+train_dataset, dev_dataset, test_dataset=  		   paddlenlp.datasets.ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
 
-For more Dataset API usage, please refer to [Dataset API](./docs/datasets.md).
-
-### Chinese Text Emebdding Loading
+## 内置多种中文embedding
 
 ```python
-
 from paddlenlp.embeddings import TokenEmbedding
 
 wordemb = TokenEmbedding("w2v.baidu_encyclopedia.target.word-word.dim300")
@@ -59,9 +65,7 @@ wordemb.cosine_sim("艺术", "火车")
 >>> 0.14792643
 ```
 
-For more token embedding usage, please refer to [examples/word_embedding](./example/../examples/word_embedding/README.md).
-
-### One-Line Classical Model Building
+## 一键加载复杂模型
 
 ```python
 from paddlenlp.models import Ernie, Senta, SimNet
@@ -71,40 +75,55 @@ ernie = Ernie("ernie-1.0", num_classes=2, task="seq-cls")
 senta = Senta(network="bow", vocab_size=1024, num_classes=2)
 
 simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
-
 ```
 
-### Rich Chinsese Pre-trained Models
+## 丰富、高质量的中文预训练模型
 
 ```python
 from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
 
 ernie = ErnieModel.from_pretrained('ernie-1.0')
+
 bert = BertModel.from_pretrained('bert-wwm-chinese')
+
 roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
+
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [Pretrained-Models](./docs/transformers.md)
 
-## API Usage
 
-* [Transformer API](./docs/transformers.md)
-* [Dataset API](./docs/datasets.md)
-* [Embedding API](./docs/embeddings.md)
-* [Metrics API](./docs/embeddings.md)
-* [Models API](./docs/models.md)
+# API list
 
-## Tutorials
+- [Transformer API](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/transformers.md)
+- [Dataset API](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/datasets.md)
+- [Embedding API](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/embeddings.md)
+- [Metrics API](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/embeddings.md)
+- [Models API](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/models.md)
 
-Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
+# 教程
 
-## Community
+- [如何使用预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
+- [基于LSTM的句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
+- [基于经典模型和预训练模型的快递单信息抽取方法](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
+- [基于seq2seq的对联生成](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
 
-* SIG for Pretrained Model Contribution
-* SIG for Dataset Integration
-* SIG for Tutorial Writing
+...
 
-## License
+更多教程参见[PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
-PaddleNLP is provided under the [Apache-2.0 License](./LICENSE).
+
+
+# 社区贡献
+
+- 如果您想贡献优秀的预训练模型，可参考
+
+- 如果您有数据集，可参考贡献
+
+- 您也可以联系我们贡献API文档、教程、有趣案例...
+
+  
+
+# License
+
+PaddleNLP遵循[Apache-2.0开源协议](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/LICENSE)。
