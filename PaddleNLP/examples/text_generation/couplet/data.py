@@ -19,10 +19,8 @@ from functools import partial
 import numpy as np
 
 import paddle
-from paddle.utils.download import get_path_from_url
 from paddlenlp.data import Vocab, Pad
 from paddlenlp.data import SamplerHelper
-from paddlenlp.utils.env import DATA_HOME
 from paddlenlp.datasets import TranslationDataset
 
 
@@ -32,7 +30,7 @@ def create_train_loader(batch_size=128):
     pad_id = vocab[CoupletDataset.EOS_TOKEN]
 
     train_batch_sampler = SamplerHelper(train_ds).shuffle().batch(
-        batch_size=batch_size).shard()
+        batch_size=batch_size)
 
     train_loader = paddle.io.DataLoader(
         train_ds,
@@ -50,8 +48,7 @@ def create_infer_loader(batch_size=128):
     bos_id = vocab[CoupletDataset.BOS_TOKEN]
     eos_id = vocab[CoupletDataset.EOS_TOKEN]
 
-    test_batch_sampler = SamplerHelper(test_ds).batch(
-        batch_size=batch_size).shard()
+    test_batch_sampler = SamplerHelper(test_ds).batch(batch_size=batch_size)
 
     test_loader = paddle.io.DataLoader(
         test_ds,
@@ -103,7 +100,7 @@ class CoupletDataset(TranslationDataset):
             raise TypeError(
                 '`train`, `dev` or `test` is supported but `{}` is passed in'.
                 format(mode))
-        # Download data
+        # Download and read data
         self.data = self.get_data(mode=mode, root=root)
         self.vocab, _ = self.get_vocab(root)
         self.transform()
