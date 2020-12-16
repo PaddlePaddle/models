@@ -75,8 +75,8 @@ python predict.py \
 
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
-## 效果评价
-使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，使用方法如下：
+## 预测效果评价
+使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，将该工具下载在该项目路径下，然后使用如下的命令，可以看到BLEU指标的结果：
 
 ```sh
 perl mosesdecoder/scripts/generic/multi-bleu.perl /root/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi < infer_output.txt
