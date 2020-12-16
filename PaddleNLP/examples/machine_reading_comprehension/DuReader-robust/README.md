@@ -41,7 +41,7 @@ python -u ./run_du.py \
     --max_seq_length 384 \
     --batch_size 12 \
     --learning_rate 3e-5 \
-    --num_train_epochs 2 \
+    --num_train_epochs 1 \
     --logging_steps 1000 \
     --save_steps 1000 \
     --warmup_proportion 0.1 \
@@ -58,11 +58,11 @@ python -u ./run_du.py \
 
 ```text
 {
-  "exact": 66.97247706422019,
-  "f1": 67.26064455422254,
+  "exact": 68.59562455892731,
+  "f1": 84.23267270105613,
   "total": 1417,
-  "HasAns_exact": 66.97247706422019,
-  "HasAns_f1": 67.26064455422254,
+  "HasAns_exact": 68.59562455892731,
+  "HasAns_f1": 84.23267270105613,
   "HasAns_total": 1417
 }
 ```
