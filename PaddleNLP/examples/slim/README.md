@@ -1,4 +1,4 @@
-# PaddleSlim-OFA in BERT
+# BERT Compression Based on PaddleSlim
 
 BERT-base模型是一个迁移能力很强的通用语义表示模型，但是模型中也有一些参数冗余。本教程将介绍如何使用PaddleSlim对BERT-base模型进行压缩。
 
