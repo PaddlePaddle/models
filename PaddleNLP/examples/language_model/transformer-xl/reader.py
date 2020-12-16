@@ -128,7 +128,7 @@ class LMDataset(IterableDataset):
         line = line.strip()
         if lower_case:
             line = line.lower()
-        tokens = line if delimiter == "" else line.split(delimiter)
+        tokens = list(line) if delimiter == "" else line.split(delimiter)
         return tokens
 
     @classmethod
