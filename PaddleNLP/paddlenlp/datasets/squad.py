@@ -434,7 +434,7 @@ class SQuAD(Dataset):
                         is_impossible=is_impossible)
                     examples.append(example)
 
-        self.examples = examples[:1000]
+        self.examples = examples
 
     def __len__(self):
         return len(self.features)
