@@ -1,5 +1,7 @@
 import os
 import io
+import collections
+import warnings
 
 from functools import partial
 import numpy as np
@@ -8,72 +10,10 @@ import paddle
 from paddle.utils.download import get_path_from_url
 from paddlenlp.data import Vocab, Pad
 from paddlenlp.data.sampler import SamplerHelper
+from paddlenlp.utils.env import DATA_HOME
+from paddle.dataset.common import md5file
 
-DATA_HOME = "/root/.paddlenlp/datasets"
-
-__all__ = ['TranslationDataset', 'IWSLT15']
-
-
-def read_raw_files(corpus_path):
-    """Read raw files, return raw data"""
-    data = []
-    (f_mode, f_encoding, endl) = ("r", "utf-8", "\n")
-    with io.open(corpus_path, f_mode, encoding=f_encoding) as f_corpus:
-        for line in f_corpus.readlines():
-            data.append(line.strip())
-    return data
-
-
-def get_raw_data(data_dir, train_filenames, valid_filenames, test_filenames,
-                 data_select):
-    data_dict = {}
-    file_select = {
-        'train': train_filenames,
-        'dev': valid_filenames,
-        'test': test_filenames
-    }
-    for mode in data_select:
-        src_filename, tgt_filename = file_select[mode]
-        src_path = os.path.join(data_dir, src_filename)
-        tgt_path = os.path.join(data_dir, tgt_filename)
-        src_data = read_raw_files(src_path)
-        tgt_data = read_raw_files(tgt_path)
-
-        data_dict[mode] = [(src_data[i], tgt_data[i])
-                           for i in range(len(src_data))]
-    return data_dict
-
-
-def setup_datasets(train_filenames,
-                   valid_filenames,
-                   test_filenames,
-                   data_select,
-                   root=None):
-    # Input check
-    target_select = ('train', 'dev', 'test')
-    if isinstance(data_select, str):
-        data_select = (data_select, )
-    if not set(data_select).issubset(set(target_select)):
-        raise TypeError(
-            'A subset of data selection {} is supported but {} is passed in'.
-            format(target_select, data_select))
-
-    raw_data = get_raw_data(root, train_filenames, valid_filenames,
-                            test_filenames, data_select)
-
-    datasets = []
-    for mode in data_select:
-        datasets.append(TranslationDataset(raw_data[mode]))
-    return tuple(datasets)
-
-
-def vocab_func(vocab, unk_token):
-    def func(tok_iter):
-        return [
-            vocab[tok] if tok in vocab else vocab[unk_token] for tok in tok_iter
-        ]
-
-    return func
+__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14ende']
 
 
 def sequential_transforms(*transforms):
@@ -89,8 +29,8 @@ def get_default_tokenizer():
     """Only support split tokenizer
     """
 
-    def _split_tokenizer(x):
-        return x.split()
+    def _split_tokenizer(x, delimiter=None):
+        return x.split(delimiter)
 
     return _split_tokenizer
 
@@ -103,13 +43,16 @@ class TranslationDataset(paddle.io.Dataset):
         data(list): Raw data. It is a list of tuple or list, each sample of
             data contains two element, source and target.
     """
+    META_INFO = collections.namedtuple('META_INFO', ('src_file', 'tgt_file',
+                                                     'src_md5', 'tgt_md5'))
+    SPLITS = {}
     URL = None
-    train_filenames = (None, None)
-    valid_filenames = (None, None)
-    test_filenames = (None, None)
-    src_vocab_filename = None
-    tgt_vocab_filename = None
-    dataset_dirname = None
+    MD5 = None
+    VOCAB_INFO = None
+    UNK_TOKEN = None
+    PAD_TOKEN = None
+    BOS_TOKEN = None
+    EOS_TOKEN = None
 
     def __init__(self, data):
         self.data = data
@@ -121,44 +64,59 @@ class TranslationDataset(paddle.io.Dataset):
         return len(self.data)
 
     @classmethod
-    def get_data(cls, root=None):
+    def get_data(cls, mode="train", root=None):
         """
-        Download dataset if any data file doesn't exist.
+        Download dataset and read raw data.
         Args:
+            mode(str, optional): Data mode to download. It could be 'train',
+                'dev' or 'test'. Default: 'train'.
             root (str, optional): data directory to save dataset. If not
                 provided, dataset will be saved in
                 `/root/.paddlenlp/datasets/machine_translation`. Default: None.
         Returns:
-            str: All file paths of dataset.
+            list: Raw data, a list of tuple.
 
         Examples:
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
-        if root is None:
-            root = os.path.join(DATA_HOME, 'machine_translation')
-            data_dir = os.path.join(root, cls.dataset_dirname)
-        if not os.path.exists(root):
-            os.makedirs(root)
-            print("IWSLT will be downloaded at ", root)
-            get_path_from_url(self.URL, root)
-            print("Downloaded success......")
-        else:
-            filename_list = [
-                cls.train_filenames[0], cls.train_filenames[1],
-                cls.valid_filenames[0], cls.valid_filenames[0],
-                cls.src_vocab_filename, cls.tgt_vocab_filename
-            ]
-            for filename in filename_list:
-                file_path = os.path.join(data_dir, filename)
-                if not os.path.exists(file_path):
-                    print(
-                        "The dataset is incomplete and will be re-downloaded.")
-                    get_path_from_url(self.URL, root)
-                    print("Downloaded success......")
-                    break
-        return data_dir
+        root = cls._download_data(mode, root)
+        data = cls.read_raw_data(mode, root)
+        return data
+
+    @classmethod
+    def _download_data(cls, mode="train", root=None):
+        """Download dataset"""
+        default_root = os.path.join(DATA_HOME, 'machine_translation',
+                                    cls.__name__)
+        src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
+            mode]
+
+        filename_list = [
+            src_filename, tgt_filename, cls.VOCAB_INFO[0], cls.VOCAB_INFO[1]
+        ]
+        fullname_list = []
+        for filename in filename_list:
+            fullname = os.path.join(default_root,
+                                    filename) if root is None else os.path.join(
+                                        os.path.expanduser(root), filename)
+            fullname_list.append(fullname)
+
+        data_hash_list = [
+            src_data_hash, tgt_data_hash, cls.VOCAB_INFO[2], cls.VOCAB_INFO[3]
+        ]
+        for i, fullname in enumerate(fullname_list):
+            if not os.path.exists(fullname) or (
+                    data_hash_list[i] and
+                    not md5file(fullname) == data_hash_list[i]):
+                if root is not None:  # not specified, and no need to warn
+                    warnings.warn(
+                        'md5 check failed for {}, download {} data to {}'.
+                        format(filename, cls.__name__, default_root))
+                path = get_path_from_url(cls.URL, default_root, cls.MD5)
+                return default_root
+        return root if root is not None else default_root
 
     @classmethod
     def get_vocab(cls, root=None):
@@ -177,20 +135,56 @@ class TranslationDataset(paddle.io.Dataset):
             .. code-block:: python
                 from paddlenlp.datasets import IWSLT15
                 (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
-
         """
-        data_path = cls.get_data(root)
 
-        # Get vocab_func
-        src_file_path = os.path.join(data_path, cls.src_vocab_filename)
-        tgt_file_path = os.path.join(data_path, cls.tgt_vocab_filename)
+        root = cls._download_data(root=root)
+        src_vocab_filename, tgt_vocab_filename, _, _ = cls.VOCAB_INFO
+        src_file_path = os.path.join(root, src_vocab_filename)
+        tgt_file_path = os.path.join(root, tgt_vocab_filename)
 
-        src_vocab = Vocab.load_vocabulary(src_file_path, cls.unk_token,
-                                          cls.bos_token, cls.eos_token)
+        src_vocab = Vocab.load_vocabulary(
+            filepath=src_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
 
-        tgt_vocab = Vocab.load_vocabulary(tgt_file_path, cls.unk_token,
-                                          cls.bos_token, cls.eos_token)
+        tgt_vocab = Vocab.load_vocabulary(
+            filepath=tgt_file_path,
+            unk_token=cls.UNK_TOKEN,
+            pad_token=cls.PAD_TOKEN,
+            bos_token=cls.BOS_TOKEN,
+            eos_token=cls.EOS_TOKEN)
         return (src_vocab, tgt_vocab)
+
+    @classmethod
+    def read_raw_data(cls, mode, root):
+        """Read raw data from data files
+        Args:
+            mode(str): Indicates the mode to read. It could be 'train', 'dev' or
+               'test'.
+            root(str): Data directory of dataset.
+        Returns:
+            list: Raw data list.
+        """
+        src_filename, tgt_filename, _, _ = cls.SPLITS[mode]
+
+        def read_raw_files(corpus_path):
+            """Read raw files, return raw data"""
+            data = []
+            (f_mode, f_encoding, endl) = ("r", "utf-8", "\n")
+            with io.open(corpus_path, f_mode, encoding=f_encoding) as f_corpus:
+                for line in f_corpus.readlines():
+                    data.append(line.strip())
+            return data
+
+        src_path = os.path.join(root, src_filename)
+        tgt_path = os.path.join(root, tgt_filename)
+        src_data = read_raw_files(src_path)
+        tgt_data = read_raw_files(tgt_path)
+
+        data = [(src_data[i], tgt_data[i]) for i in range(len(src_data))]
+        return data
 
     @classmethod
     def get_default_transform_func(cls, root=None):
@@ -211,10 +205,10 @@ class TranslationDataset(paddle.io.Dataset):
         tgt_text_vocab_transform = sequential_transforms(tgt_tokenizer)
 
         (src_vocab, tgt_vocab) = cls.get_vocab(root)
-        src_text_transform = sequential_transforms(
-            src_text_vocab_transform, vocab_func(src_vocab, cls.unk_token))
-        tgt_text_transform = sequential_transforms(
-            tgt_text_vocab_transform, vocab_func(tgt_vocab, cls.unk_token))
+        src_text_transform = sequential_transforms(src_text_vocab_transform,
+                                                   src_vocab)
+        tgt_text_transform = sequential_transforms(tgt_text_vocab_transform,
+                                                   tgt_vocab)
         return (src_text_transform, tgt_text_transform)
 
 
@@ -223,10 +217,11 @@ class IWSLT15(TranslationDataset):
     IWSLT15 Vietnames to English translation dataset.
 
     Args:
-        data(list|optional): Raw data. It is a list of tuple, each tuple
-            consists of source and target data. Default: None.
-        vocab(tuple|optional): Tuple of Vocab object or dict. It consists of
-            source and target language vocab. Default: None.
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
+        root(str, optional): If None, dataset will be downloaded in
+            `/root/.paddlenlp/datasets/machine_translation`. Default: None.
+        transform_func(callable, optional): If not None, it transforms raw data
+            to index data. Default: None.
     Examples:
         .. code-block:: python
             from paddlenlp.datasets import IWSLT15
@@ -235,35 +230,131 @@ class IWSLT15(TranslationDataset):
 
     """
     URL = "https://paddlenlp.bj.bcebos.com/datasets/iwslt15.en-vi.tar.gz"
-    train_filenames = ("train.en", "train.vi")
-    valid_filenames = ("tst2012.en", "tst2012.vi")
-    test_filenames = ("tst2013.en", "tst2013.vi")
-    src_vocab_filename = "vocab.en"
-    tgt_vocab_filename = "vocab.vi"
-    unk_token = '<unk>'
-    bos_token = '<s>'
-    eos_token = '</s>'
-    dataset_dirname = "iwslt15.en-vi"
+    SPLITS = {
+        'train': TranslationDataset.META_INFO(
+            os.path.join("iwslt15.en-vi", "train.en"),
+            os.path.join("iwslt15.en-vi", "train.vi"),
+            "5b6300f46160ab5a7a995546d2eeb9e6",
+            "858e884484885af5775068140ae85dab"),
+        'dev': TranslationDataset.META_INFO(
+            os.path.join("iwslt15.en-vi", "tst2012.en"),
+            os.path.join("iwslt15.en-vi", "tst2012.vi"),
+            "c14a0955ed8b8d6929fdabf4606e3875",
+            "dddf990faa149e980b11a36fca4a8898"),
+        'test': TranslationDataset.META_INFO(
+            os.path.join("iwslt15.en-vi", "tst2013.en"),
+            os.path.join("iwslt15.en-vi", "tst2013.vi"),
+            "c41c43cb6d3b122c093ee89608ba62bd",
+            "a3185b00264620297901b647a4cacf38")
+    }
+    VOCAB_INFO = (os.path.join("iwslt15.en-vi", "vocab.en"), os.path.join(
+        "iwslt15.en-vi", "vocab.vi"), "98b5011e1f579936277a273fd7f4e9b4",
+                  "e8b05f8c26008a798073c619236712b4")
+    UNK_TOKEN = '<unk>'
+    BOS_TOKEN = '<s>'
+    EOS_TOKEN = '</s>'
+    MD5 = 'aca22dc3f90962e42916dbb36d8f3e8e'
 
-    def __init__(self, segment='train', root=None, transform_func=None):
-        # Input check
-        segment_select = ('train', 'dev', 'test')
-        if segment not in segment_select:
+    def __init__(self, mode='train', root=None, transform_func=None):
+        data_select = ('train', 'dev', 'test')
+        if mode not in data_select:
             raise TypeError(
                 '`train`, `dev` or `test` is supported but `{}` is passed in'.
-                format(segment))
+                format(mode))
         if transform_func is not None:
             if len(transform_func) != 2:
                 raise ValueError("`transform_func` must have length of two for"
-                                 "source and target")
-        # Download data
-        data_path = IWSLT15.get_data(root)
-        dataset = setup_datasets(self.train_filenames, self.valid_filenames,
-                                 self.test_filenames, [segment], data_path)[0]
-        self.data = dataset.data
+                                 "source and target.")
+        # Download data and read data
+        self.data = self.get_data(mode=mode, root=root)
+
         if transform_func is not None:
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
+
+
+class WMT14ende(TranslationDataset):
+    """
+    WMT14 English to German translation dataset.
+
+    Args:
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
+        root(str, optional): If None, dataset will be downloaded in
+            `/root/.paddlenlp/datasets/machine_translation/WMT14ende/`. Default: None.
+        transform_func(callable, optional): If not None, it transforms raw data
+            to index data. Default: None.
+    Examples:
+        .. code-block:: python
+            from paddlenlp.datasets import WMT14ende
+            transform_func = WMT14ende.get_default_transform_func(root=root)
+            train_dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
+    """
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/WMT14.en-de.tar.gz"
+    SPLITS = {
+        'train': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "train.tok.clean.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "train.tok.clean.bpe.33708.de"),
+            "c7c0b77e672fc69f20be182ae37ff62c",
+            "1865ece46948fda1209d3b7794770a0a"),
+        'dev': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2013.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2013.tok.bpe.33708.de"),
+            "aa4228a4bedb6c45d67525fbfbcee75e",
+            "9b1eeaff43a6d5e78a381a9b03170501"),
+        'test': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2014.tok.bpe.33708.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                         "newstest2014.tok.bpe.33708.de"),
+            "c9403eacf623c6e2d9e5a1155bdff0b5",
+            "0058855b55e37c4acfcb8cffecba1050"),
+        'dev-eval': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2013.tok.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2013.tok.de"),
+            "d74712eb35578aec022265c439831b0e",
+            "6ff76ced35b70e63a61ecec77a1c418f"),
+        'test-eval': TranslationDataset.META_INFO(
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2014.tok.en"),
+            os.path.join("WMT14.en-de", "wmt14_ende_data",
+                         "newstest2014.tok.de"),
+            "8cce2028e4ca3d4cc039dfd33adbfb43",
+            "a1b1f4c47f487253e1ac88947b68b3b8")
+    }
+    VOCAB_INFO = (os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                               "vocab_all.bpe.33708"),
+                  os.path.join("WMT14.en-de", "wmt14_ende_data_bpe",
+                               "vocab_all.bpe.33708"),
+                  "2fc775b7df37368e936a8e1f63846bb0",
+                  "2fc775b7df37368e936a8e1f63846bb0")
+    UNK_TOKEN = "<unk>"
+    BOS_TOKEN = "<s>"
+    EOS_TOKEN = "<e>"
+
+    MD5 = "5506d213dba4124121c682368257bae4"
+
+    def __init__(self, mode="train", root=None, transform_func=None):
+        if mode not in ("train", "dev", "test", "dev-eval", "test-eval"):
+            raise TypeError(
+                '`train`, `dev`, `test`, `dev-eval` or `test-eval` is supported but `{}` is passed in'.
+                format(mode))
+        if transform_func is not None and len(transform_func) != 2:
+            if len(transform_func) != 2:
+                raise ValueError("`transform_func` must have length of two for"
+                                 "source and target.")
+
+        self.data = WMT14ende.get_data(mode=mode, root=root)
+        self.mode = mode
+        if transform_func is not None:
+            self.data = [(transform_func[0](data[0]),
+                          transform_func[1](data[1])) for data in self.data]
+        super(WMT14ende, self).__init__(self.data)
 
 
 # For test, not API
@@ -274,18 +365,25 @@ def prepare_train_input(insts, pad_id):
         [inst[1] for inst in insts])
     return src, src_length, tgt[:, :-1], tgt[:, 1:, np.newaxis]
 
+batch_size_fn = lambda idx, minibatch_len, size_so_far, data_source: max(size_so_far, len(data_source[idx][0]))
+
+batch_key = lambda size_so_far, minibatch_len: size_so_far * minibatch_len
 
 if __name__ == '__main__':
-    batch_size = 32
+    batch_size = 4096  #32
     pad_id = 2
 
     transform_func = IWSLT15.get_default_transform_func()
     train_dataset = IWSLT15(transform_func=transform_func)
 
     key = (lambda x, data_source: len(data_source[x][0]))
+
     train_batch_sampler = SamplerHelper(train_dataset).shuffle().sort(
         key=key, buffer_size=batch_size * 20).batch(
-            batch_size=batch_size, drop_last=True).shard()
+            batch_size=batch_size,
+            drop_last=True,
+            batch_size_fn=batch_size_fn,
+            key=batch_key).shard()
 
     train_loader = paddle.io.DataLoader(
         train_dataset,
@@ -293,6 +391,7 @@ if __name__ == '__main__':
         collate_fn=partial(
             prepare_train_input, pad_id=pad_id))
 
-    for data in train_loader:
-        print(data)
-        break
+    for i, data in enumerate(train_loader):
+        print(data[1])
+        print(paddle.max(data[1]) * len(data[1]))
+        print(len(data[1]))

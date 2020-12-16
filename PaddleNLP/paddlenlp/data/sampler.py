@@ -137,7 +137,7 @@ class SamplerHelper(object):
         """
         Sort samples according to given callable cmp or key.
         Args:
-            cmp (callable): The funcation of comparison. Default: None. 
+            cmp (callable): The function of comparison. Default: None. 
             key (callable): Return element to be compared. Default: None.
             reverse (bool): If True, it means in descending order, and False means in ascending order. Default: False.
             buffer_size (int): Buffer size for sort. If buffer_size < 0 or buffer_size is more than the length of the data, 
@@ -170,24 +170,32 @@ class SamplerHelper(object):
 
         return type(self)(self.data_source, _impl)
 
-    def batch(self,
-              batch_size,
-              drop_last=False,
-              batch_size_fn=None,
-              batch_fn=None):
+    def batch(self, batch_size, drop_last=False, batch_size_fn=None, key=None):
         """
         To produce a BatchSampler.
-        Agrs:
+        Args:
             batch_size (int): Batch size.
-            drop_last (bool): Whether to drop the last mini batch. Default: False.
-            batch_size_fn (callable, optional): Return the size of mini batch so far. Default: None.
-            batch_fn (callable, optional): Transformations to be performed. Default: None.
+            drop_last (bool): Whether to drop the last mini batch. Default:
+                False.
+            batch_size_fn (callable, optional): It accepts four arguments: 
+                index of data source, the length of minibatch, the size of
+                minibatch so far and data source, and it returns the size of
+                mini batch so far. Actually, the returned value can be anything
+                and would used as argument size_so_far in `key`. If None, it
+                would return the length of mini match. Default: None.
+            key (callable, optional): It accepts the size of minibatch so far
+                and the length of minibatch, and returns what to be compared
+                with `batch_size`. If None, only the size of mini batch so far
+                would be compared with `batch_size`. Default: None.
         Returns:
             SamplerHelper
         """
+        _key = lambda size_so_far, minibatch_len: size_so_far
+
+        ori_batch_size_fn = batch_size_fn
         if batch_size_fn is None:
-            ori_batch_size_fn = None
             batch_size_fn = lambda new, count, sofar, data_source: count
+        key = _key if key is None else key
 
         def _impl():
             data_source = self.data_source
@@ -197,20 +205,22 @@ class SamplerHelper(object):
                 size_so_far = batch_size_fn(idx,
                                             len(minibatch), size_so_far,
                                             data_source)
-                if size_so_far == batch_size:
+                if key(size_so_far, len(minibatch)) == batch_size:
                     yield minibatch
                     minibatch, size_so_far = [], 0
-                elif size_so_far > batch_size:
+                elif key(size_so_far, len(minibatch)) > batch_size:
+                    if len(minibatch) == 1:
+                        raise ValueError(
+                            "Please increase the value of `batch_size`, or limit the max length of batch."
+                        )
                     yield minibatch[:-1]
                     minibatch, size_so_far = minibatch[-1:], batch_size_fn(
                         idx, 1, 0, data_source)
             if minibatch and not drop_last:
                 yield minibatch
 
-        sampler = type(self)(
-            self.data_source,
-            _impl) if batch_fn is None else self.apply(batch_fn)
-        if ori_batch_size_fn is None and batch_fn is None and self.length is not None:
+        sampler = type(self)(self.data_source, _impl)
+        if ori_batch_size_fn is None and self.length is not None:
             sampler.length = (self.length + int(not drop_last) *
                               (batch_size - 1)) // batch_size
         else:

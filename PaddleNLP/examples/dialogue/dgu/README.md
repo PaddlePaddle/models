@@ -7,28 +7,28 @@
 DGU模型内共包含6个任务，全部基于公开数据集在Paddle2.0上完成训练及评估，详细说明如下：
 
 ```
-DRS: 使用UDC (Ubuntu Corpus V1) 数据集完成对话匹配 (Dialogue Response Selection) 任务;
-DST: 使用DSTC2 (Dialog State Tracking Challenge 2) 数据集完成对话状态追踪 (Dialogue State Tracking) 任务;
-DSF: 使用ATIS (Airline Travel Information System) 数据集完成对话槽填充 (Dialogue Slot Filling) 任务；
-DID: 使用ATIS (Airline Travel Information System) 数据集完成对话意图识别 (Dialogue Intent Detection) 任务；
-MRDA: 使用MRDAC (Meeting Recorder Dialogue Act Corpus) 数据集完成对话行为识别 (Dialogue Act Detection) 任务；
-SwDA: 使用SwDAC (Switchboard Dialogue Act Corpus) 数据集完成对话行为识别 (Dialogue Act Detection) 任务;
+udc: 使用UDC (Ubuntu Corpus V1) 数据集完成对话匹配 (Dialogue Response Selection) 任务;
+dstc2: 使用DSTC2 (Dialog State Tracking Challenge 2) 数据集完成对话状态追踪 (Dialogue State Tracking) 任务;
+atis_slot: 使用ATIS (Airline Travel Information System) 数据集完成对话槽填充 (Dialogue Slot Filling) 任务；
+atis_intent: 使用ATIS (Airline Travel Information System) 数据集完成对话意图识别 (Dialogue Intent Detection) 任务；
+mrda: 使用MRDAC (Meeting Recorder Dialogue Act Corpus) 数据集完成对话行为识别 (Dialogue Act Detection) 任务；
+swda: 使用SwDAC (Switchboard Dialogue Act Corpus) 数据集完成对话行为识别 (Dialogue Act Detection) 任务;
 ```
 
 ## 模型效果
 
 DGU模型中的6个任务，分别采用不同的评估指标在test集上进行评估，结果如下：
 
-<table  border="1">
+<table>
     <tr><th style="text-align:center">任务</th><th style="text-align:center">评估指标</th><th style="text-align:center">DGU</th></tr>
-    <tr align="center"><td rowspan="3" style="vertical-align:middle;">DRS</td><td>R1@10</td><td>81.04%</td></tr>
+    <tr align="center"><td rowspan="3" style="vertical-align:middle;">udc</td><td>R1@10</td><td>81.04%</td></tr>
     <tr align="center"><td>R2@10</td><td>89.85%</td></tr>
     <tr align="center"><td>R5@10</td><td>97.59%</td></tr>
-    <tr align="center"><td>DST</td><td>Joint_Acc</td><td>90.43%</td></tr>
-    <tr align="center"><td>DSF</td><td>F1_Micro</td><td>97.98%</td></tr>
-    <tr align="center"><td>DID</td><td>Acc</td><td>97.42%</td></tr>
-    <tr align="center"><td>MRDA</td><td>Acc</td><td>90.94%</td></tr>
-    <tr align="center"><td>SwDA</td><td>Acc</td><td>80.61%</td></tr>
+    <tr align="center"><td>dstc2</td><td>Joint_Acc</td><td>90.43%</td></tr>
+    <tr align="center"><td>atis_slot</td><td>F1_Micro</td><td>97.98%</td></tr>
+    <tr align="center"><td>atis_intent</td><td>Acc</td><td>97.42%</td></tr>
+    <tr align="center"><td>mrda</td><td>Acc</td><td>90.94%</td></tr>
+    <tr align="center"><td>swda</td><td>Acc</td><td>80.61%</td></tr>
 </table>
 
 **NOTE:** 以上结果均是采用默认配置在GPU单卡上训练和评估得到的，用户如需复现效果，可采用默认配置在单卡上进行训练评估。
@@ -69,7 +69,7 @@ DGU模型中的6个任务，分别采用不同的评估指标在test集上进行
 下载数据集压缩包并解压后，DGU_datasets目录下共存在6个目录，分别对应每个任务的训练集train.txt、评估集dev.txt和测试集test.txt。
 
 ```shell
-wget wget https://paddlenlp.bj.bcebos.com/datasets/DGU_datasets.tar.gz
+wget https://paddlenlp.bj.bcebos.com/datasets/DGU_datasets.tar.gz
 tar -zxf DGU_datasets.tar.gz
 ```
 
@@ -77,22 +77,22 @@ DGU_datasets目录结构：
 
 ```text
 DGU_datasets/
-├── did
+├── atis_intent
 │   ├── dev.txt
 │   ├── map_tag_intent_id.txt
 │   ├── test.txt
 │   └── train.txt
-├── drs
+├── udc
 │   ├── dev.txt
 │   ├── dev.txt-small
 │   ├── test.txt
 │   └── train.txt
-├── dsf
+├── atis_slot
 │   ├── dev.txt
 │   ├── map_tag_slot_id.txt
 │   ├── test.txt
 │   └── train.txt
-├── dst
+├── dstc2
 │   ├── dev.txt
 │   ├── map_tag_id.txt
 │   ├── test.txt
@@ -112,16 +112,16 @@ DGU_datasets/
 数据的每一行由多列组成，都以"\t"作为分割符，详细数据格式说明如下：
 
 ```
-drs：由label、多轮对话conv和回应response组成
+udc：由label、多轮对话conv和回应response组成
 格式：label \t conv1 \t conv2 \t conv3 \t ... \t response
 
-dst：由多轮对话id、当前轮QA对(使用\1拼接)和对话状态序列state_list(state_list中每个state由空格分割)组成
+dstc2：由多轮对话id、当前轮QA对(使用\1拼接)和对话状态序列state_list(state_list中每个state由空格分割)组成
 格式：conversation_id \t question \1 answer \t state1 state2 state3 ...
 
-dsf：由对话内容conversation_content和标签序列label_list (label_list中每个label由空格分割) 组成, 其中标签序列和对话内容中word为一一对应关系
+atis_slot：由对话内容conversation_content和标签序列label_list (label_list中每个label由空格分割) 组成, 其中标签序列和对话内容中word为一一对应关系
 格式：conversation_content \t label1 label2 label3 ...
 
-did：由标签label和对话内容conversation_content组成
+atis_intent：由标签label和对话内容conversation_content组成
 格式： label \t conversation_content
 
 mrda：由多轮对话id、标签label、发言人caller、对话内容conversation_content组成
@@ -140,14 +140,14 @@ swda：由多轮对话id、标签label、发言人caller、对话内容conversat
 ```shell
 export CUDA_VISIBLE_DEVICES=0,1
 # GPU启动，n_gpu指定训练所用的GPU数量，可以是单卡，也可以多卡。默认会进行训练、验证和评估
-python -u main.py --task_name=drs --data_dir=./DGU_datasets/drs --output_dir=./checkpoints/drs --n_gpu=2
+python -u main.py --task_name=udc --data_dir=./DGU_datasets/udc --output_dir=./checkpoints/udc --n_gpu=2
 # 若只需进行评估，do_train设为False，并且必须指定init_from_ckpt
-# python -u main.py --task_name=drs --data_dir=./DGU_datasets/drs --do_train=False --init_from_ckpt=./checkpoints/drs/best
+# python -u main.py --task_name=udc --data_dir=./DGU_datasets/udc --do_train=False --init_from_ckpt=./checkpoints/udc/best
 ```
 
 以上参数表示：
 
-* task_name：任务名称，可以为drs、dst、dsf、did、mrda或swda。
+* task_name：任务名称，可以为udc、dstc2、atis_slot、atis_intent、mrda或swda。
 * data_dir：训练数据路径。
 * output_dir：训练保存模型的文件路径。
 * n_gpu：训练所使用的GPU卡的数量，默认为1。

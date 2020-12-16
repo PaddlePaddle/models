@@ -3,7 +3,7 @@ from functools import partial
 from paddle.io import DistributedBatchSampler, DataLoader
 from paddle.static import InputSpec
 from paddlenlp.data import Stack, Tuple, Pad
-from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
+from paddlenlp.transformers import ErnieTokenizer
 import numpy as np
 import paddle
 import paddlenlp
@@ -18,10 +18,13 @@ def convert_example(example, tokenizer, max_seq_length=128):
     return input_ids, segment_ids, label
 
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-model = BertForSequenceClassification.from_pretrained('bert-base-chinese')
+paddle.set_device('gpu')
+# Dataset prepare
+train_ds = paddlenlp.datasets.ChnSentiCorp.get_datasets(['train'])
 
-train_ds, = paddlenlp.datasets.ChnSentiCorp.get_datasets(['train'])
+tokenizer = ErnieTokenizer.from_pretrained('ernie-1.0')
+model = paddlenlp.models.Ernie('ernie-1.0', task='seq-cls', num_classes=2)
+
 trans_func = partial(convert_example, tokenizer=tokenizer)
 train_ds = train_ds.apply(trans_func)
 batchify_fn = lambda samples, fn=Tuple(
