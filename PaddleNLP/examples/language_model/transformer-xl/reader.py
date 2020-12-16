@@ -1,10 +1,8 @@
-import os, sys
-import glob
+import os
 
-from collections import Counter, OrderedDict
 import numpy as np
 
-from utils.vocabulary import Vocab
+from paddlenlp.data import Vocab
 
 import paddle
 from paddle.io import IterableDataset, DataLoader
@@ -21,12 +19,14 @@ class LMDataset(IterableDataset):
         self.vocab = vocab
         self.dataset_name = dataset_name
 
-        if self.dataset_name in ["wt2", "wt103"]:
-            self.data = self.vocab.encode_file(
-                os.path.join(path, mode + ".txt"), ordered=True)
+        if self.dataset_name in ["wt103"]:
+            self.data = self.read_raw_data(
+                filename=os.path.join(path, mode + ".txt"), ordered=True)
         elif self.dataset_name in ["enwik8", "text8"]:
-            self.data = self.vocab.encode_file(
-                os.path.join(path, mode + ".txt"), ordered=True, add_eos=False)
+            self.data = self.read_raw_data(
+                filename=os.path.join(path, mode + ".txt"),
+                ordered=True,
+                add_eos=False)
         else:
             raise ValueError("Not supported dataset yet. ")
         self.rank = rank
@@ -67,6 +67,87 @@ class LMDataset(IterableDataset):
                         self.rank + 1) * self.batch_size], seq_len
             ]
 
+    def read_raw_data(self,
+                      filename,
+                      ordered=False,
+                      lower_case=True,
+                      delimiter=None,
+                      add_eos=True,
+                      add_double_eos=False):
+        assert os.path.exists(filename), "%s is not exist. " % filename
+
+        data = []
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                tokens = LMDataset.tokenize(
+                    line=line, delimiter=delimiter, lower_case=lower_case)
+                if add_double_eos:  # for lm1b
+                    tokens = [self.vocab._identifiers_to_tokens['bos_token']
+                              ] + tokens + [
+                                  self.vocab._identifiers_to_tokens['bos_token']
+                              ]
+                elif add_eos:
+                    tokens = tokens + [
+                        self.vocab._identifiers_to_tokens['eos_token']
+                    ]
+                data.append(
+                    np.asarray(self.get_indices(tokens)).astype("int64"))
+
+        if ordered:
+            data = np.concatenate(data)
+
+        return data
+
+    def get_indices(self, tokens):
+        return self.vocab.to_indices(tokens)
+
+    @classmethod
+    def get_vocab(cls,
+                  files,
+                  max_size=None,
+                  min_freq=0,
+                  lower_case=True,
+                  delimiter=None,
+                  unk_token=None,
+                  pad_token=None,
+                  bos_token=None,
+                  eos_token=None,
+                  **kwargs):
+        return Vocab.build_vocab(
+            cls.data_iterator(
+                files=files, delimiter=delimiter, lower_case=lower_case),
+            max_size=max_size,
+            min_freq=min_freq,
+            unk_token=unk_token,
+            pad_token=pad_token,
+            bos_token=bos_token,
+            eos_token=eos_token)
+
+    @classmethod
+    def tokenize(cls, line, delimiter=None, lower_case=True):
+        line = line.strip()
+        if lower_case:
+            line = line.lower()
+        tokens = line if delimiter == "" else line.split(delimiter)
+        return tokens
+
+    @classmethod
+    def data_iterator(cls, files, delimiter=None, lower_case=True):
+        if isinstance(files, str):
+            files = [files]
+        elif not isinstance(files, (list, tuple)):
+            raise ValueError(
+                "The parameter files must be a str or a list/tuple.")
+
+        for fl in files:
+            assert os.path.exists(fl), "%s is not exist. " % fl
+
+            with open(fl, 'r', encoding='utf-8') as f:
+                for line in f:
+                    tokens = cls.tokenize(
+                        line=line, delimiter=delimiter, lower_case=lower_case)
+                    yield tokens
+
 
 def get_lm_data_loader(args, vocab, mode="train"):
     lm_dataset = LMDataset(
@@ -87,32 +168,30 @@ def get_lm_data_loader(args, vocab, mode="train"):
 
 
 def get_lm_vocab(args):
-    kwargs = {}
+    kwargs = {"unk_token": "<unk>"}
     if args.token_delimiter == "None":
         kwargs["delimiter"] = None
     else:
         kwargs["delimiter"] = args.token_delimiter
 
-    if args.dataset in ["wt103", "wt2"]:
-        kwargs["special"] = ["<eos>"]
+    if args.dataset == "wt103":
+        kwargs["eos_token"] = "<eos>"
         kwargs["lower_case"] = False
-    elif args.dataset == "lm1b":
-        kwargs["special"] = []
-        kwargs["lower_case"] = False
-        kwargs["vocab_file"] = os.path.join(args.data, "1b_word_vocab.txt")
 
-    vocab = Vocab(**kwargs)
-
-    if args.dataset in ["wt2", "enwik8", "text8"]:
-        vocab.cnt_file(os.path.join(args.data, "train.txt"))
-        vocab.cnt_file(os.path.join(args.data, "valid.txt"))
-        vocab.cnt_file(os.path.join(args.data, "test.txt"))
+    if args.dataset in ["enwik8", "text8"]:
+        files = [
+            os.path.join(args.data, "train.txt"),
+            os.path.join(args.data, "valid.txt"),
+            os.path.join(args.data, "test.txt")
+        ]
     elif args.dataset == "wt103":
-        vocab.cnt_file(os.path.join(args.data, "train.txt"))
+        files = [os.path.join(args.data, "train.txt")]
     else:
         raise ValueError("Not supported dataset yet. ")
 
-    vocab.build_vocab()
+    vocab = LMDataset.get_vocab(files, **kwargs)
     args.ntokens = len(vocab)
+    print("Finish processing vocabulary, and the size of vocabulary is {}".
+          format(args.ntokens))
 
     return vocab

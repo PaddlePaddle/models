@@ -115,7 +115,7 @@ def do_train(args):
             parameters=mem_transformer.parameters(),
             beta1=args.beta1,
             beta2=args.beta2,
-            epsilon=args.eps,
+            epsilon=eval(args.eps),
             grad_clip=clip)
     elif args.optim.lower() == 'adagrad':
         optimizer = paddle.optimizer.Adagrad(
