@@ -10,6 +10,7 @@ learner_type: "gpu"
 optimizer_type: "adam"
 lr: 0.00005
 batch_size: 32
+sample_workers: 1
 CPU_NUM: 10
 epoch: 30
 log_per_step: 10

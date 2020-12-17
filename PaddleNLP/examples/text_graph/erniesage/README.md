@@ -36,6 +36,8 @@ NLPCC2016-DBQA 是由国际自然语言处理和中文计算会议 NLPCC 于 201
 
 
 ```sh
+# 数据预处理，建图
+python ./preprocessing/dump_graph.py -i ./example_data/train_data.txt -g ./example_data/graph_data.txt -o ./graph/
 # GPU多卡或单卡模式ErnieSage
 python link_prediction.py --conf ./config/erniesage_link_prediction.yaml
 # 对图节点的的embeding进行预测
