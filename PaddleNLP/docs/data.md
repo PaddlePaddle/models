@@ -41,7 +41,7 @@ from paddle.data import Pad
 a = [1, 2, 3, 4]
 b = [5, 6, 7]
 c = [8, 9]
-result = Pad(axis=0, pad_val=0)([a, b, c])
+result = Pad(pad_val=0)([a, b, c])
 """
 [[1, 2, 3, 4],
  [5, 6, 7, 0],
@@ -55,7 +55,20 @@ result = Pad(axis=0, pad_val=0)([a, b, c])
 
 ```python
 from paddle.data import Stack, Pad, Tuple
-batchify_fn = Tuple(Pad(axis=0, pad_val=0), Stack())
+data = [
+        [[1, 2, 3, 4], [1]],
+        [[5, 6, 7], [0]],
+        [[8, 9], [1]],
+       ]
+batchify_fn = Tuple(Pad(pad_val=0), Stack())
+ids, label = batchify_fn(data)
+"""
+ids:
+[[1, 2, 3, 4],
+ [5, 6, 7, 0],
+ [8, 9, 0, 0]]
+label: [[1], [0], [1]]
+"""
 ```
 
 ### `paddlenlp.data.SamplerHelper`
@@ -64,13 +77,28 @@ batchify_fn = Tuple(Pad(axis=0, pad_val=0), Stack())
 
 ```python
 from paddle.data import SamplerHelper
-"""
-构建dataset
-dataset = ...
-"""
-batch_sampler = SamplerHelper(dataset).shuffle().batch(
-    batch_size=batch_size,
-    drop_last=True)
+from paddle.io import Dataset
+
+class MyDataset(Dataset):
+    def __init__(self):
+        super(MyDataset, self).__init__()
+        self.data = [
+            ['traindata1', 'label1'],
+            ['traindata2', 'label2'],
+            ['traindata3', 'label3'],
+            ['traindata4', 'label4'],
+        ]
+
+    def __getitem__(self, index):
+        data = self.data[index][0]
+        label = self.data[index][1]
+        return data, label
+
+    def __len__(self):
+        return len(self.data)
+
+dataset = MyDataset()
+batch_sampler = SamplerHelper(dataset).shuffle().batch(batch_size=4)
 ```
 
 ### `paddlenlp.data.Vocab`
@@ -135,15 +163,12 @@ def convert_example(example):
 dataset = GlueCoLA('train')
 dataset = MapDatasetWrapper(dataset).apply(convert_example, lazy=True)
 
-batchify_fn = lambda samples, fn=Tuple(
+batchify_fn = Tuple(
     Pad(axis=0, pad_val=pad_id),  # ids
     Stack(dtype='int64')  # label
-): fn(samples)
+)
 
-batch_size = 16
-batch_sampler = SamplerHelper(dataset).shuffle().batch(
-    batch_size=batch_size,
-    drop_last=True)
+batch_sampler = SamplerHelper(dataset).shuffle().batch(batch_size=16)
 data_loader = DataLoader(
     dataset,
     batch_sampler=batch_sampler,
