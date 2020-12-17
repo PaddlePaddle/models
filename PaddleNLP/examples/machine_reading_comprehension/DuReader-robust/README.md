@@ -17,7 +17,7 @@ DuReaderrobust数据集是单篇章、抽取式阅读理解数据集，具体的
 
 **篇章 p**: 迈克尔.乔丹在NBA打了15个赛季。他在84年进入nba，期间在1993年10月6日第一次退役改打棒球，95年3月18日重新回归，在99年1月13日第二次退役，后于2001年10月31日复出，在03年最终退役…
 
-**参考答案 (a)**: [‘15个’,‘15个赛季’]
+**参考答案 a**: [‘15个’,‘15个赛季’]
 
 关于该数据集的详细内容，可参考数据集[论文](https://arxiv.org/abs/2004.11142)。
 
@@ -36,6 +36,7 @@ DuReaderrobust数据集是单篇章、抽取式阅读理解数据集，具体的
 
 ```shell
 python -u ./run_du.py \
+    --task_name dureader-robust \
     --model_type bert \
     --model_name_or_path bert-base-chinese \
     --max_seq_length 384 \
@@ -50,6 +51,7 @@ python -u ./run_du.py \
     --n_gpu 1 \
  ```
 
+* `task_name`: 数据集的名称，不区分大小写，如dureader-robust，cmrc等。
 * `model_type`: 预训练模型的种类。如bert，ernie，roberta等。
 * `model_name_or_path`: 预训练模型的具体名称。如bert-base-uncased，bert-large-cased等。或者是模型文件的本地路径。
 * `output_dir`: 保存模型checkpoint的路径。
