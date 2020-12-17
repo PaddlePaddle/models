@@ -36,8 +36,12 @@ vocab1 = Vocab.load_vocabulary(vocab_file_path)
 # 从字典构建
 # dic = {'unk':0, 'pad':1, 'bos':2, 'eos':3, ...}
 vocab2 = Vocab.from_dict(dic)
-# 从json构建
+# 从json构建，一般是已构建好的Vocab对象先保存为json_str或json文件后再进行恢复
+# json_str方式
+json_str = vocab1.to_json()
 vocab3 = Vocab.from_json(json_str)
+# json文件方式
+vocab1.to_json(json_file_path)
 vocab4 = Vocab.from_json(json_file_path)
 ```
 
@@ -88,12 +92,18 @@ class MyDataset(Dataset):
         return len(self.data)
 
 dataset = MyDataset()
-# SamplerHelper返回的是数据的索引
-sampler = SamplerHelper(dataset) # [0, 1, 2]
-sampler = sampler.shuffle() # [0, 2, 1]
+# SamplerHelper返回的是数据索引的可迭代对象，产生的迭代的索引为：[0, 1, 2]
+sampler = SamplerHelper(dataset)
+# shuffle()的作用是随机打乱索引顺序，产生的迭代的索引为：[0, 2, 1]
+sampler = sampler.shuffle()
+# sort()的作用是按照指定key为排序方式并在buffer_size大小个样本中排序
+# 示例中以样本第一个字段的长度进行升序排序，产生的迭代的索引为：[2, 0, 1]
 key = (lambda x, data_source: len(data_source[x][0]))
-sampler = sampler.sort(key=key, buffer_size=2) # [2, 0, 1]
-sampler = sampler.batch(batch_size=2) #[[2, 0], [1]]
+sampler = sampler.sort(key=key, buffer_size=2)
+# batch()的作用是按照batch_size组建mini-batch，产生的迭代的索引为：[[2, 0], [1]]
+sampler = sampler.batch(batch_size=2)
+# shard()的作用是为多卡训练切分数据集，当前卡产生的迭代的索引为：[[2, 0]]
+sampler = sampler.shard(num_replicas=2)
 ```
 
 ### 构建`collate_fn`
