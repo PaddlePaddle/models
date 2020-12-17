@@ -42,7 +42,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # Required parameters
     parser.add_argument("--model_type", default='ernie', required=True, type=str, help="Model type selected in the list: " +", ".join(MODEL_CLASSES.keys()))
-    parser.add_argument("--model_name_or_path", default='ernie_tiny', required=True, type=str, help="Path to pre-trained model or shortcut name selected in the list: " +
+    parser.add_argument("--model_name_or_path", default='ernie-tiny', required=True, type=str, help="Path to pre-trained model or shortcut name selected in the list: " +
         ", ".join(sum([list(classes[-1].pretrained_init_configuration.keys()) for classes in MODEL_CLASSES.values()], [])))
     parser.add_argument("--params_path", type=str, required=True, help="The path to model parameters to be loaded.")
 
@@ -175,8 +175,8 @@ if __name__ == "__main__":
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    if args.model_name_or_path == 'ernie_tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
+    if args.model_name_or_path == 'ernie-tiny':
+        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name_or_path)
     else:

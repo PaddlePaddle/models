@@ -32,8 +32,6 @@ MODEL_CLASSES = {
               ppnlp.transformers.ErnieTokenizer),
     'roberta': (ppnlp.transformers.RobertaForSequenceClassification,
                 ppnlp.transformers.RobertaTokenizer),
-    'electra': (ppnlp.transformers.ElectraForSequenceClassification,
-                ppnlp.transformers.ElectraTokenizer)
 }
 
 
@@ -49,7 +47,7 @@ def parse_args():
         ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument(
         "--model_name",
-        default='ernie_tiny',
+        default='ernie-tiny',
         required=True,
         type=str,
         help="Path to pre-trained model or shortcut name selected in the list: "
@@ -94,7 +92,7 @@ def parse_args():
         help="Total number of training epochs to perform.")
     parser.add_argument(
         "--warmup_proption",
-        default=0.1,
+        default=0.0,
         type=float,
         help="Linear warmup proption over the training process.")
     parser.add_argument(
@@ -120,6 +118,7 @@ def set_seed(args):
     paddle.seed(args.seed)
 
 
+@paddle.no_grad()
 def evaluate(model, criterion, metric, data_loader):
     """
     Given a dataset, it evals model and computes the metric.
@@ -236,8 +235,8 @@ def do_train(args):
 
     train_dataset, dev_dataset, test_dataset = ppnlp.datasets.ChnSentiCorp.get_datasets(
         ['train', 'dev', 'test'])
-    if args.model_name == 'ernie_tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
+    if args.model_name == 'ernie-tiny':
+        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name)
     else:
@@ -304,7 +303,7 @@ def do_train(args):
         ])
 
     criterion = paddle.nn.loss.CrossEntropyLoss()
-    metric = paddle.metric.Accuracy(name='acc_accumulation')
+    metric = paddle.metric.Accuracy()
 
     global_step = 0
     tic_train = time.time()

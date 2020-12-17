@@ -7,10 +7,10 @@ import warnings
 from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME
-
+from paddle.io import Dataset
 from .squad import InputFeatures, SQuAD
 
-__all__ = ['DuReader']
+__all__ = ['DuReader', 'DuReaderYesNo']
 
 
 class DuReaderExample(object):
@@ -38,23 +38,23 @@ class DuReaderExample(object):
 
 
 class DuReader(SQuAD):
-    SEGMENT_INFO = collections.namedtuple('SEGMENT_INFO', ('file', 'md5'))
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
 
     DATA_URL = 'https://dataset-bj.cdn.bcebos.com/dureader/dureader_preprocessed.zip'
 
-    SEGMENTS = {
-        'train': SEGMENT_INFO(
+    SPLITS = {
+        'train': META_INFO(
             os.path.join('preprocessed', 'trainset', 'zhidao.train.json'),
             None),
-        'dev': SEGMENT_INFO(
+        'dev': META_INFO(
             os.path.join('preprocessed', 'devset', 'zhidao.dev.json'), None),
-        'test': SEGMENT_INFO(
+        'test': META_INFO(
             os.path.join('preprocessed', 'testset', 'zhidao.test.json'), None)
     }
 
     def __init__(self,
                  tokenizer,
-                 segment='train',
+                 mode='train',
                  root=None,
                  doc_stride=128,
                  max_query_length=64,
@@ -63,17 +63,17 @@ class DuReader(SQuAD):
 
         super(DuReader, self).__init__(
             tokenizer=tokenizer,
-            segment=segment,
+            mode=mode,
             root=root,
             doc_stride=doc_stride,
             max_query_length=max_query_length,
             max_seq_length=max_seq_length,
             **kwargs)
 
-    def _get_data(self, root, segment, **kwargs):
+    def _get_data(self, root, mode, **kwargs):
         default_root = os.path.join(DATA_HOME, 'DuReader')
 
-        filename, data_hash = self.SEGMENTS[segment]
+        filename, data_hash = self.SPLITS[mode]
 
         fullname = os.path.join(default_root,
                                 filename) if root is None else os.path.join(
@@ -165,4 +165,80 @@ class DuReader(SQuAD):
 
             examples.append(example)
 
-        self.examples = examples[:2000]
+        self.examples = examples
+
+
+class DuReaderYesNo(Dataset):
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+
+    DATA_URL = 'https://dataset-bj.cdn.bcebos.com/qianyan/dureader_yesno-data.tar.gz'
+
+    SPLITS = {
+        'train': META_INFO(
+            os.path.join('dureader_yesno-data', 'train.json'),
+            'c469a0ef3f975cfd705e3553ddb27cc1'),
+        'dev': META_INFO(
+            os.path.join('dureader_yesno-data', 'dev.json'),
+            'c38544f8b5a7b567492314e3232057b5'),
+        'test': META_INFO(
+            os.path.join('dureader_yesno-data', 'test.json'),
+            '1c7a1a3ea5b8992eeaeea017fdc2d55f')
+    }
+
+    def __init__(self, mode='train', root=None, **kwargs):
+
+        self._get_data(root, mode, **kwargs)
+        self._transform_func = None
+
+        if mode == 'train':
+            self.is_training = True
+        else:
+            self.is_training = False
+
+        self._read()
+
+    def _get_data(self, root, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, 'DuReader')
+
+        filename, data_hash = self.SPLITS[mode]
+
+        fullname = os.path.join(default_root,
+                                filename) if root is None else os.path.join(
+                                    os.path.expanduser(root), filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+            if root is not None:  # not specified, and no need to warn
+                warnings.warn(
+                    'md5 check failed for {}, download {} data to {}'.format(
+                        filename, self.__class__.__name__, default_root))
+
+            get_path_from_url(self.DATA_URL, default_root)
+
+        self.full_path = fullname
+
+    def _read(self):
+        data_lines = []
+        with open(self.full_path, "r", encoding="utf8") as reader:
+            data_lines += reader.readlines()
+
+        examples = []
+        for entry in data_lines:
+            source = json.loads(entry.strip())
+            examples.append([
+                source['question'], source['answer'], source['yesno_answer'],
+                source['id']
+            ])
+
+        self.examples = examples
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, idx):
+        return self.examples[idx]
+
+    def get_labels(self):
+        """
+        Return labels of the DuReaderYesNo sample.
+        """
+        return ["Yes", "No", "Depends"]

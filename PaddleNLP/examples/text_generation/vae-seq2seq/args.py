@@ -28,12 +28,6 @@ def parse_args():
         help="Learning rate of optimizer.")
 
     parser.add_argument(
-        "--decay_factor",
-        type=float,
-        default=0.5,
-        help="Decay factor of learning rate.")
-
-    parser.add_argument(
         "--num_layers",
         type=int,
         default=1,
@@ -84,12 +78,6 @@ def parse_args():
         help="Drop probability of encoder.")
 
     parser.add_argument(
-        "--word_keep_prob",
-        type=float,
-        default=0.5,
-        help="Word keep probability.")
-
-    parser.add_argument(
         "--init_scale",
         type=float,
         default=0.0,
@@ -123,15 +111,6 @@ def parse_args():
         help='Whether to use gpu [True|False].')
 
     parser.add_argument(
-        "--enable_ce",
-        action='store_true',
-        help="The flag indicating whether to run the task "
-        "for continuous evaluation.")
-
-    parser.add_argument(
-        "--profile", action='store_true', help="Whether enable the profile.")
-
-    parser.add_argument(
         "--warm_up",
         type=int,
         default=10,
@@ -142,26 +121,6 @@ def parse_args():
         type=float,
         default=0.1,
         help='KL start value, up to 1.0.')
-
-    parser.add_argument(
-        "--attr_init",
-        type=str,
-        default='normal_initializer',
-        help="Initializer for paramters.")
-
-    parser.add_argument(
-        "--cache_num", type=int, default=1, help='Cache num for reader.')
-
-    parser.add_argument(
-        "--max_decay",
-        type=int,
-        default=5,
-        help='Max decay tries (if exceeds, early stop).')
-
-    parser.add_argument(
-        "--sort_cache",
-        action='store_true',
-        help='Sort cache before batch to accelerate training.')
 
     parser.add_argument(
         "--init_from_ckpt",

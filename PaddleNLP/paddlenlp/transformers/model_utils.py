@@ -24,17 +24,9 @@ from paddle.nn import Layer
 # TODO(fangzeyang) Temporary fix and replace by paddle framework downloader later 
 from paddlenlp.utils.downloader import get_path_from_url
 from paddlenlp.utils.env import MODEL_HOME
+from paddlenlp.utils.log import logger
 
 from .utils import InitTrackerMeta, fn_args_to_dict
-
-### FIXME(zhangxuefei): remove logging setting after logging format is clear
-log = logging.getLogger(__name__)
-formatter = logging.Formatter(
-    fmt='[%(levelname)s] %(asctime)s [%(filename)12s:%(lineno)5d]:\t%(message)s')
-console = logging.StreamHandler()
-console.setFormatter(formatter)
-log.addHandler(console)
-log.setLevel(logging.DEBUG)
 
 __all__ = [
     'PretrainedModel',
@@ -163,11 +155,11 @@ class PretrainedModel(Layer):
             if file_path is None or os.path.isfile(file_path):
                 resolved_resource_files[file_id] = file_path
             elif os.path.exists(path):
-                log.info("Already cached %s" % path)
+                logger.info("Already cached %s" % path)
                 resolved_resource_files[file_id] = path
             else:
-                log.info("Downloading %s and saved to %s" %
-                         (file_path, default_root))
+                logger.info("Downloading %s and saved to %s" %
+                            (file_path, default_root))
                 resolved_resource_files[file_id] = get_path_from_url(
                     file_path, default_root)
 

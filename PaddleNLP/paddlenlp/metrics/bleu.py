@@ -16,21 +16,27 @@ import math
 import sys
 from collections import defaultdict
 
+import paddle
+
+from .utils import default_trans_func
+
+__all__ = ["BLEU", "BLEUForDuReader"]
+
 
 def get_match_size(cand_ngram, refs_ngram):
     ref_set = defaultdict(int)
     for ref_ngram in refs_ngram:
         tmp_ref_set = defaultdict(int)
         for ngram in ref_ngram:
-            tmp_ref_set[ngram] += tmp_ref_set.get(ngram, 0) + 1
+            tmp_ref_set[tuple(ngram)] += 1
         for ngram, count in tmp_ref_set.items():
-            ref_set[ngram] = max(ref_set[ngram], count)
+            ref_set[tuple(ngram)] = max(ref_set[tuple(ngram)], count)
     cand_set = defaultdict(int)
     for ngram in cand_ngram:
-        cand_set[ngram] += 1
+        cand_set[tuple(ngram)] += 1
     match_size = 0
     for ngram, count in cand_set.items():
-        match_size += min(count, ref_set.get(ngram, 0))
+        match_size += min(count, ref_set.get(tuple(ngram), 0))
     cand_size = len(cand_ngram)
     return match_size, cand_size
 
@@ -48,13 +54,23 @@ def get_ngram(sent, n_size, label=None):
     return ngram_list
 
 
-class BLEU(object):
+class BLEU(paddle.metric.Metric):
     r'''
-    BLEU (bilingual evaluation understudy) is an algorithm for evaluating the quality of
-    text which has been machine-translated from one natural language to another. This metric
-    uses a modified form of precision to compare a candidate translation against multiple
-    reference translations.
+    BLEU (bilingual evaluation understudy) is an algorithm for evaluating the
+    quality of text which has been machine-translated from one natural language
+    to another. This metric uses a modified form of precision to compare a
+    candidate translation against multiple reference translations.
 
+    BLEU could be used as `paddle.metric.Metric` class, or an ordinary
+    class. When BLEU is used as `paddle.metric.Metric` class. A function is
+    needed that transforms the network output to reference string list, and
+    transforms the label to candidate string. By default, a default function
+    `default_trans_func` is provided, which gets target sequence id by
+    calculating the maximum probability of each step. In this case, user must
+    provide `vocab`. It should be noted that the BLEU here is different from
+    the BLEU calculated in prediction, and it is only for observation during
+    training and evaluation.
+    
     .. math::
 
         BP & =
@@ -68,31 +84,79 @@ class BLEU(object):
     where `c` is the length of candidate sentence, and 'r' is the length of refrence sentence.
 
     Args:
-        n_size (int): Number of gram for BLEU metric. Default: 4.
-        weights (list, optional): The weights of precision of each gram. Default: None.  
+        trans_func (callable, optional): `trans_func` transforms the network
+            output to string to calculate.
+        vocab (dict|paddlenlp.data.vocab, optional): Vocab for target language.
+            If `trans_func` is None and BLEU is used as `paddle.metric.Metric`
+            instance, `default_trans_func` will be performed and `vocab` must
+            be provided.
+        n_size (int, optional): Number of gram for BLEU metric. Default: 4.
+        weights (list, optional): The weights of precision of each gram.
+            Default: None.
+        name (str, optional): Name of `paddle.metric.Metric` instance.
+            Default: "bleu".
+
+    Examples:
+        1. Using as a general evaluation object.
+        .. code-block:: python
+            from paddlenlp.metrics import BLEU
+            bleu = BLEU()
+            cand = ["The","cat","The","cat","on","the","mat"]
+            ref_list = [["The","cat","is","on","the","mat"],["There","is","a","cat","on","the","mat"]]
+            bleu.add_inst(cand, ref_list)
+            print(bleu.score()) # 0.4671379777282001
+
+        2. Using as an instance of `paddle.metric.Metric`.
+                
+        .. code-block:: python
+        # TODO(liujiaqi)
+
     '''
 
-    def __init__(self, n_size=4, weights=None):
+    def __init__(self,
+                 trans_func=None,
+                 vocab=None,
+                 n_size=4,
+                 weights=None,
+                 name="bleu"):
+        super(BLEU, self).__init__()
         if not weights:
             weights = [1 / n_size for _ in range(n_size)]
-
         assert len(weights) == n_size, (
             "Number of weights and n-gram should be the same, got Number of weights: '%d' and n-gram: '%d'"
             % (len(weights), n_size))
-
+        self._name = name
         self.match_ngram = {}
         self.candi_ngram = {}
         self.weights = weights
         self.bp_r = 0
         self.bp_c = 0
         self.n_size = n_size
+        self.vocab = vocab
+        self.trans_func = trans_func
+
+    def update(self, output, label, seq_mask=None):
+        if self.trans_func is None:
+            if self.vocab is None:
+                raise AttributeError(
+                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing BLEU."
+                )
+            cand_list, ref_list = default_trans_func(output, label, seq_mask,
+                                                     self.vocab)
+        else:
+            cand_list, ref_list = self.trans_func(output, label, seq_mask)
+        if len(cand_list) != len(ref_list):
+            raise ValueError(
+                "Length error! Please check the output of network.")
+        for i in range(len(cand_list)):
+            self.add_inst(cand_list[i], ref_list[i])
 
     def add_inst(self, cand, ref_list):
         '''
         Update the states based on the a pair of candidate and references.
 
         Args:
-            cand (str): The candidate sentence generated by model.
+            cand (list): Tokenized candidate sentence generated by model.
             ref_list (list): List of ground truth sentences.
         '''
         for n_size in range(self.n_size):
@@ -117,7 +181,13 @@ class BLEU(object):
         self.bp_r += min([(abs(len(cand) - len(ref)), len(ref))
                           for ref in ref_list])[1]
 
-    def score(self):
+    def reset(self):
+        self.match_ngram = {}
+        self.candi_ngram = {}
+        self.bp_r = 0
+        self.bp_c = 0
+
+    def accumulate(self):
         '''
         Calculate the final bleu metric.
         '''
@@ -132,15 +202,20 @@ class BLEU(object):
             except:
                 _score = 0
             if _score == 0:
-                _score = w_i * math.log(sys.float_info.min)
+                _score = sys.float_info.min
             prob_list.append(_score)
 
         logs = math.fsum(w_i * math.log(p_i)
                          for w_i, p_i in zip(self.weights, prob_list))
         bp = math.exp(min(1 - self.bp_r / float(self.bp_c), 0))
         bleu = bp * math.exp(logs)
-
         return bleu
+
+    def score(self):
+        return self.accumulate()
+
+    def name(self):
+        return self._name
 
 
 class BLEUForDuReader(BLEU):
@@ -161,7 +236,6 @@ class BLEUForDuReader(BLEU):
                  yn_label=None,
                  yn_ref=None,
                  entity_ref=None):
-        #super(BLEUWithBonus, self).add_inst(cand, ref_list)
         BLEU.add_inst(self, cand, ref_list)
         if yn_label is not None and yn_ref is not None:
             self.add_yn_bonus(cand, ref_list, yn_label, yn_ref)
@@ -174,7 +248,7 @@ class BLEUForDuReader(BLEU):
             ref_ngram = []
             for ref_id, r in enumerate(yn_ref):
                 ref_ngram.append(get_ngram(ref_list[ref_id], n_size, label=r))
-            match_size, cand_size = self.get_match_size(cand_ngram, ref_ngram)
+            match_size, cand_size = get_match_size(cand_ngram, ref_ngram)
             self.match_ngram[n_size] += self.alpha * match_size
             self.candi_ngram[n_size] += self.alpha * match_size
 
@@ -184,6 +258,6 @@ class BLEUForDuReader(BLEU):
             ref_ngram = []
             for reff_id, r in enumerate(entity_ref):
                 ref_ngram.append(get_ngram(r, n_size, label='ENTITY'))
-            match_size, cand_size = self.get_match_size(cand_ngram, ref_ngram)
+            match_size, cand_size = get_match_size(cand_ngram, ref_ngram)
             self.match_ngram[n_size] += self.beta * match_size
             self.candi_ngram[n_size] += self.beta * match_size

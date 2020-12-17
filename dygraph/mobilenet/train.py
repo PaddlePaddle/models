@@ -222,9 +222,15 @@ def train_mobilenet():
 
                 net.clear_gradients()
                 t2 = time.time()
-                total_loss += avg_loss.numpy()
-                total_acc1 += acc_top1.numpy()
-                total_acc5 += acc_top5.numpy()
+
+                avg_loss_value = avg_loss.numpy()
+                acc_top1_value = acc_top1.numpy()
+                acc_top5_value = acc_top5.numpy()
+
+                total_loss += avg_loss_value
+                total_acc1 += acc_top1_value
+                total_acc5 += acc_top5_value
+
                 total_sample += 1
                 batch_id += 1
 
@@ -240,8 +246,8 @@ def train_mobilenet():
                     ips = float(args.batch_size) / batch_cost_avg.get_average()
                     print(
                         "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, net_cost: %.5f sec, backward_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f images/sec"
-                        % (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(),
-                           acc_top5.numpy(), batch_cost_avg.get_average(),
+                        % (eop, batch_id, avg_loss_value, acc_top1_value,
+                           acc_top5_value, batch_cost_avg.get_average(),
                            batch_net_avg.get_average(),
                            batch_backward_avg.get_average(),
                            batch_reader_avg.get_average(), ips))

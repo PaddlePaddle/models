@@ -221,7 +221,7 @@ class GRUEncoder(nn.Layer):
             E.g., setting num_layers=2 would mean stacking two GRUs together to form a stacked GRU, 
             with the second GRU taking in outputs of the first GRU and computing the final results.
         direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward", "backward" and "bidirectional".
+            It can be "forward" and "bidirectional".
             When "bidirectional", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each GRU layer except the last layer, with dropout probability equal to dropout.
@@ -344,7 +344,7 @@ class LSTMEncoder(nn.Layer):
             E.g., setting num_layers=2 would mean stacking two LSTMs together to form a stacked LSTM, 
             with the second LSTM taking in outputs of the first LSTM and computing the final results.
         direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward", "backward" and "bidirectional".
+            It can be "forward" and "bidirectional".
             When "bidirectional", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each LSTM layer except the last layer, with dropout probability equal to dropout.
@@ -468,7 +468,7 @@ class RNNEncoder(nn.Layer):
             E.g., setting num_layers=2 would mean stacking two RNNs together to form a stacked RNN, 
             with the second RNN taking in outputs of the first RNN and computing the final results.
         direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward", "backward" and "bidirectional".
+            It can be "forward" and "bidirectional".
             When "bidirectional", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout.

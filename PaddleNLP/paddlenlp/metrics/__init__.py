@@ -14,4 +14,6 @@
 
 from .perplexity import Perplexity
 from .chunk import ChunkEvaluator
-from .bleu import BLEU
+from .bleu import BLEU, BLEUForDuReader
+from .rouge import RougeL, RougeLForDuReader, RougeN, Rouge1, Rouge2
+from .glue import AccuracyAndF1, Mcc, PearsonAndSpearman

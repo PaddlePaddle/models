@@ -2,9 +2,7 @@ English | [简体中文](./README.md)
 
 # PaddleNLP
 
-![License](https://img.shields.io/badge/license-Apache%202-red.svg)
-![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
-![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+![License](https://img.shields.io/badge/license-Apache%202-red.svg)![python version](https://img.shields.io/badge/python-3.6+-orange.svg)![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## Introduction
 
@@ -31,7 +29,7 @@ PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-t
 * paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp>=2.0.0a
+pip install paddlenlp==2.0.0b
 ```
 
 ## Quick Start
@@ -49,7 +47,6 @@ For more Dataset API usage, please refer to [Dataset API](./docs/datasets.md).
 ### Chinese Text Emebdding Loading
 
 ```python
-
 from paddlenlp.embeddings import TokenEmbedding
 
 wordemb = TokenEmbedding("w2v.baidu_encyclopedia.target.word-word.dim300")
@@ -71,7 +68,6 @@ ernie = Ernie("ernie-1.0", num_classes=2, task="seq-cls")
 senta = Senta(network="bow", vocab_size=1024, num_classes=2)
 
 simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
-
 ```
 
 ### Rich Chinsese Pre-trained Models
@@ -85,7 +81,7 @@ roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [Pretrained-Models](./docs/transformers.md)
+For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
 
 ## API Usage
 

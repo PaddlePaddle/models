@@ -17,16 +17,6 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--train_data_prefix", type=str, help="file prefix for train data")
-    parser.add_argument(
-        "--eval_data_prefix", type=str, help="file prefix for eval data")
-    parser.add_argument(
-        "--test_data_prefix", type=str, help="file prefix for test data")
-    parser.add_argument(
-        "--vocab_prefix", type=str, help="file prefix for vocab")
-    parser.add_argument("--src_lang", type=str, help="source language suffix")
-    parser.add_argument("--trg_lang", type=str, help="target language suffix")
 
     parser.add_argument(
         "--optimizer",
@@ -45,13 +35,12 @@ def parse_args():
         type=int,
         default=1,
         help="layers number of encoder and decoder")
+
     parser.add_argument(
         "--hidden_size",
         type=int,
         default=100,
         help="hidden size of encoder and decoder")
-    parser.add_argument("--src_vocab_size", type=int, help="source vocab size")
-    parser.add_argument("--trg_vocab_size", type=int, help="target vocab size")
 
     parser.add_argument(
         "--batch_size", type=int, help="batch size of each step")
@@ -64,13 +53,16 @@ def parse_args():
         type=int,
         default=50,
         help="max length for source and target sentence")
+
     parser.add_argument(
         "--dropout", type=float, default=0.0, help="drop probability")
+
     parser.add_argument(
         "--init_scale",
         type=float,
         default=0.0,
         help="init scale for parameter")
+
     parser.add_argument(
         "--max_grad_norm",
         type=float,
@@ -90,15 +82,11 @@ def parse_args():
         help="model path for model to save")
 
     parser.add_argument(
-        "--reload_model", type=str, help="reload model to inference")
-
-    parser.add_argument(
-        "--infer_file", type=str, help="file name for inference")
-    parser.add_argument(
         "--infer_output_file",
         type=str,
         default='infer_output',
         help="file name for inference output")
+
     parser.add_argument(
         "--beam_size", type=int, default=10, help="file name for inference")
 
@@ -107,16 +95,6 @@ def parse_args():
         type=eval,
         default=False,
         help='Whether using gpu [True|False]')
-
-    parser.add_argument(
-        "--profile", action='store_true', help="Whether enable the profile.")
-    # NOTE: profiler args, used for benchmark
-
-    parser.add_argument(
-        "--profiler_path",
-        type=str,
-        default='./seq2seq.profile',
-        help="the profiler output file path. (used for benchmark)")
 
     parser.add_argument(
         "--init_from_ckpt",

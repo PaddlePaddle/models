@@ -51,9 +51,7 @@ def do_train(args):
         paddle.seed(random_seed)
 
     # Define data loader
-    (train_loader, train_steps_fn), (eval_loader,
-                                     eval_steps_fn) = reader.create_data_loader(
-                                         args, trainer_count, rank)
+    (train_loader), (eval_loader) = reader.create_data_loader(args)
 
     # Define model
     transformer = TransformerModel(
@@ -176,26 +174,25 @@ def do_train(args):
 
             if step_idx % args.save_step == 0 and step_idx != 0:
                 # Validation
-                if args.validation_file:
-                    transformer.eval()
-                    total_sum_cost = 0
-                    total_token_num = 0
-                    with paddle.no_grad():
-                        for input_data in eval_loader:
-                            (src_word, trg_word, lbl_word) = input_data
-                            logits = transformer(
-                                src_word=src_word, trg_word=trg_word)
-                            sum_cost, avg_cost, token_num = criterion(logits,
-                                                                      lbl_word)
-                            total_sum_cost += sum_cost.numpy()
-                            total_token_num += token_num.numpy()
-                            total_avg_cost = total_sum_cost / total_token_num
-                        logger.info("validation, step_idx: %d, avg loss: %f, "
-                                    "normalized loss: %f, ppl: %f" %
-                                    (step_idx, total_avg_cost,
-                                     total_avg_cost - loss_normalizer,
-                                     np.exp([min(total_avg_cost, 100)])))
-                    transformer.train()
+                transformer.eval()
+                total_sum_cost = 0
+                total_token_num = 0
+                with paddle.no_grad():
+                    for input_data in eval_loader:
+                        (src_word, trg_word, lbl_word) = input_data
+                        logits = transformer(
+                            src_word=src_word, trg_word=trg_word)
+                        sum_cost, avg_cost, token_num = criterion(logits,
+                                                                  lbl_word)
+                        total_sum_cost += sum_cost.numpy()
+                        total_token_num += token_num.numpy()
+                        total_avg_cost = total_sum_cost / total_token_num
+                    logger.info("validation, step_idx: %d, avg loss: %f, "
+                                "normalized loss: %f, ppl: %f" %
+                                (step_idx, total_avg_cost,
+                                 total_avg_cost - loss_normalizer,
+                                 np.exp([min(total_avg_cost, 100)])))
+                transformer.train()
 
                 if args.save_model and rank == 0:
                     model_dir = os.path.join(args.save_model,

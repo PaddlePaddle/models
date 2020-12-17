@@ -1,12 +1,9 @@
 简体中文 | [English](./README_en.md)
-
 <p align="center">
   <img src="./docs/imgs/paddlenlp.png" width="520" height ="100"  align="middle" />
 </p>
 
-
 基于PaddlePaddle2.0的NLP领域深度学习框架，包含丰富的前沿模型、易学易用的高层API、覆盖主流任务的全流程、高性能代码实现。
-
 
  [![python version](https://camo.githubusercontent.com/4bc45421df57c3901ec5d21da412680df9b2d74fee7c297ab4e6764868e805fb/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f707974686f6e2d332e362b2d6f72616e67652e737667)](https://camo.githubusercontent.com/4bc45421df57c3901ec5d21da412680df9b2d74fee7c297ab4e6764868e805fb/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f707974686f6e2d332e362b2d6f72616e67652e737667) [![support os](https://camo.githubusercontent.com/7c97d13875070c3d1cfc86838fa87cb3db7909847a3992a33665c0a67800a33a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6f732d6c696e757825324325323077696e2532432532306d61632d79656c6c6f772e737667)](https://camo.githubusercontent.com/7c97d13875070c3d1cfc86838fa87cb3db7909847a3992a33665c0a67800a33a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6f732d6c696e757825324325323077696e2532432532306d61632d79656c6c6f772e737667)
 
@@ -72,7 +69,6 @@ wordemb.cosine_sim("艺术", "火车")
 更多使用方法请参考 [word_embedding文档](./examples/word_embedding/README.md)。
 
 ## 一键加载复杂模型
-
 ```python
 from paddlenlp.models import Ernie, Senta, SimNet
 
@@ -84,7 +80,6 @@ simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
 ```
 
 ## 丰富、高质量的中文预训练模型
-
 ```python
 from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
 
@@ -140,10 +135,9 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 # 社区贡献
 
 - 欢迎您向PaddleNLP贡献优秀的预训练模型、数据集...
-
 - 您也可以联系我们贡献API文档、教程、有趣案例...
 
-  
+
 
 # License
 
