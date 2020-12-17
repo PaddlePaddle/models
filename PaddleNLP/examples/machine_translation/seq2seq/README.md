@@ -56,7 +56,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定）。预测命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码。生成的翻译结果位于`--infer_output_file`指定的路径，预测命令如下：
 
 ```sh
 python predict.py \
