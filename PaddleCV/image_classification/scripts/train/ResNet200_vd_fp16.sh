@@ -6,13 +6,11 @@ export FLAGS_cudnn_exhaustive_search=1
 export FLAGS_cudnn_batchnorm_spatial_persistent=1
 
 DATA_DIR="Your image dataset path, e.g. ./data/ILSVRC2012/"
-DATA_FORMAT="NCHW"
+DATA_FORMAT="NHWC"
 USE_AMP=true #whether to use amp
 USE_DALI=true
 USE_ADDTO=true
-if ${USE_AMP} ;then
-    DATA_FORMAT="NHWC"
-fi
+
 if ${USE_ADDTO} ;then
     export FLAGS_max_inplace_grad_add=8
 fi
