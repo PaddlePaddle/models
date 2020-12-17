@@ -87,9 +87,21 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 * [Metrics API](./docs/embeddings.md)
 * [Models API](./docs/models.md)
 
+
+
+
 ## Tutorials
 
 Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
+
+* [paddlenlp.seq2vec是什么? 瞧瞧它怎么完成情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to use lstm to do sentiment analysis.
+
+* [使用PaddleNLP语义预训练模型ERNIE优化情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
+
+* [基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771) shows how to make use of bigru and crf to do information extraction.
+
+* [使用PaddleNLP预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361) shows how to exploit the pretrained ERNIE to do information extraction better.
+
 
 ## Community
 
