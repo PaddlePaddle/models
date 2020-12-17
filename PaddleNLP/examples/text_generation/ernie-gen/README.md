@@ -73,7 +73,7 @@ python -u ./train.py \
 - `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
 - `init_checkpoint` 表示模型加载路径，通过设置此参数可以开启增量训练。
 
-训练会持续很长的时间，为此我们提供了微调后的[模型](https://paddlenlp.bj.bcebos.com/models/transformers/ernie_gen_finetuned/ernie_1.0_poetry.pdparams)。您可以通过`init_checkpoint`加载该模型进行增量训练、评估或预测。
+训练会持续很长的时间，为此我们提供了[微调后的模型](https://paddlenlp.bj.bcebos.com/models/transformers/ernie_gen_finetuned/ernie_1.0_poetry.pdparams)。您可以下载该模型并通过`init_checkpoint`加载其参数进行增量训练、评估或预测。
 
 ### 2.4 模型评估
 
