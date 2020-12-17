@@ -116,7 +116,7 @@ class ErnieSageV2Encoder(Encoder):
         """ forward train function of the model.
 
         Args:
-            graphs (GraphTensor List): list of graph tensors.
+            graphs (Graph List): list of graph tensors.
             inputs (Tensor List): list of input tensors.
 
         Returns:

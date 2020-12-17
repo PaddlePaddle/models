@@ -135,7 +135,7 @@ class ErnieSageV2Conv(nn.Layer):
         """Message Passing of erniesage v2.
 
         Args:
-            graph (GraphTensor): the GraphTensor object.
+            graph (Graph): the Graph object.
             feature (Tensor): the node feature tensor.
 
         Returns:
