@@ -25,20 +25,21 @@ token_embedding = TokenEmbedding(embedding_name="w2v.baidu_encyclopedia.target.w
 # 查看token_embedding详情
 print(token_embedding)
 
-Object   type: <paddlenlp.embeddings.token_embedding.TokenEmbedding object at 0x7f67fd192e30>
-Unknown index: 1
+Object   type: <paddlenlp.embeddings.token_embedding.TokenEmbedding object at 0x7fda7eb5f290>
+Unknown index: 635963
 Unknown token: [UNK]
-Padding index: 0
+Padding index: 635964
 Padding token: [PAD]
 Parameter containing:
-Tensor(shape=[636015, 300], dtype=float32, place=CPUPlace, stop_gradient=False,
-       [[ 0.        ,  0.        ,  0.        , ...,  0.        ,  0.        ,  0.        ],
-        [ 0.00372404,  0.01534354,  0.01341010, ..., -0.00605236, -0.02150303,  0.02372430],
-        [-0.24200200,  0.13931701,  0.07378800, ...,  0.14103900,  0.05592300, -0.08004800],
+Tensor(shape=[635965, 300], dtype=float32, place=CPUPlace, stop_gradient=False,
+       [[-0.24200200,  0.13931701,  0.07378800, ...,  0.14103900,  0.05592300, -0.08004800],
+        [-0.08671700,  0.07770800,  0.09515300, ...,  0.11196400,  0.03082200, -0.12893000],
+        [-0.11436500,  0.12201900,  0.02833000, ...,  0.11068700,  0.03607300, -0.13763499],
         ...,
-        [ 0.01615800, -0.00266300, -0.00628300, ...,  0.01484100,  0.00196600, -0.01032000],
-        [ 0.01705700,  0.00040400, -0.01222000, ...,  0.02837200,  0.02402500, -0.00814800],
-        [ 0.02628800, -0.00008300, -0.00393500, ...,  0.00654000,  0.00024600, -0.00662600]])
+        [ 0.02628800, -0.00008300, -0.00393500, ...,  0.00654000,  0.00024600, -0.00662600],
+        [-0.00924490,  0.00652097,  0.01049327, ..., -0.01796000,  0.03498908, -0.02209341],
+        [ 0.        ,  0.        ,  0.        , ...,  0.        ,  0.        ,  0.        ]])
+
 ```
 
 ## 查询embedding结果
@@ -93,5 +94,5 @@ words = tokenizer.cut("中国人民")
 print(words) # ['中国人', '民']
 
 tokens = tokenizer.encode("中国人民")
-print(tokens) # [12532, 1336]
+print(tokens) # [12530, 1334]
 ```
