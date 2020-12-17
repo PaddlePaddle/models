@@ -31,6 +31,7 @@ from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
+from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -51,6 +52,7 @@ TASK_CLASSES = {
 MODEL_CLASSES = {
     "bert": (BertForSequenceClassification, BertTokenizer),
     "electra": (ElectraForSequenceClassification, ElectraTokenizer),
+    "ernie": (ErnieForSequenceClassification, ErnieTokenizer),
 }
 
 
@@ -174,27 +176,27 @@ def evaluate(model, loss_fct, metric, data_loader):
         loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
-    acc = metric.accumulate()
+    res = metric.accumulate()
     if isinstance(metric, AccuracyAndF1):
         print(
             "eval loss: %f, acc: %s, precision: %s, recall: %s, f1: %s, acc and f1: %s, "
             % (
                 loss.numpy(),
-                acc[0],
-                acc[1],
-                acc[2],
-                acc[3],
-                acc[4], ),
+                res[0],
+                res[1],
+                res[2],
+                res[3],
+                res[4], ),
             end='')
     elif isinstance(metric, Mcc):
-        print("eval loss: %f, mcc: %s, " % (loss.numpy(), acc[0]), end='')
+        print("eval loss: %f, mcc: %s, " % (loss.numpy(), res[0]), end='')
     elif isinstance(metric, PearsonAndSpearman):
         print(
             "eval loss: %f, pearson: %s, spearman: %s, pearson and spearman: %s, "
-            % (loss.numpy(), acc[0], acc[1], acc[2]),
+            % (loss.numpy(), res[0], res[1], res[2]),
             end='')
     else:
-        print("eval loss: %f, acc: %s, " % (loss.numpy(), acc), end='')
+        print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
     model.train()
 
 
