@@ -164,7 +164,10 @@ Data: 作为老的四星酒店，房间依然很整洁，相当不错。机场�
 
 ## 线上体验教程
 
-[paddlenlp.seq2vec是什么? 瞧瞧它怎么完成情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1294333)展示了使用序列模型LSTM完成情感分析任务。
-[使用PaddleNLP语义预训练模型ERNIE优化情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1283423)展示了使用ERNIE优化情感分析任务。
-[基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
-[使用PaddleNLP预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
+* [paddlenlp.seq2vec是什么? 瞧瞧它怎么完成情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1294333)展示了使用序列模型LSTM完成情感分析任务。
+
+* [使用PaddleNLP语义预训练模型ERNIE优化情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1283423)展示了使用ERNIE优化情感分析任务。
+
+* [基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
+
+* [使用PaddleNLP预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
