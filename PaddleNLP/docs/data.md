@@ -15,12 +15,95 @@
 
 ## API使用方法
 
-### `paddlenlp.data.Stack`
+以上API都是用来辅助构建`DataLoader`，`DataLoader`比较重要的三个初始化参数是`dataset`、`batch_sampler`和`collate_fn`。
+
+`paddlenlp.data.Vocab`和`paddlenlp.data.JiebaTokenizer`用在构建`dataset`时处理文本token到ID的映射。
+
+`paddlenlp.data.SamplerHelper`用于构建可迭代的`batch_sampler`。
+
+`paddlenlp.data.Stack`、`paddlenlp.data.Pad`和`paddlenlp.data.Tuple`用于构建生成mini-batch的`collate_fn`函数。
+
+### 构建`dataset`
+
+#### `paddlenlp.data.Vocab`
+
+`paddlenlp.data.Vocab`词表类，集合了一系列文本token与ids之间映射的一系列方法，支持从文件、字典、json等一系方式构建词表。
+
+```python
+from paddlenlp.data import Vocab
+# 从文件构建
+vocab1 = Vocab.load_vocabulary(vocab_file_path)
+# 从字典构建
+# dic = {'unk':0, 'pad':1, 'bos':2, 'eos':3, ...}
+vocab2 = Vocab.from_dict(dic)
+# 从json构建
+vocab3 = Vocab.from_json(json_str)
+vocab4 = Vocab.from_json(json_file_path)
+```
+
+#### `paddlenlp.data.JiebaTokenizer`
+
+`paddlenlp.data.JiebaTokenizer`初始化需传入`paddlenlp.data.Vocab`类，包含`cut`分词方法和将句子转换为ids的`encode`方法。
+
+```python
+from paddlenlp.data import Vocab, JiebaTokenizer
+# 词表文件路径，运行示例程序可先下载词表文件
+# wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
+vocab_file_path = './senta_word_dict.txt'
+# 构建词表
+vocab = Vocab.load_vocabulary(
+    vocab_file_path,
+    unk_token='[UNK]',
+    pad_token='[PAD]')
+tokenizer = JiebaTokenizer(vocab)
+tokens = tokenizer.cut('我爱你中国') # ['我爱你', '中国']
+ids = tokenizer.encode('我爱你中国') # [1170578, 575565]
+```
+
+### 构建`batch_sampler`
+
+#### `paddlenlp.data.SamplerHelper`
+
+`paddlenlp.data.SamplerHelper`的作用是构建用于`DataLoader`的可迭代采样器，它包含`shuffle`、`sort`、`batch`、`shard`等一系列方法，方便用户灵活使用。
+
+```python
+from paddlenlp.data import SamplerHelper
+from paddle.io import Dataset
+
+class MyDataset(Dataset):
+    def __init__(self):
+        super(MyDataset, self).__init__()
+        self.data = [
+            [[1, 2, 3, 4], [1]],
+            [[5, 6, 7], [0]],
+            [[8, 9], [1]],
+        ]
+
+    def __getitem__(self, index):
+        data = self.data[index][0]
+        label = self.data[index][1]
+        return data, label
+
+    def __len__(self):
+        return len(self.data)
+
+dataset = MyDataset()
+# SamplerHelper返回的是数据的索引
+sampler = SamplerHelper(dataset) # [0, 1, 2]
+sampler = sampler.shuffle() # [0, 2, 1]
+key = (lambda x, data_source: len(data_source[x][0]))
+sampler = sampler.sort(key=key, buffer_size=2) # [2, 0, 1]
+sampler = sampler.batch(batch_size=2) #[[2, 0], [1]]
+```
+
+### 构建`collate_fn`
+
+#### `paddlenlp.data.Stack`
 
 `paddlenlp.data.Stack`用来组建batch，它的输入必须具有相同的shape，输出便是这些输入的堆叠组成的batch数据。
 
 ```python
-from paddle.data import Stack
+from paddlenlp.data import Stack
 a = [1, 2, 3, 4]
 b = [3, 4, 5, 6]
 c = [5, 6, 7, 8]
@@ -32,12 +115,12 @@ result = Stack()([a, b, c])
 """
 ```
 
-### `paddlenlp.data.Pad`
+#### `paddlenlp.data.Pad`
 
 `paddlenlp.data.Pad`用来组建batch，它的输入长度不同，它首先会将输入数据全部padding到最大长度，然后再堆叠组成batch数据输出。
 
 ```python
-from paddle.data import Pad
+from paddlenlp.data import Pad
 a = [1, 2, 3, 4]
 b = [5, 6, 7]
 c = [8, 9]
@@ -49,12 +132,12 @@ result = Pad(pad_val=0)([a, b, c])
 """
 ```
 
-### `paddlenlp.data.Tuple`
+#### `paddlenlp.data.Tuple`
 
 `paddlenlp.data.Tuple`会将多个组batch的函数包装在一起。
 
 ```python
-from paddle.data import Stack, Pad, Tuple
+from paddlenlp.data import Stack, Pad, Tuple
 data = [
         [[1, 2, 3, 4], [1]],
         [[5, 6, 7], [0]],
@@ -71,82 +154,22 @@ label: [[1], [0], [1]]
 """
 ```
 
-### `paddlenlp.data.SamplerHelper`
-
-`paddlenlp.data.SamplerHelper`的作用是构建用于`DataLoader`的可迭代采样器，它包含`shuffle`、`sort`、`batch`、`shard`等一系列方法，方便用户灵活使用。
-
-```python
-from paddle.data import SamplerHelper
-from paddle.io import Dataset
-
-class MyDataset(Dataset):
-    def __init__(self):
-        super(MyDataset, self).__init__()
-        self.data = [
-            ['traindata1', 'label1'],
-            ['traindata2', 'label2'],
-            ['traindata3', 'label3'],
-            ['traindata4', 'label4'],
-        ]
-
-    def __getitem__(self, index):
-        data = self.data[index][0]
-        label = self.data[index][1]
-        return data, label
-
-    def __len__(self):
-        return len(self.data)
-
-dataset = MyDataset()
-batch_sampler = SamplerHelper(dataset).shuffle().batch(batch_size=4)
-```
-
-### `paddlenlp.data.Vocab`
-
-`paddlenlp.data.Vocab`词表类，集合了一系列文本token与ids之间映射的一系列方法，支持从文件、字典、json等一系方式构建词表。
-
-```python
-from paddle.data import Vocab
-# 从文件构建
-vocab1 = Vocab.load_vocabulary(vocab_file_path)
-# 从字典构建
-# dic = {'unk':0, 'pad':1, 'bos':2, 'eos':3, ...}
-vocab2 = Vocab.from_dict(dic)
-# 从json构建
-vocab3 = Vocab.from_json(json_str)
-vocab4 = Vocab.from_json(json_file_path)
-```
-
-### `paddlenlp.data.JiebaTokenizer`
-
-`paddlenlp.data.JiebaTokenizer`初始化需传入`paddlenlp.data.Vocab`类，包含`cut`分词方法和将句子转换为ids的`encode`方法。
-
-```python
-from paddle.data import Vocab, JiebaTokenizer
-# 从文件构建词表
-vocab = Vocab.load_vocabulary(vocab_file_path)
-tokenizer = JiebaTokenizer(vocab)
-tokens = tokenizer.cut('我爱你中国')
-ids = tokenizer.encode('我爱你中国')
-```
-
 ### 综合示例
 
 ```python
 from paddlenlp.data import Vocab, JiebaTokenizer, Stack, Pad, Tuple, SamplerHelper
-from paddlenlp.datasets import GlueCoLA
+from paddlenlp.datasets import ChnSentiCorp
 from paddlenlp.datasets import MapDatasetWrapper
 from paddle.io import DataLoader
 
-# 词表文件路径
-vocab_file_path = './vocab.txt'
+# 词表文件路径，运行示例程序可先下载词表文件
+# wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
+vocab_file_path = './senta_word_dict.txt'
 # 构建词表
 vocab = Vocab.load_vocabulary(
     vocab_file_path,
     unk_token='[UNK]',
-    pad_token='[PAD]',
-    bos_token='[CLS]',
-    eos_token='[SEP]')
+    pad_token='[PAD]')
 # 初始化分词器
 tokenizer = JiebaTokenizer(vocab)
 
@@ -160,7 +183,7 @@ def convert_example(example):
     label = [label]
     return ids, label
 
-dataset = GlueCoLA('train')
+dataset = ChnSentiCorp('train')
 dataset = MapDatasetWrapper(dataset).apply(convert_example, lazy=True)
 
 batchify_fn = Tuple(
