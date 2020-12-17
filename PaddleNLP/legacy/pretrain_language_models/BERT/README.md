@@ -202,6 +202,7 @@ DATA_PATH=/path/to/xnli/data/
 CKPT_PATH=/path/to/save/checkpoints/
 
 python -u run_classifier.py --task_name ${TASK_NAME} \
+                   --use_cuda false \
                    --use_xpu true \
                    --do_train true \
                    --do_val true \
