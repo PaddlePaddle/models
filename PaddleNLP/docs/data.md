@@ -173,19 +173,16 @@ vocab = Vocab.load_vocabulary(
 # 初始化分词器
 tokenizer = JiebaTokenizer(vocab)
 
-pad_id = vocab.token_to_idx[vocab.pad_token]
-bos_id = vocab.token_to_idx[vocab.bos_token]
-eos_id = vocab.token_to_idx[vocab.eos_token]
-
 def convert_example(example):
     text, label = example
-    ids = [bos_id] + tokenizer.encode(text) + [eos_id]
+    ids = tokenizer.encode(text)
     label = [label]
     return ids, label
 
 dataset = ChnSentiCorp('train')
 dataset = MapDatasetWrapper(dataset).apply(convert_example, lazy=True)
 
+pad_id = vocab.token_to_idx[vocab.pad_token]
 batchify_fn = Tuple(
     Pad(axis=0, pad_val=pad_id),  # ids
     Stack(dtype='int64')  # label
