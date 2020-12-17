@@ -56,7 +56,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定），在linux系统下，测试集的译文数据的默认安装路径为`~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi`，如果您使用的是Windows系统，需要在下方更改路径。预测命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定）。预测命令如下：
 
 ```sh
 python predict.py \
@@ -67,7 +67,6 @@ python predict.py \
      --init_scale  0.1 \
      --max_grad_norm 5.0 \
      --init_from_ckpt attention_models/9 \
-     --infer_target_file ~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi \
      --infer_output_file infer_output.txt \
      --beam_size 10 \
      --use_gpu True

@@ -82,8 +82,6 @@ def parse_args():
         help="model path for model to save")
 
     parser.add_argument(
-        "--infer_target_file", type=str, help="target file name for inference")
-    parser.add_argument(
         "--infer_output_file",
         type=str,
         default='infer_output',

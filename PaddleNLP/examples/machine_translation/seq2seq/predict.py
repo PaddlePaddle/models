@@ -46,6 +46,7 @@ def do_predict(args):
     test_loader, src_vocab_size, tgt_vocab_size, bos_id, eos_id = create_infer_loader(
         args)
     _, vocab = IWSLT15.get_vocab()
+
     trg_idx2word = vocab.idx_to_token
 
     model = paddle.Model(
@@ -85,11 +86,12 @@ def do_predict(args):
                     cand_list.append(word_list)
                     break
 
+    test_ds = IWSLT15.get_datasets(["test"])
+
     bleu = BLEU()
-    with io.open(args.infer_target_file, encoding="utf-8") as f:
-        for i, line in enumerate(f):
-            ref = line.strip().split()
-            bleu.add_inst(cand_list[i], [ref])
+    for i, data in enumerate(test_ds):
+        ref = data[1].split()
+        bleu.add_inst(cand_list[i], [ref])
     print("BLEU score is %s." % bleu.score())
 
 
