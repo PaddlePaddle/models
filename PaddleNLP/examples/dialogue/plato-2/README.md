@@ -101,3 +101,5 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 32层PLATO-2网络交互示例：
 
 <p><img src="./imgs/case.jpg" hspace="10"/></p>
+
+**NOTE:** 输入"[EXIT]"退出交互程序，输入"[NEXT]"开启下一轮新的对话。
