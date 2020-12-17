@@ -8,8 +8,9 @@ from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 from paddle.io import Dataset
 from paddlenlp.utils.env import DATA_HOME
+from paddlenlp.transformers.tokenizer_utils import _is_whitespace, _is_control, convert_to_unicode
 
-__all__ = ['SQuAD']
+__all__ = ['SQuAD', 'DuReaderRobust', 'CMRC', 'DRCD']
 
 
 class SquadExample(object):
@@ -96,7 +97,7 @@ class SQuAD(Dataset):
     def __init__(self,
                  tokenizer,
                  mode='train',
-                 version_2_with_negative=True,
+                 version_2_with_negative=False,
                  root=None,
                  doc_stride=128,
                  max_query_length=64,
@@ -127,7 +128,7 @@ class SQuAD(Dataset):
             max_seq_length=self.max_seq_length)
 
     def _get_data(self, root, mode, **kwargs):
-        default_root = os.path.join(DATA_HOME, 'SQuAD')
+        default_root = os.path.join(DATA_HOME, self.__class__.__name__)
         if self.version_2_with_negative:
             filename, data_hash = self.SPLITS['2.0'][mode]
         else:
@@ -166,7 +167,6 @@ class SQuAD(Dataset):
         features = []
         for (example_index, example) in enumerate(examples):
             query_tokens = tokenizer._tokenize(example.question_text)
-
             if len(query_tokens) > max_query_length:
                 query_tokens = query_tokens[0:max_query_length]
 
@@ -285,7 +285,6 @@ class SQuAD(Dataset):
 
                 unique_id += 1
                 features.append(feature)
-
         return features
 
     def _improve_answer_span(self, doc_tokens, input_start, input_end,
@@ -365,12 +364,6 @@ class SQuAD(Dataset):
         with open(self.full_path, "r", encoding="utf8") as reader:
             input_data = json.load(reader)["data"]
 
-        def is_whitespace(c):
-            if c == " " or c == "\t" or c == "\r" or c == "\n" or ord(
-                    c) == 0x202F:
-                return True
-            return False
-
         examples = []
         for entry in input_data:
             for paragraph in entry["paragraphs"]:
@@ -379,7 +372,7 @@ class SQuAD(Dataset):
                 char_to_word_offset = []
                 prev_is_whitespace = True
                 for c in paragraph_text:
-                    if is_whitespace(c):
+                    if _is_whitespace(c):
                         prev_is_whitespace = True
                     else:
                         if prev_is_whitespace:
@@ -410,8 +403,11 @@ class SQuAD(Dataset):
                             answer_offset = answer["answer_start"]
                             answer_length = len(orig_answer_text)
                             start_position = char_to_word_offset[answer_offset]
-                            end_position = char_to_word_offset[
-                                answer_offset + answer_length - 1]
+                            try:
+                                end_position = char_to_word_offset[
+                                    answer_offset + answer_length - 1]
+                            except:
+                                continue
 
                         else:
                             start_position = -1
@@ -428,7 +424,6 @@ class SQuAD(Dataset):
                         else:
                             start_position = -1
                             end_position = -1
-
                     example = SquadExample(
                         qas_id=qas_id,
                         question_text=question_text,
@@ -451,3 +446,212 @@ class SQuAD(Dataset):
             return feature.input_ids, feature.segment_ids, feature.unique_id, feature.start_position, feature.end_position
         else:
             return feature.input_ids, feature.segment_ids, feature.unique_id
+
+
+class DuReaderRobust(SQuAD):
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+
+    DATA_URL = 'https://dataset-bj.cdn.bcebos.com/qianyan/dureader_robust-data.tar.gz'
+
+    SPLITS = {
+        'train': META_INFO(
+            os.path.join('dureader_robust-data', 'train.json'),
+            '800a3dcb742f9fdf9b11e0a83433d4be'),
+        'dev': META_INFO(
+            os.path.join('dureader_robust-data', 'dev.json'),
+            'ae73cec081eaa28a735204c4898a2222'),
+        'test': META_INFO(
+            os.path.join('dureader_robust-data', 'test.json'),
+            'e0e8aa5c7b6d11b6fc3935e29fc7746f')
+    }
+
+    def __init__(self,
+                 tokenizer,
+                 mode='train',
+                 root=None,
+                 doc_stride=128,
+                 max_query_length=64,
+                 max_seq_length=512,
+                 **kwargs):
+
+        super(DuReaderRobust, self).__init__(
+            tokenizer=tokenizer,
+            mode=mode,
+            version_2_with_negative=False,
+            root=root,
+            doc_stride=doc_stride,
+            max_query_length=max_query_length,
+            max_seq_length=max_seq_length,
+            **kwargs)
+
+    def _get_data(self, root, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, 'self.__class__.__name__')
+
+        filename, data_hash = self.SPLITS[mode]
+
+        fullname = os.path.join(default_root,
+                                filename) if root is None else os.path.join(
+                                    os.path.expanduser(root), filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+            if root is not None:  # not specified, and no need to warn
+                warnings.warn(
+                    'md5 check failed for {}, download {} data to {}'.format(
+                        filename, self.__class__.__name__, default_root))
+
+            get_path_from_url(self.DATA_URL, default_root)
+
+        self.full_path = fullname
+
+    def _read(self):
+        with open(self.full_path, "r", encoding="utf8") as reader:
+            input_data = json.load(reader)["data"]
+
+        examples = []
+        for entry in input_data:
+            for paragraph in entry["paragraphs"]:
+                paragraph_text = paragraph["context"]
+                raw_doc_tokens = self.tokenizer.basic_tokenizer.tokenize(
+                    paragraph_text)
+                doc_tokens = []
+                char_to_word_offset = []
+                k = 0
+                temp_word = ""
+                for c in paragraph_text:
+                    if not self.tokenizer.basic_tokenizer.tokenize(c):
+                        char_to_word_offset.append(k - 1)
+                        continue
+                    else:
+                        temp_word += c
+                        char_to_word_offset.append(k)
+
+                    if temp_word == raw_doc_tokens[k]:
+                        doc_tokens.append(temp_word)
+                        temp_word = ""
+                        k += 1
+
+                assert k == len(raw_doc_tokens)
+
+                for qa in paragraph["qas"]:
+                    qas_id = qa["id"]
+                    question_text = qa["question"]
+                    start_position = None
+                    end_position = None
+                    orig_answer_text = None
+                    is_impossible = False
+
+                    if self.is_training:
+                        if (len(qa["answers"]) != 1):
+                            raise ValueError(
+                                "For training, each question should have exactly 1 answer."
+                            )
+
+                        answer = qa["answers"][0]
+                        orig_answer_text = answer["text"]
+                        answer_offset = answer["answer_start"]
+                        answer_length = len(orig_answer_text)
+                        start_position = char_to_word_offset[answer_offset]
+                        try:
+                            end_position = char_to_word_offset[
+                                answer_offset + answer_length - 1]
+                        except:
+                            continue
+
+                    else:
+                        orig_answer_text = []
+                        if 'answers' in qa.keys():
+                            answers = qa["answers"]
+                            for answer in answers:
+                                orig_answer_text.append(answer["text"])
+
+                    example = SquadExample(
+                        qas_id=qas_id,
+                        question_text=question_text,
+                        doc_tokens=doc_tokens,
+                        orig_answer_text=orig_answer_text,
+                        start_position=start_position,
+                        end_position=end_position,
+                        is_impossible=is_impossible)
+                    examples.append(example)
+
+        self.examples = examples
+
+
+class CMRC(DuReaderRobust):
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+
+    DEV_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/cmrc/cmrc2018_dev.json'
+    TRAIN_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/cmrc/cmrc2018_train.json'
+    TRIAL_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/cmrc/cmrc2018_trial.json'
+
+    SPLITS = {
+        'train': META_INFO(
+            os.path.join('cmrc2018_train.json'),
+            '7fb714b479c7f40fbb16acabd7af0ede'),
+        'dev': META_INFO(
+            os.path.join('cmrc2018_dev.json'),
+            '853b80709ff2d071f9fce196521b843c'),
+        'trial': META_INFO(
+            os.path.join('cmrc2018_trial.json'),
+            '853b80709ff2d071f9fce196521b843c')
+    }
+
+    def _get_data(self, root, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, self.__class__.__name__)
+
+        filename, data_hash = self.SPLITS[mode]
+        fullname = os.path.join(default_root,
+                                filename) if root is None else os.path.join(
+                                    os.path.expanduser(root), filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+            if root is not None:  # not specified, and no need to warn
+                warnings.warn(
+                    'md5 check failed for {}, download {} data to {}'.format(
+                        filename, self.__class__.__name__, default_root))
+            if mode == 'train':
+                fullname = get_path_from_url(self.TRAIN_DATA_URL, default_root)
+            elif mode == 'dev':
+                fullname = get_path_from_url(self.DEV_DATA_URL, default_root)
+            elif mode == 'trial':
+                fullname = get_path_from_url(self.TRIAL_DATA_URL, default_root)
+        self.full_path = fullname
+
+
+class DRCD(DuReaderRobust):
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+
+    DEV_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/DRCD/DRCD_dev.json'
+    TRAIN_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/DRCD/DRCD_training.json'
+    TEST_DATA_URL = 'https://paddlenlp.bj.bcebos.com/datasets/DRCD/DRCD_test.json'
+
+    SPLITS = {
+        'train': META_INFO(
+            os.path.join('DRCD_dev.json'), '7fb714b479c7f40fbb16acabd7af0ede'),
+        'dev': META_INFO(
+            os.path.join('DRCD_training.json'),
+            '853b80709ff2d071f9fce196521b843c'),
+        'test': META_INFO(
+            os.path.join('DRCD_test.json'), '853b80709ff2d071f9fce196521b843c')
+    }
+
+    def _get_data(self, root, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, self.__class__.__name__)
+
+        filename, data_hash = self.SPLITS[mode]
+        fullname = os.path.join(default_root,
+                                filename) if root is None else os.path.join(
+                                    os.path.expanduser(root), filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+            if root is not None:  # not specified, and no need to warn
+                warnings.warn(
+                    'md5 check failed for {}, download {} data to {}'.format(
+                        filename, self.__class__.__name__, default_root))
+            if mode == 'train':
+                fullname = get_path_from_url(self.TRAIN_DATA_URL, default_root)
+            elif mode == 'dev':
+                fullname = get_path_from_url(self.DEV_DATA_URL, default_root)
+            elif mode == 'test':
+                fullname = get_path_from_url(self.TEST_DATA_URL, default_root)
+        self.full_path = fullname

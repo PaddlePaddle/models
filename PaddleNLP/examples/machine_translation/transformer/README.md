@@ -25,7 +25,7 @@
 
 1. paddle安装
 
-    本项目依赖于 PaddlePaddle 2.0rc及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装
+    本项目依赖于 PaddlePaddle 2.0rc1 及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装
 
 2. 下载代码
 
@@ -37,7 +37,6 @@
     此外，需要另外涉及：
       * attrdict
       * pyyaml
-      * subword-nmt (可选，用于处理数据)
 
 
 
@@ -60,42 +59,45 @@ dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
 
 以提供的英德翻译数据为例，可以执行以下命令进行模型训练：
 
-```sh
+``` sh
 # setting visible devices for training
 export CUDA_VISIBLE_DEVICES=0
 python train.py --config ./configs/transformer.base.yaml
 ```
 
-可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中设置相应的参数。
+可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中设置相应的参数。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
 
 ### 单机多卡
 
 同样，可以执行如下命令实现八卡训练：
 
-```sh
+``` sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py --config ./configs/transformer.base.yaml
 ```
 
+与上面的情况相似，可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中设置相应的参数。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
 
 ### 模型推断
 
 以英德翻译数据为例，模型训练完成后可以执行以下命令对指定文件中的文本进行翻译：
 
-```sh
+``` sh
 # setting visible devices for prediction
 export CUDA_VISIBLE_DEVICES=0
-python predict.py
+python predict.py --config ./configs/transformer.base.yaml
 ```
 
- 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前不能保证结果写入文件的顺序。
+ 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
+
+ 需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前暂未支持将结果按照指定顺序写入文件。
 
 
 ### 模型评估
 
 预测结果中每行输出是对应行输入的得分最高的翻译，对于使用 BPE 的数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估。评估过程具体如下（BLEU 是翻译任务常用的自动评估方法指标）：
 
-```sh
+``` sh
 # 还原 predict.txt 中的预测结果为 tokenize 后的数据
 sed -r 's/(@@ )|(@@ ?$)//g' predict.txt > predict.tok.txt
 # 若无 BLEU 评估工具，需先进行下载
@@ -103,7 +105,8 @@ git clone https://github.com/moses-smt/mosesdecoder.git
 # 以英德翻译 newstest2014 测试数据为例
 perl mosesdecoder/scripts/generic/multi-bleu.perl ~/.paddlenlp/datasets/machine_translation/WMT14ende/WMT14.en-de/wmt14_ende_data/newstest2014.tok.de < predict.tok.txt
 ```
-可以看到类似如下的结果，此处结果是 big model 在 newstest2014 上的结果：
+
+执行上述操作之后，可以看到类似如下的结果，此处结果是 big model 在 newstest2014 上的 BLEU 结果：
 ```
 BLEU = 27.48, 58.6/33.2/21.1/13.9 (BP=1.000, ratio=1.012, hyp_len=65312, ref_len=64506)
 ```
