@@ -29,10 +29,7 @@ from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.metrics import Mcc, PearsonAndSpearman
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.utils.log import logger
 
 TASK_CLASSES = {
     "cola": (GlueCoLA, Mcc),
