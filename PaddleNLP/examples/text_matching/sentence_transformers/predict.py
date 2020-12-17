@@ -91,7 +91,6 @@ def convert_example(example,
         title_segment_ids(obj: `list[int]`): List of title sequence pair mask.
         label(obj:`numpy.array`, data type of int64, optional): The input label if not is_test.
     """
-    print(example)
     query, title = example[0], example[1]
 
     query_encoded_inputs = tokenizer.encode(
@@ -193,7 +192,7 @@ if __name__ == "__main__":
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    if args.model_name == 'ernie_tiny':
+    if args.model_name == 'ernie-tiny':
         # ErnieTinyTokenizer is special for ernie_tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name)
