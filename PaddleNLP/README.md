@@ -1,7 +1,7 @@
 简体中文 | [English](./README_en.md)
 
 <p align="center">
-  <img src="./docs/imgs/paddlenlp.png" width="520" height ="100"  align="middle" />
+  <img src="https://paddlenlp.bj.bcebos.com/images/paddlenlp.png" width="520" height ="100"  align="middle" />
 </p>
 
 
@@ -128,10 +128,10 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 # 社区贡献与技术交流
 
 - 欢迎您加入PaddleNLP的SIG社区，贡献优秀的模型实现、公开数据集、教程与案例、外围小工具。
-- 现在就加入我们的QQ技术交流群，一起交流NLP技术！⬇️
+- 现在就加入PaddleNLP的QQ技术交流群，一起交流NLP技术吧！⬇️
 
 <div align="center">
-  <img src="./docs/imgs/qq.png"  width="200" height="200" />
+  <img src="https://paddlenlp.bj.bcebos.com/images/qq.png" width="200" height="200" />
 </div>  
 
 
