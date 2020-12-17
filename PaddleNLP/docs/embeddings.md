@@ -43,3 +43,6 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 ## 英文词向量
 
 待更新。
+
+## 致谢
+- 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文Embedding来源。
