@@ -31,14 +31,14 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 | Co-occurrence 类型          | 目标词向量 | 上下文词向量  |
 | --------------------------- | ------   | ---- |
 |    Word → Word              | w2v.baidu_encyclopedia.target.word-word.dim300     |   w2v.baidu_encyclopedia.context.word-word.dim300    |
-|    Word → Ngram (1-2)       |  w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300    |   暂无    |
-|    Word → Ngram (1-3)       |  暂无    |   暂无    |
-|    Ngram (1-2) → Ngram (1-2)|  暂无   |   暂无    |
+|    Word → Ngram (1-2)       |  w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300    |   w2v.baidu_encyclopedia.context.word-ngram.1-2.dim300    |
+|    Word → Ngram (1-3)       |  w2v.baidu_encyclopedia.target.word-ngram.1-3.dim300    |   w2v.baidu_encyclopedia.context.word-ngram.1-3.dim300    |
+|    Ngram (1-2) → Ngram (1-2)|  w2v.baidu_encyclopedia.target.word-ngram.2-2.dim300   |   w2v.baidu_encyclopedia.target.word-ngram.2-2.dim300    |
 |    Word → Character (1)     |  w2v.baidu_encyclopedia.target.word-character.char1-1.dim300    |  w2v.baidu_encyclopedia.context.word-character.char1-1.dim300     |
 |    Word → Character (1-2)   |  w2v.baidu_encyclopedia.target.word-character.char1-2.dim300    |  w2v.baidu_encyclopedia.context.word-character.char1-2.dim300     |
 |    Word → Character (1-4)   |  w2v.baidu_encyclopedia.target.word-character.char1-4.dim300    |  w2v.baidu_encyclopedia.context.word-character.char1-4.dim300     |
-|    Word → Word (left/right) |   暂无   |   暂无    |
-|    Word → Word (distance)   |   暂无   |   暂无    |
+|    Word → Word (left/right) |   w2v.baidu_encyclopedia.target.word-wordLR.dim300   |   w2v.baidu_encyclopedia.context.word-wordLR.dim300    |
+|    Word → Word (distance)   |   w2v.baidu_encyclopedia.target.word-wordPosition.dim300   |   w2v.baidu_encyclopedia.context.word-wordPosition.dim300    |
 
 ## 英文词向量
 
