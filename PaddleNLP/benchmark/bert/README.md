@@ -115,5 +115,5 @@ python -u ./run_glue.py \
 | SST-2 | Accuracy                     | 92.76       |
 | STS-B | Pearson/Spearman corr        | 89.12       |
 | MNLI  | matched acc./mismatched acc. | 84.45/84.62 |
-| QNLI  | acc.                         | 88.61       |
+| QNLI  | acc.                         | 91.73       |
 | RTE   | acc.                         | 67.15       |
