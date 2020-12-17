@@ -43,8 +43,6 @@ class TokenEmbedding(nn.Embedding):
                  unknown_token_vector=None,
                  extended_vocab_path=None,
                  trainable=True):
-
-        embedding_name = embedding_name.lower()
         vector_path = osp.join(EMBEDDING_HOME, embedding_name + ".npz")
         if not osp.exists(vector_path):
             # download
