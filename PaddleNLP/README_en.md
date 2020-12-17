@@ -1,5 +1,9 @@
 English | [简体中文] (./README.md)
 
+<p align="center">
+  <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
+</p>
+
 # PaddleNLP
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
@@ -81,33 +85,34 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 ## API Usage
 
-* [Transformer API](./docs/transformers.md)
-* [Dataset API](./docs/datasets.md)
-* [Embedding API](./docs/embeddings.md)
-* [Metrics API](./docs/embeddings.md)
-* [Models API](./docs/models.md)
 
+- [Transformer API](./docs/transformers.md)
 
+- [Dataset API](./docs/datasets.md)
+
+- [Embedding API](./docs/embeddings.md)
+
+- [Metrics API](./docs/embeddings.md)
+
+- [Models API](./docs/models.md)
 
 
 ## Tutorials
 
 Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
-* [paddlenlp.seq2vec是什么? 瞧瞧它怎么完成情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to use lstm to do sentiment analysis.
+* [What's Seq2Vec?](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to use LSTM to do sentiment analysis.
 
-* [使用PaddleNLP语义预训练模型ERNIE优化情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
+* [Sentiment Analysis with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
 
-* [基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771) shows how to make use of bigru and crf to do information extraction.
+* [Waybill Information Extraction with BiGRU-CRF Model](https://aistudio.baidu.com/aistudio/projectdetail/1317771) shows how to make use of bigru and crf to do information extraction.
 
-* [使用PaddleNLP预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361) shows how to exploit the pretrained ERNIE to do information extraction better.
+* [Waybill Information Extraction with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1329361) shows how to exploit the pretrained ERNIE to do information extraction better.
 
 
 ## Community
 
-* SIG for Pretrained Model Contribution
-* SIG for Dataset Integration
-* SIG for Tutorial Writing
+Join our QQ Technical Group to
 
 ## License
 

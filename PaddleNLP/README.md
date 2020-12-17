@@ -1,7 +1,7 @@
 简体中文 | [English](./README_en.md)
 
 <p align="center">
-  <img src="https://paddlenlp.bj.bcebos.com/images/paddlenlp.png" width="520" height ="100"  align="middle" />
+  <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
 </p>
 
 
@@ -27,7 +27,7 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
   - 通过高度优化的Transformer网络实现，结合混合精度与Fleet分布式训练API，可充分利用GPU集群资源，高效完成预训练模型的分布式训练。
 
 
-  
+
 # 安装
 
 ## 环境依赖
@@ -36,7 +36,7 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
 - paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp==2.0.0b 
+pip install paddlenlp==2.0.0b
 ```
 
 
@@ -110,7 +110,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 - [Models API](./docs/models.md)
 
-  
+
 
 # 可交互式Notebook教程
 
@@ -131,7 +131,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 - 现在就加入PaddleNLP的QQ技术交流群，一起交流NLP技术吧！⬇️
 
 <div align="center">
-  <img src="https://paddlenlp.bj.bcebos.com/images/qq.png" width="200" height="200" />
+  <img src="./docs/imgs/qq.png" width="200" height="200" />
 </div>  
 
 
