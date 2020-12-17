@@ -47,7 +47,7 @@ def predict():
     else:
         tokenizer = BertTokenizer.from_pretrained(args.model_name_or_path)
 
-    dev_dataset = Poetry.get_datasets(['test'])
+    dev_dataset = Poetry.get_datasets(['dev'])
     attn_id = tokenizer.vocab[
         '[ATTN]'] if '[ATTN]' in tokenizer.vocab else tokenizer.vocab['[MASK]']
     tgt_type_id = model.sent_emb.weight.shape[0] - 1
