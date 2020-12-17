@@ -117,6 +117,7 @@ python predict.py \
         --max_grad_norm 5.0 \
         --dataset yahoo \
         --use_gpu True \
+        --infer_output_file infer_output.txt \
         --init_from_ckpt yahoo_model/49 \
 
 ```
