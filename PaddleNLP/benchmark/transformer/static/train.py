@@ -196,7 +196,7 @@ def do_train(args):
                 if args.save_model:
                     model_path = os.path.join(
                         args.save_model, "step_" + str(step_idx), "transformer")
-                    paddle.io.save(train_program, model_path)
+                    paddle.static.save(train_program, model_path)
 
             batch_id += 1
             step_idx += 1
