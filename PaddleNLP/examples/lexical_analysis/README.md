@@ -92,8 +92,3 @@ python predict.py --data_dir ./lexical_analysis_dataset_tiny \
         --batch_size 32 \
         --use_gpu True
 ```
-
-
-### 如何贡献代码
-
-如果你可以修复某个 issue 或者增加一个新功能，欢迎给我们提交 PR。如果对应的 PR 被接受了，我们将根据贡献的质量和难度 进行打分（0-5 分，越高越好）。如果你累计获得了 10 分，可以联系我们获得面试机会或为你写推荐信。
