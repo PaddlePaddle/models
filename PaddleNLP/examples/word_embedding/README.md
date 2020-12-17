@@ -58,7 +58,7 @@ nohup python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=1e-4 --batch
 以上参数表示：
 
 * `vocab_path`: 词汇表文件路径。
-* `use_gpu`: 是否使用GPU进行训练， 默认为`False`。
+* `use_gpu`: 是否使用GPU进行训练， 默认为`True`。
 * `lr`: 学习率， 默认为5e-4。
 * `batch_size`: 运行一个batch大小，默认为64。
 * `epochs`: 训练轮次，默认为5。
@@ -96,3 +96,7 @@ Eval Acc：
 
 ## 致谢
 - 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文Embedding来源。
+
+## 参考论文
+- Li, Shen, et al. "Analogical reasoning on chinese morphological and semantic relations." arXiv preprint arXiv:1805.06504 (2018).
+- Qiu, Yuanyuan, et al. "Revisiting correlations between intrinsic and extrinsic evaluations of word embeddings." Chinese Computational Linguistics and Natural Language Processing Based on Naturally Annotated Big Data. Springer, Cham, 2018. 209-221.

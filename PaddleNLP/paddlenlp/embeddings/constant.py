@@ -22,17 +22,27 @@ PAD_TOKEN = '[PAD]'
 UNK_TOKEN = '[UNK]'
 
 EMBEDDING_NAME_LIST = [
+    # Word2Vec
     # baidu_encyclopedia
     "w2v.baidu_encyclopedia.target.word-word.dim300",
     "w2v.baidu_encyclopedia.target.word-character.char1-1.dim300",
     "w2v.baidu_encyclopedia.target.word-character.char1-2.dim300",
     "w2v.baidu_encyclopedia.target.word-character.char1-4.dim300",
     "w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.1-3.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.2-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-wordLR.dim300",
+    "w2v.baidu_encyclopedia.target.word-wordPosition.dim300",
     "w2v.baidu_encyclopedia.target.bigram-char.dim300",
     "w2v.baidu_encyclopedia.context.word-word.dim300",
     "w2v.baidu_encyclopedia.context.word-character.char1-1.dim300",
     "w2v.baidu_encyclopedia.context.word-character.char1-2.dim300",
     "w2v.baidu_encyclopedia.context.word-character.char1-4.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.1-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.1-3.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.2-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-wordLR.dim300",
+    "w2v.baidu_encyclopedia.context.word-wordPosition.dim300",
     # wikipedia
     "w2v.wiki.target.bigram-char.dim300",
     "w2v.wiki.target.word-char.dim300",
