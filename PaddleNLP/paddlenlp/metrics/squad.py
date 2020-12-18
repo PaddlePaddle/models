@@ -378,8 +378,8 @@ def compute_f1(a_gold, a_pred, is_whitespace_splited=True):
     pred_toks = normalize_answer(a_pred).split()
 
     if not is_whitespace_splited:
-        gold_toks = gold_toks[0]
-        pred_toks = pred_toks[0]
+        gold_toks = gold_toks[0] if gold_toks else ""
+        pred_toks = pred_toks[0] if pred_toks else ""
 
     common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
     num_same = sum(common.values())

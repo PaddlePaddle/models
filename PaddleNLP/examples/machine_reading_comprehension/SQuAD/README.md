@@ -5,9 +5,6 @@
 ## 1. 任务说明
 本文主要介绍基于Bert预训练模型的SQuAD（Stanford Question Answering Dataset）数据集的阅读理解任务，给定一篇文章和一个问题，计算答案在文章中的起始位置和结束位置。对于SQuAD2.0数据集，还可以返回答案在文章中不存在的概率。
 
-**目前语言模型要求使用PaddlePaddle 2.0及以上版本或适当的develop版本。**
-
-
 ## 2. 数据集
 
 此任务的数据集包括以下数据集：
@@ -26,6 +23,23 @@ SQuAD v2.0
 
 ## 1. 开始第一次模型调用
 
+### 安装说明
+
+* PaddlePaddle 安装
+
+   本项目依赖于 PaddlePaddle 2.0-rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+
+* PaddleNLP 安装
+
+   ```shell
+   pip install paddlenlp>=2.0.0b
+   ```
+
+* 环境依赖
+
+    Python的版本要求 3.6+
+
+
 ### 数据准备
 为了方便开发者进行测试，我们内置了数据下载脚本，用户可以通过命令行传入`--version_2_with_negative`控制所需要的SQuAD数据集版本，也可以通过`--data_path`传入本地数据集的位置，数据集需保证与SQuAD数据集格式一致。
 
@@ -42,7 +56,7 @@ python -u ./run_squad.py \
     --batch_size 12 \
     --learning_rate 3e-5 \
     --num_train_epochs 2 \
-    --logging_steps 1000 \
+    --logging_steps 100 \
     --save_steps 1000 \
     --warmup_proportion 0.1 \
     --weight_decay 0.01 \

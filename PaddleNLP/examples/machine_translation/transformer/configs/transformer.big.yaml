@@ -24,7 +24,7 @@ use_gpu: True
 
 # Args for reader, see reader.py for details
 pool_size: 200000
-sort_type: "pool"
+sort_type: "global"
 batch_size: 4096
 infer_batch_size: 8
 

@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-
 import pgl
 import paddle
 import paddle.nn as nn
-from pgl.contrib.imperative.graph_tensor import GraphTensor
+import numpy as np
 from paddlenlp.transformers import ErniePretrainedModel
 
 from models.encoder import Encoder
@@ -52,15 +50,15 @@ class ErnieSageForLinkPrediction(ErniePretrainedModel):
         """Forward function of link prediction task.
 
         Args:
-            graphs (GraphTensor List): the GraphTensor list.
+            graphs (Graph List): the Graph list.
             datas (Tensor List): other input of the model.
 
         Returns:
             Tensor: loss and output tensors.
         """
-        user_index, pos_item_index, neg_item_index, user_real_index, pos_item_real_index = datas
+        term_ids, user_index, pos_item_index, neg_item_index, user_real_index, pos_item_real_index = datas
         # encoder model
-        outputs = self.encoder(graphs,
+        outputs = self.encoder(graphs, term_ids,
                                [user_index, pos_item_index, neg_item_index])
         user_feat, pos_item_feat, neg_item_feat = outputs
 

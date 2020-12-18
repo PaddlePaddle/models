@@ -58,3 +58,8 @@ for batch in train_data_loader:
 4. 定义训练所需的优化器，loss函数等，就可以开始进行模型fine-tune任务。
 
 更多详细使用方法，请参考[examples](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples)。
+
+## 参考资料：
+- 部分中文预训练模型来自：https://github.com/ymcui/Chinese-BERT-wwm
+- Sun, Yu, et al. "Ernie: Enhanced representation through knowledge integration." arXiv preprint arXiv:1904.09223 (2019).
+- Cui, Yiming, et al. "Pre-training with whole word masking for chinese bert." arXiv preprint arXiv:1906.08101 (2019).

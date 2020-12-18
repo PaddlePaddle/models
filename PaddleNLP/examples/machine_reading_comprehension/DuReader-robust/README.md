@@ -5,12 +5,9 @@
 ## 1. 任务说明
 阅读理解模型的鲁棒性是衡量该技术能否在实际应用中大规模落地的重要指标之一。随着当前技术的进步，模型虽然能够在一些阅读理解测试集上取得较好的性能，但在实际应用中，这些模型所表现出的鲁棒性仍然难以令人满意。DuReader-robust数据集作为首个关注阅读理解模型鲁棒性的中文数据集，旨在考察模型在真实应用场景中的过敏感性、过稳定性以及泛化能力等问题。
 
-**目前语言模型要求使用PaddlePaddle 2.0及以上版本或适当的develop版本。**
-
-
 ## 2. 数据集
 
-DuReaderrobust数据集是单篇章、抽取式阅读理解数据集，具体的任务定义为：
+DuReader-robust数据集是单篇章、抽取式阅读理解数据集，具体的任务定义为：
 对于一个给定的问题q和一个篇章p，参赛系统需要根据篇章内容，给出该问题的答案a。数据集中的每个样本，是一个三元组<q, p, a>，例如：
 
 **问题 q**: 乔丹打了多少个赛季
@@ -26,7 +23,24 @@ DuReaderrobust数据集是单篇章、抽取式阅读理解数据集，具体的
 
 ## 1. 开始第一次模型调用
 
+### 安装说明
+
+* PaddlePaddle 安装
+
+   本项目依赖于 PaddlePaddle 2.0-rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+
+* PaddleNLP 安装
+
+   ```shell
+   pip install paddlenlp>=2.0.0b
+   ```
+
+* 环境依赖
+
+    Python的版本要求 3.6+
+
 ### 数据准备
+
 为了方便开发者进行测试，我们内置了数据下载脚本，也可以通过`--data_path`传入本地数据集的位置，数据集需保证与DuReader-robust数据集格式一致。
 
 
@@ -43,7 +57,7 @@ python -u ./run_du.py \
     --batch_size 12 \
     --learning_rate 3e-5 \
     --num_train_epochs 1 \
-    --logging_steps 1000 \
+    --logging_steps 10 \
     --save_steps 1000 \
     --warmup_proportion 0.1 \
     --weight_decay 0.01 \

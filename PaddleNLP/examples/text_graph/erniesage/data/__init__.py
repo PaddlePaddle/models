@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '2.0.0b0'
+from data.dataset import *
+from data.graph_reader import *
 
-from . import data
-from . import datasets
-from . import embeddings
-from . import layers
-from . import metrics
-from . import models
-from . import seq2vec
-from . import transformers
-from . import utils
+__all__ = []
+__all__ += dataset.__all__
+__all__ += graph_reader.__all__

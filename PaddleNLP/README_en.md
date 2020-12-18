@@ -1,6 +1,8 @@
-English | [简体中文] (./README.md)
+English | [简体中文](./README.md)
 
-# PaddleNLP
+<p align="center">
+  <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
+</p>
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
@@ -39,7 +41,7 @@ pip install paddlenlp>=2.0.0a
 ### Quick Dataset Loading
 
 ```python
-from paddlenlp.datasets import ChnSentiCrop
+from paddlenlp.datasets import ChnSentiCorp
 
 train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
@@ -81,21 +83,41 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 ## API Usage
 
-* [Transformer API](./docs/transformers.md)
-* [Dataset API](./docs/datasets.md)
-* [Embedding API](./docs/embeddings.md)
-* [Metrics API](./docs/embeddings.md)
-* [Models API](./docs/models.md)
+
+- [Transformer API](./docs/transformers.md)
+
+- [Dataset API](./docs/datasets.md)
+
+- [Embedding API](./docs/embeddings.md)
+
+- [Metrics API](./docs/metrics.md)
+
+- [Models API](./docs/models.md)
+
+
+
+
 
 ## Tutorials
 
 Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
+* [What's Seq2Vec?](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to use LSTM to do sentiment analysis.
+
+* [Sentiment Analysis with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
+
+* [Waybill Information Extraction with BiGRU-CRF Model](https://aistudio.baidu.com/aistudio/projectdetail/1317771) shows how to make use of bigru and crf to do information extraction.
+
+* [Waybill Information Extraction with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1329361) shows how to exploit the pretrained ERNIE to do information extraction better.
+
+
 ## Community
 
-* SIG for Pretrained Model Contribution
-* SIG for Dataset Integration
-* SIG for Tutorial Writing
+Join our QQ Technical Group for technical exchange right now! ⬇️
+
+<div align="center">
+  <img src="./docs/imgs/qq.png" width="200" height="200" />
+</div>
 
 ## License
 

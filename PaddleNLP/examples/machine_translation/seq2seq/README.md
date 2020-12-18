@@ -19,7 +19,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本目录包含Seq2Seq的一个经典样例：机器翻译，带attention机制的翻译模型。Seq2Seq翻译模型，模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义，再根据该含义来写出目标语言的语句。更多关于机器翻译的具体原理和数学表达式，我们推荐参考飞桨官网[机器翻译案例](https://www.paddlepaddle.org.cn/documentation/docs/zh/user_guides/nlp_case/machine_translation/README.cn.html)。
 
-运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc1及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 
 ## 模型概览
@@ -56,7 +56,7 @@ python train.py \
 
 ## 模型预测
 
-训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码，其中译文数据由 `--infer_target_file` 指定），在linux系统下，默认安装路径为`~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi`，如果您使用的是Windows系统，需要更改下面的路径。预测命令如下：
+训练完成之后，可以使用保存的模型（由 `--init_from_ckpt` 指定）对测试集的数据集进行beam search解码。生成的翻译结果位于`--infer_output_file`指定的路径，预测命令如下：
 
 ```sh
 python predict.py \
@@ -67,7 +67,6 @@ python predict.py \
      --init_scale  0.1 \
      --max_grad_norm 5.0 \
      --init_from_ckpt attention_models/9 \
-     --infer_target_file ~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi \
      --infer_output_file infer_output.txt \
      --beam_size 10 \
      --use_gpu True
@@ -76,16 +75,4 @@ python predict.py \
 各参数的具体说明请参阅 `args.py` ，注意预测时所用模型超参数需和训练时一致。
 
 ## 预测效果评价
-使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，将该工具下载在该项目路径下，然后使用如下的命令，可以看到BLEU指标的结果
-（需要注意的是，在windows系统下，可能需要更改文件路径`~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi`）：
-
-```sh
-perl mosesdecoder/scripts/generic/multi-bleu.perl ~/.paddlenlp/datasets/machine_translation/IWSLT15/iwslt15.en-vi/tst2013.vi < infer_output.txt
-```
-
-取第10个epoch保存的模型进行预测，取beam_size=10。效果如下：
-
-```
-tst2013 BLEU: 24.40
-
-```
+取第10个epoch的结果，用取beam_size为10的beam search解码，`predict.py`脚本在生成翻译结果之后，会调用`paddlenlp.metrics.BLEU`计算翻译结果的BLEU指标，最终计算出的BLEU分数为0.24074304399683688。

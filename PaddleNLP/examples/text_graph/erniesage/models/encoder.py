@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pgl
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import numpy as np
-from pgl.contrib.imperative.message_passing import GraphSageConv
 
-from models.conv import ErnieSageV2Conv
+from models.conv import GraphSageConv, ErnieSageV2Conv
 
 
 class Encoder(nn.Layer):
@@ -80,27 +78,22 @@ class ErnieSageV2Encoder(Encoder):
             ernie,
             ernie.config["hidden_size"],
             self.config.hidden_size,
-            initializer,
             learning_rate=fc_lr,
-            agg="sum",
-            name="ErnieSageV2Conv_0")
+            aggr_func="sum")
         self.convs.append(erniesage_conv)
         for i in range(1, self.config.num_layers):
             layer = GraphSageConv(
-                self.config.hidden_size * 2,
                 self.config.hidden_size,
-                initializer,
+                self.config.hidden_size,
                 learning_rate=fc_lr,
-                agg="sum",
-                name="%s_%s" % ("GraphSageConv_", i))
+                aggr_func="sum")
             self.convs.append(layer)
 
         if self.config.final_fc:
             self.linear = nn.Linear(
-                self.config.hidden_size * 2,
                 self.config.hidden_size,
-                weight_attr=paddle.ParamAttr(name="final_fc" + '_w'),
-                bias_attr=paddle.ParamAttr(name="final_fc" + '_b'))
+                self.config.hidden_size,
+                weight_attr=paddle.ParamAttr(learning_rate=fc_lr))
 
     def take_final_feature(self, feature, index):
         """Gather the final feature.
@@ -119,17 +112,20 @@ class ErnieSageV2Encoder(Encoder):
             feat = F.normalize(feat, axis=1)
         return feat
 
-    def forward(self, graphs, inputs):
+    def forward(self, graphs, term_ids, inputs):
         """ forward train function of the model.
 
         Args:
-            graphs (GraphTensor List): list of graph tensors.
+            graphs (Graph List): list of graph tensors.
             inputs (Tensor List): list of input tensors.
 
         Returns:
             Tensor List: list of final feature tensors.
         """
-        feature = graphs[0].node_feat["term_ids"]
+        # term_ids for ErnieSageConv is the raw feature.
+        feature = term_ids
+        for i in range(len(graphs), self.config.num_layers):
+            graphs.append(graphs[0])
         for i in range(0, self.config.num_layers):
             if i == self.config.num_layers - 1 and i != 0:
                 act = None

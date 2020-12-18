@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-**ERNIE-GEN 是面向生成任务的预训练-微调框架**，首次在预训练阶段加入**span-by-span 生成**任务，让模型每次能够生成一个语义完整的片段。在预训练和微调中通过**填充式生成机制**和**噪声感知机制**来缓解曝光偏差问题。此外, ERNIE-GEN 采样**多片段-多粒度目标文本采样**策略, 增强源文本和目标文本的关联性，加强了编码器和解码器的交互。
+ERNIE-GEN 是面向生成任务的预训练-微调框架，首次在预训练阶段加入**span-by-span 生成任务**，让模型每次能够生成一个语义完整的片段。在预训练和微调中通过**填充式生成机制**和**噪声感知机制**来缓解曝光偏差问题。此外, ERNIE-GEN 采样**多片段-多粒度目标文本采样策略**, 增强源文本和目标文本的关联性，加强了编码器和解码器的交互。
 
 ![multi-flow-attention](https://github.com/PaddlePaddle/ERNIE/raw/repro/ernie-gen/.meta/multi-flow-attention.png)
 
@@ -15,6 +15,8 @@
 - paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
 - paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
+
+- tqdm，安装方式：`pip install tqdm`
 
 ### 2.2 数据准备
 
@@ -71,6 +73,8 @@ python -u ./train.py \
 - `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
 - `init_checkpoint` 表示模型加载路径，通过设置此参数可以开启增量训练。
 
+训练会持续很长的时间，为此我们提供了[微调后的模型](https://paddlenlp.bj.bcebos.com/models/transformers/ernie_gen_finetuned/ernie_1.0_poetry.pdparams)。您可以下载该模型并通过`init_checkpoint`加载其参数进行增量训练、评估或预测。
+
 ### 2.4 模型评估
 
 通过加载训练保存的模型，可以对验证集数据进行验证，启动方式如下：
@@ -107,6 +111,7 @@ python -u ./predict.py \
     --use_gpu
 ```
 
+
 ## 引用
 
 您可以按下面的格式引用ERNIE-Gen论文:
@@ -120,6 +125,8 @@ python -u ./predict.py \
 }
 ```
 
-## 如何贡献代码
+## 线上教程体验
 
-如果你可以修复某个 issue 或者增加一个新功能，欢迎给我们提交 PR。如果对应的 PR 被接受了，我们将根据贡献的质量和难度 进行打分（0-5 分，越高越好）。如果你累计获得了 10 分，可以联系我们获得面试机会或为你写推荐信。
+我们为诗歌文本生成提供了线上教程，欢迎体验：
+
+* [使用PaddleNLP预训练模型ERNIE-GEN生成诗歌](https://aistudio.baidu.com/aistudio/projectdetail/1339888)

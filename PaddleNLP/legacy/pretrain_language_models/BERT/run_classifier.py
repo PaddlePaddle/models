@@ -100,7 +100,7 @@ run_type_g.add_arg("profiler_path",                str,    './', "the profiler o
 run_type_g.add_arg("is_profiler",                  int,    0,     "the profiler switch. (used for benchmark)")
 run_type_g.add_arg("max_iter",                     int,    0,     "the max batch nums to train. (used for benchmark)")
 
-run_type_g.add_arg("use_cuda",                     bool,   False,  "If set, use GPU for training.")
+run_type_g.add_arg("use_cuda",                     bool,   True,  "If set, use GPU for training.")
 run_type_g.add_arg("use_xpu",                      bool,   False,  "If set, use XPU for training.")
 run_type_g.add_arg("use_fast_executor",            bool,   False, "If set, use fast parallel executor (in experiment).")
 run_type_g.add_arg("shuffle",                      bool,   True,  "")

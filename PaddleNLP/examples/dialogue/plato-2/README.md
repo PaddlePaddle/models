@@ -6,13 +6,9 @@
 
 为了能够简易地构建一个高质量的开放域聊天机器人，本项目在Paddle2.0上实现了PLATO-2的预测模型，并基于终端实现了简单的人机交互。用户可以通过下载预训练模型快速构建一个开放域聊天机器人。
 
-PLATO-2的网络结构及评估结果见下图：
+PLATO-2的网络结构见下图：
 
 <p align="center"><img src="./imgs/network.png" hspace="10"/></p>
-
-<p align="center"><img src="./imgs/eval_en.png" hspace="10"/></p>
-
-<p align="center"><img src="./imgs/eval_cn.png" hspace="10"/></p>
 
 PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePaddle/Knover)
 
@@ -22,7 +18,7 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 
 * PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 2.0rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 * PaddleNLP 安装
 
@@ -32,13 +28,13 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 
 * 环境依赖
 
-    Python的版本要求 3.6+
+   Python的版本要求 3.6+
 
-    本项目依赖sentencepiece和termcolor，请在运行本项目之前进行安装
+   本项目依赖sentencepiece和termcolor，请在运行本项目之前进行安装
 
-    ```shell
-    pip install sentencepiece termcolor
-    ```
+   ```shell
+   pip install sentencepiece termcolor
+   ```
 
 ### 代码结构说明
 
@@ -101,3 +97,5 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 32层PLATO-2网络交互示例：
 
 <p><img src="./imgs/case.jpg" hspace="10"/></p>
+
+**NOTE:** 输入"[EXIT]"退出交互程序，输入"[NEXT]"开启下一轮新的对话。
