@@ -35,7 +35,7 @@ wget https://paddlenlp.bj.bcebos.com/data/dict.txt
 
 ### 启动训练
 
-我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。实验输出的日志保存在use_token_embedding.txt和use_normal_embedding.txt。使用PaddlePaddle框架的paddle.nn.Embedding在ChnSentiCorp下非常容易过拟合，因此调低了它的学习率。
+我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
 
 CPU 启动：
 
@@ -44,7 +44,7 @@ CPU 启动：
 nohup python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=5e-4 --batch_size=64 --epochs=20 --use_token_embedding=True --vdl_dir='./vdl_dir' >use_token_embedding.txt 2>&1 &
 
 # 使用paddle.nn.Embedding
-nohup python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir'>use_normal_embedding.txt 2>&1 &
+nohup python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir' >use_normal_embedding.txt 2>&1 &
 ```
 
 GPU 启动：
