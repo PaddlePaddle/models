@@ -28,6 +28,7 @@ from paddle.io import DataLoader, Dataset
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
 from paddlenlp.transformers import BertTokenizer
 from data import create_data_holder, create_pretraining_dataset
+from cupy.cuda import nvtx
 
 MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
 
@@ -264,13 +265,18 @@ def do_train(args):
         random.Random(args.seed + epoch).shuffle(files)
 
         for f_id in range(0, len(files)):
+            nvtx.RangePush("File " + str(f_id))
             train_data_loader, _ = create_pretraining_dataset(
                 files[f_id], args.max_predictions_per_seq, args, data_holders)
+            nvtx.RangePush("Data loading")
             for step, batch in enumerate(train_data_loader):
+                nvtx.RangePop()
                 global_step += 1
+                nvtx.RangePush("Batch " + str(step))
                 loss_return = exe.run(main_program,\
                     feed=batch,
                     fetch_list=[loss])
+                nvtx.RangePop()
                 # In the new 2.0 api, must call this function to change the learning_rate
                 lr_scheduler.step()
                 if global_step % args.logging_steps == 0:
@@ -292,7 +298,10 @@ def do_train(args):
                 if global_step >= args.max_steps:
                     del train_data_loader
                     return
+                nvtx.RangePush("Data loading")
+            nvtx.RangePop()
             del train_data_loader
+            nvtx.RangePop()
         epoch += 1
 
 
