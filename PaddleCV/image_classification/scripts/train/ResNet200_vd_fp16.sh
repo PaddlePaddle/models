@@ -21,7 +21,7 @@ fi
 python train.py \
        --model=ResNet200_vd \
        --data_dir=${DATA_DIR} \
-       --batch_size=16 \
+       --batch_size=64 \
        --num_epochs=200 \
        --total_images=1281167 \
        --image_shape 4 224 224 \
