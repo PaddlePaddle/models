@@ -104,9 +104,9 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 Please refer to our official AI Studio account for more interactive tutorials: [PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)
 
-* [What's Seq2Vec?](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to use LSTM to do sentiment analysis.
+* [What's Seq2Vec?](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to use LSTM to do sentiment analysis.
 
-* [Sentiment Analysis with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1283423) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
+* [Sentiment Analysis with ERNIE](https://aistudio.baidu.com/aistudio/projectdetail/1294333) shows how to exploit the pretrained ERNIE to make sentiment analysis better.
 
 * [Waybill Information Extraction with BiGRU-CRF Model](https://aistudio.baidu.com/aistudio/projectdetail/1317771) shows how to make use of bigru and crf to do information extraction.
 

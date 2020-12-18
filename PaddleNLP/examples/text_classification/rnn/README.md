@@ -2,19 +2,73 @@
 
 文本分类是NLP应用最广的任务之一，可以被应用到多个领域中，包括但不仅限于：情感分析、垃圾邮件识别、商品评价分类...
 
-一般通过将文本表示成向量后接入分类器，完成文本分类。
+情感分析是一个自然语言处理中老生常谈的任务。情感分析的目的是为了找出说话者/作者在某些话题上，或者针对一个文本两极的观点的态度。这个态度或许是他或她的个人判断或是评估，也许是他当时的情感状态（就是说，作者在做出这个言论时的情绪状态），或是作者有意向的情感交流（就是作者想要读者所体验的情绪）。其可以用于数据挖掘、Web 挖掘、文本挖掘和信息检索方面得到了广泛的研究。可通过 [AI开放平台-情感倾向分析](http://ai.baidu.com/tech/nlp_apply/sentiment_classify) 线上体验。
 
-如何用向量表征文本，使得向量携带语义信息，是我们关心的重点。
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/febb8a1478e34258953e56611ddc76cd20b412fec89845b0a4a2e6b9f8aae774" hspace='10'/> <br />
+</p>
 
 本项目开源了一系列模型用于进行文本建模，用户可通过参数配置灵活使用。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp对多个模型进行评测。
 
-情感倾向分析（Sentiment Classification）是一类常见的文本分类任务。其针对带有主观描述的中文文本，可自动判断该文本的情感极性类别并给出相应的置信度。情感类型分为积极、消极。情感倾向分析能够帮助企业理解用户消费习惯、分析热点话题和危机舆情监控，为企业提供有利的决策支持。可通过 [AI开放平台-情感倾向分析](http://ai.baidu.com/tech/nlp_apply/sentiment_classify) 线上体验。
+## paddlenlp.seq2vec
+
+情感分析任务中关键技术是如何将文本表示成一个**携带语义的文本向量**。随着深度学习技术的快速发展，目前常用的文本表示技术有LSTM，GRU，RNN等方法。
+PaddleNLP提供了一系列的文本表示技术，如`seq2vec`模块。
+
+[`paddlenlp.seq2vec`](../../../paddlenlp/seq2vec) 模块作用为将输入的序列文本表征成一个语义向量。
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/bbf00931c7534ab48a5e7dff5fbc2ba3ff8d459940434628ad21e9195da5d4c6" width = "500" height = "200"  hspace='10'/> <br />
+</p>
+
 
 ## 模型简介
 
 
 
-本项目通过调用[Seq2Vec](../../../paddlenlp/seq2vec/)中内置的模型进行序列建模，完成句子的向量表示。包含最简单的词袋模型和一系列经典的RNN类模型。
+本项目通过调用[seq2vec](../../../paddlenlp/seq2vec/)中内置的模型进行序列建模，完成句子的向量表示。包含最简单的词袋模型和一系列经典的RNN类模型。
+
+`seq2vec`模块
+
+* 功能是将序列Embedding Tensor（shape是(batch_size, num_token, emb_dim) ）转化成文本语义表征Enocded Texts Tensor（shape 是(batch_sie,encoding_size)）
+* 提供了`BoWEncoder`，`CNNEncoder`，`GRUEncoder`，`LSTMEncoder`，`RNNEncoder`等模型
+    - `BoWEncoder` 是将输入序列Embedding Tensor在num_token维度上叠加，得到文本语义表征Enocded Texts Tensor。
+    - `CNNEncoder` 是将输入序列Embedding Tensor进行卷积操作，在对卷积结果进行max_pooling，得到文本语义表征Enocded Texts Tensor。
+    - `GRUEncoder` 是对输入序列Embedding Tensor进行GRU运算，在运算结果上进行pooling或者取最后一个step的隐表示，得到文本语义表征Enocded Texts Tensor。
+    - `LSTMEncoder` 是对输入序列Embedding Tensor进行LSTM运算，在运算结果上进行pooling或者取最后一个step的隐表示，得到文本语义表征Enocded Texts Tensor。
+    - `RNNEncoder` 是对输入序列Embedding Tensor进行RNN运算，在运算结果上进行pooling或者取最后一个step的隐表示，得到文本语义表征Enocded Texts Tensor。
+
+
+`seq2vec`提供了许多语义表征方法，那么这些方法在什么时候更加适合呢？
+
+* `BoWEncoder`采用Bag of Word Embedding方法，其特点是简单。但其缺点是没有考虑文本的语境，所以对文本语义的表征不足以表意。
+
+* `CNNEncoder`采用卷积操作，提取局部特征，其特点是可以共享权重。但其缺点同样只考虑了局部语义，上下文信息没有充分利用。
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/2b2498edd83e49d3b017c4a14e1be68506349249b8a24cdaa214755fb51eadcd" width = "300" height = "150"  hspace='10'/> <br />
+</p>
+
+* `RNNEnocder`采用RNN方法，在计算下一个token语义信息时，利用上一个token语义信息作为其输入。但其缺点容易产生梯度消失和梯度爆炸。
+
+<p align="center">
+<img src="http://colah.github.io/posts/2015-09-NN-Types-FP/img/RNN-general.png" width = "50%" height = "30%"  hspace='10'/> <br />
+</p>
+
+* `LSTMEnocder`采用LSTM方法，LSTM是RNN的一种变种。为了学到长期依赖关系，LSTM 中引入了门控机制来控制信息的累计速度，
+    包括有选择地加入新的信息，并有选择地遗忘之前累计的信息。
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/a5af1d93c69f422d963e094397a2f6ce978c30a26ab6480ab70d688dd1929de0" width = "50%" height = "30%"  hspace='10'/> <br />
+</p>
+
+* `GRUEncoder`采用GRU方法，GRU也是RNN的一种变种。一个LSTM单元有四个输入 ，因而参数是RNN的四倍，带来的结果是训练速度慢。
+    GRU对LSTM进行了简化，在不影响效果的前提下加快了训练速度。
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/fc848bc2cb494b40ae42af892b756f5888770320a1fa42348cec10d3df64ee2f" width = "40%" height = "25%"  hspace='10'/> <br />
+</p>
+
 
 | 模型                                             | 模型介绍                                                     |
 | ------------------------------------------------ | ------------------------------------------------------------ |
@@ -38,25 +92,31 @@
 | Bi-LSTM Attention |  0.8992 |  0.8856 |
 | TextCNN  | 0.9102  | 0.9107 |
 
+
+<p align="center">
+<img src="https://ai-studio-static-online.cdn.bcebos.com/ecf309c20e5347399c55f1e067821daa088842fa46ad49be90de4933753cd3cf" width = "600" height = "200"  hspace='10'/> <br />
+</p>
+
+
+关于CNN、LSTM、GRU、RNN等更多信息参考：
+
+* https://canvas.stanford.edu/files/1090785/download
+* https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+* https://arxiv.org/abs/1412.3555
+* https://arxiv.org/pdf/1506.00019
+* https://arxiv.org/abs/1404.2188
+
+
 ## 快速开始
 
-### 安装说明
+### 环境依赖
 
-* PaddlePaddle 安装
+- python >= 3.6
+- paddlepaddle >= 2.0.0-rc1
 
-   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
-
-* PaddleNLP 安装
-
-   ```shell
-   pip install paddlenlp
-   ```
-
-* 环境依赖
-
-   本项目依赖于jieba分词，请在运行本项目之前，安装jieba，如`pip install -U jieba`
-
-   Python的版本要求 3.6+，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/install/quick/zh/2.0rc-linux-docker) 部分的内容
+```
+pip install paddlenlp==2.0.0b
+```
 
 ### 代码结构说明
 
@@ -164,10 +224,18 @@ Data: 作为老的四星酒店，房间依然很整洁，相当不错。机场�
 
 ## 线上体验教程
 
-* [paddlenlp.seq2vec是什么? 瞧瞧它怎么完成情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1294333)展示了使用序列模型LSTM完成情感分析任务。
+- [使用seq2vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
 
-* [使用PaddleNLP语义预训练模型ERNIE优化情感分析教程](https://aistudio.baidu.com/aistudio/projectdetail/1283423)展示了使用ERNIE优化情感分析任务。
+- [如何将预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
 
-* [基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
+- [使用Bi-GRU+CRF完成快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
 
-* [使用PaddleNLP预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
+- [使用预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
+
+- [使用Seq2Seq模型完成自动对联模型](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
+
+- [使用预训练模型ERNIE-GEN实现智能写诗](https://aistudio.baidu.com/aistudio/projectdetail/1339888)
+
+- [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
+
+更多教程参见[PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)。
