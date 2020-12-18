@@ -12,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-
-import yaml
 import os
 import io
 import random
 import time
+import argparse
 from functools import partial
 
+import numpy as np
+import yaml
 import paddle
 import pgl
-import numpy as np
 from easydict import EasyDict as edict
 from paddlenlp.utils.log import logger
-from pgl.utils.data import Dataloader
 
 from models import ErnieSageForLinkPrediction
 from data import TrainData, PredictData, GraphDataLoader, batch_fn
@@ -107,6 +105,7 @@ def tostr(data_array):
     return " ".join(["%.5lf" % d for d in data_array])
 
 
+@paddle.no_grad()
 def do_predict(config):
     paddle.set_device("gpu" if config.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:

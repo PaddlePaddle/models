@@ -19,7 +19,7 @@ output_path: "./output"
 # data config ------
 train_data: "./example_data/graph_data.txt"
 graph_data: "./example_data/train_data.txt"
-graph_work_path: "./graph"
+graph_work_path: "./graph_workdir"
 input_type: "text"
 encoding: "utf8"
 

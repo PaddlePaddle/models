@@ -75,11 +75,6 @@ class PredictData(Dataset):
 
 
 def batch_fn(batch_ex, samples, base_graph, term_ids):
-    # batch_ex = [
-    #     (src, dst, neg),
-    #     (src, dst, neg),
-    #     (src, dst, neg),
-    #     ]
     batch_src = []
     batch_dst = []
     batch_neg = []
