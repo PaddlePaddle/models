@@ -50,7 +50,7 @@ class GraphSageConv(nn.Layer):
         def _recv_func(message):
             return getattr(message, self.aggr_func)(message["msg"])
 
-        msg = graph.send(_send_func, nfeat_list=[("h", feature)])
+        msg = graph.send(_send_func, src_feat={"h": feature})
         neigh_feature = graph.recv(reduce_func=_recv_func, msg=msg)
 
         self_feature = self.self_linear(feature)
@@ -145,7 +145,7 @@ class ErnieSageV2Conv(nn.Layer):
         def _recv_func(message):
             return getattr(message, self.aggr_func)(message["msg"])
 
-        msg = graph.send(self.ernie_send, nfeat_list=[("term_ids", term_ids)])
+        msg = graph.send(self.ernie_send, node_feat={"term_ids": term_ids})
         neigh_feature = graph.recv(reduce_func=_recv_func, msg=msg)
 
         cls = paddle.full(
