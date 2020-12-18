@@ -69,7 +69,12 @@ def create_data_loader(args):
                 key=trg_key, buffer_size=buffer_size).sort(
                     key=src_key, buffer_size=buffer_size)
         else:
-            sampler = sampler.shuffle()
+            if args.shuffle:
+                if args.reader_seed == "None" or args.reader_seed is None:
+                    reader_seed = 0
+                else:
+                    reader_seed = eval(args.reader_seed)
+                sampler = sampler.shuffle(seed=reader_seed)
             if args.sort_type == SortType.POOL:
                 buffer_size = args.pool_size
                 sampler = sampler.sort(key=src_key, buffer_size=buffer_size)

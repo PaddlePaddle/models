@@ -27,6 +27,11 @@ pool_size: 200000
 sort_type: "global"
 batch_size: 4096
 infer_batch_size: 8
+# Data shuffle only works when sort_type is pool or none
+shuffle: True
+# reader_seed must be set when shuffle is True and using multi-cards to train. 
+# Otherwise, the number of batches cannot be guaranteed. 
+reader_seed: 128
 
 # Hyparams for training:
 # The number of epoches for training
