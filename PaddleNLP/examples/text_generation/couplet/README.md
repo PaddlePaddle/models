@@ -18,7 +18,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本目录包含Seq2Seq的一个经典样例：自动对联生成，带attention机制的文本生成模型。
 
-运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc1及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 
 ## 模型概览
@@ -28,9 +28,9 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 ## 数据介绍
 
-本教程使用[couplet数据集](https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz)数据集作为训练语料，train_src.tsv及train_tgt.tsv为训练集，dev_src.tsv及test_tgt.tsv为开发集，test_src.tsv及test_tgt.tsv为测试集。
+本教程使用[couplet数据集](https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz)数据集作为训练语料，train_src.tsv及train_tgt.tsv为训练集，dev_src.tsv及dev_tgt.tsv为开发集，test_src.tsv及test_tgt.tsv为测试集。
 
-数据集会在`CoupletDataset`初始化时自动下载,如果用户在初始化数据集时没有提供路径，在linux系统下，数据集会自动下载到`~/.paddlenlp/datasets/machine_translation/CoupletDataset/`目录下
+数据集会在`CoupletDataset`初始化时自动下载，如果用户在初始化数据集时没有提供路径，在linux系统下，数据集会自动下载到`~/.paddlenlp/datasets/machine_translation/CoupletDataset/`目录下
 
 
 ## 模型训练
@@ -47,7 +47,7 @@ python train.py \
     --max_epoch 20
 ```
 
-各参数的具体说明请参阅 `args.py` 。训练程序会在每个epoch训练结束之后，save一次模型。
+各参数的具体说明请参阅 `args.py` 。训练程序会在每个epoch训练结束之后，保存一次模型。
 
 **NOTE:** 如需恢复模型训练，则`init_from_ckpt`只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=couplet_models/19`即可，程序会自动加载模型参数`couplet_models/19.pdparams`，也会自动加载优化器状态`couplet_models/19.pdopt`。
 
