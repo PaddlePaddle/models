@@ -157,7 +157,7 @@ if __name__ == '__main__':
     metric = ChunkEvaluator((train_ds.label_num + 2) // 2, "IOB")
     loss_fn = paddle.nn.loss.CrossEntropyLoss(ignore_index=ignore_label)
     optimizer = paddle.optimizer.AdamW(
-        learning_rate=5e-5, parameters=model.parameters())
+        learning_rate=2e-5, parameters=model.parameters())
 
     step = 0
     for epoch in range(10):
