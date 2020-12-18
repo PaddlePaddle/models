@@ -124,3 +124,9 @@ python -u ./predict.py \
   year={2020}
 }
 ```
+
+## 线上教程体验
+
+我们为诗歌文本生成提供了线上教程，欢迎体验：
+
+* [使用PaddleNLP预训练模型ERNIE-GEN生成诗歌](https://aistudio.baidu.com/aistudio/projectdetail/1339888)
