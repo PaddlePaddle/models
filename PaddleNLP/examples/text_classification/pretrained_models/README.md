@@ -21,7 +21,7 @@
 
 本图片来自于：https://github.com/thunlp/PLMpapers
 
-本示例展示了以ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/pdf/1904.09223))代表的预训练模型如何Finetune完成中文文本分类任务。
+本示例展示了以ERNIE([Enhanced Representation through Knowledge Integration](https://arxiv.org/abs/1904.09223))代表的预训练模型如何Finetune完成中文文本分类任务。
 
 ## 模型简介
 
