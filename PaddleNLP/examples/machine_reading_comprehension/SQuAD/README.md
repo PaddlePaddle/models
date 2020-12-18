@@ -27,7 +27,7 @@ SQuAD v2.0
 
 * PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 2.0-rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 * PaddleNLP 安装
 
@@ -56,7 +56,7 @@ python -u ./run_squad.py \
     --batch_size 12 \
     --learning_rate 3e-5 \
     --num_train_epochs 2 \
-    --logging_steps 1000 \
+    --logging_steps 100 \
     --save_steps 1000 \
     --warmup_proportion 0.1 \
     --weight_decay 0.01 \
