@@ -73,7 +73,7 @@ def create_data_loader(args):
                 if args.reader_seed == "None" or args.reader_seed is None:
                     reader_seed = 0
                 else:
-                    reader_seed = eval(args.reader_seed)
+                    reader_seed = args.reader_seed
                 sampler = sampler.shuffle(seed=reader_seed)
             if args.sort_type == SortType.POOL:
                 buffer_size = args.pool_size
