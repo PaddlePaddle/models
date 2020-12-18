@@ -1,10 +1,8 @@
-English | [简体中文] (./README.md)
+English | [简体中文](./README.md)
 
 <p align="center">
   <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
 </p>
-
-# PaddleNLP
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
@@ -43,7 +41,7 @@ pip install paddlenlp>=2.0.0a
 ### Quick Dataset Loading
 
 ```python
-from paddlenlp.datasets import ChnSentiCrop
+from paddlenlp.datasets import ChnSentiCorp
 
 train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
@@ -92,7 +90,7 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 - [Embedding API](./docs/embeddings.md)
 
-- [Metrics API](./docs/embeddings.md)
+- [Metrics API](./docs/metrics.md)
 
 - [Models API](./docs/models.md)
 
@@ -115,7 +113,11 @@ Please refer to our official AI Studio account for more interactive tutorials: [
 
 ## Community
 
-Join our QQ Technical Group to
+Join our QQ Technical Group for technical exchange right now! ⬇️
+
+<div align="center">
+  <img src="./docs/imgs/qq.png" width="200" height="200" />
+</div>
 
 ## License
 

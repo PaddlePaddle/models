@@ -45,7 +45,7 @@ pip install paddlenlp==2.0.0b
 ## 数据集快速加载
 
 ```python
-from paddlenlp.datasets import ChnSentiCrop
+from paddlenlp.datasets import ChnSentiCorp
 
 train_dataset, dev_dataset, test_dataset= ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
@@ -102,11 +102,13 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 - [Transformer API](./docs/transformers.md)
 
+- [Data API](./docs/data.md)
+
 - [Dataset API](./docs/datasets.md)
 
 - [Embedding API](./docs/embeddings.md)
 
-- [Metrics API](./docs/embeddings.md)
+- [Metrics API](./docs/metrics.md)
 
 - [Models API](./docs/models.md)
 
@@ -115,10 +117,10 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 # 可交互式Notebook教程
 
 - [使用seq2vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
-- [如何将预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
-- [使用Bi-GRU+CRF完成快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
+- [如何通过预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
+- [使用BiGRU-CRF模型完成快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
 - [使用预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
-- [使用Seq2Seq模型完成自动对联模型](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
+- [使用Seq2Seq模型完成自动对联](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
 - [使用预训练模型ERNIE-GEN实现智能写诗](https://aistudio.baidu.com/aistudio/projectdetail/1339888)
 - [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
 
