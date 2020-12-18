@@ -16,7 +16,7 @@ PaddleNLP已预置多个公开的预训练Embedding，用户可以通过使用`p
 * 环境依赖
 
    - python >= 3.6
-   - paddlepaddle >= 2.0.0-rc1
+   - paddlepaddle-gpu >= 2.0.0-rc1
 
    ```
    pip install paddlenlp==2.0.0b
@@ -32,7 +32,7 @@ wget https://paddlenlp.bj.bcebos.com/data/dict.txt
 
 ### 启动训练
 
-我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
+我们以中文情感分类公开数据集ChnSentiCorp为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在验证集（dev.tsv）验证。
 
 CPU 启动：
 
