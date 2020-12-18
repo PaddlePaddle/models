@@ -16,7 +16,7 @@
 | -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | ERNIE-GEN文本生成 | [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_generation/ernie-gen) |ERNIE-GEN是百度发布的生成式预训练模型，是一种Multi-Flow结构的预训练和微调框架。ERNIE-GEN利用更少的参数量和数据，在摘要生成、问题生成、对话和生成式问答4个任务共5个数据集上取得了SOTA效果 |
 | BERT 预训练&GLUE下游任务 | [BERT(Bidirectional Encoder Representation from Transformers)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/bert) | BERT模型作为目前最为火热语义表示预训练模型，PaddleNLP提供了简洁功效的实现方式，同时易用性方面通过简单参数切换即可实现不同的BERT模型。 |
-| Electra 预训练&GLUE下游任务     | [Electra(Pre-training Text Encoders as Discriminators Rather Than Generator)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/electra) |ELECTRA模型新一种模型预训练的框架，采用generator和discriminator的结合方式，相对于BERT来说能提升计算效率，同时缓解BERT训练和预测不一致的问题。|
+| Electra 预训练&GLUE下游任务     | [Electra(Efficiently Learning an Encoder that Classifies Token Replacements Accurately)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/electra) |ELECTRA 创新性地引入GAN的思想对BERT预训练过程进行了改进，在和BERT具有相同的模型参数、预训练计算量一样的情况下，ELECTRA GLUE得分明显好。同时相比GPT、ELMo，在GLUE得分略好时，ELECTRA预训练模型只需要很少的参数和计算量。|
 
 ### 核心应用模型
 

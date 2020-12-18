@@ -5,8 +5,6 @@
 ## 1. 任务说明
 机器阅读理解评测中常用的F1、EM等指标虽然能够很好的衡量抽取式模型所预测的答案和真实答案的匹配程度，但在处理观点类问题时，该类指标难以衡量模型是否真正理解答案所代表的含义，例如答案中包含的观点极性。DuReader-yesno是一个以观点极性判断为目标任务的数据集，通过引入该数据集，可以弥补抽取类数据集的不足，从而更好地评价模型的自然语言理解能力。
 
-**目前语言模型要求使用PaddlePaddle 2.0及以上版本或适当的develop版本。**
-
 
 ## 2. 数据集
 
@@ -39,6 +37,22 @@
 
 ## 1. 开始第一次模型调用
 
+### 安装说明
+
+* PaddlePaddle 安装
+
+   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+
+* PaddleNLP 安装
+
+   ```shell
+   pip install paddlenlp>=2.0.0b
+   ```
+
+* 环境依赖
+
+    Python的版本要求 3.6+
+
 ### 数据准备
 为了方便开发者进行测试，我们内置了数据下载脚本，也可以通过`--data_path`传入本地数据集的位置，数据集需保证与DuReader-yesno数据集格式一致。
 
@@ -55,7 +69,7 @@ python -u ./run_du.py \
     --batch_size 12 \
     --learning_rate 3e-5 \
     --num_train_epochs 2 \
-    --logging_steps 1000 \
+    --logging_steps 200 \
     --save_steps 1000 \
     --warmup_proportion 0.1 \
     --weight_decay 0.01 \

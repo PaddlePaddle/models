@@ -2,7 +2,7 @@
 
 ## 模型简介
 
-对话系统 (Dialogue System) 常常需要根据应用场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽填充、行为识别、状态追踪等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得Dialogue System得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话通用理解模型 (DGU: DialogueGeneralUnderstanding)，通过实验表明，使用base-model (BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
+对话系统 (Dialogue System) 常常需要根据应用场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽填充、行为识别、状态追踪等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得Dialogue System得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话通用理解模型 (DGU: Dialogue General Understanding)，通过实验表明，使用base-model (BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
 
 DGU模型内共包含6个任务，全部基于公开数据集在Paddle2.0上完成训练及评估，详细说明如下：
 
@@ -39,17 +39,17 @@ DGU模型中的6个任务，分别采用不同的评估指标在test集上进行
 
 * PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 2.0rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 * PaddleNLP 安装
 
    ```shell
-   pip install paddlenlp
+   pip install paddlenlp>=2.0.0b
    ```
 
 * 环境依赖
 
-   Python的版本要求 3.6+，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/install/quick/zh/2.0rc-linux-docker) 部分的内容
+   Python的版本要求 3.6+
 
 ### 代码结构说明
 
