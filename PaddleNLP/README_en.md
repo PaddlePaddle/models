@@ -4,8 +4,6 @@ English | [简体中文](./README.md)
   <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
 </p>
 
-# PaddleNLP
-
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
@@ -43,7 +41,7 @@ pip install paddlenlp>=2.0.0a
 ### Quick Dataset Loading
 
 ```python
-from paddlenlp.datasets import ChnSentiCrop
+from paddlenlp.datasets import ChnSentiCorp
 
 train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
