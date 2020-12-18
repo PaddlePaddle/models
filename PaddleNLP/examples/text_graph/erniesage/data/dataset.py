@@ -21,7 +21,7 @@ from paddle.io import Dataset, IterableDataset
 from paddlenlp.utils.log import logger
 import pgl
 from pgl import Graph
-from pgl.nn.sampling import graphsage_sample
+from pgl.sampling import graphsage_sample
 
 __all__ = [
     "TrainData",
