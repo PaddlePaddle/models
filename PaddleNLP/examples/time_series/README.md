@@ -53,6 +53,8 @@ python predict.py --data_path time_series_covid19_confirmed_global.csv \
 ```
 
 
-## 如何贡献代码
+## 线上教程体验
 
-如果你可以修复某个 issue 或者增加一个新功能，欢迎给我们提交 PR。如果对应的 PR 被接受了，我们将根据贡献的质量和难度 进行打分（0-5 分，越高越好）。如果你累计获得了 10 分，可以联系我们获得面试机会或为你写推荐信。
+我们为时间序列预测任务提供了线上教程，欢迎体验：
+
+* [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
