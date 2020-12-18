@@ -50,7 +50,7 @@ python run_bigru_crf.py
 
 详细介绍请参考教程：[基于Bi-GRU+CRF的快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
 
-#### 2.4 启动ERNIE + FC训练
+#### 2.3.2 启动ERNIE + FC训练
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0 # 只支持单卡训练
