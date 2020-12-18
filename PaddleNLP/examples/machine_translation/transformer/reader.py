@@ -85,6 +85,9 @@ def create_data_loader(args):
             batch_size_fn=_max_token_fn,
             key=_key)
 
+        if args.shuffle_batch:
+            batch_sampler.shuffle()
+
         if m == "train":
             batch_sampler = batch_sampler.shard()
 
