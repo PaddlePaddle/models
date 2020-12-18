@@ -132,7 +132,7 @@ def do_predict(config):
 
     predict_loader = GraphDataLoader(
         predict_ds,
-        batch_size=config.batch_size,
+        batch_size=config.infer_batch_size,
         shuffle=True,
         num_workers=config.sample_workers,
         collate_fn=collate_fn)
