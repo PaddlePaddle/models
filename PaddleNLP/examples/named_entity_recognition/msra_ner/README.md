@@ -1,4 +1,4 @@
-# 使用PaddleNLP运行MSRA_NER
+# 使用PaddleNLP运行MSRA-NER
 
 ## 1. 简介
 
@@ -21,7 +21,7 @@ MSRA-NER 数据集由微软亚研院发布，其目标是识别文本中具有�
 
 - paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
 
-### 2.2 启动MSRA_NER任务
+### 2.2 启动MSRA-NER任务
 
 ```shell
 export CUDA_VISIBLE_DEVICES=0
@@ -66,3 +66,8 @@ eval loss: 0.019874, precision: 0.991670, recall: 0.991930, f1: 0.991800
 precision                     | 0.992903    |
 recall                        | 0.991823    |
 f1                            | 0.992363    |
+
+## 参考
+
+[Microsoft Research Asia Chinese Word-Segmentation Data Set](https://www.microsoft.com/en-us/download/details.aspx?id=52531)
+[The third international Chinese language processing bakeoff: Word segmentation and named entity recognition](https://faculty.washington.edu/levow/papers/sighan06.pdf)

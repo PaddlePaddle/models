@@ -57,4 +57,4 @@ python predict.py --data_path time_series_covid19_confirmed_global.csv \
 
 我们为时间序列预测任务提供了线上教程，欢迎体验：
 
-* [使用PaddlePaddle完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
+* [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
