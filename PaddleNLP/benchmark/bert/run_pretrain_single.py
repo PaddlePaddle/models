@@ -276,7 +276,7 @@ def do_train(args):
                 if global_step % args.logging_steps == 0:
                     time_cost = time.time() - tic_train
                     print(
-                        "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s, ips :%.2f sequences/s"
+                        "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s, ips: %.2f sequences/s"
                         % (global_step, epoch, step, loss_return[0],
                            args.logging_steps / time_cost,
                            args.logging_steps * args.batch_size / time_cost))
