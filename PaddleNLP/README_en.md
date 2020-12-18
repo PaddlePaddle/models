@@ -1,4 +1,4 @@
-English | [简体中文] (./README.md)
+English | [简体中文](./README.md)
 
 <p align="center">
   <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
@@ -112,7 +112,11 @@ Please refer to our official AI Studio account for more interactive tutorials: [
 
 ## Community
 
-Join our QQ Technical Group to
+Join our QQ Technical Group for technical exchange right now! ⬇️
+
+<div align="center">
+  <img src="./docs/imgs/qq.png" width="200" height="200" />
+</div>
 
 ## License
 
