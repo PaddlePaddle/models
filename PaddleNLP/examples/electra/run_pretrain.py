@@ -480,11 +480,13 @@ def do_train(args):
             float(num_training_steps - current_step) / float(
                 max(1, num_training_steps - num_warmup_steps))))
 
+    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=1.0)
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
         epsilon=args.adam_epsilon,
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
+        grad_clip=clip,
         apply_decay_param_fun=lambda x: x in [
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])

@@ -104,9 +104,11 @@ class Mcc(Metric):
 
     def update(self, preds_and_labels):
         preds = preds_and_labels[0]
-        preds = preds.numpy()
         labels = preds_and_labels[1]
-        labels = labels.numpy().reshape(-1, 1)
+        if isinstance(preds, paddle.Tensor):
+            preds = preds.numpy()
+        if isinstance(labels, paddle.Tensor):
+            labels = labels.numpy().reshape(-1, 1)
         sample_num = labels.shape[0]
         for i in range(sample_num):
             pred = preds[i]
@@ -161,9 +163,13 @@ class PearsonAndSpearman(Metric):
 
     def update(self, preds_and_labels):
         preds = preds_and_labels[0]
-        preds = np.squeeze(preds.numpy().reshape(-1, 1)).tolist()
         labels = preds_and_labels[1]
-        labels = np.squeeze(labels.numpy().reshape(-1, 1)).tolist()
+        if isinstance(preds, paddle.Tensor):
+            preds = preds.numpy()
+        if isinstance(labels, paddle.Tensor):
+            labels = labels.numpy()
+        preds = np.squeeze(preds.reshape(-1, 1)).tolist()
+        labels = np.squeeze(labels.reshape(-1, 1)).tolist()
         self.preds.append(preds)
         self.labels.append(labels)
 
