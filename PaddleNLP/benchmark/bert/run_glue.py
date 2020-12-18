@@ -23,18 +23,21 @@ import numpy as np
 import paddle
 from paddle.io import DataLoader
 
-from paddlenlp.datasets import GlueQNLI, GlueSST2
+from paddle.metric import Accuracy
+from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueMNLI, GlueQNLI, GlueRTE
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.metrics import Mcc, PearsonAndSpearman
+from paddlenlp.utils.log import logger
 
 TASK_CLASSES = {
-    "qnli": (GlueQNLI, paddle.metric.Accuracy),  # (dataset, metric)
-    "sst-2": (GlueSST2, paddle.metric.Accuracy),
+    "cola": (GlueCoLA, Mcc),
+    "sst-2": (GlueSST2, Accuracy),
+    "sts-b": (GlueSTSB, PearsonAndSpearman),
+    "mnli": (GlueMNLI, Accuracy),
+    "qnli": (GlueQNLI, Accuracy),
+    "rte": (GlueRTE, Accuracy),
 }
 
 MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer), }
@@ -141,12 +144,15 @@ def parse_args():
     return args
 
 
-def create_data_holder():
+def create_data_holder(task_name):
     input_ids = paddle.static.data(
         name="input_ids", shape=[-1, -1], dtype="int64")
     segment_ids = paddle.static.data(
         name="segment_ids", shape=[-1, -1], dtype="int64")
-    label = paddle.static.data(name="label", shape=[-1, 1], dtype="int64")
+    if task_name == "sts-b":
+        label = paddle.static.data(name="label", shape=[-1, 1], dtype="float32")
+    else:
+        label = paddle.static.data(name="label", shape=[-1, 1], dtype="int64")
 
     return [input_ids, segment_ids, label]
 
@@ -175,12 +181,21 @@ def set_seed(args):
 
 def evaluate(exe, metric, loss, correct, dev_program, data_loader):
     metric.reset()
+    returns = [loss]
+    if isinstance(correct, list) or isinstance(correct, tuple):
+        returns.extend(list(correct))
+    else:
+        returns.append(correct)
     for batch in data_loader:
-        loss_return, correct_return = exe.run(dev_program, feed=batch, \
-           fetch_list=[loss, correct])
-        metric.update(correct_return)
+        exe.run(dev_program, feed=batch, \
+           fetch_list=returns)
+        return_numpys = exe.run(dev_program, feed=batch, \
+           fetch_list=returns)
+        metric_numpy = return_numpys[1] if len(return_numpys[
+            1:]) == 1 else return_numpys[1:]
+        metric.update(metric_numpy)
         accuracy = metric.accumulate()
-    print("eval loss: %f, accuracy: %f" % (loss_return, accuracy))
+    print("eval loss: %f, acc: %s" % (return_numpys[0], accuracy))
 
 
 def convert_example(example,
@@ -274,7 +289,7 @@ def do_train(args):
 
     # Create the tokenizer and dataset
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
-    train_dataset, dev_dataset = dataset_class.get_datasets(["train", "dev"])
+    train_dataset = dataset_class.get_datasets(["train"])
 
     trans_func = partial(
         convert_example,
@@ -293,15 +308,11 @@ def do_train(args):
     train_batch_sampler = paddle.io.BatchSampler(
         train_dataset, batch_size=args.batch_size, shuffle=True)
 
-    dev_dataset = dev_dataset.apply(trans_func, lazy=True)
-    dev_batch_sampler = paddle.io.BatchSampler(
-        dev_dataset, batch_size=args.batch_size, shuffle=False)
-
     feed_list_name = []
 
     # Define the input data and create the train/dev data_loader
     with paddle.static.program_guard(main_program, startup_program):
-        [input_ids, segment_ids, labels] = create_data_holder()
+        [input_ids, segment_ids, labels] = create_data_holder(args.task_name)
 
     train_data_loader = DataLoader(
         dataset=train_dataset,
@@ -311,19 +322,49 @@ def do_train(args):
         num_workers=0,
         return_list=False)
 
-    dev_data_loader = DataLoader(
-        dataset=dev_dataset,
-        feed_list=[input_ids, segment_ids, labels],
-        batch_sampler=dev_batch_sampler,
-        collate_fn=batchify_fn,
-        num_workers=0,
-        return_list=False)
+    if args.task_name == "mnli":
+        dev_dataset_matched, dev_dataset_mismatched = dataset_class.get_datasets(
+            ["dev_matched", "dev_mismatched"])
+        dev_dataset_matched = dev_dataset_matched.apply(trans_func, lazy=True)
+        dev_dataset_mismatched = dev_dataset_mismatched.apply(
+            trans_func, lazy=True)
+        dev_batch_sampler_matched = paddle.io.BatchSampler(
+            dev_dataset_matched, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader_matched = DataLoader(
+            dataset=dev_dataset_matched,
+            batch_sampler=dev_batch_sampler_matched,
+            feed_list=[input_ids, segment_ids, labels],
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=False)
+        dev_batch_sampler_mismatched = paddle.io.BatchSampler(
+            dev_dataset_mismatched, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader_mismatched = DataLoader(
+            dataset=dev_dataset_mismatched,
+            feed_list=[input_ids, segment_ids, labels],
+            batch_sampler=dev_batch_sampler_mismatched,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=False)
+    else:
+        dev_dataset = dataset_class.get_datasets(["dev"])
+        dev_dataset = dev_dataset.apply(trans_func, lazy=True)
+        dev_batch_sampler = paddle.io.BatchSampler(
+            dev_dataset, batch_size=args.batch_size, shuffle=False)
+        dev_data_loader = DataLoader(
+            dataset=dev_dataset,
+            feed_list=[input_ids, segment_ids, labels],
+            batch_sampler=dev_batch_sampler,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=False)
 
     # Create the training-forward program, and clone it for the validation
     with paddle.static.program_guard(main_program, startup_program):
+        num_class = 1 if train_dataset.get_labels() is None else len(
+            train_dataset.get_labels())
         model, pretrained_state_dict = model_class.from_pretrained(
-            args.model_name_or_path,
-            num_classes=len(train_dataset.get_labels()))
+            args.model_name_or_path, num_classes=num_class)
         loss_fct = paddle.nn.loss.CrossEntropyLoss(
         ) if train_dataset.get_labels() else paddle.nn.loss.MSELoss()
         logits = model(input_ids, segment_ids)
@@ -384,8 +425,14 @@ def do_train(args):
             lr_scheduler.step()
             if global_step % args.save_steps == 0:
                 # Validation pass, record the loss and metric 
-                evaluate(exe, metric, loss, correct, dev_program,
-                         dev_data_loader)
+                if args.task_name == "mnli":
+                    evaluate(exe, metric, loss, correct, dev_program,
+                             dev_data_loader_matched)
+                    evaluate(exe, metric, loss, correct, dev_program,
+                             dev_data_loader_mismatched)
+                else:
+                    evaluate(exe, metric, loss, correct, dev_program,
+                             dev_data_loader)
                 output_dir = os.path.join(args.output_dir,
                                           "model_%d" % global_step)
                 if not os.path.exists(output_dir):

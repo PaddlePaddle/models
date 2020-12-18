@@ -6,13 +6,9 @@
 
 为了能够简易地构建一个高质量的开放域聊天机器人，本项目在Paddle2.0上实现了PLATO-2的预测模型，并基于终端实现了简单的人机交互。用户可以通过下载预训练模型快速构建一个开放域聊天机器人。
 
-PLATO-2的网络结构及评估结果见下图：
+PLATO-2的网络结构见下图：
 
 <p align="center"><img src="./imgs/network.png" hspace="10"/></p>
-
-<p align="center"><img src="./imgs/eval_en.png" hspace="10"/></p>
-
-<p align="center"><img src="./imgs/eval_cn.png" hspace="10"/></p>
 
 PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePaddle/Knover)
 
@@ -101,3 +97,5 @@ python interaction.py --vocab_path ./data/vocab.txt --spm_model_file ./data/spm.
 32层PLATO-2网络交互示例：
 
 <p><img src="./imgs/case.jpg" hspace="10"/></p>
+
+**NOTE:** 输入"[EXIT]"退出交互程序，输入"[NEXT]"开启下一轮新的对话。
