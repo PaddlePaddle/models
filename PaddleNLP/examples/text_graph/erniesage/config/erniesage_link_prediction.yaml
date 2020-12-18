@@ -1,12 +1,12 @@
 # Global Enviroment Settings 
 
 # trainer config ------
-n_gpu: 2
+n_gpu: 2 # delete it, if use cpu to train
 seed: 2020
-# ernie_tiny or ernie avaiable
-model_name_or_path: "ernie_tiny"
-task: "link_predict"
-learner_type: "gpu"
+
+task: "link_prediction"
+model_name_or_path: "ernie-tiny" # ernie-tiny or ernie-1.0 avaiable
+sample_workers: 1
 optimizer_type: "adam"
 lr: 0.00005
 batch_size: 32
@@ -17,11 +17,11 @@ save_per_step: 200
 output_path: "./output"
 
 # data config ------
-train_data: "./example_data/link_prediction/graph_data.txt"
-graph_data: "./example_data/link_prediction/train_data.txt"
-graph_work_path: "./graph"
-sample_workers: 1
+train_data: "./example_data/graph_data.txt"
+graph_data: "./example_data/train_data.txt"
+graph_work_path: "./graph_workdir"
 input_type: "text"
+encoding: "utf8"
 
 # model config ------
 samples: [10]
@@ -38,4 +38,3 @@ neg_type: "batch_neg"
 # infer config ------
 infer_model: "./output/last"
 infer_batch_size: 128
-encoding: "utf8"

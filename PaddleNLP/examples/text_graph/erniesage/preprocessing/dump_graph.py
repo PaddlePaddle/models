@@ -22,11 +22,12 @@ from functools import partial
 from io import open
 
 import numpy as np
+import yaml
 import tqdm
+from easydict import EasyDict as edict
 import pgl
 from pgl.graph_kernel import alias_sample_build_table
 from pgl.utils.logger import log
-
 from paddlenlp.transformers import ErnieTinyTokenizer
 
 
@@ -35,20 +36,20 @@ def term2id(string, tokenizer, max_seqlen):
     tokens = tokenizer(string)
     ids = tokenizer.convert_tokens_to_ids(tokens)
     ids = ids[:max_seqlen - 1]
-    ids = ids + [2]  # ids + [sep]
-    ids = ids + [0] * (max_seqlen - len(ids))
+    ids = ids + [tokenizer.sep_token_id]
+    ids = ids + [tokenizer.pad_token_id] * (max_seqlen - len(ids))
     return ids
 
 
-def load_graph(args, str2id, term_file, terms, item_distribution):
+def load_graph(config, str2id, term_file, terms, item_distribution):
     edges = []
-    with io.open(args.graphpath, encoding=args.encoding) as f:
+    with io.open(config.graph_data, encoding=config.encoding) as f:
         for idx, line in enumerate(f):
             if idx % 100000 == 0:
-                log.info("%s readed %s lines" % (args.graphpath, idx))
+                log.info("%s readed %s lines" % (config.graph_data, idx))
             slots = []
             for col_idx, col in enumerate(line.strip("\n").split("\t")):
-                s = col[:args.max_seqlen]
+                s = col[:config.max_seqlen]
                 if s not in str2id:
                     str2id[s] = len(str2id)
                     term_file.write(str(col_idx) + "\t" + col + "\n")
@@ -64,17 +65,17 @@ def load_graph(args, str2id, term_file, terms, item_distribution):
     return edges
 
 
-def load_link_prediction_train_data(args, str2id, term_file, terms,
+def load_link_prediction_train_data(config, str2id, term_file, terms,
                                     item_distribution):
     train_data = []
     neg_samples = []
-    with io.open(args.inpath, encoding=args.encoding) as f:
+    with io.open(config.train_data, encoding=config.encoding) as f:
         for idx, line in enumerate(f):
             if idx % 100000 == 0:
-                log.info("%s readed %s lines" % (args.inpath, idx))
+                log.info("%s readed %s lines" % (config.train_data, idx))
             slots = []
             for col_idx, col in enumerate(line.strip("\n").split("\t")):
-                s = col[:args.max_seqlen]
+                s = col[:config.max_seqlen]
                 if s not in str2id:
                     str2id[s] = len(str2id)
                     term_file.write(str(col_idx) + "\t" + col + "\n")
@@ -86,25 +87,27 @@ def load_link_prediction_train_data(args, str2id, term_file, terms,
             neg_samples.append(slots[2:])
             train_data.append((src, dst))
     train_data = np.array(train_data, dtype="int64")
-    np.save(os.path.join(args.outpath, "train_data.npy"), train_data)
+    np.save(os.path.join(config.graph_work_path, "train_data.npy"), train_data)
     if len(neg_samples) != 0:
         np.save(
-            os.path.join(args.outpath, "neg_samples.npy"),
+            os.path.join(config.graph_work_path, "neg_samples.npy"),
             np.array(neg_samples))
 
 
-def dump_graph(args):
-    if not os.path.exists(args.outpath):
-        os.makedirs(args.outpath)
+def dump_graph(config):
+    if not os.path.exists(config.graph_work_path):
+        os.makedirs(config.graph_work_path)
     str2id = dict()
     term_file = io.open(
-        os.path.join(args.outpath, "terms.txt"), "w", encoding=args.encoding)
+        os.path.join(config.graph_work_path, "terms.txt"),
+        "w",
+        encoding=config.encoding)
     terms = []
     item_distribution = []
 
-    edges = load_graph(args, str2id, term_file, terms, item_distribution)
-    if args.task == "link_prediction":
-        load_link_prediction_train_data(args, str2id, term_file, terms,
+    edges = load_graph(config, str2id, term_file, terms, item_distribution)
+    if config.task == "link_prediction":
+        load_link_prediction_train_data(config, str2id, term_file, terms,
                                         item_distribution)
     else:
         raise ValueError
@@ -118,51 +121,42 @@ def dump_graph(args):
     indegree = graph.indegree()
     graph.indegree()
     graph.outdegree()
-    graph.dump(args.outpath)
+    graph.dump(config.graph_work_path)
 
     # dump alias sample table
     item_distribution = np.array(item_distribution)
     item_distribution = np.sqrt(item_distribution)
     distribution = 1. * item_distribution / item_distribution.sum()
     alias, events = alias_sample_build_table(distribution)
-    np.save(os.path.join(args.outpath, "alias.npy"), alias)
-    np.save(os.path.join(args.outpath, "events.npy"), events)
+    np.save(os.path.join(config.graph_work_path, "alias.npy"), alias)
+    np.save(os.path.join(config.graph_work_path, "events.npy"), events)
     log.info("End Build Graph")
 
 
-def dump_node_feat(args):
+def dump_node_feat(config):
     log.info("Dump node feat starting...")
     id2str = [
         line.strip("\n").split("\t")[-1]
         for line in io.open(
-            os.path.join(args.outpath, "terms.txt"), encoding=args.encoding)
+            os.path.join(config.graph_work_path, "terms.txt"),
+            encoding=config.encoding)
     ]
     # pool = multiprocessing.Pool()
 
-    tokenizer = ErnieTinyTokenizer.from_pretrained(args.model_name_or_path)
-    fn = partial(term2id, tokenizer=tokenizer, max_seqlen=args.max_seqlen)
+    tokenizer = ErnieTinyTokenizer.from_pretrained(config.model_name_or_path)
+    fn = partial(term2id, tokenizer=tokenizer, max_seqlen=config.max_seqlen)
     term_ids = [fn(x) for x in id2str]
 
     np.save(
-        os.path.join(args.outpath, "term_ids.npy"),
+        os.path.join(config.graph_work_path, "term_ids.npy"),
         np.array(term_ids, np.uint16))
     log.info("Dump node feat done.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='main')
-    parser.add_argument("-i", "--inpath", type=str, default=None)
-    parser.add_argument("-g", "--graphpath", type=str, default=None)
-    parser.add_argument("-l", "--max_seqlen", type=int, default=30)
-    # parser.add_argument("--vocab_file", type=str, default="./vocab.txt")
-    parser.add_argument("--model_name_or_path", type=str, default="ernie_tiny")
-    parser.add_argument("--encoding", type=str, default="utf8")
-    parser.add_argument(
-        "--task",
-        type=str,
-        default="link_prediction",
-        choices=["link_prediction", "node_classification"])
-    parser.add_argument("-o", "--outpath", type=str, default=None)
+    parser.add_argument("--conf", type=str, default="./config.yaml")
     args = parser.parse_args()
-    dump_graph(args)
-    dump_node_feat(args)
+    config = edict(yaml.load(open(args.conf), Loader=yaml.FullLoader))
+    dump_graph(config)
+    dump_node_feat(config)

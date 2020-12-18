@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import logging
-import yaml
 import os
 import io
 import random
 import time
-import numpy as np
-from easydict import EasyDict as edict
+import argparse
+from functools import partial
 
+import numpy as np
+import yaml
 import paddle
-from pgl.contrib.imperative.graph_tensor import GraphTensor
+import pgl
+from easydict import EasyDict as edict
+from paddlenlp.utils.log import logger
 
 from models import ErnieSageForLinkPrediction
-from data import GraphDataset, TrainData, PredictData, GraphDataLoader
-from paddlenlp.utils.log import logger
+from data import TrainData, PredictData, GraphDataLoader, batch_fn
 
 
 def set_seed(config):
@@ -36,22 +36,38 @@ def set_seed(config):
     paddle.seed(config.seed)
 
 
+def load_data(graph_data_path):
+    base_graph = pgl.Graph.load(graph_data_path)
+    term_ids = np.load(
+        os.path.join(graph_data_path, "term_ids.npy"), mmap_mode="r")
+    return base_graph, term_ids
+
+
 def do_train(config):
     paddle.set_device("gpu" if config.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
     set_seed(config)
 
-    graphs = [GraphTensor() for x in range(len(config.samples))]
+    base_graph, term_ids = load_data(config.graph_work_path)
+    collate_fn = partial(
+        batch_fn,
+        samples=config.samples,
+        base_graph=base_graph,
+        term_ids=term_ids)
+
     mode = 'train'
-    data = TrainData(config.graph_work_path)
+    train_ds = TrainData(config.graph_work_path)
     model = ErnieSageForLinkPrediction.from_pretrained(
         config.model_name_or_path, config=config)
     model = paddle.DataParallel(model)
 
-    train_dataset = GraphDataset(graphs, data, config.batch_size,
-                                 config.samples, mode, config.graph_work_path)
-    graph_loader = GraphDataLoader(train_dataset)
+    train_loader = GraphDataLoader(
+        train_ds,
+        batch_size=config.batch_size,
+        shuffle=True,
+        num_workers=config.sample_workers,
+        collate_fn=collate_fn)
 
     optimizer = paddle.optimizer.Adam(
         learning_rate=config.lr, parameters=model.parameters())
@@ -59,7 +75,7 @@ def do_train(config):
     global_step = 0
     tic_train = time.time()
     for epoch in range(config.epoch):
-        for step, (graphs, datas) in enumerate(graph_loader()):
+        for step, (graphs, datas) in enumerate(train_loader):
             global_step += 1
             loss, outputs = model(graphs, datas)
             if global_step % config.log_per_step == 0:
@@ -78,36 +94,47 @@ def do_train(config):
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)
                     model._layers.save_pretrained(output_dir)
+    if (not config.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+        output_dir = os.path.join(config.output_path, "last")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        model._layers.save_pretrained(output_dir)
 
 
 def tostr(data_array):
     return " ".join(["%.5lf" % d for d in data_array])
 
 
+@paddle.no_grad()
 def do_predict(config):
     paddle.set_device("gpu" if config.n_gpu else "cpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
     set_seed(config)
 
-    graphs = [GraphTensor() for x in range(len(config.samples))]
     mode = 'predict'
     num_nodes = int(
         np.load(os.path.join(config.graph_work_path, "num_nodes.npy")))
-    data = PredictData(num_nodes)
-    model = ErnieSageForLinkPrediction.from_pretrained(
-        config.model_name_or_path, config=config)
-    model = paddle.DataParallel(model)
 
-    train_dataset = GraphDataset(
-        graphs,
-        data,
-        config.batch_size,
-        config.samples,
-        mode,
-        config.graph_work_path,
-        shuffle=False)
-    graph_loader = GraphDataLoader(train_dataset)
+    base_graph, term_ids = load_data(config.graph_work_path)
+    collate_fn = partial(
+        batch_fn,
+        samples=config.samples,
+        base_graph=base_graph,
+        term_ids=term_ids)
+
+    model = ErnieSageForLinkPrediction.from_pretrained(
+        config.infer_model, config=config)
+
+    model = paddle.DataParallel(model)
+    predict_ds = PredictData(num_nodes)
+
+    predict_loader = GraphDataLoader(
+        predict_ds,
+        batch_size=config.infer_batch_size,
+        shuffle=True,
+        num_workers=config.sample_workers,
+        collate_fn=collate_fn)
 
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
     id2str = io.open(
@@ -121,12 +148,12 @@ def do_predict(config):
     global_step = 0
     epoch = 0
     tic_train = time.time()
-    for step, (graphs, datas) in enumerate(graph_loader()):
+    model.eval()
+    for step, (graphs, datas) in enumerate(predict_loader):
         global_step += 1
         loss, outputs = model(graphs, datas)
         for user_feat, user_real_index in zip(outputs[0].numpy(),
                                               outputs[3].numpy()):
-            # user_feat, user_real_index = 
             sri = id2str[int(user_real_index)].strip("\n")
             line = "{}\t{}\n".format(sri, tostr(user_feat))
             fout.write(line)

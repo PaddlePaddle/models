@@ -15,29 +15,88 @@
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from pgl.contrib.imperative.message_passing import SageConv
 
 
-class ErnieSageV2Conv(SageConv):
+class GraphSageConv(nn.Layer):
+    """ GraphSAGE is a general inductive framework that leverages node feature
+    information (e.g., text attributes) to efficiently generate node embeddings
+    for previously unseen data.
+
+    Paper reference:
+    Hamilton, Will, Zhitao Ying, and Jure Leskovec.
+    "Inductive representation learning on large graphs."
+    Advances in neural information processing systems. 2017.
+    """
+
+    def __init__(self, input_size, hidden_size, learning_rate, aggr_func="sum"):
+        super(GraphSageConv, self).__init__()
+        assert aggr_func in ["sum", "mean", "max", "min"], \
+            "Only support 'sum', 'mean', 'max', 'min' built-in receive function."
+        self.aggr_func = "reduce_%s" % aggr_func
+
+        self.self_linear = nn.Linear(
+            input_size,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(learning_rate=learning_rate))
+        self.neigh_linear = nn.Linear(
+            input_size,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(learning_rate=learning_rate))
+
+    def forward(self, graph, feature, act=None):
+        def _send_func(src_feat, dst_feat, edge_feat):
+            return {"msg": src_feat["h"]}
+
+        def _recv_func(message):
+            return getattr(message, self.aggr_func)(message["msg"])
+
+        msg = graph.send(_send_func, src_feat={"h": feature})
+        neigh_feature = graph.recv(reduce_func=_recv_func, msg=msg)
+
+        self_feature = self.self_linear(feature)
+        neigh_feature = self.neigh_linear(neigh_feature)
+        output = self_feature + neigh_feature
+        if act is not None:
+            output = getattr(F, act)(output)
+
+        output = F.normalize(output, axis=1)
+        return output
+
+
+class ErnieSageV2Conv(nn.Layer):
     """ ErnieSage (abbreviation of ERNIE SAmple aggreGatE), a model proposed by the PGL team.
     ErnieSageV2: Ernie is applied to the EDGE of the text graph.
     """
 
-    def __init__(self, ernie, input_size, hidden_size, initializer,
-                 learning_rate, agg, name):
+    def __init__(self,
+                 ernie,
+                 input_size,
+                 hidden_size,
+                 learning_rate,
+                 aggr_func='sum'):
         """ErnieSageV2: Ernie is applied to the EDGE of the text graph.
 
         Args:
             ernie (nn.Layer): the ernie model.
             input_size (int): input size of feature tensor.
             hidden_size (int): hidden size of the Conv layers.
-            initializer (initializer): parameters initializer.
             learning_rate (float): learning rate.
-            agg (str): aggregate function. 'sum', 'mean', 'max' avaliable.
-            name (str): layer name.
+            aggr_func (str): aggregate function. 'sum', 'mean', 'max' avaliable.
         """
-        super(ErnieSageV2Conv, self).__init__(
-            input_size, hidden_size, initializer, learning_rate, "sum", name)
+        super(ErnieSageV2Conv, self).__init__()
+        assert aggr_func in ["sum", "mean", "max", "min"], \
+            "Only support 'sum', 'mean', 'max', 'min' built-in receive function."
+        self.aggr_func = "reduce_%s" % aggr_func
+
+        self.self_linear = nn.Linear(
+            input_size,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(learning_rate=learning_rate))
+        self.neigh_linear = nn.Linear(
+            input_size,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(learning_rate=learning_rate))
+
         self.ernie = ernie
 
     def ernie_send(self, src_feat, dst_feat, edge_feat):
@@ -72,20 +131,23 @@ class ErnieSageV2Conv(SageConv):
         feature = outputs[1]
         return {"msg": feature}
 
-    def send_recv(self, graph, feature):
+    def send_recv(self, graph, term_ids):
         """Message Passing of erniesage v2.
 
         Args:
-            graph (GraphTensor): the GraphTensor object.
+            graph (Graph): the Graph object.
             feature (Tensor): the node feature tensor.
 
         Returns:
             Tensor: the self and neighbor feature tensors.
         """
-        msg = graph.send(self.ernie_send, nfeat_list=[("term_ids", feature)])
-        neigh_feature = graph.recv(msg, self.agg_func)
 
-        term_ids = feature
+        def _recv_func(message):
+            return getattr(message, self.aggr_func)(message["msg"])
+
+        msg = graph.send(self.ernie_send, node_feat={"term_ids": term_ids})
+        neigh_feature = graph.recv(reduce_func=_recv_func, msg=msg)
+
         cls = paddle.full(
             shape=[term_ids.shape[0], 1], dtype="int64", fill_value=1)
         term_ids = paddle.concat([cls, term_ids], 1)
@@ -94,3 +156,24 @@ class ErnieSageV2Conv(SageConv):
         self_feature = outputs[1]
 
         return self_feature, neigh_feature
+
+    def forward(self, graph, term_ids, act='relu'):
+        """Forward funciton of Conv layer.
+
+        Args:
+            graph (Graph): Graph object.
+            feature (Tensor): node feture.
+            act (str, optional): activation function. Defaults to 'relu'.
+
+        Returns:
+            Tensor: feature after conv.
+        """
+
+        self_feature, neigh_feature = self.send_recv(graph, term_ids)
+        self_feature = self.self_linear(self_feature)
+        neigh_feature = self.neigh_linear(neigh_feature)
+        output = self_feature + neigh_feature
+        if act is not None:
+            output = getattr(F, act)(output)
+        output = F.normalize(output, axis=1)
+        return output
