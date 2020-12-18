@@ -92,7 +92,7 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 
 - [Embedding API](./docs/embeddings.md)
 
-- [Metrics API](./docs/embeddings.md)
+- [Metrics API](./docs/metrics.md)
 
 - [Models API](./docs/models.md)
 
