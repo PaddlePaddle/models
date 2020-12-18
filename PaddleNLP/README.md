@@ -45,7 +45,7 @@ pip install paddlenlp==2.0.0b
 ## 数据集快速加载
 
 ```python
-from paddlenlp.datasets import ChnSentiCrop
+from paddlenlp.datasets import ChnSentiCorp
 
 train_dataset, dev_dataset, test_dataset= ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
