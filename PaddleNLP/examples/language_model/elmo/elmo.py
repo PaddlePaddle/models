@@ -302,8 +302,8 @@ class ELMoLoss(nn.Layer):
         bw_label = paddle.unsqueeze(bw_label, axis=2)
 
         # [batch_size, seq_len, 1]
-        fw_loss = F.softmax_with_cross_entropy(logits=fw_logits, label=fw_label)
-        bw_loss = F.softmax_with_cross_entropy(logits=bw_logits, label=bw_label)
+        fw_loss = F.cross_entropy(logits=fw_logits, label=fw_label)
+        bw_loss = F.cross_entropy(logits=bw_logits, label=bw_label)
 
         avg_loss = 0.5 * (paddle.mean(fw_loss) + paddle.mean(bw_loss))
         return avg_loss

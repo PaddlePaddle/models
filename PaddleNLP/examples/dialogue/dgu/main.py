@@ -73,7 +73,7 @@ class DGULossFunction(nn.Layer):
         if self.task_name in [
                 'udc', 'atis_slot', 'atis_intent', 'mrda', 'swda'
         ]:
-            return F.softmax_with_cross_entropy
+            return F.cross_entropy
         elif self.task_name == 'dstc2':
             return nn.BCEWithLogitsLoss(reduction='sum')
 
