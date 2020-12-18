@@ -42,11 +42,25 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 
 ## 英文词向量
 
-待更新。
+### GloVe
+
+| 语料               | 25维     | 50维      | 100维    | 200维    | 300 维   |
+| -----------------  | ------   |  ------   | ------   | ------   | ------   |
+| Wiki2014 + GigaWord| 无 ｜ glove.wiki2014-gigaword.target.word-word.dim50.en | glove.wiki2014-gigaword.target.word-word.dim100.en | glove.wiki2014-gigaword.target.word-word.dim200.en | glove.wiki2014-gigaword.target.word-word.dim300.en |
+| Twitter            | glove.twitter.target.word-word.dim25.en ｜ glove.twitter.target.word-word.dim50.en ｜ glove.twitter.target.word-word.dim100.en ｜ glove.twitter.target.word-word.dim200.en ｜ 无 ｜
+
+### FastText
+
+| 语料 | 名称 |
+|------|------|
+| Wiki2017 | fasttext.wiki-news.target.word-word.dim300.en |
+| Crawl    | fasttext.crawl.target.word-word.dim300.en |
 
 ## 致谢
-- 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文Embedding来源。
+- 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文Embedding预训练模型，感谢[GloVe Project](https://nlp.stanford.edu/projects/glove)提供的GloVe英文Embedding预训练模型，感谢[FastText Project](https://fasttext.cc/docs/en/english-vectors.html)提供的fasttext英文预训练模型。
 
 ## 参考论文
 - Li, Shen, et al. "Analogical reasoning on chinese morphological and semantic relations." arXiv preprint arXiv:1805.06504 (2018).
 - Qiu, Yuanyuan, et al. "Revisiting correlations between intrinsic and extrinsic evaluations of word embeddings." Chinese Computational Linguistics and Natural Language Processing Based on Naturally Annotated Big Data. Springer, Cham, 2018. 209-221.
+- Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
+- T. Mikolov, E. Grave, P. Bojanowski, C. Puhrsch, A. Joulin. Advances in Pre-Training Distributed Word Representations

@@ -49,7 +49,7 @@ class TokenEmbedding(nn.Embedding):
             url = osp.join(EMBEDDING_URL_ROOT, embedding_name + ".tar.gz")
             get_path_from_url(url, EMBEDDING_HOME)
 
-        logger.info("Loading embedding vector...")
+        logger.info("Loading token embedding...")
         vector_np = np.load(vector_path)
         self.embedding_dim = vector_np['embedding'].shape[1]
         self.unknown_token = unknown_token
@@ -81,7 +81,7 @@ class TokenEmbedding(nn.Embedding):
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
         logger.info("Finish loading embedding vector.")
-        s = "Token Embedding brief:\
+        s = "Token Embedding info:\
              \nUnknown index: {}\
              \nUnknown token: {}\
              \nPadding index: {}\
