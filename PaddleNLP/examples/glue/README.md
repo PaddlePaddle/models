@@ -20,7 +20,7 @@
 以 GLUE/SST-2 任务为例，启动GLUE任务进行Fine-tuning 的方式如下：
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=0
 export TASK_NAME=SST-2
 
 python -u ./run_glue.py \
@@ -40,7 +40,7 @@ python -u ./run_glue.py \
 
 其中参数释义如下：
 - `model_type` 指示了Fine-tuning使用的预训练模型类型，如：bert、electra、ernie等，因不同类型的预训练模型可能有不同的 Fine-tuning layer 和 tokenizer。
-- `model_name_or_path` 指示了Fine-tuning使用的具体预训练模型，可以是PaddleNLP提供的预训练模型 或者 本地的预训练模型。如果使用本地的预训练模型，可以配置本地模型的目录地址，例如: /home/xx_model/，目录中需包含paddle预训练模型model_state.pdparams。如果使用PaddleNLP提供的预训练模型，可以选择下面某个，但是注意这里选择的模型要和上面配置的模型类型匹配，如：model_type 配置的是bert，则model_name_or_path只能选择bert相关的模型（下表中bert开头的9个）
+- `model_name_or_path` 指示了Fine-tuning使用的具体预训练模型，可以是PaddleNLP提供的预训练模型 或者 本地的预训练模型。如果使用本地的预训练模型，可以配置本地模型的目录地址，例如: /home/xx_model/，目录中需包含paddle预训练模型model_state.pdparams。如果使用PaddleNLP提供的预训练模型，可以选择下面某个，但是注意这里选择的模型要和上面配置的模型类型匹配，如：model_type 配置的是bert，则model_name_or_path只能选择bert相关的模型（即下表中包含bert的那些）
 
    | PaddleNLP提供的预训练模型        |
    |---------------------------------|
