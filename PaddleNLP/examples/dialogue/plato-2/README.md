@@ -18,7 +18,7 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 
 * PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 2.0rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 * PaddleNLP 安装
 
@@ -28,13 +28,13 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 
 * 环境依赖
 
-    Python的版本要求 3.6+
+   Python的版本要求 3.6+
 
-    本项目依赖sentencepiece和termcolor，请在运行本项目之前进行安装
+   本项目依赖sentencepiece和termcolor，请在运行本项目之前进行安装
 
-    ```shell
-    pip install sentencepiece termcolor
-    ```
+   ```shell
+   pip install sentencepiece termcolor
+   ```
 
 ### 代码结构说明
 
