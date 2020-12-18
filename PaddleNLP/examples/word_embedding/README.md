@@ -13,17 +13,14 @@ PaddleNLP已预置多个公开的预训练Embedding，用户可以通过使用`p
 
    本项目依赖于 PaddlePaddle 2.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-* PaddleNLP 安装
-
-   ```shell
-   pip install paddlenlp
-   ```
-
 * 环境依赖
 
-   本项目依赖于jieba分词，请在运行本项目之前，安装jieba，如`pip install -U jieba`
+   - python >= 3.6
+   - paddlepaddle >= 2.0.0-rc1
 
-   Python的版本要求 3.6+，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/install/quick/zh/2.0rc-linux-docker) 部分的内容
+   ```
+   pip install paddlenlp==2.0.0b
+   ```
 
 ### 下载词表
 
@@ -41,10 +38,10 @@ CPU 启动：
 
 ```
 # 使用paddlenlp.embeddings.TokenEmbedding
-nohup python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=5e-4 --batch_size=64 --epochs=20 --use_token_embedding=True --vdl_dir='./vdl_dir' >use_token_embedding.txt 2>&1 &
+python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=5e-4 --batch_size=64 --epochs=20 --use_token_embedding=True --vdl_dir='./vdl_dir'
 
 # 使用paddle.nn.Embedding
-nohup python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir' >use_normal_embedding.txt 2>&1 &
+python train.py --vocab_path='./dict.txt' --use_gpu=False --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir'
 ```
 
 GPU 启动：
@@ -52,11 +49,10 @@ GPU 启动：
 export CUDA_VISIBLE_DEVICES=0
 
 # 使用paddlenlp.embeddings.TokenEmbedding
-nohup python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=5e-4 --batch_size=64 --epochs=20 --use_token_embedding=True --vdl_dir='./vdl_dir' > use_token_embedding.txt 2>&1 &
+python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=5e-4 --batch_size=64 --epochs=20 --use_token_embedding=True --vdl_dir='./vdl_dir'
 
-# 如显存不足，可以先等第一个训练完成再启动该训练
 # 使用paddle.nn.Embedding
-nohup python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir' > use_normal_embedding.txt 2>&1 &
+python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=1e-4 --batch_size=64 --epochs=20 --use_token_embedding=False --vdl_dir='./vdl_dir'
 ```
 
 以上参数表示：
@@ -80,7 +76,7 @@ nohup python train.py --vocab_path='./dict.txt' --use_gpu=True --lr=1e-4 --batch
 推荐使用VisualDL查看实验对比。以下为VisualDL的启动命令，其中logdir参数指定的目录需要与启动训练时指定的`vdl_dir`相同。（更多VisualDL的用法，可参考[VisualDL使用指南](https://github.com/PaddlePaddle/VisualDL#2-launch-panel)）
 
 ```
-nohup visualdl --logdir ./vdl_dir --port 8888 --host 0.0.0.0 &
+visualdl --logdir ./vdl_dir --port 8888 --host 0.0.0.0
 ```
 
 ### 训练效果对比
