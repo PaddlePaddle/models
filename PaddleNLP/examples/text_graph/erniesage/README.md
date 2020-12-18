@@ -20,9 +20,9 @@
 <img src="https://raw.githubusercontent.com/PaddlePaddle/PGL/main/examples/erniesage/docs/source/_static/ERNIESage_v1_4.png" alt="ERNIESage_v1_4" width="800">
 
 ## 环境依赖
-- paddlepaddle >= 2.0rc
-- pgl >= 2.0
-- paddlenlp >= 2.0-beta
+- paddlepaddle >= 2.0.0rc1
+- pgl >= 2.0.0a0
+- paddlenlp >= 2.0.0b0
 
 ## 数据准备
 示例数据```data.txt```中使用了NLPCC2016-DBQA的部分数据，格式为每行"query \t answer"。
@@ -53,7 +53,7 @@ python link_prediction.py --conf ./config/erniesage_link_prediction.yaml --do_pr
 - samples: 采样邻居数
 - model_type: 模型类型，包括ErnieSageV2。
 - ernie_name: 热启模型类型，支持“ernie”和"ernie_tiny"，后者速度更快，指定该参数后会自动从服务器下载预训练模型文件。
-- num_layers: 图神经网络层数。
+- num_layers: 图神经网络层数。
 - hidden_size: 隐藏层大小。
 - batch_size: 训练时的batchsize。
 - infer_batch_size: 预测时batchsize。
