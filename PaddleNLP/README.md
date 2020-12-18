@@ -108,7 +108,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 - [Embedding API](./docs/embeddings.md)
 
-- [Metrics API](./docs/embeddings.md)
+- [Metrics API](./docs/metrics.md)
 
 - [Models API](./docs/models.md)
 
