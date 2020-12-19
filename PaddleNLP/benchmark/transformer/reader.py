@@ -43,6 +43,12 @@ def create_data_loader(args):
             mode=m, transform_func=transform_func) for m in ["train", "dev"]
     ]
 
+    if args.shuffle or args.shuffle_batch:
+        if args.shuffle_seed == "None" or args.shuffle_seed is None:
+            shuffle_seed = 0
+        else:
+            shuffle_seed = args.shuffle_seed
+
     def _max_token_fn(current_idx, current_batch_size, tokens_sofar,
                       data_source):
         return max(tokens_sofar,
@@ -70,10 +76,6 @@ def create_data_loader(args):
                     key=src_key, buffer_size=buffer_size)
         else:
             if args.shuffle:
-                if args.shuffle_seed == "None" or args.shuffle_seed is None:
-                    shuffle_seed = 0
-                else:
-                    shuffle_seed = args.shuffle_seed
                 sampler = sampler.shuffle(seed=shuffle_seed)
             if args.sort_type == SortType.POOL:
                 buffer_size = args.pool_size
@@ -85,11 +87,11 @@ def create_data_loader(args):
             batch_size_fn=_max_token_fn,
             key=_key)
 
-        if args.shuffle_batch:
-            batch_sampler.shuffle()
-
         if m == "train":
             batch_sampler = batch_sampler.shard()
+
+        if args.shuffle_batch:
+            batch_sampler.shuffle(seed=shuffle_seed)
 
         data_loader = DataLoader(
             dataset=dataset,
