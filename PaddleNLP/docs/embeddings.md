@@ -71,7 +71,7 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 
 以上所述的模型名称可直接以参数形式传入padddlenlp.embeddings.TokenEmbedding，加载相对应的模型。比如要加载语料为Wiki2017，通过FastText训练的预训练模型（`fasttext.wiki-news.target.word-word.dim300.en`），只需执行以下代码：
 
-```
+```python
 import paddle
 from paddlenlp.embeddings import TokenEmbedding
 
