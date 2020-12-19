@@ -340,13 +340,13 @@ def do_train(args):
 
         train_data_loader, _ = create_pretraining_dataset(
             data_file, args.max_predictions_per_seq, shared_file_list, args,
-            worker_init) 
+            worker_init)
 
         # TODO(guosheng): better way to process single file
-        if f_start_id + 1 == len(files): single_file = True
-            
+        single_file = True if f_start_id + 1 == len(files) else False
+
         for f_id in range(f_start_id, len(files)):
-            if not single_file:
+            if not single_file and f_id == f_start_id:
                 continue
             if paddle.distributed.get_world_size() > num_files:
                 data_file = files[(f_id * paddle.distributed.get_world_size() +

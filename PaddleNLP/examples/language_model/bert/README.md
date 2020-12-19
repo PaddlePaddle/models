@@ -131,7 +131,7 @@ python -u ./run_glue.py \
 | Task  | Metric                       | Result            |
 |:-----:|:----------------------------:|:-----------------:|
 | SST-2 | Accuracy                     |      0.92660      |
-| QNLI  | Accuracy                     |      0.91781      |
+| QNLI  | Accuracy                     |      0.91707      |
 | CoLA  | Mattehew's corr              |      0.59557      |
 | MRPC  | F1/Accuracy                  |  0.91667/0.88235  |
 | STS-B | Person/Spearman corr         |  0.88847/0.88350  |
