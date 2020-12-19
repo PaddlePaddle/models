@@ -3,13 +3,15 @@
   - [英文词向量](#英文词向量)  
     - [GloVe](#glove)  
     - [FastText](#fasttext)
+  - [使用方式](#使用方式)
   - [模型信息](#模型信息)
   - [致谢](#致谢)  
   - [参考论文](#参考论文)
 
 # Embedding 模型汇总
 
-PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`paddlenlp.embeddings.TokenEmbedding`时，指定预训练模型的名称，即可加载相对应的预训练模型。以下为PaddleNLP所支持的预训练Embedding模型，其名称用作`paddlenlp.embeddings.TokenEmbedding`的参数。命名方式为：\${训练模型}.\${语料}.\${词向量类型}.\${co-occurrence type}.dim\${维度}。训练模型有三种，分别是Word2Vec(w2v, 使用skip-gram模型训练), GloVe(glove)和FastText(fasttext)。
+PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`paddlenlp.embeddings.TokenEmbedding`时，指定预训练模型的名称，即可加载相对应的预训练模型。以下为PaddleNLP所支持的预训练Embedding模型，其名称用作`paddlenlp.embeddings.TokenEmbedding`的参数。命名方式为：\${训练模型}.\${语料}.\${词向量类型}.\${co-occurrence type}.dim\${维度}。训练模型有三种，分别是Word2Vec(w2v, 使用skip-gram模型训练), GloVe(glove)和FastText(fasttext)。在[使用方式](#使用方式)这一节中，将介绍如何通过模型名称使用`paddlenlp.embeddings.TokenEmbedding`加载预训练模型。
+
 
 ## 中文词向量
 
@@ -64,6 +66,17 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 |------|------|
 | Wiki2017 | fasttext.wiki-news.target.word-word.dim300.en |
 | Crawl    | fasttext.crawl.target.word-word.dim300.en |
+
+## 使用方式
+
+以上所述的模型名称可直接以参数形式传入padddlenlp.embeddings.TokenEmbedding，加载相对应的模型。比如要加载语料为Wiki2017，通过FastText训练的预训练模型（`fasttext.wiki-news.target.word-word.dim300.en`），只需执行以下代码：
+
+```
+import paddle
+from paddlenlp.embeddings import TokenEmbedding
+
+token_embedding = TokenEmbedding(embedding_name="fasttext.wiki-news.target.word-word.dim300.en")
+```
 
 ## 模型信息
 
