@@ -70,11 +70,11 @@ def create_data_loader(args):
                     key=src_key, buffer_size=buffer_size)
         else:
             if args.shuffle:
-                if args.reader_seed == "None" or args.reader_seed is None:
-                    reader_seed = 0
+                if args.shuffle_seed == "None" or args.shuffle_seed is None:
+                    shuffle_seed = 0
                 else:
-                    reader_seed = args.reader_seed
-                sampler = sampler.shuffle(seed=reader_seed)
+                    shuffle_seed = args.shuffle_seed
+                sampler = sampler.shuffle(seed=shuffle_seed)
             if args.sort_type == SortType.POOL:
                 buffer_size = args.pool_size
                 sampler = sampler.sort(key=src_key, buffer_size=buffer_size)
