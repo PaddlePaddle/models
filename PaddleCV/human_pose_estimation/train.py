@@ -84,7 +84,7 @@ def print_immediately(s):
 
 def train(args):
     if args.dataset == 'coco':
-        import lib.coco_reader as reader
+        import lib.mpii_reader as reader
         IMAGE_SIZE = [288, 384]
         HEATMAP_SIZE = [72, 96]
         args.kp_dim = 17
