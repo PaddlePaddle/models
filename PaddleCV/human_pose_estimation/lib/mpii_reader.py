@@ -185,8 +185,9 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False):
         else:
             fold = os.path.join(cfg.DATAROOT, cfg.IMAGEDIR, 'test')
             for img_name in os.listdir(fold):
-                yield dict(image=os.path.join(fold, img_name),
-                           filename=img_name)
+                if(img_name.endswith(".jpg") or img_name.endswith(".png")):
+                    yield dict(image=os.path.join(fold, img_name),
+                               filename=img_name)
 
     if not image_set == 'test':
         mapper = functools.partial(data_augmentation, is_train=is_train)
