@@ -15,6 +15,7 @@
 import numpy as np
 import argparse
 import ast
+import os
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.layer_helper import LayerHelper
@@ -23,6 +24,7 @@ from paddle.fluid.dygraph.base import to_variable
 
 from paddle.fluid import framework
 
+from paddle.distributed import fleet
 import math
 import sys
 import time
@@ -283,8 +285,11 @@ def eval(model, data):
 
 def train_resnet():
     epoch = args.epoch
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if args.use_data_parallel:
+        place_idx = int(os.environ['FLAGS_selected_gpus'])
+        place = fluid.CUDAPlace(place_idx)
+    else:
+        place = fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
@@ -293,14 +298,15 @@ def train_resnet():
             fluid.default_startup_program().random_seed = seed
             fluid.default_main_program().random_seed = seed
 
-        if args.use_data_parallel:
-            strategy = fluid.dygraph.parallel.prepare_context()
-
         resnet = ResNet()
         optimizer = optimizer_setting(parameter_list=resnet.parameters())
 
         if args.use_data_parallel:
-            resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
+            fleet.init(is_collective=True)
+            dist_strategy = fleet.DistributedStrategy()
+            optimizer = fleet.distributed_optimizer(optimizer, dist_strategy)
+            # call after distributed_optimizer so as to apply dist_strategy
+            resnet = fleet.build_distributed_model(resnet)
 
         train_reader = paddle.batch(
             paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)

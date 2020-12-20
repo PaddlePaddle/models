@@ -21,6 +21,7 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.distributed import fleet
 
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
@@ -32,9 +33,9 @@ from model import Transformer, CrossEntropyCriterion, NoamDecay
 
 def do_train(args):
     if args.use_cuda:
-        trainer_count = fluid.dygraph.parallel.Env().nranks
-        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id
-                                ) if trainer_count > 1 else fluid.CUDAPlace(0)
+        trainer_count = int(os.getenv("PADDLE_TRAINERS_NUM", 1))
+        place_idx = int(os.getenv('FLAGS_selected_gpus', 0))
+        place = fluid.CUDAPlace(place_idx)
     else:
         trainer_count = 1
         place = fluid.CPUPlace()
@@ -130,9 +131,11 @@ def do_train(args):
             transformer.load_dict(model_dict)
 
         if trainer_count > 1:
-            strategy = fluid.dygraph.parallel.prepare_context()
-            transformer = fluid.dygraph.parallel.DataParallel(
-                transformer, strategy)
+            fleet.init(is_collective=True)
+            dist_strategy = fleet.DistributedStrategy()
+            optimizer = fleet.distributed_optimizer(optimizer, dist_strategy)
+            # call after distributed_optimizer so as to apply dist_strategy
+            transformer = fleet.build_distributed_model(transformer)
 
         # the best cross-entropy value with label smoothing
         loss_normalizer = -(
