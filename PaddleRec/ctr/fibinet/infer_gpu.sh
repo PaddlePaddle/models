@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python train.py --use_gpu 1 --test_files_path ./test_data_full --model_dir ./model_dir --test_epoch 10
