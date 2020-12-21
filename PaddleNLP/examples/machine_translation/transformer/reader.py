@@ -87,11 +87,11 @@ def create_data_loader(args):
             batch_size_fn=_max_token_fn,
             key=_key)
 
-        if m == "train":
-            batch_sampler = batch_sampler.shard()
-
         if args.shuffle_batch:
             batch_sampler.shuffle(seed=shuffle_seed)
+
+        if m == "train":
+            batch_sampler = batch_sampler.shard()
 
         data_loader = DataLoader(
             dataset=dataset,
