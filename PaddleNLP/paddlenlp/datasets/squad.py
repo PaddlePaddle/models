@@ -243,7 +243,14 @@ class SQuAD(Dataset):
                 segment_ids.append(1)
 
                 input_ids = tokenizer.convert_tokens_to_ids(tokens)
-
+                input_ids = input_ids + [
+                    tokenizer.vocab[tokenizer.pad_token]
+                    for _ in range(self.max_seq_length - len(input_ids))
+                ]
+                segment_ids = segment_ids + [
+                    tokenizer.vocab[tokenizer.pad_token]
+                    for _ in range(self.max_seq_length - len(segment_ids))
+                ]
                 input_mask = [1] * len(input_ids)
 
                 start_position = None
