@@ -163,9 +163,13 @@ def reset_program_state_dict(model, state_dict, pretrained_state_dict):
 
 
 def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
+    # Use the same data seed(for data shuffle) for all procs to guarantee data
+    # consistency after sharding.
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    # Maybe different op seeds(for dropout) for different procs is better. By:
+    # `paddle.seed(args.seed + paddle.distributed.get_rank())`
+    paddle.seed(args.seed)
 
 
 def evaluate(exe, metric, loss, correct, dev_program, data_loader):
@@ -256,12 +260,12 @@ def do_train(args):
     place = paddle.CUDAPlace(0)
     set_seed(args)
 
-    # Create the main_program for the training and dev_program for the validation 
+    # Create the main_program for the training and dev_program for the validation
     main_program = paddle.static.default_main_program()
     startup_program = paddle.static.default_startup_program()
     dev_program = paddle.static.Program()
 
-    # Get the configuration of tokenizer and model  
+    # Get the configuration of tokenizer and model
     args.task_name = args.task_name.lower()
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
@@ -325,8 +329,8 @@ def do_train(args):
         loss = loss_fct(logits, labels)
         dev_program = main_program.clone(for_test=True)
 
-    # Create the training-backward program, this pass will not be 
-    # executed in the validation    
+    # Create the training-backward program, this pass will not be
+    # executed in the validation
     with paddle.static.program_guard(main_program, startup_program):
         lr_scheduler = paddle.optimizer.lr.LambdaDecay(
             args.learning_rate,
@@ -354,9 +358,9 @@ def do_train(args):
         metric = metric_class()
         correct = metric.compute(logits, labels)
 
-    # Initialize the fine-tuning parameter, we will load the parameters in 
+    # Initialize the fine-tuning parameter, we will load the parameters in
     # pre-training model. And initialize the parameter which not in pre-training model
-    # by the normal distribution. 
+    # by the normal distribution.
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
     state_dict = model.state_dict()
@@ -378,7 +382,7 @@ def do_train(args):
                 tic_train = time.time()
             lr_scheduler.step()
             if global_step % args.save_steps == 0:
-                # Validation pass, record the loss and metric 
+                # Validation pass, record the loss and metric
                 evaluate(exe, metric, loss, correct, dev_program,
                          dev_data_loader)
                 output_dir = os.path.join(args.output_dir,
