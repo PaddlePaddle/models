@@ -201,31 +201,6 @@ class MapDatasetWrapper(Dataset):
     def __getattr__(self, name):
         return getattr(self.data, name)
 
-    def apply(self, fn, lazy=False):
-        """
-        Performs specific function on the dataset to transform every sample.
-        Args:
-            fn (callable): Transformations to be performed. It receives single
-                sample as argument rather than dataset.
-            lazy (bool, optional): If True, transformations would be delayed and
-                performed on demand. Otherwise, transforms all samples at once
-                and return a new MapDatasetWrapper instance. Note that if `fn` is
-                stochastic, `lazy` should be True or you will get the same
-                result on all epochs. Defalt: False.
-        Returns:
-            MapDatasetWrapper: A new MapDatasetWrapper instance if `lazy` is True, \
-                otherwise bind `fn` as a property to transform on demand.
-        """
-        if lazy:
-            self._transform_func = fn
-        else:
-            applied_data = [fn(self.data[idx]) for idx in range(len(self.data))]
-            return type(self)(applied_data)
-        return self
-
-    def __getattr__(self, name):
-        return getattr(self.data, name)
-
 
 class TSVDataset(Dataset):
     """
