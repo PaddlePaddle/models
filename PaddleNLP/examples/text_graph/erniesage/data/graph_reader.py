@@ -14,15 +14,27 @@
 
 import paddle
 import copy
+import pgl
 from paddle.io import DataLoader
 
 __all__ = ["GraphDataLoader"]
 
 
 class GraphDataLoader(object):
-    def __init__(self, dataset):
-        self.loader = DataLoader(dataset)
-        self.graphs = dataset.graphs
+    def __init__(self,
+                 dataset,
+                 batch_size=1,
+                 shuffle=True,
+                 num_workers=1,
+                 collate_fn=None,
+                 **kwargs):
+        self.loader = DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            collate_fn=collate_fn,
+            **kwargs)
 
     def __iter__(self):
         func = self.__callback__()
@@ -40,18 +52,16 @@ class GraphDataLoader(object):
             """ tensor list to ([graph_tensor, graph_tensor, ...], 
             other tensor) 
             """
+            graph_num = 1
             start_len = 0
             datas = []
             graph_list = []
-            for i in range(len(tensors)):
-                tensors[i] = paddle.squeeze(tensors[i], axis=0)
-
-            for graph in self.graphs:
-                new_graph = copy.deepcopy(graph)
-                length = len(new_graph._graph_attr_holder)
-                graph_tensor_list = tensors[start_len:start_len + length]
-                start_len += length
-                graph_list.append(new_graph.from_tensor(graph_tensor_list))
+            for graph in range(graph_num):
+                graph_list.append(
+                    pgl.Graph(
+                        num_nodes=tensors[start_len],
+                        edges=tensors[start_len + 1]))
+                start_len += 2
 
             for i in range(start_len, len(tensors)):
                 datas.append(tensors[i])

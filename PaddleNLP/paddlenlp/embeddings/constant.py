@@ -83,5 +83,18 @@ EMBEDDING_NAME_LIST = [
     "w2v.sikuquanshu.target.word-bigram.dim300",
     # Mix-large
     "w2v.mixed-large.target.word-char.dim300",
-    "w2v.mixed-large.target.word-word.dim300"
+    "w2v.mixed-large.target.word-word.dim300",
+
+    # GloVe
+    "glove.wiki2014-gigaword.target.word-word.dim50.en",
+    "glove.wiki2014-gigaword.target.word-word.dim100.en",
+    "glove.wiki2014-gigaword.target.word-word.dim200.en",
+    "glove.wiki2014-gigaword.target.word-word.dim300.en",
+    "glove.twitter.target.word-word.dim25.en",
+    "glove.twitter.target.word-word.dim50.en",
+    "glove.twitter.target.word-word.dim100.en",
+    "glove.twitter.target.word-word.dim200.en",
+    # FastText
+    "fasttext.wiki-news.target.word-word.dim300.en",
+    "fasttext.crawl.target.word-word.dim300.en"
 ]

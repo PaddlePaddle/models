@@ -181,7 +181,7 @@ def do_train(args):
         args.learning_rate,
         lambda current_step, warmup_proportion=args.warmup_proportion,
         num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_ds.examples)//args.batch_size*args.num_train_epochs): float(
+        (len(train_data_loader)*args.num_train_epochs): float(
             current_step) / float(max(1, warmup_proportion*num_training_steps))
         if current_step < warmup_proportion*num_training_steps else max(
             0.0,

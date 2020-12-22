@@ -4,7 +4,7 @@ BERT-base模型是一个迁移能力很强的通用语义表示模型，但是�
 
 ## 压缩结果
 
-基于`bert-base-uncased` 在GLUE dev数据集上的finetune结果进行压缩。压缩后模型精度和压缩前模型在GLUE dev数据集上的精度对比如下表所示， 压缩后模型相比压缩前加速约2倍，模型参数大小减小26%（从110M减少到81M）。
+基于`bert-base-uncased` 在GLUE dev数据集上的finetune结果进行压缩。压缩后模型精度和压缩前模型在GLUE dev数据集上的精度对比如下表所示:
 
 | Task  | Metric                       | Result            | Result with PaddleSlim |
 |:-----:|:----------------------------:|:-----------------:|:----------------------:|
@@ -17,6 +17,7 @@ BERT-base模型是一个迁移能力很强的通用语义表示模型，但是�
 | MNLI  | Matched acc/MisMatched acc   |  0.84422/0.84825  |   0.84687/0.85242      |
 | RTE   | Accuracy                     |      0.711191     |       0.718412         |
 
+压缩后模型相比压缩前加速约59%（测试环境: T4, FP32, batch_size=16），模型参数大小减小26%（从110M减少到81M）。
 
 ## 快速开始
 本教程示例以GLUE/SST-2 数据集为例。
@@ -86,7 +87,7 @@ python -u ./run_glue_ofa.py --model_type bert \
 - `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
 - `width_mult_list` 表示压缩训练过程中，对每层Transformer Block的宽度选择的范围。
 
-压缩训练之后在dev上的结果如压缩结果表格中Result with PaddleSlim那一列所示， 速度相比原始模型加速2倍。
+压缩训练之后在dev上的结果如压缩结果表格中Result with PaddleSlim那一列所示，速度相比原始模型加速59%。
 
 ## 压缩原理
 
