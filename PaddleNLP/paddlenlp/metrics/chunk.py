@@ -1,5 +1,31 @@
-import numpy as np
+from collections import defaultdict
+
 import paddle
+import numpy as np
+from seqeval.metrics.sequence_labeling import get_entities
+
+
+def extract_tp_actual_correct(y_true, y_pred, suffix, *args):
+    entities_true = defaultdict(set)
+    entities_pred = defaultdict(set)
+    for type_name, start, end in get_entities(y_true, suffix):
+        entities_true[type_name].add((start, end))
+    for type_name, start, end in get_entities(y_pred, suffix):
+        entities_pred[type_name].add((start, end))
+
+    target_names = sorted(set(entities_true.keys()) | set(entities_pred.keys()))
+
+    tp_sum = np.array([], dtype=np.int32)
+    pred_sum = np.array([], dtype=np.int32)
+    true_sum = np.array([], dtype=np.int32)
+    for type_name in target_names:
+        entities_true_type = entities_true.get(type_name, set())
+        entities_pred_type = entities_pred.get(type_name, set())
+        tp_sum = np.append(tp_sum, len(entities_true_type & entities_pred_type))
+        pred_sum = np.append(pred_sum, len(entities_pred_type))
+        true_sum = np.append(true_sum, len(entities_true_type))
+
+    return pred_sum, tp_sum, true_sum
 
 
 class ChunkEvaluator(paddle.metric.Metric):
@@ -7,32 +33,35 @@ class ChunkEvaluator(paddle.metric.Metric):
     It is often used in sequence tagging tasks, such as Named Entity Recognition(NER).
 
     Args:
-        num_chunk_types (int): The number of chunk types.
-        chunk_scheme (str): Indicate the tagging schemes used here. The value must
-            be IOB, IOE, IOBES or plain.
-        excluded_chunk_types (list, optional): Indicate the chunk types shouldn't
-            be taken into account. It should be a list of chunk type ids(integer).
-            Default None.
+        label_list (list): The label list.
+        suffix (bool): if set True, the label ends with '-B', '-I', '-E' or '-S', else the label starts with them.
     """
 
-    def __init__(self, num_chunk_types, chunk_scheme,
-                 excluded_chunk_types=None):
+    def __init__(self, label_list, suffix=False):
         super(ChunkEvaluator, self).__init__()
-        self.num_chunk_types = num_chunk_types
-        self.chunk_scheme = chunk_scheme
-        self.excluded_chunk_types = excluded_chunk_types
+        self.id2label_dict = dict(enumerate(label_list))
+        self.suffix = suffix
         self.num_infer_chunks = 0
         self.num_label_chunks = 0
         self.num_correct_chunks = 0
 
     def compute(self, inputs, lengths, predictions, labels):
-        precision, recall, f1_score, num_infer_chunks, num_label_chunks, num_correct_chunks = paddle.metric.chunk_eval(
-            predictions,
-            labels,
-            chunk_scheme=self.chunk_scheme,
-            num_chunk_types=self.num_chunk_types,
-            excluded_chunk_types=self.excluded_chunk_types,
-            seq_length=lengths)
+        labels = labels.numpy()
+        predictions = predictions.numpy()
+        unpad_labels = [[
+            self.id2label_dict[index]
+            for index in labels[sent_index][:lengths[sent_index]]
+        ] for sent_index in range(len(lengths))]
+        unpad_predictions = [[
+            self.id2label_dict.get(index, "O")
+            for index in predictions[sent_index][:lengths[sent_index]]
+        ] for sent_index in range(len(lengths))]
+
+        pred_sum, tp_sum, true_sum = extract_tp_actual_correct(
+            unpad_labels, unpad_predictions, self.suffix)
+        num_correct_chunks = paddle.to_tensor([tp_sum.sum()])
+        num_infer_chunks = paddle.to_tensor([pred_sum.sum()])
+        num_label_chunks = paddle.to_tensor([true_sum.sum()])
 
         return num_infer_chunks, num_label_chunks, num_correct_chunks
 
