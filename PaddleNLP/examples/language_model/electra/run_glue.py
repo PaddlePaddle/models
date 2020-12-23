@@ -51,9 +51,13 @@ MODEL_CLASSES = {
 
 
 def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
+    # Use the same data seed(for data shuffle) for all procs to guarantee data
+    # consistency after sharding.
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    # Maybe different op seeds(for dropout) for different procs is better. By:
+    # `paddle.seed(args.seed + paddle.distributed.get_rank())`
+    paddle.seed(args.seed)
 
 
 def evaluate(model, loss_fct, metric, data_loader):
