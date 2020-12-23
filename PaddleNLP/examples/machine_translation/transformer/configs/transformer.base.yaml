@@ -66,6 +66,8 @@ n_best: 1
 src_vocab_size: 10000
 # Size of target word dictionay
 trg_vocab_size: 10000
+# Used to pad vocab size to be multiple of pad_factor.
+pad_factor: 8
 # Index for <bos> token
 bos_idx: 0
 # Index for <eos> token
