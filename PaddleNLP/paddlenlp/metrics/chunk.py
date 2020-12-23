@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-import paddle
 import numpy as np
+import paddle
 from seqeval.metrics.sequence_labeling import get_entities
 
 
