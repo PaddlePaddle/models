@@ -36,7 +36,11 @@ def min_max_filer(data, max_len, min_len=0):
 def create_data_loader(args):
     root = None if args.root == "None" else args.root
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
-    args.src_vocab_size, args.trg_vocab_size = len(src_vocab), len(trg_vocab)
+    padding_vocab = (
+        lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
+    )
+    args.src_vocab_size = padding_vocab(len(src_vocab))
+    args.trg_vocab_size = padding_vocab(len(trg_vocab))
     transform_func = WMT14ende.get_default_transform_func(root=root)
     datasets = [
         WMT14ende.get_datasets(
@@ -107,7 +111,11 @@ def create_data_loader(args):
 def create_infer_loader(args):
     root = None if args.root == "None" else args.root
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
-    args.src_vocab_size, args.trg_vocab_size = len(src_vocab), len(trg_vocab)
+    padding_vocab = (
+        lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
+    )
+    args.src_vocab_size = padding_vocab(len(src_vocab))
+    args.trg_vocab_size = padding_vocab(len(trg_vocab))
     transform_func = WMT14ende.get_default_transform_func(root=root)
     dataset = WMT14ende.get_datasets(
         mode="test", transform_func=transform_func).filter(
