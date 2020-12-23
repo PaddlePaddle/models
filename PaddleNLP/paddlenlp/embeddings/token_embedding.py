@@ -69,7 +69,7 @@ class TokenEmbedding(nn.Embedding):
         vector_path = osp.join(EMBEDDING_HOME, embedding_name + ".npz")
         if not osp.exists(vector_path):
             # download
-            url = osp.join(EMBEDDING_URL_ROOT, embedding_name + ".tar.gz")
+            url = EMBEDDING_URL_ROOT + "/" + embedding_name + ".tar.gz"
             get_path_from_url(url, EMBEDDING_HOME)
 
         logger.info("Loading token embedding...")

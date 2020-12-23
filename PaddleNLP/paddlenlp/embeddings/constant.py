@@ -16,7 +16,7 @@ from enum import Enum
 import os.path as osp
 
 URL_ROOT = "https://paddlenlp.bj.bcebos.com"
-EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
+EMBEDDING_URL_ROOT = URL_ROOT + "/models/embeddings"
 
 PAD_TOKEN = '[PAD]'
 UNK_TOKEN = '[UNK]'
