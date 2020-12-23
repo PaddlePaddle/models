@@ -172,6 +172,9 @@ def do_train(args):
                 sum_cost, avg_cost, token_num = criterion(logits, lbl_word,
                                                           lbl_weight)
 
+                # NOTE: When using PaddlePaddle 2.0, it's not necessary to call
+                # scale_loss() and apply_collective_grads(). However, they are both
+                # necessary for PaddlePaddle 1.8. Please check PaddlePaddle version. 
                 avg_cost.backward()
 
                 optimizer.minimize(avg_cost)
