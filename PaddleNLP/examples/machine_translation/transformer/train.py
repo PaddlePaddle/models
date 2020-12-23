@@ -46,8 +46,6 @@ def do_train(args):
     (train_loader), (eval_loader) = reader.create_data_loader(args)
 
     # Define model
-    print(args.src_vocab_size)
-    print(args.trg_vocab_size)
     transformer = TransformerModel(
         src_vocab_size=args.src_vocab_size,
         trg_vocab_size=args.trg_vocab_size,
