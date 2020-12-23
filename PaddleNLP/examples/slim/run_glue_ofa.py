@@ -161,9 +161,13 @@ def parse_args():
 
 
 def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
+    # Use the same data seed(for data shuffle) for all procs to guarantee data
+    # consistency after sharding.
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    # Maybe different op seeds(for dropout) for different procs is better. By:
+    # `paddle.seed(args.seed + paddle.distributed.get_rank())`
+    paddle.seed(args.seed)
 
 
 def evaluate(model, criterion, metric, data_loader, width_mult=1.0):
@@ -411,7 +415,7 @@ def do_train(args):
     # Step2: Convert origin model to supernet.
     sp_config = supernet(expand_ratio=args.width_mult_list)
     model = Convert(sp_config).convert(model)
-    # Use weights saved in the dictionary to initialize supernet. 
+    # Use weights saved in the dictionary to initialize supernet.
     utils.set_state_dict(model, origin_weights)
     del origin_weights
 
@@ -444,7 +448,7 @@ def do_train(args):
     if args.task_name == "mnli":
         dev_data_loader = (dev_data_loader_matched, dev_data_loader_mismatched)
 
-    # Step6: Calculate the importance of neurons and head, 
+    # Step6: Calculate the importance of neurons and head,
     # and then reorder them according to the importance.
     head_importance, neuron_importance = utils.compute_neuron_head_importance(
         args.task_name,
