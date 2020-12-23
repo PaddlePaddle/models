@@ -172,19 +172,14 @@ def do_train(args):
                 sum_cost, avg_cost, token_num = criterion(logits, lbl_word,
                                                           lbl_weight)
 
-                if trainer_count > 1:
-                    avg_cost = transformer.scale_loss(avg_cost)
-                    avg_cost.backward()
-                    transformer.apply_collective_grads()
-                else:
-                    avg_cost.backward()
+                avg_cost.backward()
 
                 optimizer.minimize(avg_cost)
                 transformer.clear_gradients()
 
                 interval_word_num += np.prod(src_word.shape)
                 if step_idx % args.print_step == 0:
-                    total_avg_cost = avg_cost.numpy() * trainer_count
+                    total_avg_cost = avg_cost.numpy()
 
                     if step_idx == 0:
                         logger.info(
