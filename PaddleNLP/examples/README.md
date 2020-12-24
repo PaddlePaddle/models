@@ -7,8 +7,8 @@
 
 | 任务类型     | 目录                                                         | 简介                                                         |
 | ----------------------------------| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 中文词法分析 | [LAC(Lexical Analysis of Chinese)](./lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
-| 预训练词向量 | [WordEmbedding](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/word_embedding) | 提供了丰富的中文预训练词向量，通过简单配置即可使用词向量来进行热启训练，能支持较多的中文场景下的训练任务的热启训练，加快训练收敛速度。|
+| 中文词法分析 | [Lexical Analysis](./lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
+| 预训练词向量 | [Word Embedding](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/word_embedding) | 提供了丰富的中文预训练词向量，通过简单配置即可使用词向量来进行热启训练，能支持较多的中文场景下的训练任务的热启训练，加快训练收敛速度。|
 
 
 ### 核心技术模型
