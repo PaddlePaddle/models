@@ -95,8 +95,7 @@ def train(args):
         learning_rate=args.base_lr, parameters=model.parameters())
     crf_loss = LinearChainCrfLoss(network.crf.transitions)
     chunk_evaluator = ChunkEvaluator(
-        int(math.ceil((train_dataset.num_labels + 1) / 2.0)),
-        "IOB")  # + 1 for START and STOP
+        label_list=train_dataset.label_vocab.keys(), suffix=True)
     model.prepare(optimizer, crf_loss, chunk_evaluator)
     if args.init_checkpoint:
         model.load(args.init_checkpoint)

@@ -313,7 +313,8 @@ def do_train(args):
         ])
 
     loss_fct = paddle.nn.loss.CrossEntropyLoss(ignore_index=ignore_label)
-    metric = ChunkEvaluator(int(math.ceil((label_num + 1) / 2.0)), "IOB")
+
+    metric = ChunkEvaluator(label_list=train_dataset.get_labels())
 
     global_step = 0
     tic_train = time.time()

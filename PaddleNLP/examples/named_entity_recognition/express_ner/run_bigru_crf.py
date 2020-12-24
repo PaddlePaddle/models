@@ -165,7 +165,8 @@ if __name__ == '__main__':
     optimizer = paddle.optimizer.Adam(
         learning_rate=0.001, parameters=model.parameters())
     crf_loss = LinearChainCrfLoss(network.crf.transitions)
-    chunk_evaluator = ChunkEvaluator((train_ds.label_num + 2) // 2, 'IOB')
+    chunk_evaluator = ChunkEvaluator(
+        label_list=train_ds.label_vocab.keys(), suffix=True)
     model.prepare(optimizer, crf_loss, chunk_evaluator)
 
     model.fit(train_data=train_loader,
