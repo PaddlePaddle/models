@@ -111,6 +111,16 @@ def do_train(args):
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
 
+    pos_enc_param_names = [
+        transformer.src_pos_embedding.pos_encoder.weight.name,
+        transformer.trg_pos_embedding.pos_encoder.weight.name
+    ]
+    for pos_enc_param_name in pos_enc_param_names:
+        pos_enc_param = paddle.static.global_scope().find_var(
+            pos_enc_param_name).get_tensor()
+        pos_enc_param.set(
+            position_encoding_init(args.max_length + 1, args.d_model), place)
+
     build_strategy = paddle.static.BuildStrategy()
     build_strategy.enable_inplace = True
     exec_strategy = paddle.static.ExecutionStrategy()
