@@ -24,6 +24,5 @@ if __name__ == '__main__':
         kv_cache=paddle.to_tensor(cache),
         #kv_cache=paddle.randn([32, 2, 32, 9, 80], 'float32'),
         use_cache=True)
-    cached_kvs = paddle.stack(cached_kvs)
-    print(out.shape, cached_kvs.shape)
+    print(out.shape)
     print(out.reshape([30, -1]))

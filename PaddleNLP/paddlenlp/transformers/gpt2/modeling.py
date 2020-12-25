@@ -72,16 +72,31 @@ class TransformerDecoderLayer(nn.Layer):
         self.activation = getattr(F, activation)
 
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, cache=None):
+        if not isinstance(cache, self.self_attn.Cache):
+            pk, pv = paddle.unstack(cache, axis=1)
+            cache = self.self_attn.gen_cache(pk, pv)
         print("tgt", tgt)
+        print("tgt sum", paddle.sum(tgt))
+        print("in norm sum", paddle.sum(self.norm1.weight))
+        print("in norm bias sum", paddle.sum(self.norm1.bias))
+        import os
+        import numpy as np
+        if not os.path.exists("./new_tgt.npy"):
+            np.save("./new_tgt.npy", tgt.numpy())
+            np.save("./new_norm_w.npy", self.norm1.weight.numpy())
+            np.save("./new_norm_b.npy", self.norm1.bias.numpy())
+
         residual = tgt
         if self.normalize_before:
             tgt = self.norm1(tgt)
+            print("fuck layer norm", tgt)
 
         if cache is None:
             tgt = self.self_attn(tgt, tgt, tgt, tgt_mask, None)
         else:
             tgt, incremental_cache = self.self_attn(tgt, tgt, tgt, tgt_mask,
                                                     cache)
+        print("attn", tgt)
         # Dropout ?
         tgt = residual + self.dropout1(tgt)
         if not self.normalize_before:
@@ -90,8 +105,9 @@ class TransformerDecoderLayer(nn.Layer):
         residual = tgt
         if self.normalize_before:
             tgt = self.norm2(tgt)
-
+        print("before mlp", tgt)
         tgt = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
+        print("after mlp", tgt)
         tgt = residual + self.dropout2(tgt)
 
         if not self.normalize_before:
@@ -120,7 +136,6 @@ class GPT2Embeddings(nn.Layer):
         self.word_embeddings = nn.Embedding(vocab_size, hidden_size)
         self.position_embeddings = nn.Embedding(max_position_embeddings,
                                                 hidden_size)
-        self.token_type_embeddings = nn.Embedding(type_vocab_size, hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
     def forward(self, input_ids, token_type_ids=None, position_ids=None):
@@ -128,15 +143,12 @@ class GPT2Embeddings(nn.Layer):
             ones = paddle.ones_like(input_ids, dtype="int64")
             seq_length = paddle.cumsum(ones, axis=1)
             position_ids = seq_length - ones
-            position_ids.stop_gradient = True
-        if token_type_ids is None:
-            token_type_ids = paddle.zeros_like(input_ids, dtype="int64")
 
+        print("position_ids", position_ids)
         input_embedings = self.word_embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids)
-        token_type_embeddings = self.token_type_embeddings(token_type_ids)
 
-        embeddings = input_embedings + position_embeddings + token_type_embeddings
+        embeddings = input_embedings + position_embeddings
         embeddings = self.dropout(embeddings)
         return embeddings
 
@@ -245,6 +257,12 @@ class GPT2Model(GPT2PretrainedModel):
                     (length, length),
                     dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
                 1)
+        if position_ids is None and kv_cache is not None:
+            past_length = kv_cache[0][0].shape[-2]
+            position_ids = paddle.arange(
+                past_length, input_ids.shape[-1] + past_length, dtype='int64')
+            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+
         embedding_output = self.embeddings(
             input_ids=input_ids,
             position_ids=position_ids,
