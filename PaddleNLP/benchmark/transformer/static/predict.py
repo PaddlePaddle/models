@@ -11,7 +11,7 @@ from pprint import pprint
 
 import paddle
 
-from paddlenlp.transformers import InferTransformerModel, position_encoding_init
+from paddlenlp.transformers import InferTransformerModel
 
 sys.path.append("../")
 import reader

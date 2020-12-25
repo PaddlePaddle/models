@@ -12,7 +12,7 @@ from pprint import pprint
 import paddle
 import paddle.distributed as dist
 
-from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion, position_encoding_init
+from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 
 sys.path.append("../")
 import reader
