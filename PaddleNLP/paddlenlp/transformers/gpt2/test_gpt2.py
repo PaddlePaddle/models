@@ -19,8 +19,13 @@ if __name__ == '__main__':
     gpt = GPT2ForPretraining(GPT2Model(**config))
 
     gpt.eval()
+    model_dict = gpt.state_dict()
+    for k in sorted(list(model_dict.keys())):
+        print(k, model_dict[k].shape)
     out, cached_kvs = gpt(
         input_ids=paddle.ones([1, 1], 'int64'),
         kv_cache=paddle.randn([32, 1, 2, 32, 9, 80], 'float32'),
+        #kv_cache=paddle.randn([32, 2, 32, 9, 80], 'float32'),
         use_cache=True)
+    cached_kvs = paddle.stack(cached_kvs)
     print(out.shape, cached_kvs.shape)
