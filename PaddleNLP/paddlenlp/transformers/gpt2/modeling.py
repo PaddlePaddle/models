@@ -72,6 +72,7 @@ class TransformerDecoderLayer(nn.Layer):
         self.activation = getattr(F, activation)
 
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, cache=None):
+        print("tgt", tgt)
         residual = tgt
         if self.normalize_before:
             tgt = self.norm1(tgt)
@@ -120,7 +121,6 @@ class GPT2Embeddings(nn.Layer):
         self.position_embeddings = nn.Embedding(max_position_embeddings,
                                                 hidden_size)
         self.token_type_embeddings = nn.Embedding(type_vocab_size, hidden_size)
-        self.layer_norm = nn.LayerNorm(hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
     def forward(self, input_ids, token_type_ids=None, position_ids=None):
@@ -224,7 +224,7 @@ class GPT2Model(GPT2PretrainedModel):
             activation=hidden_act,
             attn_dropout=attention_probs_dropout_prob,
             act_dropout=0)
-        self.encoder = nn.TransformerDecoder(
+        self.decoder = nn.TransformerDecoder(
             decoder_layer, num_hidden_layers, norm=nn.LayerNorm(hidden_size))
         self.apply(self.init_weights)
 
@@ -235,17 +235,27 @@ class GPT2Model(GPT2PretrainedModel):
                 attention_mask=None,
                 kv_cache=None):
         if attention_mask is None:
-            attention_mask = paddle.unsqueeze(
-                (input_ids == self.pad_token_id
-                 ).astype(self.embeddings.word_embeddings.weight.dtype) * -1e9,
-                axis=[1, 2])
+            # attention_mask = paddle.unsqueeze(
+            #     (input_ids == self.pad_token_id
+            #      ).astype(self.embeddings.word_embeddings.weight.dtype) * -1e9,
+            #     axis=[1, 2])
+            length = input_ids.shape[1]
+            attention_mask = paddle.tensor.triu(
+                (paddle.ones(
+                    (length, length),
+                    dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
+                1)
         embedding_output = self.embeddings(
             input_ids=input_ids,
             position_ids=position_ids,
             token_type_ids=token_type_ids)
         # attention_mask
-        encoder_outputs = self.encoder(
-            embedding_output, memory=None, cache=kv_cache)
+        print("embedding_output", embedding_output)
+        encoder_outputs = self.decoder(
+            embedding_output,
+            memory=None,
+            tgt_mask=attention_mask,
+            cache=kv_cache)
         return encoder_outputs
 
 
