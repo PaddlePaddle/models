@@ -374,6 +374,7 @@ class InferTransformerModel(TransformerModel):
             max_step_num=self.max_out_len,
             memory=enc_output,
             trg_src_attn_bias=trg_src_attn_bias,
-            static_cache=static_cache)
+            static_cache=static_cache,
+            is_test=True)
 
         return rs
