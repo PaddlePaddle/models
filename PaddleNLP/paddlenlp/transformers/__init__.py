@@ -19,10 +19,11 @@ from .bert.modeling import *
 from .bert.tokenizer import *
 from .ernie.modeling import *
 from .ernie.tokenizer import *
+from .gpt2.modeling import *
+from .gpt2.tokenizer import *
 from .roberta.modeling import *
 from .roberta.tokenizer import *
 from .electra.modeling import *
 from .electra.tokenizer import *
-from .gpt2.modeling import *
 from .transformer.modeling import *
 from .ernie_gen.modeling import ErnieForGeneration

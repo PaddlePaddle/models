@@ -1,2 +1,2 @@
-from .model import GPT2Model
-from .tokenization import GPT2Tokenizer
+from .model import *
+from .tokenizer import GPT2ChineseTokenizer

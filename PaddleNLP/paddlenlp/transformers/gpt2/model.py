@@ -37,10 +37,10 @@ class Attention(nn.Layer):
 
     def forward(self, x, kv_cache=None):
         self.seq_len = x.shape[1]
-        print("q before linear", x)
+        print("q before linear", x.mean())
         x = self.query_key_value(x)
         q, k, v = x.split(num_or_sections=3, axis=2)
-        print("q after linear", q)
+        print("q after linear", q.mean())
 
         q = self.split_heads(q)
         k = self.split_heads(k)
@@ -196,5 +196,5 @@ if __name__ == '__main__':
     out, cached_kvs = gpt(paddle.ones([1, 1], 'int64'),
                           paddle.to_tensor(cache),
                           use_cache=True)
-    print(out.shape, cached_kvs.shape)
-    print(out.reshape([30, -1]))
+    print(out.mean())
+    print(cached_kvs.mean())

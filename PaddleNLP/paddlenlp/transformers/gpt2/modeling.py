@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import collections
 import numpy as np
 import paddle
 import paddle.nn as nn
+import paddle.tensor as tensor
 import paddle.nn.functional as F
 import math
+from paddle.fluid import layers
 
 from .. import PretrainedModel, register_base_model
 from paddle.nn.layer.transformer import _convert_param_attr_to_list
@@ -24,10 +27,485 @@ __all__ = [
     'GPT2Model',
     "GPT2PretrainedModel",
     'GPT2ForPretraining',
-    'GPT2PretrainingCriterion',
-    # 'GPT2PretrainingHeads',
-    'GPT2ForQuestionAnswering',
 ]
+
+
+class MultiHeadAttention(nn.Layer):
+    """
+    Attention mapps queries and a set of key-value pairs to outputs, and
+    Multi-Head Attention performs multiple parallel attention to jointly attending
+    to information from different representation subspaces.
+
+    Please refer to `Attention Is All You Need <https://arxiv.org/pdf/1706.03762.pdf>`_
+    for more details.
+
+    Parameters:
+        embed_dim (int): The expected feature size in the input and output.
+        num_heads (int): The number of heads in multi-head attention.
+        dropout (float, optional): The dropout probability used on attention
+            weights to drop some attention targets. 0 for no dropout. Default 0
+        kdim (int, optional): The feature size in key. If None, assumed equal to
+            `embed_dim`. Default None.
+        vdim (int, optional): The feature size in value. If None, assumed equal to
+            `embed_dim`. Default None.
+        need_weights (bool, optional): Indicate whether to return the attention
+            weights. Default False.
+        weight_attr(ParamAttr, optional):  To specify the weight parameter property.
+            Default: None, which means the default weight parameter property is used.
+            See usage for details in :code:`ParamAttr` .
+        bias_attr (ParamAttr, optional): To specify the bias parameter property.
+            Default: None, which means the default bias parameter property is used.
+            If it is set to False, this layer will not have trainable bias parameter.
+            See usage for details in :code:`ParamAttr` .
+
+    Examples:
+
+        .. code-block:: python
+
+            import paddle
+
+            # encoder input: [batch_size, sequence_length, d_model]
+            query = paddle.rand((2, 4, 128))
+            # self attention mask: [batch_size, num_heads, query_len, query_len]
+            attn_mask = paddle.rand((2, 2, 4, 4))
+            multi_head_attn = paddle.MultiHeadAttention(128, 2)
+            output = multi_head_attn(query, None, None, attn_mask=attn_mask)  # [2, 4, 128]
+    """
+
+    Cache = collections.namedtuple("Cache", ["k", "v"])
+    StaticCache = collections.namedtuple("StaticCache", ["k", "v"])
+
+    def __init__(self,
+                 embed_dim,
+                 num_heads,
+                 dropout=0.,
+                 kdim=None,
+                 vdim=None,
+                 need_weights=False,
+                 weight_attr=None,
+                 bias_attr=None):
+        super(MultiHeadAttention, self).__init__()
+        self.embed_dim = embed_dim
+        self.kdim = kdim if kdim is not None else embed_dim
+        self.vdim = vdim if vdim is not None else embed_dim
+        self.num_heads = num_heads
+        self.dropout = dropout
+        self.need_weights = need_weights
+
+        self.head_dim = embed_dim // num_heads
+        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+
+        self.q_proj = nn.Linear(
+            embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
+        self.k_proj = nn.Linear(
+            self.kdim, embed_dim, weight_attr, bias_attr=bias_attr)
+        self.v_proj = nn.Linear(
+            self.vdim, embed_dim, weight_attr, bias_attr=bias_attr)
+        self.out_proj = nn.Linear(
+            embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
+
+    def _prepare_qkv(self, query, key, value, use_cache=False, cache=None):
+        r"""
+        Prapares linear projected queries, keys and values for usage of subsequnt
+        multiple parallel attention. If `cache` is not None, using cached results
+        to reduce redundant calculations.
+
+        Parameters:
+            query (Tensor): The queries for multi-head attention. It is a
+                tensor with shape `[batch_size, query_length, embed_dim]`. The
+                data type should be float32 or float64.
+            key (Tensor): The keys for multi-head attention. It is
+                a tensor with shape `[batch_size, key_length, kdim]`. The
+                data type should be float32 or float64. If None, use `query` as
+                `key`.
+            value (Tensor): The values for multi-head attention. It
+                is a tensor with shape `[batch_size, value_length, vdim]`.
+                The data type should be float32 or float64. If None, use `query` as
+                `value`.
+            cache (MultiHeadAttention.Cache|MultiHeadAttention.StaticCache, optional):
+                It is a namedtuple with `k` and `v` as fields, and stores tensors
+                shaped `[batch_size, num_heads, length, embed_dim]` which are results
+                of linear projection, reshape and transpose calculations in
+                MultiHeadAttention. If is an instance of `Cache`, `k` and `v`
+                fields reserve intermediate results of previous positions, which
+                mostly used for decoder self attention. If it is an instance of
+                `StaticCache`, `key` and `value` args would be ignored, `k` and
+                `v` fields would be used as calculated results on `key` and
+                `value`, which mostly used for decoder-encoder cross attention.
+                It is only used for inference and should be None for training.
+                Default None.
+
+        Returns:
+            tuple: A tuple including linear projected keys and values. These two \
+                tensors have shapes `[batch_size, n_head, sequence_length, d_key]` \
+                and `[batch_size, n_head, sequence_length, d_value]` separately, \
+                and their data types are same as inputs.
+        """
+
+        q = self.q_proj(query)
+        q = tensor.reshape(x=q, shape=[0, 0, self.num_heads, self.head_dim])
+        q = tensor.transpose(x=q, perm=[0, 2, 1, 3])
+
+        if isinstance(cache, self.StaticCache):
+            # for encoder-decoder attention in inference and has cached
+            k, v = cache.k, cache.v
+        else:
+            k, v = self.compute_kv(key, value)
+
+        if isinstance(cache, self.Cache):
+            # for decoder self-attention in inference
+            k = tensor.concat([cache.k, k], axis=2)
+            v = tensor.concat([cache.v, v], axis=2)
+        if use_cache is True:
+            cache = self.Cache(k, v)
+
+        return (q, k, v) if use_cache is False else (q, k, v, cache)
+
+    def compute_kv(self, key, value):
+        r"""
+        Applies linear projection on input keys and values, then splits heads
+        (reshape and transpose) to get keys and values from different representation
+        subspaces. The results are used as key-values pairs for subsequent multiple
+        parallel attention.
+
+        It is part of calculations in multi-head attention, and is provided as
+        a method to pre-compute and prefetch these results, thus we can use them
+        to construct cache for inference.
+
+        Parameters:
+            key (Tensor): The keys for multi-head attention. It is a tensor
+                with shape `[batch_size, sequence_length, kdim]`. The data type
+                should be float32 or float64.
+            value (Tensor): The values for multi-head attention. It is a tensor
+                with shape `[batch_size, sequence_length, vdim]`. The data type
+                should be float32 or float64.
+
+        Returns:
+            tuple: A tuple including transformed keys and values. Their shapes \
+                both are `[batch_size, num_heads, sequence_length, embed_dim // num_heads]`, \
+                and their data types are same as inputs.
+        """
+        k = self.k_proj(key)
+        v = self.v_proj(value)
+        k = tensor.reshape(x=k, shape=[0, 0, self.num_heads, self.head_dim])
+        k = tensor.transpose(x=k, perm=[0, 2, 1, 3])
+        v = tensor.reshape(x=v, shape=[0, 0, self.num_heads, self.head_dim])
+        v = tensor.transpose(x=v, perm=[0, 2, 1, 3])
+        return k, v
+
+    def gen_cache(self, key, value=None, type=Cache):
+        """
+        Generates cache for `forward` usage in inference accroding to arguments.
+        The generated cache is an instance of `MultiHeadAttention.Cache` or an
+        instance of `MultiHeadAttention.StaticCache`.
+
+        `Cache` or `StaticCache` is namedtuple with `k` and `v` as fields,
+        and it stores tensors shaped `[batch_size, num_heads, length, embed_dim]`
+        which are results of linear projection, reshape and transpose calculations
+        in MultiHeadAttention.
+
+        If the generated cache is an instance of `Cache`, `k` and `v` fields
+        reserve intermediate result tensors of previous positions, and the tensors
+        are incremental among decoding steps, which mostly are used for decoder
+        decoder self attention.
+
+        If the generated cache is an instance of `StaticCache`, `k` and `v` fields
+        would be used as calculated result tensors on keys an values in `forward`,
+        and the tensors keep unchanged among decoding steps, which are mostly used
+        for decoder-encoder cross attention.
+
+        The cache is generated as follows:
+
+        1. If `type` is `StaticCache`, apply `compute_kv(key, value)` and use the
+        results to create an instance of `StaticCache`.
+
+        2. If `type` is `Cache` and `value` is None, generate empty tensors shaped
+        `[batch_size, num_heads, 0, embed_dim // num_heads]` and use the results
+        to create an instance of `Cache`, where `batch_size` is from the first
+        dimension of `key`.
+
+        3. If `type` is `Cache` and `value` is not None, use `key`, `value` to create
+        an instance of `Cache`.
+
+        Parameters:
+            key (Tensor): The keys for multi-head attention. It is
+                a tensor with shape `[batch_size, key_length, kdim]`. The
+                data type should be float32 or float64. If `value` is None,
+                it is only for batch size and data type reference.
+            value (Tensor, optional): The values for multi-head attention. It
+                is a tensor with shape `[batch_size, value_length, vdim]`.
+                The data type should be float32 or float64. If None, `key` is only
+                for batch size reference. Default None.
+            type (type): It should be `MultiHeadAttention.StaticCache` or
+                `MultiHeadAttention.Cache` to indicate the cache type to generate.
+
+        Returns:
+            namedtuple: an instance of `Cache` or `StaticCache` accordingly.
+        """
+        if type == MultiHeadAttention.StaticCache:  # static_kv
+            k, v = self.compute_kv(key, value)
+            return self.StaticCache(k, v)
+        elif value is None:  # incremental_state
+            k = layers.fill_constant_batch_size_like(
+                input=key,
+                shape=[-1, self.num_heads, 0, self.head_dim],
+                dtype=key.dtype,
+                value=0)
+            v = layers.fill_constant_batch_size_like(
+                input=key,
+                shape=[-1, self.num_heads, 0, self.head_dim],
+                dtype=key.dtype,
+                value=0)
+            return self.Cache(k, v)
+        else:
+            # incremental_state with initial value, mainly for usage like UniLM
+            return self.Cache(key, value)
+
+    def forward(self,
+                query,
+                key,
+                value,
+                attn_mask=None,
+                use_cache=False,
+                cache=None):
+        r"""
+        Applies multi-head attention to map queries and a set of key-value pairs
+        to outputs.
+
+        Parameters:
+            query (Tensor): The queries for multi-head attention. It is a
+                tensor with shape `[batch_size, query_length, embed_dim]`. The
+                data type should be float32 or float64.
+            key (Tensor, optional): The keys for multi-head attention. It is
+                a tensor with shape `[batch_size, key_length, kdim]`. The
+                data type should be float32 or float64. If None, use `query` as
+                `key`. Default None.
+            value (Tensor, optional): The values for multi-head attention. It
+                is a tensor with shape `[batch_size, value_length, vdim]`.
+                The data type should be float32 or float64. If None, use `query` as
+                `value`. Default None.
+            attn_mask (Tensor, optional): A tensor used in multi-head attention
+                to prevents attention to some unwanted positions, usually the
+                paddings or the subsequent positions. It is a tensor with shape
+                broadcasted to `[batch_size, n_head, sequence_length, sequence_length]`,
+                where the unwanted positions have `-INF` values and the others
+                have 0 values. The data type should be float32 or float64. It can
+                be None when nothing wanted or needed to be prevented attention to.
+                Default None
+            cache (MultiHeadAttention.Cache|MultiHeadAttention.StaticCache, optional):
+                It is a namedtuple with `k` and `v` as fields, and stores tensors
+                shaped `[batch_size, num_heads, length, embed_dim]` which are results
+                of linear projection, reshape and transpose calculations in
+                MultiHeadAttention. If it is an instance of `Cache`, `k` and `v`
+                fields reserve intermediate results of previous positions, which
+                mostly used for decoder self attention. If it is an instance of
+                `StaticCache`, `key` and `value` args would be ignored, `k` and
+                `v` fields would be used as calculated results on `key` and
+                `value`, which mostly used for decoder-encoder cross attention.
+                It is only used for inference and should be None for training.
+                Default None.
+
+        Returns:
+            Tensor|tuple: It is a tensor that has the same shape and data type \
+                as `query`, representing attention output. Or a tuple if \
+                `need_weights` is True or `cache` is not None. If `need_weights` \
+                is True, except for attention output, the tuple also includes \
+                the attention weights tensor shaped `[batch_size, num_heads, query_length, key_length]`. \
+                If `cache` is not None, the tuple then includes the new cache \
+                having the same type as `cache`, and if it is `StaticCache`, it \
+                is same as the input `cache`, if it is `Cache`, the new cache \
+                reserves tensors concatanating raw tensors with intermediate \
+                results of current query.
+        """
+        key = query if key is None else key
+        value = query if value is None else value
+        # compute q ,k ,v
+        if use_cache is False:
+            q, k, v = self._prepare_qkv(query, key, value, use_cache, cache)
+        else:
+            q, k, v, cache = self._prepare_qkv(query, key, value, use_cache,
+                                               cache)
+        # scale dot product attention
+        # TODO(guosheng): use tensor.matmul, however it doesn't support `alpha`
+        product = layers.matmul(
+            x=q, y=k, transpose_y=True, alpha=self.head_dim**-0.5)
+        if attn_mask is not None:
+            # TODO(guosheng): support bool mask
+            product = product + attn_mask
+        weights = F.softmax(product)
+        if self.dropout:
+            weights = F.dropout(
+                weights,
+                self.dropout,
+                training=self.training,
+                mode="upscale_in_train")
+
+        out = tensor.matmul(weights, v)
+
+        # combine heads
+        out = tensor.transpose(out, perm=[0, 2, 1, 3])
+        out = tensor.reshape(x=out, shape=[0, 0, out.shape[2] * out.shape[3]])
+
+        # project to output
+        out = self.out_proj(out)
+
+        outs = [out]
+        if self.need_weights:
+            outs.append(weights)
+        if use_cache is True:
+            outs.append(cache)
+        return out if len(outs) == 1 else tuple(outs)
+
+
+class TransformerDecoder(nn.Layer):
+    """
+    TransformerDecoder is a stack of N decoder layers.
+
+    Parameters:
+        decoder_layer (Layer): an instance of the `TransformerDecoderLayer`. It
+            would be used as the first layer, and the other layers would be created
+            according to the configurations of it.
+        num_layers (int): The number of decoder layers to be stacked.
+        norm (LayerNorm, optional): the layer normalization component. If provided,
+            apply layer normalization on the output of last encoder layer.
+
+    Examples:
+
+        .. code-block:: python
+
+            import paddle
+            from paddle.nn import TransformerDecoderLayer, TransformerDecoder
+
+            # decoder input: [batch_size, tgt_len, d_model]
+            dec_input = paddle.rand((2, 4, 128))
+            # encoder output: [batch_size, src_len, d_model]
+            enc_output = paddle.rand((2, 6, 128))
+            # self attention mask: [batch_size, n_head, tgt_len, tgt_len]
+            self_attn_mask = paddle.rand((2, 2, 4, 4))
+            # cross attention mask: [batch_size, n_head, tgt_len, src_len]
+            cross_attn_mask = paddle.rand((2, 2, 4, 6))
+            decoder_layer = TransformerDecoderLayer(128, 2, 512)
+            decoder = TransformerDecoder(decoder_layer, 2)
+            output = decoder(dec_input,
+                             enc_output,
+                             self_attn_mask,
+                             cross_attn_mask)  # [2, 4, 128]
+    """
+
+    def __init__(self, decoder_layer, num_layers, norm=None):
+        super(TransformerDecoder, self).__init__()
+        self.layers = nn.LayerList([(
+            decoder_layer
+            if i == 0 else type(decoder_layer)(**decoder_layer._config))
+                                    for i in range(num_layers)])
+        self.num_layers = num_layers
+        self.norm = norm
+
+    def forward(self,
+                tgt,
+                memory,
+                tgt_mask=None,
+                memory_mask=None,
+                use_cache=False,
+                cache=None):
+        r"""
+        Applies a stack of N Transformer decoder layers on inputs. If `norm` is
+        provided, also applies layer normalization on the output of last decoder
+        layer.
+
+        Parameters:
+            tgt (Tensor): The input of Transformer decoder. It is a tensor
+                with shape `[batch_size, target_length, d_model]`. The data type
+                should be float32 or float64.
+            memory (Tensor): The output of Transformer encoder. It is a tensor
+                with shape `[batch_size, source_length, d_model]`. The data type
+                should be float32 or float64.
+            tgt_mask (Tensor, optional): A tensor used in self attention
+                to prevents attention to some unwanted positions, usually the
+                the subsequent positions. It is a tensor with shape broadcasted
+                to `[batch_size, n_head, target_length, target_length]`,
+                where the unwanted positions have `-INF` values and the others
+                have 0 values. The data type should be float32 or float64. It can
+                be None when nothing wanted or needed to be prevented attention to.
+                Default None
+            memory_mask (Tensor, optional): A tensor used in decoder-encoder
+                cross attention to prevents attention to some unwanted positions,
+                usually the paddings. It is a tensor with shape broadcasted to
+               `[batch_size, n_head, target_length, source_length]`, where the
+                unwanted positions have `-INF` values and the others have 0 values.
+                The data type should be float32 or float64. It can be None when
+                nothing wanted or needed to be prevented attention to. Default None
+            cache (list, optional): It is a list, and each element in the list
+                is a tuple( :code:`(incremental_cache, static_cache)` ). See
+                `TransformerDecoder.gen_cache` for more details. It is only
+                used for inference and should be None for training. Default None.
+
+        Returns:
+            Tensor|tuple: It is a tensor that has the same shape and data type \
+                as `tgt`, representing the output of Transformer decoder. \
+                Or a tuple if `cache` is not None, except for decoder output, \
+                the tuple includes the new cache which is same as input `cache` \
+                argument but `incremental_cache` in it has an incremental length. \
+                See `MultiHeadAttention.gen_cache` and `MultiHeadAttention.forward` \
+                for more details.
+        """
+        output = tgt
+        new_caches = []
+        for i, mod in enumerate(self.layers):
+            if cache is None:
+                if use_cache:
+                    output, new_cache = mod(output,
+                                            memory,
+                                            tgt_mask=tgt_mask,
+                                            use_cache=use_cache,
+                                            cache=cache)
+                    new_caches.append(new_cache)
+                else:
+                    output = mod(output,
+                                 memory,
+                                 tgt_mask=tgt_mask,
+                                 use_cache=use_cache,
+                                 cache=cache)
+
+            else:
+                output, new_cache = mod(output,
+                                        memory,
+                                        tgt_mask=tgt_mask,
+                                        use_cache=use_cache,
+                                        cache=cache[i])
+                new_caches.append(new_cache)
+
+        if self.norm is not None:
+            output = self.norm(output)
+
+        return output if use_cache is False else (output, new_caches)
+
+    def gen_cache(self, memory, do_zip=False):
+        r"""
+        Generates cache for `forward` usage. The generated cache is a list, and
+        each element in it is a tuple( :code:`(incremental_cache, static_cache)` )
+        produced by `TransformerDecoderLayer.gen_cache`. See `TransformerDecoderLayer.gen_cache`
+        for more details. If `do_zip` is True, apply `zip` on these tuples to get
+        a list with two elements.
+
+
+        Parameters:
+            memory (Tensor): The output of Transformer encoder. It is a tensor
+                with shape `[batch_size, source_length, d_model]`. The data type
+                should be float32 or float64.
+            do_zip (bool, optional): Indicate whether to apply `zip` on the tuples.
+                If True, return a list with two elements. Default False
+
+        Returns:
+            list: It is a list, and each element in the list is a tuple produced \
+                by `TransformerDecoderLayer.gen_cache(memory)`. See `TransformerDecoderLayer.gen_cache` \
+                for more details. If `do_zip` is True, apply `zip` on these tuples \
+                and return a list with two elements.
+        """
+        cache = [layer.gen_cache(memory) for layer in self.layers]
+        if do_zip:
+            cache = list(zip(*cache))
+        return cache
 
 
 class TransformerDecoderLayer(nn.Layer):
@@ -54,7 +532,7 @@ class TransformerDecoderLayer(nn.Layer):
         weight_attrs = _convert_param_attr_to_list(weight_attr, 3)
         bias_attrs = _convert_param_attr_to_list(bias_attr, 3)
 
-        self.self_attn = nn.MultiHeadAttention(
+        self.self_attn = MultiHeadAttention(
             d_model,
             nhead,
             dropout=attn_dropout,
@@ -66,43 +544,21 @@ class TransformerDecoderLayer(nn.Layer):
         self.linear2 = nn.Linear(
             dim_feedforward, d_model, weight_attrs[2], bias_attr=bias_attrs[2])
         self.norm1 = nn.LayerNorm(d_model, epsilon=1e-5)
-        print("Fuck the origin epsilon")
         self.norm2 = nn.LayerNorm(d_model, epsilon=1e-5)
         self.dropout1 = nn.Dropout(dropout, mode="upscale_in_train")
         self.dropout2 = nn.Dropout(dropout, mode="upscale_in_train")
         self.activation = getattr(F, activation)
 
-    def forward(self, tgt, memory, tgt_mask=None, memory_mask=None, cache=None):
-        if not isinstance(cache, self.self_attn.Cache):
-            pk, pv = paddle.unstack(cache, axis=1)
-            cache = self.self_attn.gen_cache(pk, pv)
-        print("tgt", tgt)
-        print("tgt sum", paddle.sum(tgt))
-        print("in norm sum", paddle.sum(self.norm1.weight))
-        print("in norm bias sum", paddle.sum(self.norm1.bias))
-        import os
-        import numpy as np
-        if not os.path.exists("./new_tgt.npy"):
-            np.save("./new_tgt.npy", tgt.numpy())
-            np.save("./new_norm_w.npy", self.norm1.weight.numpy())
-            np.save("./new_norm_b.npy", self.norm1.bias.numpy())
-            print("in norm shape", self.norm1._normalized_shape)
-            print("in norm epsilon", self.norm1._epsilon)
-
+    def forward(self, tgt, memory, tgt_mask=None, use_cache=False, cache=None):
         residual = tgt
         if self.normalize_before:
-            print("fuck tgt", tgt)
             tgt = self.norm1(tgt)
-            if not os.path.exists("./new_tgt.npy"):
-                np.save("./new_normed_tgt.npy", tgt.numpy())
-            print("fuck layer norm", tgt)
 
-        if cache is None:
-            tgt = self.self_attn(tgt, tgt, tgt, tgt_mask, None)
+        if use_cache is False:
+            tgt = self.self_attn(tgt, tgt, tgt, tgt_mask, use_cache, cache)
         else:
             tgt, incremental_cache = self.self_attn(tgt, tgt, tgt, tgt_mask,
-                                                    cache)
-        print("attn", tgt)
+                                                    use_cache, cache)
         # Dropout ?
         tgt = residual + self.dropout1(tgt)
         if not self.normalize_before:
@@ -111,15 +567,13 @@ class TransformerDecoderLayer(nn.Layer):
         residual = tgt
         if self.normalize_before:
             tgt = self.norm2(tgt)
-        print("before mlp", tgt)
         tgt = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
-        print("after mlp", tgt)
         tgt = residual + self.dropout2(tgt)
 
         if not self.normalize_before:
             tgt = self.norm2(tgt)
 
-        return tgt if cache is None else (tgt, incremental_cache)
+        return tgt if use_cache is False else (tgt, incremental_cache)
 
     def gen_cache(self, memory):
         incremental_cache = self.self_attn.gen_cache(
@@ -150,7 +604,6 @@ class GPT2Embeddings(nn.Layer):
             seq_length = paddle.cumsum(ones, axis=1)
             position_ids = seq_length - ones
 
-        print("position_ids", position_ids)
         input_embedings = self.word_embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids)
 
@@ -169,7 +622,7 @@ class GPT2PretrainedModel(PretrainedModel):
 
     model_config_file = "model_config.json"
     pretrained_init_configuration = {
-        "gpt2-base": {
+        "gpt2-base-cn": {
             "vocab_size": 30000,
             "hidden_size": 2560,
             "num_hidden_layers": 32,
@@ -184,13 +637,12 @@ class GPT2PretrainedModel(PretrainedModel):
             "pad_token_id": 0,
         },
     }
-    #resource_files_names = {"model_state": "model_state.pdparams"}
-    #pretrained_resource_files_map = {
-    #    "model_state": {
-    #        "gpt2-base-uncased":
-    #        "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2-base-uncased.pdparams",
-    #    }
-    #}
+    resource_files_names = {"model_state": "model_state.pdparams"}
+    pretrained_resource_files_map = {
+        "model_state": {
+            "gpt2-base-cn": "http://10.255.129.12:8829/model_state.pdparams",
+        }
+    }
     base_model_prefix = "gpt2"
 
     def init_weights(self, layer):
@@ -206,8 +658,6 @@ class GPT2PretrainedModel(PretrainedModel):
                         if hasattr(self, "initializer_range") else
                         self.gpt2.config["initializer_range"],
                         shape=layer.weight.shape))
-        # elif isinstance(layer, nn.LayerNorm):
-        #     layer._epsilon = 1e-12
 
 
 @register_base_model
@@ -242,7 +692,7 @@ class GPT2Model(GPT2PretrainedModel):
             activation=hidden_act,
             attn_dropout=attention_probs_dropout_prob,
             act_dropout=0)
-        self.decoder = nn.TransformerDecoder(
+        self.decoder = TransformerDecoder(
             decoder_layer, num_hidden_layers, norm=nn.LayerNorm(hidden_size))
         self.apply(self.init_weights)
 
@@ -251,118 +701,39 @@ class GPT2Model(GPT2PretrainedModel):
                 token_type_ids=None,
                 position_ids=None,
                 attention_mask=None,
-                kv_cache=None):
+                use_cache=False,
+                cache=None):
         if attention_mask is None:
-            # attention_mask = paddle.unsqueeze(
-            #     (input_ids == self.pad_token_id
-            #      ).astype(self.embeddings.word_embeddings.weight.dtype) * -1e9,
-            #     axis=[1, 2])
             length = input_ids.shape[1]
             attention_mask = paddle.tensor.triu(
                 (paddle.ones(
                     (length, length),
                     dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
                 1)
-        if position_ids is None and kv_cache is not None:
-            past_length = kv_cache[0][0].shape[-2]
-            position_ids = paddle.arange(
-                past_length, input_ids.shape[-1] + past_length, dtype='int64')
-            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+        past_length = 0
+        if cache is not None:
+            past_length = cache[0].k.shape[-2]
+        position_ids = paddle.arange(
+            past_length, input_ids.shape[-1] + past_length, dtype='int64')
+        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
 
         embedding_output = self.embeddings(
             input_ids=input_ids,
             position_ids=position_ids,
             token_type_ids=token_type_ids)
-        # attention_mask
-        print("embedding_output", embedding_output)
         encoder_outputs = self.decoder(
             embedding_output,
             memory=None,
             tgt_mask=attention_mask,
-            cache=kv_cache)
+            use_cache=use_cache,
+            cache=cache)
         return encoder_outputs
-
-
-class GPT2ForQuestionAnswering(GPT2PretrainedModel):
-    def __init__(self, gpt2, dropout=None):
-        super(GPT2ForQuestionAnswering, self).__init__()
-        self.gpt2 = gpt2  # allow gpt2 to be config
-        self.classifier = nn.Linear(self.gpt2.config["hidden_size"], 2)
-        self.apply(self.init_weights)
-
-    def forward(self, input_ids, token_type_ids=None):
-        sequence_output, _ = self.gpt2(
-            input_ids,
-            token_type_ids=token_type_ids,
-            position_ids=None,
-            attention_mask=None)
-
-        logits = self.classifier(sequence_output)
-        logits = paddle.transpose(logits, perm=[2, 0, 1])
-        start_logits, end_logits = paddle.unstack(x=logits, axis=0)
-
-        return start_logits, end_logits
-
-
-# class GPT2LMPredictionHead(nn.Layer):
-#     def __init__(self,
-#                  hidden_size,
-#                  vocab_size,
-#                  activation,
-#                  embedding_weights=None):
-#         super(GPT2LMPredictionHead, self).__init__()
-#         self.transform = nn.Linear(hidden_size, hidden_size)
-#         self.activation = getattr(nn.functional, activation)
-#         self.layer_norm = nn.LayerNorm(hidden_size)
-#         self.decoder_weight = self.create_parameter(
-#             shape=[hidden_size, vocab_size],
-#             dtype=self.transform.weight.dtype,
-#             is_bias=True) if embedding_weights is None else embedding_weights
-#         self.decoder_bias = self.create_parameter(
-#             shape=[vocab_size], dtype=self.decoder_weight.dtype, is_bias=True)
-#
-#     def forward(self, hidden_states, masked_positions=None):
-#         if masked_positions is not None:
-#             hidden_states = paddle.reshape(hidden_states,
-#                                            [-1, hidden_states.shape[-1]])
-#             hidden_states = paddle.tensor.gather(hidden_states,
-#                                                  masked_positions)
-#         # gather masked tokens might be more quick
-#         hidden_states = self.transform(hidden_states)
-#         hidden_states = self.activation(hidden_states)
-#         hidden_states = self.layer_norm(hidden_states)
-#         hidden_states = paddle.tensor.matmul(
-#             hidden_states, self.decoder_weight,
-#             transpose_y=True) + self.decoder_bias
-#         return hidden_states
-#
-#
-# class GPT2PretrainingHeads(nn.Layer):
-#     def __init__(self,
-#                  hidden_size,
-#                  vocab_size,
-#                  activation,
-#                  embedding_weights=None):
-#         super(GPT2PretrainingHeads, self).__init__()
-#         self.predictions = GPT2LMPredictionHead(hidden_size, vocab_size,
-#                                                 activation, embedding_weights)
-#         # self.seq_relationship = nn.Linear(hidden_size, 2)
-#
-#     def forward(self, sequence_output, pooled_output, masked_positions=None):
-#         prediction_scores = self.predictions(sequence_output, masked_positions)
-#         return prediction_scores
 
 
 class GPT2ForPretraining(GPT2PretrainedModel):
     def __init__(self, gpt2):
         super(GPT2ForPretraining, self).__init__()
         self.gpt2 = gpt2
-        # self.cls = GPT2PretrainingHeads(
-        #     self.bert.config["hidden_size"],
-        #     self.bert.config["vocab_size"],
-        #     self.bert.config["hidden_act"],
-        #     embedding_weights=self.gpt2.embeddings.word_embeddings.weight)
-
         self.apply(self.init_weights)
 
     def forward(self,
@@ -371,14 +742,15 @@ class GPT2ForPretraining(GPT2PretrainedModel):
                 position_ids=None,
                 attention_mask=None,
                 masked_positions=None,
-                kv_cache=None,
-                use_cache=False):
+                use_cache=False,
+                cache=None):
         outputs = self.gpt2(
             input_ids,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
             attention_mask=attention_mask,
-            kv_cache=kv_cache)
+            use_cache=use_cache,
+            cache=cache)
         encoder_outputs, cached_kvs = outputs[:2]
         logits = paddle.matmul(
             encoder_outputs,

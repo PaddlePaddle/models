@@ -14,12 +14,18 @@
 
 import os
 import unicodedata
+import json
+import sentencepiece
+import jieba
 
 from .. import PretrainedTokenizer
 from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize,\
     _is_whitespace, _is_control, _is_punctuation
 
-__all__ = ['BasicTokenizer', 'GPT2Tokenizer', 'WordpieceTokenizer']
+__all__ = [
+    'BasicTokenizer', 'GPT2Tokenizer', 'WordpieceTokenizer',
+    'GPT2ChineseTokenizer'
+]
 
 
 class BasicTokenizer(object):
@@ -214,6 +220,66 @@ class WordpieceTokenizer(object):
             else:
                 output_tokens.extend(sub_tokens)
         return output_tokens
+
+
+class GPT2ChineseTokenizer(PretrainedTokenizer):
+    """
+    Constructs a GPT2 Chinese tokenizer. It uses a basic tokenizer to do punctuation
+    splitting, lower casing and so on, and follows a WordPiece tokenizer to
+    tokenize as subwords.
+    """
+    resource_files_names = {
+        "vocab_file": "vocab.json",
+        "model_file": "sentencepiece.model"
+    }  # for save_pretrained
+    pretrained_resource_files_map = {
+        "vocab_file": {
+            "gpt2-base-cn": "http://10.255.129.12:8829/vocab.json",
+        },
+        "model_file": {
+            "gpt2-base-cn": "http://10.255.129.12:8829/sentencepiece.model"
+        }
+    }
+    pretrained_init_configuration = {"gpt2-base-cn": {"do_lower_case": True}, }
+
+    def __init__(self,
+                 vocab_file,
+                 model_file,
+                 do_lower_case=True,
+                 max_len=512,
+                 bod_id="<bod>",
+                 eod_id="<eod>",
+                 max_length=None):
+
+        if not os.path.isfile(vocab_file):
+            raise ValueError(
+                "Can't find a vocabulary file at path '{}'. To load the "
+                "vocabulary from a pretrained model please use "
+                "`tokenizer = GPT2Tokenizer.from_pretrained(PRETRAINED_MODEL_NAME)`"
+                .format(vocab_file))
+        self.max_len = max_len if max_len is not None else int(1e12)
+        self.encoder = json.load(open(vocab_file))
+        self.decoder = {v: k for k, v in self.encoder.items()}
+        self.sp = sentencepiece.SentencePieceProcessor(model_file=model_file)
+        self.translator = str.maketrans(" \n", "\u2582\u2583")
+
+    def tokenize(self, text):
+        """ Tokenize a string. """
+        seg_list = [
+            x.translate(self.translator) for x in jieba.cut(text, cut_all=False)
+        ]
+        new_seg = " ".join(seg_list)
+        return self.sp.encode(new_seg)
+
+    def convert_tokens_to_ids(self, text):
+        res = self.tokenize(text)
+        return res
+
+    def convert_ids_to_tokens(self, tokens):
+        text = self.sp.decode(tokens)
+        text = text.replace(' ', '').replace('\u2582', ' ').replace('\u2583',
+                                                                    '\n')
+        return text
 
 
 class GPT2Tokenizer(PretrainedTokenizer):
