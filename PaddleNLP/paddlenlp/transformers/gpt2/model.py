@@ -101,7 +101,12 @@ class Block(nn.Layer):
             np.save("./origin_tgt.npy", x.numpy())
             np.save("./origin_norm_w.npy", self.input_layernorm.weight.numpy())
             np.save("./origin_norm_b.npy", self.input_layernorm.bias.numpy())
+            print("in norm shape", self.input_layernorm._normalized_shape)
+            print("in norm epsilon", self.input_layernorm._epsilon)
+
         x_norm = self.input_layernorm(x)
+        if not os.path.exists("./origin_tgt.npy"):
+            np.save("./origin_normed_tgt.npy", x_norm.numpy())
         print("fuck layer norm", x_norm)
         attn, cached_kv = self.attention(x_norm, kv_cache=kv_cache)
         print("attn", attn)

@@ -65,8 +65,9 @@ class TransformerDecoderLayer(nn.Layer):
         self.dropout = nn.Dropout(act_dropout, mode="upscale_in_train")
         self.linear2 = nn.Linear(
             dim_feedforward, d_model, weight_attrs[2], bias_attr=bias_attrs[2])
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
+        self.norm1 = nn.LayerNorm(d_model, epsilon=1e-5)
+        print("Fuck the origin epsilon")
+        self.norm2 = nn.LayerNorm(d_model, epsilon=1e-5)
         self.dropout1 = nn.Dropout(dropout, mode="upscale_in_train")
         self.dropout2 = nn.Dropout(dropout, mode="upscale_in_train")
         self.activation = getattr(F, activation)
@@ -85,10 +86,15 @@ class TransformerDecoderLayer(nn.Layer):
             np.save("./new_tgt.npy", tgt.numpy())
             np.save("./new_norm_w.npy", self.norm1.weight.numpy())
             np.save("./new_norm_b.npy", self.norm1.bias.numpy())
+            print("in norm shape", self.norm1._normalized_shape)
+            print("in norm epsilon", self.norm1._epsilon)
 
         residual = tgt
         if self.normalize_before:
+            print("fuck tgt", tgt)
             tgt = self.norm1(tgt)
+            if not os.path.exists("./new_tgt.npy"):
+                np.save("./new_normed_tgt.npy", tgt.numpy())
             print("fuck layer norm", tgt)
 
         if cache is None:
@@ -200,8 +206,8 @@ class GPT2PretrainedModel(PretrainedModel):
                         if hasattr(self, "initializer_range") else
                         self.gpt2.config["initializer_range"],
                         shape=layer.weight.shape))
-        elif isinstance(layer, nn.LayerNorm):
-            layer._epsilon = 1e-12
+        # elif isinstance(layer, nn.LayerNorm):
+        #     layer._epsilon = 1e-12
 
 
 @register_base_model

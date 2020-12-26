@@ -5,7 +5,8 @@ import numpy as np
 sys.path.append("../../../")
 from paddlenlp.transformers import GPT2ForPretraining, GPT2Model
 
-if __name__ == '__main__':
+
+def main():
     config = GPT2ForPretraining.pretrained_init_configuration["gpt2-base"]
     gpt = GPT2ForPretraining(GPT2Model(**config))
 
@@ -26,3 +27,7 @@ if __name__ == '__main__':
         use_cache=True)
     print(out.shape)
     print(out.reshape([30, -1]))
+
+
+if __name__ == '__main__':
+    main()
