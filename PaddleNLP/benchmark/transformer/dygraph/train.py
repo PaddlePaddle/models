@@ -134,7 +134,7 @@ def do_train(args):
             sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
             #avg_cost.backward()
-            scaled = scaler.scale(loss)  # scale the loss 
+            scaled = scaler.scale(avg_cost)  # scale the loss 
             scaled.backward()  # do backward
 
             #optimizer.step()
