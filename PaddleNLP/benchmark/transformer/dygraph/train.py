@@ -80,15 +80,6 @@ def do_train(args):
         beta2=args.beta2,
         epsilon=float(args.eps),
         parameters=transformer.parameters())
-    if args.use_amp:
-        # amp_list = paddle.static.amp.AutoMixedPrecisionLists(
-        #     custom_white_list=['layer_norm', 'softmax'])
-        # optimizer = paddle.static.amp.decorate(
-        optimizer = paddle.fluid.contrib.mixed_precision.decorator.decorate(
-            optimizer,
-            # amp_list,
-            init_loss_scaling=args.scale_loss,
-            use_dynamic_loss_scaling=True)
 
     # Init from some checkpoint, to resume the previous training
     if args.init_from_checkpoint:
@@ -135,11 +126,15 @@ def do_train(args):
             train_reader_cost = time.time() - batch_start
             (src_word, trg_word, lbl_word) = input_data
 
+            scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
+
             logits = transformer(src_word=src_word, trg_word=trg_word)
 
             sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
-            avg_cost.backward()
+            #avg_cost.backward()
+            scaled = scaler.scale(loss)  # scale the loss 
+            scaled.backward()  # do backward
 
             optimizer.step()
             optimizer.clear_grad()
