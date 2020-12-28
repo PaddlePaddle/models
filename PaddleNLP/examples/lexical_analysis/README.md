@@ -4,7 +4,7 @@
 
 词法分析任务的输入是一个字符串（我们后面使用『句子』来指代它），而输出是句子中的词边界和词性、实体类别。序列标注是词法分析的经典建模方式，我们使用基于 GRU 的网络结构学习特征，将学习到的特征接入 CRF 解码层完成序列标注。模型结构如下所示：<br />
 
-![GRU-CRF-MODEL](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/lexical_analysis/gru-crf-model.png)
+![GRU-CRF-MODEL](https://paddlenlp.bj.bcebos.com/imgs/gru-crf-model.png)
 
 1. 输入采用 one-hot 方式表示，每个字以一个 id 表示
 2. one-hot 序列通过字表，转换为实向量表示的字向量序列；
@@ -18,7 +18,9 @@
 
 - Python >= 3.6
 
-- PaddlePaddle >= 2.0.0，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+
+- paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
 
 ### 2.2 数据准备
 
@@ -59,40 +61,34 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 
 ```bash
 python -m paddle.distributed.launch train.py \
-        --root ./lexical_analysis_dataset_tiny \
+        --data_dir ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
-        --use_gpu True
+        --use_gpu True \
+        # --init_checkpoint ./save_dir/final
 ```
 
-其中 root 是数据集所在文件夹路径。
+其中 data_dir 是数据集所在文件夹路径，init_checkpoint 是模型加载路径，通过设置init_checkpoint可以启动增量训练。
 
 ### 2.4 模型评估
 
 通过加载训练保存的模型，可以对测试集数据进行验证，启动方式如下：
 
 ```bash
-python eval.py --root ./lexical_analysis_dataset_tiny \
+python eval.py --data_dir ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
 ```
-
-其中 init_checkpoint 是模型加载路径。
 
 ### 2.5 模型预测
 
 对无标签数据可以启动模型预测：
 
 ```bash
-python predict.py --root ./lexical_analysis_dataset_tiny \
+python predict.py --data_dir ./lexical_analysis_dataset_tiny \
         --init_checkpoint ./save_dir/final \
         --batch_size 32 \
         --use_gpu True
 ```
-
-
-### 如何贡献代码
-
-如果你可以修复某个 issue 或者增加一个新功能，欢迎给我们提交 PR。如果对应的 PR 被接受了，我们将根据贡献的质量和难度 进行打分（0-5 分，越高越好）。如果你累计获得了 10 分，可以联系我们获得面试机会或为你写推荐信。

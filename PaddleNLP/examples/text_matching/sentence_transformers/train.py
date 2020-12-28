@@ -30,10 +30,8 @@ from model import SentenceTransformer
 MODEL_CLASSES = {
     "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
     'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
-    'roberta': (ppnlp.transformers.RobertaModel,
-                ppnlp.transformers.RobertaTokenizer),
-    # 'electra': (ppnlp.transformers.Electra,
-    #             ppnlp.transformers.ElectraTokenizer)
+    'roberta':
+    (ppnlp.transformers.RobertaModel, ppnlp.transformers.RobertaTokenizer),
 }
 
 
@@ -250,8 +248,8 @@ def do_train(args):
 
     train_dataset, dev_dataset, test_dataset = ppnlp.datasets.LCQMC.get_datasets(
         ['train', 'dev', 'test'])
-    if args.model_name == 'ernie_tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
+    if args.model_name == 'ernie-tiny':
+        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name)
     else:

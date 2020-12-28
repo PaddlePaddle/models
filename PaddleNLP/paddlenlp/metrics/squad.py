@@ -14,10 +14,17 @@ import os
 import math
 
 
-def compute_predictions(all_examples, all_features, all_results, n_best_size,
-                        max_answer_length, do_lower_case,
-                        version_2_with_negative, null_score_diff_threshold,
-                        verbose, tokenizer):
+def compute_predictions(all_examples,
+                        all_features,
+                        all_results,
+                        n_best_size,
+                        max_answer_length,
+                        do_lower_case,
+                        version_2_with_negative,
+                        null_score_diff_threshold,
+                        verbose,
+                        tokenizer,
+                        is_whitespace_splited=True):
     """Write final predictions to the json file and log-odds of null if needed."""
 
     example_index_to_features = collections.defaultdict(list)
@@ -130,6 +137,8 @@ def compute_predictions(all_examples, all_features, all_results, n_best_size,
                 orig_text = " ".join(orig_tokens)
                 final_text = get_final_text(tok_text, orig_text, tokenizer,
                                             verbose)
+                if not is_whitespace_splited:
+                    final_text = final_text.replace(' ', '')
                 if final_text in seen_predictions:
                     continue
 
@@ -184,7 +193,6 @@ def compute_predictions(all_examples, all_features, all_results, n_best_size,
             nbest_json.append(output)
 
         assert len(nbest_json) >= 1
-
         if not version_2_with_negative:
             all_predictions[example.qas_id] = nbest_json[0]["text"]
         else:
@@ -246,7 +254,6 @@ def get_final_text(pred_text, orig_text, tokenizer, verbose):
     # and `pred_text`, and check if they are the same length. If they are
     # NOT the same length, the heuristic has failed. If they are the same
     # length, we assume the characters are one-to-one aligned.
-
     tok_text = " ".join(tokenizer.basic_tokenizer.tokenize(orig_text))
     start_position = tok_text.find(pred_text)
     if start_position == -1:
@@ -356,21 +363,24 @@ def normalize_answer(s):
     def lower(text):
         return text.lower()
 
-    return white_space_fix(remove_articles(remove_punc(lower(s))))
-
-
-def get_tokens(s):
-    if not s: return []
-    return normalize_answer(s).split()
+    if not s:
+        return []
+    else:
+        return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 
 def compute_exact(a_gold, a_pred):
     return int(normalize_answer(a_gold) == normalize_answer(a_pred))
 
 
-def compute_f1(a_gold, a_pred):
-    gold_toks = get_tokens(a_gold)
-    pred_toks = get_tokens(a_pred)
+def compute_f1(a_gold, a_pred, is_whitespace_splited=True):
+    gold_toks = normalize_answer(a_gold).split()
+    pred_toks = normalize_answer(a_pred).split()
+
+    if not is_whitespace_splited:
+        gold_toks = gold_toks[0] if gold_toks else ""
+        pred_toks = pred_toks[0] if pred_toks else ""
+
     common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
     num_same = sum(common.values())
     if len(gold_toks) == 0 or len(pred_toks) == 0:
@@ -384,7 +394,7 @@ def compute_f1(a_gold, a_pred):
     return f1
 
 
-def get_raw_scores(examples, preds):
+def get_raw_scores(examples, preds, is_whitespace_splited=True):
     exact_scores = {}
     f1_scores = {}
     for example in examples:
@@ -399,9 +409,12 @@ def get_raw_scores(examples, preds):
             print('Missing prediction for %s' % qid)
             continue
         a_pred = preds[qid]
+
         # Take max over all gold answers
         exact_scores[qid] = max(compute_exact(a, a_pred) for a in gold_answers)
-        f1_scores[qid] = max(compute_f1(a, a_pred) for a in gold_answers)
+        f1_scores[qid] = max(
+            compute_f1(a, a_pred, is_whitespace_splited) for a in gold_answers)
+
     return exact_scores, f1_scores
 
 
@@ -472,14 +485,18 @@ def find_all_best_thresh(main_eval, preds, exact_raw, f1_raw, na_probs,
     main_eval['best_f1_thresh'] = f1_thresh
 
 
-def squad_evaluate(examples, preds, na_probs=None, na_prob_thresh=1.0):
+def squad_evaluate(examples,
+                   preds,
+                   na_probs=None,
+                   na_prob_thresh=1.0,
+                   is_whitespace_splited=True):
     if not na_probs:
         na_probs = {k: 0.0 for k in preds}
 
     qid_to_has_ans = make_qid_to_has_ans(examples)  # maps qid to True/False
     has_ans_qids = [k for k, v in qid_to_has_ans.items() if v]
     no_ans_qids = [k for k, v in qid_to_has_ans.items() if not v]
-    exact_raw, f1_raw = get_raw_scores(examples, preds)
+    exact_raw, f1_raw = get_raw_scores(examples, preds, is_whitespace_splited)
     exact_thresh = apply_no_ans_threshold(exact_raw, na_probs, qid_to_has_ans,
                                           na_prob_thresh)
     f1_thresh = apply_no_ans_threshold(f1_raw, na_probs, qid_to_has_ans,

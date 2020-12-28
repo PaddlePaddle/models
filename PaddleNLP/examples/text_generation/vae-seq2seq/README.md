@@ -1,4 +1,4 @@
-运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle 2.0-rc1及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 # Variational Autoencoder (VAE) for Text Generation
 以下是本范例模型的简要目录结构及说明：
@@ -15,7 +15,7 @@
 ```
 
 ## 简介
-本目录下此范例模型的实现，旨在展示如何用Paddle 2.0-rc 构建用于文本生成的VAE示例，其中LSTM作为编码器和解码器。分别对官方PTB数据和yahoo数据集进行训练。
+本目录下此范例模型的实现，旨在展示如何用Paddle构建用于文本生成的VAE示例，其中LSTM作为编码器和解码器。分别对官方PTB数据和yahoo数据集进行训练。
 
 关于VAE的详细介绍参照： [(Bowman et al., 2015) Generating Sentences from a Continuous Space](https://arxiv.org/pdf/1511.06349.pdf)
 
@@ -23,9 +23,9 @@
 
 本教程使用了两个文本数据集：
 
-PTB dataset，原始下载地址为: http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz
+PTB数据集由华尔街日报的文章组成，包含929k个训练tokens，词汇量为10k。下载地址为: https://dataset.bj.bcebos.com/imikolov%2Fsimple-examples.tgz。
 
-yahoo，原始下载地址为：https://drive.google.com/file/d/13IsiffVjcQ-wrrbBGMwiG3sYf-DFxtXH/view?usp=sharing/
+Yahoo数据集来自[(Yang et al., 2017) Improved Variational Autoencoders for Text Modeling using Dilated Convolutions](https://arxiv.org/pdf/1702.08139.pdf)，该数据集从原始Yahoo Answer数据中采样100k个文档，数据集的平均文档长度为78，词汇量为200k。下载地址为：https://paddlenlp.bj.bcebos.com/datasets/yahoo-answer-100k.tar.gz
 
 ### 数据获取
 
@@ -91,7 +91,7 @@ python -m paddle.distributed.launch train.py \
 
 ## 模型预测
 
-当模型训练完成之后，可以选择加载模型保存目录下的第 50 个epoch的模型进行预测，生成batch_size条短文本。如果使用ptb数据集，可以通过下面命令配置：
+当模型训练完成之后，可以选择加载模型保存目录下的第 50 个epoch的模型进行预测，生成batch_size条短文本。生成的文本位于参数`infer_output_file`指定的路径下。如果使用ptb数据集，可以通过下面命令配置：
 
 ```
 export CUDA_VISIBLE_DEVICES=0
@@ -101,6 +101,7 @@ python predict.py \
         --max_grad_norm 5.0 \
         --dataset ptb \
         --use_gpu True \
+        --infer_output_file infer_output.txt \
         --init_from_ckpt ptb_model/49 \
 
 ```
@@ -116,6 +117,7 @@ python predict.py \
         --max_grad_norm 5.0 \
         --dataset yahoo \
         --use_gpu True \
+        --infer_output_file infer_output.txt \
         --init_from_ckpt yahoo_model/49 \
 
 ```

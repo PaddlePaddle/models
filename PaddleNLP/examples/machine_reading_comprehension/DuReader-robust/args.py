@@ -4,6 +4,12 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--task_name",
+        default=None,
+        type=str,
+        required=True,
+        help="The name of the task.")
+    parser.add_argument(
         "--data_path",
         type=str,
         default=None,

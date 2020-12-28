@@ -21,3 +21,5 @@ from .ptb import *
 from .squad import *
 from .translation import *
 from .dureader import *
+from .cnndm import *
+from .poetry import *

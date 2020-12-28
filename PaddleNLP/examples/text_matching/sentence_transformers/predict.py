@@ -29,10 +29,8 @@ from model import SentenceTransformer
 MODEL_CLASSES = {
     "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
     'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
-    'roberta': (ppnlp.transformers.RobertaModel,
-                ppnlp.transformers.RobertaTokenizer),
-    # 'electra': (ppnlp.transformers.Electra,
-    #             ppnlp.transformers.ElectraTokenizer)
+    'roberta':
+    (ppnlp.transformers.RobertaModel, ppnlp.transformers.RobertaTokenizer)
 }
 
 
@@ -93,7 +91,6 @@ def convert_example(example,
         title_segment_ids(obj: `list[int]`): List of title sequence pair mask.
         label(obj:`numpy.array`, data type of int64, optional): The input label if not is_test.
     """
-    print(example)
     query, title = example[0], example[1]
 
     query_encoded_inputs = tokenizer.encode(
@@ -176,10 +173,6 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
         title_input_ids = paddle.to_tensor(title_input_ids)
         title_segment_ids = paddle.to_tensor(title_segment_ids)
 
-        print(query_input_ids)
-        print(query_segment_ids)
-        print(title_segment_ids)
-
         probs = model(
             query_input_ids,
             title_input_ids,
@@ -199,7 +192,7 @@ if __name__ == "__main__":
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    if args.model_name == 'ernie_tiny':
+    if args.model_name == 'ernie-tiny':
         # ErnieTinyTokenizer is special for ernie_tiny pretained model.
         tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
             args.model_name)

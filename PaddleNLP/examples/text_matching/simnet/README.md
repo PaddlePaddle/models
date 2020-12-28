@@ -1,4 +1,4 @@
-# 使用SimNet完成pointwise文本匹配任务
+# 使用SimNet完成文本匹配任务
 
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，
@@ -13,18 +13,17 @@ SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MM
 | 模型                                             | 模型介绍                                                     |
 | ------------------------------------------------ | ------------------------------------------------------------ |
 | BOW（Bag Of Words）                              | 非序列模型，将句子表示为其所包含词的向量的加和               |
-| RNN (Recurrent Neural Network)                   | 序列模型，能够有效地处理序列信息                             |
+| CNN                                          | 序列模型，使用卷积操作，提取局部区域地特征             |
 | GRU（Gated Recurrent Unit）                      | 序列模型，能够较好地解决序列文本中长距离依赖的问题           |
 | LSTM（Long Short Term Memory）                   | 序列模型，能够较好地解决序列文本中长距离依赖的问题           |
 
 
-## TBD 增加模型效果
 | 模型  | dev acc | test acc |
 | ---- | ------- | -------- |
-| BoW  |  |  |
-| CNN  |  |  |
-| GRU  |  |  |
-| LSTM  |  |  |
+| BoW  | 0.7290 | 0.75232 |
+| CNN  | 0.7042 | 0.73760 |
+| GRU  | 0.7781 | 0.77808 |
+| LSTM  | 0.73760 | 0.77320 |
 
 
 
@@ -53,8 +52,7 @@ SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MM
 以下是本项目主要代码结构及说明：
 
 ```text
-.
-├── data.py # 数据读取
+simnet/
 ├── predict.py # 模型预测
 ├── utils.py # 数据处理工具
 ├── train.py # 训练模型主程序入口，包括训练、评估
@@ -91,7 +89,7 @@ query title label
 wget https://paddlenlp.bj.bcebos.com/data/simnet_word_dict.txt
 ```
 
-我们以中文pointwise文本匹配数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
+我们以中文文本匹配数据集LCQMC为示例数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 
 CPU启动：
 
@@ -166,3 +164,22 @@ Data: ['世界上什么东西最小', '世界上什么东西最小？']      Lab
 Data: ['光眼睛大就好看吗', '眼睛好看吗？']      Label: dissimilar
 Data: ['小蝌蚪找妈妈怎么样', '小蝌蚪找妈妈是谁画的']      Label: dissimilar
 ```
+
+
+## 线上体验教程
+
+- [使用seq2vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
+
+- [如何将预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
+
+- [使用Bi-GRU+CRF完成快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
+
+- [使用预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
+
+- [使用Seq2Seq模型完成自动对联模型](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
+
+- [使用预训练模型ERNIE-GEN实现智能写诗](https://aistudio.baidu.com/aistudio/projectdetail/1339888)
+
+- [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
+
+更多教程参见[PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)。

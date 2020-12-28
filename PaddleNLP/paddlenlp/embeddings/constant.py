@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2020 PaddlePaddle Authors and Chinese-Word-Vectors Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,86 @@
 from enum import Enum
 import os.path as osp
 
-URL_ROOT = "https://bj.bcebos.com/paddlenlp"
-EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
+URL_ROOT = "https://paddlenlp.bj.bcebos.com"
+EMBEDDING_URL_ROOT = URL_ROOT + "/models/embeddings"
 
 PAD_TOKEN = '[PAD]'
 UNK_TOKEN = '[UNK]'
 
-PAD_IDX = 0
-UNK_IDX = 1
+EMBEDDING_NAME_LIST = [
+    # Word2Vec
+    # baidu_encyclopedia
+    "w2v.baidu_encyclopedia.target.word-word.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-1.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-character.char1-4.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.1-3.dim300",
+    "w2v.baidu_encyclopedia.target.word-ngram.2-2.dim300",
+    "w2v.baidu_encyclopedia.target.word-wordLR.dim300",
+    "w2v.baidu_encyclopedia.target.word-wordPosition.dim300",
+    "w2v.baidu_encyclopedia.target.bigram-char.dim300",
+    "w2v.baidu_encyclopedia.context.word-word.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-1.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-character.char1-4.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.1-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.1-3.dim300",
+    "w2v.baidu_encyclopedia.context.word-ngram.2-2.dim300",
+    "w2v.baidu_encyclopedia.context.word-wordLR.dim300",
+    "w2v.baidu_encyclopedia.context.word-wordPosition.dim300",
+    # wikipedia
+    "w2v.wiki.target.bigram-char.dim300",
+    "w2v.wiki.target.word-char.dim300",
+    "w2v.wiki.target.word-word.dim300",
+    "w2v.wiki.target.word-bigram.dim300",
+    # people_daily
+    "w2v.people_daily.target.bigram-char.dim300",
+    "w2v.people_daily.target.word-char.dim300",
+    "w2v.people_daily.target.word-word.dim300",
+    "w2v.people_daily.target.word-bigram.dim300",
+    # weibo
+    "w2v.weibo.target.bigram-char.dim300",
+    "w2v.weibo.target.word-char.dim300",
+    "w2v.weibo.target.word-word.dim300",
+    "w2v.weibo.target.word-bigram.dim300",
+    # sogou
+    "w2v.sogou.target.bigram-char.dim300",
+    "w2v.sogou.target.word-char.dim300",
+    "w2v.sogou.target.word-word.dim300",
+    "w2v.sogou.target.word-bigram.dim300",
+    # zhihu
+    "w2v.zhihu.target.bigram-char.dim300",
+    "w2v.zhihu.target.word-char.dim300",
+    "w2v.zhihu.target.word-word.dim300",
+    "w2v.zhihu.target.word-bigram.dim300",
+    # finacial
+    "w2v.financial.target.bigram-char.dim300",
+    "w2v.financial.target.word-char.dim300",
+    "w2v.financial.target.word-word.dim300",
+    "w2v.financial.target.word-bigram.dim300",
+    # literature
+    "w2v.literature.target.bigram-char.dim300",
+    "w2v.literature.target.word-char.dim300",
+    "w2v.literature.target.word-word.dim300",
+    "w2v.literature.target.word-bigram.dim300",
+    # siku
+    "w2v.sikuquanshu.target.word-word.dim300",
+    "w2v.sikuquanshu.target.word-bigram.dim300",
+    # Mix-large
+    "w2v.mixed-large.target.word-char.dim300",
+    "w2v.mixed-large.target.word-word.dim300",
 
-EMBEDDING_NAME_LIST = ["w2v.baidu_encyclopedia.target.word-word.dim300"]
+    # GloVe
+    "glove.wiki2014-gigaword.target.word-word.dim50.en",
+    "glove.wiki2014-gigaword.target.word-word.dim100.en",
+    "glove.wiki2014-gigaword.target.word-word.dim200.en",
+    "glove.wiki2014-gigaword.target.word-word.dim300.en",
+    "glove.twitter.target.word-word.dim25.en",
+    "glove.twitter.target.word-word.dim50.en",
+    "glove.twitter.target.word-word.dim100.en",
+    "glove.twitter.target.word-word.dim200.en",
+    # FastText
+    "fasttext.wiki-news.target.word-word.dim300.en",
+    "fasttext.crawl.target.word-word.dim300.en"
+]

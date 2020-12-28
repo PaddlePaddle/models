@@ -24,8 +24,8 @@ import paddle.nn.functional as F
 from .. import PretrainedModel, register_base_model
 
 __all__ = [
-    'ElectraModel', 'ElectraForTotalPretraining', 'ElectraDiscriminator',
-    'ElectraGenerator', 'ElectraClassificationHead',
+    'ElectraModel', 'ElectraPretrainedModel', 'ElectraForTotalPretraining',
+    'ElectraDiscriminator', 'ElectraGenerator', 'ElectraClassificationHead',
     'ElectraForSequenceClassification', 'ElectraForTokenClassification',
     'ElectraPretrainingCriterion'
 ]
@@ -150,7 +150,7 @@ class ElectraPretrainedModel(PretrainedModel):
 
     # model init configuration
     pretrained_init_configuration = {
-        "electra-small-generator": {
+        "electra-small": {
             "attention_probs_dropout_prob": 0.1,
             "embedding_size": 128,
             "hidden_act": "gelu",
@@ -165,52 +165,7 @@ class ElectraPretrainedModel(PretrainedModel):
             "type_vocab_size": 2,
             "vocab_size": 30522
         },
-        "electra-base-generator": {
-            "attention_probs_dropout_prob": 0.1,
-            "embedding_size": 768,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 256,
-            "initializer_range": 0.02,
-            "intermediate_size": 1024,
-            "max_position_embeddings": 512,
-            "num_attention_heads": 4,
-            "num_hidden_layers": 12,
-            "pad_token_id": 0,
-            "type_vocab_size": 2,
-            "vocab_size": 30522
-        },
-        "electra-large-generator": {
-            "attention_probs_dropout_prob": 0.1,
-            "embedding_size": 1024,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 256,
-            "initializer_range": 0.02,
-            "intermediate_size": 1024,
-            "max_position_embeddings": 512,
-            "num_attention_heads": 4,
-            "num_hidden_layers": 24,
-            "pad_token_id": 0,
-            "type_vocab_size": 2,
-            "vocab_size": 30522
-        },
-        "electra-small-discriminator": {
-            "attention_probs_dropout_prob": 0.1,
-            "embedding_size": 128,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "hidden_size": 256,
-            "initializer_range": 0.02,
-            "intermediate_size": 1024,
-            "max_position_embeddings": 512,
-            "num_attention_heads": 4,
-            "num_hidden_layers": 12,
-            "pad_token_id": 0,
-            "type_vocab_size": 2,
-            "vocab_size": 30522
-        },
-        "electra-base-discriminator": {
+        "electra-base": {
             "attention_probs_dropout_prob": 0.1,
             "embedding_size": 768,
             "hidden_act": "gelu",
@@ -225,7 +180,7 @@ class ElectraPretrainedModel(PretrainedModel):
             "type_vocab_size": 2,
             "vocab_size": 30522
         },
-        "electra-large-discriminator": {
+        "electra-large": {
             "attention_probs_dropout_prob": 0.1,
             "embedding_size": 1024,
             "hidden_act": "gelu",
@@ -240,7 +195,7 @@ class ElectraPretrainedModel(PretrainedModel):
             "type_vocab_size": 2,
             "vocab_size": 30522
         },
-        "chinese-electra-discriminator-small": {
+        "chinese-electra-small": {
             "attention_probs_dropout_prob": 0.1,
             "embedding_size": 128,
             "hidden_act": "gelu",
@@ -255,7 +210,7 @@ class ElectraPretrainedModel(PretrainedModel):
             "type_vocab_size": 2,
             "vocab_size": 21128,
         },
-        "chinese-electra-discriminator-base": {
+        "chinese-electra-base": {
             "attention_probs_dropout_prob": 0.1,
             "embedding_size": 768,
             "hidden_act": "gelu",
@@ -274,22 +229,16 @@ class ElectraPretrainedModel(PretrainedModel):
     resource_files_names = {"model_state": "model_state.pdparams"}
     pretrained_resource_files_map = {
         "model_state": {
-            "electra-small-generator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-small-generator.pdparams",
-            "electra-base-generator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-base-generator.pdparams",
-            "electra-large-generator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-large-generator.pdparams",
-            "electra-small-discriminator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-small-discriminator.pdparams",
-            "electra-base-discriminator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-base-discriminator.pdparams",
-            "electra-large-discriminator":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-large-discriminator.pdparamss",
-            "chinese-electra-discriminator-small":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-discriminator-small/chinese-electra-discriminator-small.pdparams",
-            "chinese-electra-discriminator-base":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-discriminator-base/chinese-electra-discriminator-base.pdparams",
+            "electra-small":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-small.pdparams",
+            "electra-base":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-base.pdparams",
+            "electra-large":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/electra/electra-large.pdparams",
+            "chinese-electra-small":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-small/chinese-electra-small.pdparams",
+            "chinese-electra-base":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-base/chinese-electra-base.pdparams",
         }
     }
 
@@ -487,11 +436,11 @@ class ElectraGenerator(ElectraPretrainedModel):
 class ElectraClassificationHead(nn.Layer):
     """Head for sentence-level classification tasks."""
 
-    def __init__(self, hidden_size, hidden_dropout_prob, num_labels):
+    def __init__(self, hidden_size, hidden_dropout_prob, num_classes):
         super(ElectraClassificationHead, self).__init__()
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
-        self.out_proj = nn.Linear(hidden_size, num_labels)
+        self.out_proj = nn.Linear(hidden_size, num_classes)
 
     def forward(self, features, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
@@ -504,13 +453,13 @@ class ElectraClassificationHead(nn.Layer):
 
 
 class ElectraForSequenceClassification(ElectraPretrainedModel):
-    def __init__(self, electra, num_labels):
+    def __init__(self, electra, num_classes):
         super(ElectraForSequenceClassification, self).__init__()
-        self.num_labels = num_labels
+        self.num_classes = num_classes
         self.electra = electra
         self.classifier = ElectraClassificationHead(
             self.electra.config["hidden_size"],
-            self.electra.config["hidden_dropout_prob"], self.num_labels)
+            self.electra.config["hidden_dropout_prob"], self.num_classes)
 
         self.init_weights()
 
@@ -529,13 +478,13 @@ class ElectraForSequenceClassification(ElectraPretrainedModel):
 
 
 class ElectraForTokenClassification(ElectraPretrainedModel):
-    def __init__(self, electra, num_labels):
+    def __init__(self, electra, num_classes):
         super(ElectraForTokenClassification, self).__init__()
-        self.num_labels = num_labels
+        self.num_classes = num_classes
         self.electra = electra
         self.dropout = nn.Dropout(self.electra.config["hidden_dropout_prob"])
         self.classifier = nn.Linear(self.electra.config["hidden_size"],
-                                    self.num_labels)
+                                    self.num_classes)
         self.init_weights()
 
     def forward(self,
@@ -554,6 +503,99 @@ class ElectraForTokenClassification(ElectraPretrainedModel):
 
 
 class ElectraForTotalPretraining(ElectraPretrainedModel):
+    pretrained_init_configuration = {
+        "electra-small-generator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 128,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 256,
+            "initializer_range": 0.02,
+            "intermediate_size": 1024,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 4,
+            "num_hidden_layers": 12,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+        "electra-base-generator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 768,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 256,
+            "initializer_range": 0.02,
+            "intermediate_size": 1024,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 4,
+            "num_hidden_layers": 12,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+        "electra-large-generator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 1024,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 256,
+            "initializer_range": 0.02,
+            "intermediate_size": 1024,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 4,
+            "num_hidden_layers": 24,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+        "electra-small-discriminator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 128,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 256,
+            "initializer_range": 0.02,
+            "intermediate_size": 1024,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 4,
+            "num_hidden_layers": 12,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+        "electra-base-discriminator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 768,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 768,
+            "initializer_range": 0.02,
+            "intermediate_size": 3072,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 12,
+            "num_hidden_layers": 12,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+        "electra-large-discriminator": {
+            "attention_probs_dropout_prob": 0.1,
+            "embedding_size": 1024,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "hidden_size": 1024,
+            "initializer_range": 0.02,
+            "intermediate_size": 4096,
+            "max_position_embeddings": 512,
+            "num_attention_heads": 16,
+            "num_hidden_layers": 24,
+            "pad_token_id": 0,
+            "type_vocab_size": 2,
+            "vocab_size": 30522
+        },
+    }
+
     def __init__(self, generator, discriminator):
         super(ElectraForTotalPretraining, self).__init__()
 

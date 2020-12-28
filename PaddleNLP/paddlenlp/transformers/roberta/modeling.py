@@ -19,6 +19,7 @@ from .. import PretrainedModel, register_base_model
 
 __all__ = [
     'RobertaModel',
+    'RobertaPretrainedModel',
     'RobertaForSequenceClassification',
     'RobertaForTokenClassification',
     'RobertaForQuestionAnswering',

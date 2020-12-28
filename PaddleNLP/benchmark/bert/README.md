@@ -1,6 +1,6 @@
 # BERT Benchmark with Fleet API
 BERT - Bidirectional Encoder Representations from Transformers [论文链接](https://arxiv.org/abs/1810.04805)
-PaddlePaddle实现了BERT的预训练模型（Pre-training）和下游任务(Fine-tunning)。在预训练任务上提供单机版本和多机版本，同时提供混合精度接口来进行加速，可以任务需要进行选择。
+PaddlePaddle实现了BERT的预训练模型（Pre-training）和下游任务(Fine-tunning)。
 ## 数据集
 ### Pre-training数据集
 
@@ -10,7 +10,8 @@ PaddlePaddle实现了BERT的预训练模型（Pre-training）和下游任务(Fin
 ## Pre-training任务训练
 ### 环境变量设置
 1. paddlenlp的安装
-pip install paddlenlp==2.0.0a2 -i https://pypi.org/simple
+pip install paddlenlp==2.0.0b0 -i https://pypi.org/simple
+
 2. 设置预训练的数据地址环境变量
 ```shell
 export DATA_DIR=${HOME}/bert_data/wikicorpus_en
@@ -54,26 +55,6 @@ python ./run_pretrain_single.py \
     --max_steps 1000000
 ```
 
-### 训练速度对比
-进行速度对比的模型是bert-based模型，主要对比的方式是单机单机和多机多卡（4机32卡）下面进行速度对比，所有的GPU测试配置都是基于 Tesla V100-SXM2-16GB，下面的配置如下：
-- InfiniBand 100 Gb/sec (4X EDR)， Mellanox Technologies MT27700 Family
-- 48 CPU(s), Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz
-- Memory 500G
-- Ubuntu 16.04.4 LTS (GNU/Linux 4.4.0-116-generic x86_64)
-- CUDA Version: 10.2, Driver API Version: 10.2, Driver Version: 440.33.01
-- cuDNN Version: 7.6
-- PaddlePaddle version: paddlepadle-gpu >= 2.0.0rc1
-- PaddleNLP version: paddlenlp >= 2.0.0a2
-
-速度统计方式是统计每秒预训练模型能处理的样本数量，其中
-- batch_size=64
-- max_seq_length=128
-
-下面是具体速度对比情况:
-| node num | node num | gpu num/node | gpu num | batch_size/gpu |Throughput | Speedup |
-|----------| -------- | -------------| ------- | --------       | ----------| ------- |
-
-
 ## Fine-tuning任务训练
 
 在完成 BERT 模型的预训练后，即可利用预训练参数在特定的 NLP 任务上做 Fine-tuning。以下利用开源的预训练模型，示例如何进行分类任务的 Fine-tuning。
@@ -111,5 +92,9 @@ python -u ./run_glue.py \
 
 | Task  | Metric                       | Result      |
 |-------|------------------------------|-------------|
+| CoLA  | Matthews corr                | 59.90       |
 | SST-2 | Accuracy                     | 92.76       |
-| QNLI  | Accuracy                     | 91.73       |
+| STS-B | Pearson/Spearman corr        | 89.12       |
+| MNLI  | matched acc./mismatched acc. | 84.45/84.62 |
+| QNLI  | acc.                         | 91.73       |
+| RTE   | acc.                         | 67.15       |

@@ -28,7 +28,8 @@
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle 1.8及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装
+   本项目依赖于 PaddlePaddle 2.0rc 及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装。
+   若使用的是 PaddlePaddle 1.8 版本，请选择 release/1.8 分支。
 
 2. 下载代码
 

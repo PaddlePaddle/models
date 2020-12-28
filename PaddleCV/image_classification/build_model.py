@@ -15,7 +15,7 @@ import paddle
 import paddle.fluid as fluid
 import utils.utility as utility
 
-AMP_MODEL_LIST = ["ResNet50", "SE_ResNet50_vd"]
+AMP_MODEL_LIST = ["ResNet50", "SE_ResNet50_vd", "ResNet200_vd"]
 
 
 def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):

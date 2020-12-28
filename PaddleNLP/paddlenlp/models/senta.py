@@ -23,32 +23,32 @@ INF = 1. * 1e12
 
 class Senta(nn.Layer):
     def __init__(self,
-                 network_name,
+                 network,
                  vocab_size,
                  num_classes,
                  emb_dim=128,
                  pad_token_id=0):
         super().__init__()
 
-        network_name = network_name.lower()
-        if network_name == 'bow':
+        network = network.lower()
+        if network == 'bow':
             self.model = BoWModel(
                 vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
-        elif network_name == 'bigru':
+        elif network == 'bigru':
             self.model = GRUModel(
                 vocab_size,
                 num_classes,
                 emb_dim,
                 direction='bidirectional',
                 padding_idx=pad_token_id)
-        elif network_name == 'bilstm':
+        elif network == 'bilstm':
             self.model = LSTMModel(
                 vocab_size,
                 num_classes,
                 emb_dim,
                 direction='bidirectional',
                 padding_idx=pad_token_id)
-        elif network_name == 'bilstm_attn':
+        elif network == 'bilstm_attn':
             lstm_hidden_size = 196
             attention = SelfInteractiveAttention(hidden_size=2 *
                                                  lstm_hidden_size)
@@ -58,17 +58,17 @@ class Senta(nn.Layer):
                 lstm_hidden_size=lstm_hidden_size,
                 num_classes=num_classes,
                 padding_idx=pad_token_id)
-        elif network_name == 'birnn':
+        elif network == 'birnn':
             self.model = RNNModel(
                 vocab_size,
                 num_classes,
                 emb_dim,
-                direction='bidrectional',
+                direction='bidirectional',
                 padding_idx=pad_token_id)
-        elif network_name == 'cnn':
+        elif network == 'cnn':
             self.model = CNNModel(
                 vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
-        elif network_name == 'gru':
+        elif network == 'gru':
             self.model = GRUModel(
                 vocab_size,
                 num_classes,
@@ -76,7 +76,7 @@ class Senta(nn.Layer):
                 direction='forward',
                 padding_idx=pad_token_id,
                 pooling_type='max')
-        elif network_name == 'lstm':
+        elif network == 'lstm':
             self.model = LSTMModel(
                 vocab_size,
                 num_classes,
@@ -84,7 +84,7 @@ class Senta(nn.Layer):
                 direction='forward',
                 padding_idx=pad_token_id,
                 pooling_type='max')
-        elif network_name == 'rnn':
+        elif network == 'rnn':
             self.model = RNNModel(
                 vocab_size,
                 num_classes,
@@ -92,15 +92,15 @@ class Senta(nn.Layer):
                 direction='forward',
                 padding_idx=pad_token_id,
                 pooling_type='max')
-        elif network_name == 'textcnn':
+        elif network == 'textcnn':
             self.model = TextCNNModel(
                 vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         else:
             raise ValueError(
                 "Unknown network: %s, it must be one of bow, lstm, bilstm, cnn, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
-                % network_name)
+                % network)
 
-    def forward(self, text, seq_len):
+    def forward(self, text, seq_len=None):
         logits = self.model(text, seq_len)
         probs = F.softmax(logits, axis=-1)
         return probs
@@ -137,7 +137,7 @@ class BoWModel(nn.Layer):
         self.fc2 = nn.Linear(hidden_size, fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
-    def forward(self, text, seq_len):
+    def forward(self, text, seq_len=None):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
 
@@ -462,7 +462,7 @@ class CNNModel(nn.Layer):
         self.fc = nn.Linear(self.encoder.get_output_dim(), fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
-    def forward(self, text, seq_len):
+    def forward(self, text, seq_len=None):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, len(ngram_filter_sizes)*num_filter)
@@ -511,7 +511,7 @@ class TextCNNModel(nn.Layer):
         self.fc = nn.Linear(self.encoder.get_output_dim(), fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
-    def forward(self, text, seq_len):
+    def forward(self, text, seq_len=None):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, len(ngram_filter_sizes)*num_filter)

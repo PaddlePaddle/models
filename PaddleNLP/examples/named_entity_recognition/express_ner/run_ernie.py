@@ -154,7 +154,7 @@ if __name__ == '__main__':
     model = ErnieForTokenClassification.from_pretrained(
         "ernie-1.0", num_classes=train_ds.label_num)
 
-    metric = ChunkEvaluator((train_ds.label_num + 2) // 2, "IOB")
+    metric = ChunkEvaluator(label_list=train_ds.label_vocab.keys(), suffix=True)
     loss_fn = paddle.nn.loss.CrossEntropyLoss(ignore_index=ignore_label)
     optimizer = paddle.optimizer.AdamW(
         learning_rate=2e-5, parameters=model.parameters())

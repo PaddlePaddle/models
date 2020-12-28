@@ -137,7 +137,7 @@ class SamplerHelper(object):
         """
         Sort samples according to given callable cmp or key.
         Args:
-            cmp (callable): The funcation of comparison. Default: None. 
+            cmp (callable): The function of comparison. Default: None. 
             key (callable): Return element to be compared. Default: None.
             reverse (bool): If True, it means in descending order, and False means in ascending order. Default: False.
             buffer_size (int): Buffer size for sort. If buffer_size < 0 or buffer_size is more than the length of the data, 

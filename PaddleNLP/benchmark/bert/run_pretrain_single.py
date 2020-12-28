@@ -294,7 +294,6 @@ def do_train(args):
                     train_reader_cost = 0.0
                     train_run_cost = 0.0
                     total_samples = 0
-
                 if global_step % args.save_steps == 0:
                     output_dir = os.path.join(args.output_dir,
                                               "model_%d" % global_step)

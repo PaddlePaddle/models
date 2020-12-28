@@ -63,9 +63,7 @@ def do_train(args):
         paddle.seed(random_seed)
 
     # Define data loader
-    # NOTE: To guarantee all data is involved, use world_size=1 and rank=0. 
-    (train_loader, train_steps_fn), (
-        eval_loader, eval_steps_fn) = reader.create_data_loader(args)
+    (train_loader), (eval_loader) = reader.create_data_loader(args)
 
     train_program = paddle.static.Program()
     startup_program = paddle.static.Program()
@@ -198,7 +196,7 @@ def do_train(args):
                 if args.save_model:
                     model_path = os.path.join(
                         args.save_model, "step_" + str(step_idx), "transformer")
-                    paddle.io.save(train_program, model_path)
+                    paddle.static.save(train_program, model_path)
 
             batch_id += 1
             step_idx += 1

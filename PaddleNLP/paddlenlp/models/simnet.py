@@ -51,7 +51,7 @@ class SimNet(nn.Layer):
                 padding_idx=pad_token_id)
         else:
             raise ValueError(
-                "Unknown network: %s, it must be one of bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
+                "Unknown network: %s, it must be one of bow, cnn, lstm or gru."
                 % network)
 
     def forward(self, query, title, query_seq_len=None, title_seq_len=None):

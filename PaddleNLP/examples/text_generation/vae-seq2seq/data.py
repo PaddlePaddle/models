@@ -117,7 +117,11 @@ class VAEDataset(paddle.io.Dataset):
         return corpus_ids
 
     def read_raw_data(self, dataset, max_vocab_cnt=-1):
-        data_path = os.path.join("data", dataset)
+        if dataset == 'yahoo':
+            dataset_name = 'yahoo-answer-100k'
+        else:
+            dataset_name = os.path.join('simple-examples', 'data')
+        data_path = os.path.join("data", dataset_name)
         train_file = os.path.join(data_path, dataset + ".train.txt")
         valid_file = os.path.join(data_path, dataset + ".valid.txt")
         test_file = os.path.join(data_path, dataset + ".test.txt")
@@ -282,7 +286,13 @@ def create_data_loader(data_path,
 
 def get_vocab(dataset, batch_size, vocab_file=None, max_sequence_len=50):
     train_dataset = VAEDataset(dataset, batch_size, mode='train')
-    dataset_prefix = os.path.join("data", dataset)
+    if dataset == 'yahoo':
+        dataset_name = 'yahoo-answer-100k'
+    else:
+        dataset_name = os.path.join('simple-examples', 'data')
+
+    dataset_prefix = os.path.join("data", dataset_name)
+
     train_file = os.path.join(dataset_prefix, dataset + ".train.txt")
     vocab_file = None
     if "yahoo" in dataset:
