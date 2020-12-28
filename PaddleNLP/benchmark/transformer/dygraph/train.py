@@ -128,7 +128,8 @@ def do_train(args):
 
             scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
 
-            logits = transformer(src_word=src_word, trg_word=trg_word)
+            with paddle.amp.auto_cast():
+                logits = transformer(src_word=src_word, trg_word=trg_word)
 
             sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
@@ -136,7 +137,9 @@ def do_train(args):
             scaled = scaler.scale(loss)  # scale the loss 
             scaled.backward()  # do backward
 
-            optimizer.step()
+            #optimizer.step()
+            scaler.minimize(optimizer, scaled)  # update parameters     
+
             optimizer.clear_grad()
 
             tokens_per_cards = token_num.numpy()
