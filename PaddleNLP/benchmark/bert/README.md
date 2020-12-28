@@ -20,7 +20,7 @@ export DATA_DIR=${HOME}/bert_data/wikicorpus_en
 ### 运行模型训练脚本
 ```shell
 
-1. 如果是需要多单机多卡/多机多卡训练，则使用下面的命令进行训练
+1. 如果是需要单机多卡/多机多卡训练，则使用下面的命令进行训练
 unset CUDA_VISIBLE_DEVICES
 fleetrun --gpus 0,1,2,3 ./run_pretrain.py \
     --model_type bert \
