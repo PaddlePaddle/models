@@ -130,8 +130,7 @@ def do_train(args):
 
             with paddle.amp.auto_cast():
                 logits = transformer(src_word=src_word, trg_word=trg_word)
-
-            sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
+                sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
             #avg_cost.backward()
             scaled = scaler.scale(avg_cost)  # scale the loss 
