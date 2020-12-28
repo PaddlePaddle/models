@@ -106,11 +106,12 @@ def do_train(args):
             epsilon=float(args.eps),
             parameters=transformer.parameters())
         if args.use_amp:
-            amp_list = paddle.static.amp.AutoMixedPrecisionLists(
-                custom_white_list=['layer_norm', 'softmax'])
-            optimizer = paddle.static.amp.decorate(
+            # amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+            #     custom_white_list=['layer_norm', 'softmax'])
+            # optimizer = paddle.static.amp.decorate(
+            optimizer = paddle.fluid.contrib.mixed_precision.decorator.decorate(
                 optimizer,
-                amp_list,
+                # amp_list,
                 init_loss_scaling=args.scale_loss,
                 use_dynamic_loss_scaling=True)
 
@@ -150,6 +151,20 @@ def do_train(args):
             # NOTE: used for benchmark and use None as default.
             if args.max_iter and step_idx == args.max_iter:
                 return
+
+            # if step_idx == 1:
+            #     return
+
+            # if step_idx == 200:
+            #     core.nvprof_start()
+            #     #profiler.start_profiler("All")
+
+            # if step_idx == 210:
+            #     core.nvprof_stop()
+            #     #profiler.stop_profiler("total", "./profile")
+
+            #     sys.exit()
+
             train_reader_cost = time.time() - batch_start
 
             outs = exe.run(compiled_train_program,

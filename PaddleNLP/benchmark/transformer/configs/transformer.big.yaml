@@ -29,7 +29,7 @@ scale_loss: 128.0
 # Args for reader, see reader.py for details
 pool_size: 200000
 sort_type: "global"
-batch_size: 4096
+batch_size: 5120
 infer_batch_size: 16
 shuffle_batch: True
 # Data shuffle only works when sort_type is pool or none

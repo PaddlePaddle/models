@@ -51,3 +51,4 @@ USER_HOME = _get_user_home()
 PPNLP_HOME = _get_ppnlp_home()
 MODEL_HOME = _get_sub_home('models')
 DATA_HOME = _get_sub_home('datasets')
+DATA_HOME = '/paddle/working/.paddlenlp/datasets/'
