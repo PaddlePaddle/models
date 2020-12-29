@@ -299,7 +299,7 @@ def train(args):
                 if train_batch_id % args.print_step == 0:
                     batch_cost_averager.reset()
                     reader_cost_averager.reset()
-
+           # return
             train_batch_id += 1
             total_batch_num = total_batch_num + 1
             batch_start = time.time()

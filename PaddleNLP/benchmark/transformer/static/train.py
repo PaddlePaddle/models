@@ -50,12 +50,9 @@ def batch_creator(loader, trainer_count):
 
 def do_train(args):
     paddle.enable_static()
-    if args.use_gpu:
-        trainer_count = len(os.environ['CUDA_VISIBLE_DEVICES'].split(','))
-        place = paddle.set_device("gpu:0")
-    else:
-        trainer_count = int(os.environ['CPU_NUM'])
-        place = paddle.set_device("cpu")
+    places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
+    trainer_count = len(places)
+
 
     # Set seed for CE
     random_seed = eval(str(args.random_seed))
@@ -63,7 +60,7 @@ def do_train(args):
         paddle.seed(random_seed)
 
     # Define data loader
-    (train_loader), (eval_loader) = reader.create_data_loader(args)
+    (train_loader), (eval_loader) = reader.create_data_loader(args, places)
 
     train_program = paddle.static.Program()
     startup_program = paddle.static.Program()
@@ -108,11 +105,10 @@ def do_train(args):
 
         optimizer.minimize(avg_cost)
 
-    exe = paddle.static.Executor(place)
+    exe = paddle.static.Executor()
     exe.run(startup_program)
 
     build_strategy = paddle.static.BuildStrategy()
-    build_strategy.enable_inplace = True
     exec_strategy = paddle.static.ExecutionStrategy()
 
     compiled_train_program = paddle.static.CompiledProgram(
@@ -138,7 +134,7 @@ def do_train(args):
         batch_id = 0
         batch_start = time.time()
         pass_start_time = batch_start
-        for data in batch_creator(train_loader, trainer_count):
+        for data in train_loader():
             # NOTE: used for benchmark and use None as default.
             if args.max_iter and step_idx == args.max_iter:
                 return
