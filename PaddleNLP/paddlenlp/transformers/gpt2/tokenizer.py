@@ -22,10 +22,7 @@ from .. import PretrainedTokenizer
 from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize,\
     _is_whitespace, _is_control, _is_punctuation
 
-__all__ = [
-    'BasicTokenizer', 'GPT2Tokenizer', 'WordpieceTokenizer',
-    'GPT2ChineseTokenizer'
-]
+__all__ = ['GPT2Tokenizer', 'GPT2ChineseTokenizer']
 
 
 class WordpieceTokenizer(object):
