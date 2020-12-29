@@ -33,7 +33,7 @@ def min_max_filer(data, max_len, min_len=0):
     return (data_min_len >= min_len) and (data_max_len <= max_len)
 
 
-def create_data_loader(args, places):
+def create_data_loader(args, places=None):
     root = None if args.root == "None" else args.root
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
     padding_vocab = (
