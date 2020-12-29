@@ -33,7 +33,7 @@ def min_max_filer(data, max_len, min_len=0):
     return (data_min_len >= min_len) and (data_max_len <= max_len)
 
 
-def create_data_loader(args):
+def create_data_loader(args, places=None):
     root = None if args.root == "None" else args.root
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
     padding_vocab = (
@@ -67,14 +67,14 @@ def create_data_loader(args):
 
         data_loader = DataLoader(
             dataset=dataset,
+            places=places,
             batch_sampler=batch_sampler,
             collate_fn=partial(
                 prepare_train_input,
                 bos_idx=args.bos_idx,
                 eos_idx=args.eos_idx,
                 pad_idx=args.bos_idx),
-            num_workers=0,
-            return_list=True)
+            num_workers=0)
         data_loaders[i] = (data_loader)
     return data_loaders
 
