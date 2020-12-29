@@ -34,25 +34,10 @@ def parse_args():
     return args
 
 
-def batch_creator(loader, trainer_count):
-    batch = []
-    for data in loader:
-        batch.append(data)
-        if len(batch) == trainer_count:
-            yield batch
-            batch = []
-    # DO NOT drop last.
-    if len(batch) > 0:
-        while len(batch) < trainer_count:
-            batch.append(batch[-1])
-        yield batch
-
-
 def do_train(args):
     paddle.enable_static()
     places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
     trainer_count = len(places)
-
 
     # Set seed for CE
     random_seed = eval(str(args.random_seed))
