@@ -52,20 +52,20 @@ python -u ./run_msra_ner.py \
 训练过程将按照 `logging_steps` 和 `save_steps` 的设置打印如下日志：
 
 ```
-global step 996, epoch: 1, batch: 344, loss: 0.038471, speed: 4.72 step/s
-global step 997, epoch: 1, batch: 345, loss: 0.032820, speed: 4.82 step/s
-global step 998, epoch: 1, batch: 346, loss: 0.008144, speed: 4.69 step/s
-global step 999, epoch: 1, batch: 347, loss: 0.031425, speed: 4.36 step/s
-global step 1000, epoch: 1, batch: 348, loss: 0.073151, speed: 4.59 step/s
-eval loss: 0.019874, precision: 0.991670, recall: 0.991930, f1: 0.991800
+global step 1496, epoch: 2, batch: 192, loss: 0.010747, speed: 4.77 step/s
+global step 1497, epoch: 2, batch: 193, loss: 0.004837, speed: 4.46 step/s
+global step 1498, epoch: 2, batch: 194, loss: 0.011281, speed: 4.24 step/s
+global step 1499, epoch: 2, batch: 195, loss: 0.005711, speed: 4.73 step/s
+global step 1500, epoch: 2, batch: 196, loss: 0.003150, speed: 4.52 step/s
+eval loss: 0.010307, precision: 0.884222, recall: 0.903190, f1: 0.893605
 ```
 
 使用以上命令进行单卡 Fine-tuning ，在验证集上有如下结果：
  Metric                       | Result      |
 ------------------------------|-------------|
-precision                     | 0.992903    |
-recall                        | 0.991823    |
-f1                            | 0.992363    |
+precision                     | 0.884222    |
+recall                        | 0.903190    |
+f1                            | 0.893605    |
 
 ## 参考
 
