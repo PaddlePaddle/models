@@ -38,8 +38,11 @@ def parse_args():
 def do_train(args):
     paddle.enable_static()
     fleet.init(is_collective=True)
-    places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
-    trainer_count = len(places)
+    gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
+    print("gpu_id:", gpu_id)
+    gpu_id = fleet.worker_index()
+    places = paddle.CUDAPlace(gpu_id) if args.use_gpu else paddle.static.cpu_places()
+    trainer_count = 1 if args.use_gpu else len(places)
 
     # Set seed for CE
     random_seed = eval(str(args.random_seed))
@@ -94,11 +97,11 @@ def do_train(args):
         exec_strategy = paddle.static.ExecutionStrategy()
         dist_strategy = fleet.DistributedStrategy()
         dist_strategy.build_strategy = build_strategy
-        dist_strategy.exec_strategy = exec_strategy
+        #dist_strategy.exec_strategy = exec_strategy
         optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
         optimizer.minimize(avg_cost)
 
-    exe = paddle.static.Executor()
+    exe = paddle.static.Executor(places)
     exe.run(startup_program)
 
 
