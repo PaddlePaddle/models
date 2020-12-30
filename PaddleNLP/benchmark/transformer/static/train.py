@@ -97,7 +97,6 @@ def do_train(args):
         exec_strategy = paddle.static.ExecutionStrategy()
         dist_strategy = fleet.DistributedStrategy()
         dist_strategy.build_strategy = build_strategy
-        #dist_strategy.exec_strategy = exec_strategy
         optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
         optimizer.minimize(avg_cost)
 
