@@ -10,6 +10,7 @@ from attrdict import AttrDict
 from pprint import pprint
 
 import paddle
+import paddle.distributed.fleet as fleet
 import paddle.distributed as dist
 
 from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion, position_encoding_init
@@ -36,6 +37,7 @@ def parse_args():
 
 def do_train(args):
     paddle.enable_static()
+    fleet.init(is_collective=True)
     places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
     trainer_count = len(places)
 
@@ -88,19 +90,17 @@ def do_train(args):
             epsilon=float(args.eps),
             parameters=transformer.parameters())
 
+        build_strategy = paddle.static.BuildStrategy()
+        exec_strategy = paddle.static.ExecutionStrategy()
+        dist_strategy = fleet.DistributedStrategy()
+        dist_strategy.build_strategy = build_strategy
+        dist_strategy.exec_strategy = exec_strategy
+        optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
         optimizer.minimize(avg_cost)
 
     exe = paddle.static.Executor()
     exe.run(startup_program)
 
-    build_strategy = paddle.static.BuildStrategy()
-    exec_strategy = paddle.static.ExecutionStrategy()
-
-    compiled_train_program = paddle.static.CompiledProgram(
-        train_program).with_data_parallel(
-            loss_name=avg_cost.name,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
@@ -125,7 +125,7 @@ def do_train(args):
                 return
             train_reader_cost = time.time() - batch_start
 
-            outs = exe.run(compiled_train_program,
+            outs = exe.run(train_program,
                            feed=[{
                                'src_word': data[i][0],
                                'trg_word': data[i][1],
