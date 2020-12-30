@@ -39,8 +39,6 @@ def do_train(args):
     paddle.enable_static()
     fleet.init(is_collective=True)
     gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
-    print("gpu_id:", gpu_id)
-    gpu_id = fleet.worker_index()
     places = paddle.CUDAPlace(gpu_id) if args.use_gpu else paddle.static.cpu_places()
     trainer_count = 1 if args.use_gpu else len(places)
 
