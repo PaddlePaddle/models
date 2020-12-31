@@ -123,6 +123,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 - [使用Seq2Seq模型完成自动对联](https://aistudio.baidu.com/aistudio/projectdetail/1321118)
 - [使用预训练模型ERNIE-GEN实现智能写诗](https://aistudio.baidu.com/aistudio/projectdetail/1339888)
 - [使用TCN网络完成新冠疫情病例数预测](https://aistudio.baidu.com/aistudio/projectdetail/1290873)
+- [使用预训练模型完成阅读理解](https://aistudio.baidu.com/aistudio/projectdetail/1339612)
 
 更多教程参见[PaddleNLP on AI Studio](https://aistudio.baidu.com/aistudio/personalcenter/thirdview/574995)。
 
