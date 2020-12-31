@@ -36,7 +36,8 @@ class GPT2Dataset(paddle.io.Dataset):
         self.reset_position_id = reset_position_id
         self.example_texts = []
         self._read_json()
-        self.eos_id = tokenizer.get_command("eos")
+        self.eos_id = tokenizer.get_command("eos").Id
+        print("the eos is:{}".format(self.eos_id))
 
     def _read_json(self):
         nltk.download("punkt")
@@ -69,11 +70,11 @@ class GPT2Dataset(paddle.io.Dataset):
 
         # the pad and eod tokens do not contribute the loss
         loss_mask = np.ones(seq_length)
-        loss_mask[tokens == self.eos_id] = 0.0
+        loss_mask[np.where(np.array(tokens) == self.eos_id)] = 0.0
         position_ids = np.arange(0, seq_length, dtype="int64")
 
         if self.reset_attenion_mask or self.reset_position_id:
-            eos_indices = position_ids[tokens == eod_token]
+            eos_indices = position_ids[np.weher(tokens == eod_token)]
             prev_index = 0
             for i in range(eos_indices.size()[0]):
                 pos_id = eos_indices[i]
@@ -82,6 +83,7 @@ class GPT2Dataset(paddle.io.Dataset):
                 if self.reset_position_ids:
                     position_ids[(pos_id + 1):] -= (pos_id + 1 - prev_index)
                     prev_index = i + 1
+        attention_mask = (attention_mask - 1.0) * 10000.0
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def __getitem__(self, index):

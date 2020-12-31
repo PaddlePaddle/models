@@ -24,10 +24,14 @@ from .. import PretrainedModel, register_base_model
 from paddle.nn.layer.transformer import _convert_param_attr_to_list
 
 __all__ = [
-    'GPT2Model',
-    "GPT2PretrainedModel",
-    'GPT2ForPretraining',
+    'GPT2Model', "GPT2PretrainedModel", 'GPT2ForPretraining',
+    'GPT2PretrainingCriterion'
 ]
+
+
+def openai_glue(x):
+    return 0.5 * x * (1.0 + paddle.tanh(0.7978845608028654 * x *
+                                        (1.0 + 0.044715 * x * x)))
 
 
 class MultiHeadAttention(nn.Layer):
@@ -477,7 +481,6 @@ class TransformerDecoder(nn.Layer):
 
         if self.norm is not None:
             output = self.norm(output)
-
         return output if use_cache is False else (output, new_caches)
 
     def gen_cache(self, memory, do_zip=False):
@@ -540,13 +543,13 @@ class TransformerDecoderLayer(nn.Layer):
             bias_attr=bias_attrs[0])
         self.linear1 = nn.Linear(
             d_model, dim_feedforward, weight_attrs[2], bias_attr=bias_attrs[2])
-        self.dropout = nn.Dropout(act_dropout, mode="upscale_in_train")
+        #self.dropout1 = nn.Dropout(act_dropout, mode="upscale_in_train")
         self.linear2 = nn.Linear(
             dim_feedforward, d_model, weight_attrs[2], bias_attr=bias_attrs[2])
         self.norm1 = nn.LayerNorm(d_model, epsilon=1e-5)
         self.norm2 = nn.LayerNorm(d_model, epsilon=1e-5)
         self.dropout1 = nn.Dropout(dropout, mode="upscale_in_train")
-        self.dropout2 = nn.Dropout(dropout, mode="upscale_in_train")
+        self.dropout2 = nn.Dropout(act_dropout, mode="upscale_in_train")
         self.activation = getattr(F, activation)
 
     def forward(self, tgt, memory, tgt_mask=None, use_cache=False, cache=None):
@@ -559,7 +562,6 @@ class TransformerDecoderLayer(nn.Layer):
         else:
             tgt, incremental_cache = self.self_attn(tgt, tgt, tgt, tgt_mask,
                                                     use_cache, cache)
-        # Dropout ?
         tgt = residual + self.dropout1(tgt)
         if not self.normalize_before:
             tgt = self.norm1(tgt)
@@ -567,8 +569,8 @@ class TransformerDecoderLayer(nn.Layer):
         residual = tgt
         if self.normalize_before:
             tgt = self.norm2(tgt)
-        tgt = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
-        tgt = residual + self.dropout2(tgt)
+        tgt = self.dropout2(self.linear2(openai_glue(self.linear1(tgt))))
+        tgt = residual + tgt
 
         if not self.normalize_before:
             tgt = self.norm2(tgt)
@@ -609,6 +611,7 @@ class GPT2Embeddings(nn.Layer):
 
         embeddings = input_embedings + position_embeddings
         embeddings = self.dropout(embeddings)
+        print("embedding mean:{}".format(embeddings.mean()))
         return embeddings
 
 
@@ -637,14 +640,14 @@ class GPT2PretrainedModel(PretrainedModel):
             "pad_token_id": 0,
         },
         "gpt2-medium-en": {
-            "vocab_size": 50256,
+            "vocab_size": 50304,
             "hidden_size": 1024,
-            "num_hidden_layers": 16,
+            "num_hidden_layers": 1,
             "num_attention_heads": 16,
-            "intermediate_size": 1024,
+            "intermediate_size": 4096,
             "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "attention_probs_dropout_prob": 0.1,
+            "hidden_dropout_prob": 0.0,
+            "attention_probs_dropout_prob": 0.0,
             "max_position_embeddings": 1024,
             "type_vocab_size": 1,  # no use
             "initializer_range": 0.02,
@@ -760,7 +763,10 @@ class GPT2ForPretraining(GPT2PretrainedModel):
             attention_mask=attention_mask,
             use_cache=use_cache,
             cache=cache)
-        encoder_outputs, cached_kvs = outputs[:2]
+        if use_cache:
+            encoder_outputs, cached_kvs = outputs[:2]
+        else:
+            encoder_outputs = outputs
         logits = paddle.matmul(
             encoder_outputs,
             self.gpt2.embeddings.word_embeddings.weight,
@@ -773,12 +779,14 @@ class GPT2ForPretraining(GPT2PretrainedModel):
 
 
 class GPT2PretrainingCriterion(paddle.nn.Layer):
-    def __init__(self, vocab_size):
+    def __init__(self):
         super(GPT2PretrainingCriterion, self).__init__()
-        self.vocab_size = vocab_size
 
-    def forward(self, prediction_scores, masked_lm_labels, masked_lm_scale):
+    def forward(self, prediction_scores, masked_lm_labels, masked_loss):
         masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
-            prediction_scores, masked_lm_labels, ignore_index=-1)
-        masked_lm_loss = masked_lm_loss / masked_lm_scale
-        return paddle.sum(masked_lm_loss)
+            prediction_scores, masked_lm_labels.unsqueeze(2), ignore_index=-1)
+        masked_loss = masked_loss.reshape([-1])
+        masked_lm_loss = paddle.sum(masked_lm_loss.reshape([-1]) * masked_loss)
+        loss = masked_lm_loss / masked_loss.sum()
+        print("masked loss:{}".format(loss))
+        return loss

@@ -30,7 +30,7 @@ import paddle.distributed as dist
 from paddle.io import DataLoader, Dataset
 
 from paddlenlp.data import Stack, Tuple, Pad
-from paddlenlp.transformers import GPT2Model, GPT2ForPretraining
+from paddlenlp.transformers import GPT2Model, GPT2ForPretraining, GPT2PretrainingCriterion
 from paddlenlp.transformers import GPT2Tokenizer
 from paddlenlp.utils.log import logger
 from data import GPT2Dataset
@@ -73,7 +73,7 @@ def parse_args():
 
     parser.add_argument(
         "--batch_size",
-        default=2,
+        default=8,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
@@ -100,7 +100,7 @@ def parse_args():
         help="Total number of training epochs to perform.", )
     parser.add_argument(
         "--max_steps",
-        default=-1,
+        default=10000,
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
@@ -172,17 +172,19 @@ def do_train(args):
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
     model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
-    train_data_loader = create_pretrained_dataset(args, "./data.json",
-                                                  tokenizer, worker_init)
+
     model = GPT2ForPretraining(
         GPT2Model(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
+    # creat the critrion for the gpt model 
+    criterion = GPT2PretrainingCriterion()
 
-    for tokens, loss_mask, attention_mask, position_ids, labels in train_data_loader:
-        model(tokens, position_ids, attention_mask)
-    """
+    state_dict = paddle.load("./new_gpt2.pdparams")
+    model.set_state_dict(state_dict)
+
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
+    """
     lr_scheduler = paddle.optimizer.lr.LambdaDecay(
         args.learning_rate,
         lambda current_step, num_warmup_steps=args.warmup_steps,
@@ -194,9 +196,10 @@ def do_train(args):
             float(num_training_steps - current_step) / float(
                 max(1, num_training_steps - num_warmup_steps))),
         last_epoch=0)
+    """
 
     optimizer = paddle.optimizer.AdamW(
-        learning_rate=lr_scheduler,
+        learning_rate=args.learning_rate,
         epsilon=args.adam_epsilon,
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
@@ -212,9 +215,8 @@ def do_train(args):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
             if os.path.isfile(os.path.join(args.input_dir, f))
-            and "training" in f
         ]
-        files.sort()
+        #files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
         f_start_id = 0
@@ -223,51 +225,45 @@ def do_train(args):
 
         if paddle.distributed.get_world_size() > num_files:
             remainder = paddle.distributed.get_world_size() % num_files
-            data_file = files[
-                (f_start_id * paddle.distributed.get_world_size() +
-                 paddle.distributed.get_rank() + remainder * f_start_id) %
-                num_files]
+            data_file = files[(
+                f_start_id * paddle.distributed.get_world_size() +
+                paddle.distributed.get_rank() + remainder * f_start_id) %
+                              num_files]
         else:
             data_file = files[(f_start_id * paddle.distributed.get_world_size()
                                + paddle.distributed.get_rank()) % num_files]
 
         previous_file = data_file
 
-        train_data_loader, _ = create_pretraining_dataset(
-            data_file, args.max_predictions_per_seq, shared_file_list, args,
-            worker_init)
-
-        # TODO(guosheng): better way to process single file
+        train_data_loader = create_pretrained_dataset(args, data_file,
+                                                      tokenizer, worker_init)
         single_file = True if f_start_id + 1 == len(files) else False
 
         for f_id in range(f_start_id, len(files)):
             if not single_file and f_id == f_start_id:
                 continue
             if paddle.distributed.get_world_size() > num_files:
-                data_file = files[(f_id * paddle.distributed.get_world_size() +
-                                   paddle.distributed.get_rank() +
-                                   remainder * f_id) % num_files]
+                data_file = files[(
+                    f_id * paddle.distributed.get_world_size() +
+                    paddle.distributed.get_rank() + remainder * f_id) %
+                                  num_files]
             else:
                 data_file = files[(f_id * paddle.distributed.get_world_size() +
                                    paddle.distributed.get_rank()) % num_files]
 
             previous_file = data_file
-            dataset_future = pool.submit(create_pretraining_dataset, data_file,
-                                         args.max_predictions_per_seq,
-                                         shared_file_list, args, worker_init)
+            dataset_future = pool.submit(create_pretrained_dataset, args,
+                                         data_file, tokenizer, worker_init)
             for step, batch in enumerate(train_data_loader):
                 global_step += 1
-                (input_ids, segment_ids, input_mask, masked_lm_positions,
-                 masked_lm_labels, next_sentence_labels,
-                 masked_lm_scale) = batch
-                prediction_scores, seq_relationship_score = model(
-                    input_ids=input_ids,
-                    token_type_ids=segment_ids,
-                    attention_mask=input_mask,
-                    masked_positions=masked_lm_positions)
-                loss = criterion(prediction_scores, seq_relationship_score,
-                                 masked_lm_labels, next_sentence_labels,
-                                 masked_lm_scale)
+                tokens, loss_mask, attention_mask, position_ids, labels = batch
+
+                loss_mask.stop_gradient = True
+                attention_mask.stop_gradient = True
+
+                preds = model(tokens, position_ids, attention_mask)
+                loss = criterion(preds, labels, loss_mask)
+
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1
                         ) or paddle.distributed.get_rank() == 0:
@@ -278,7 +274,7 @@ def do_train(args):
                     tic_train = time.time()
                 loss.backward()
                 optimizer.step()
-                lr_scheduler.step()
+                #lr_scheduler.step()
                 optimizer.clear_gradients()
                 if global_step % args.save_steps == 0:
                     if (not args.n_gpu > 1
@@ -296,12 +292,12 @@ def do_train(args):
                             optimizer.state_dict(),
                             os.path.join(output_dir, "model_state.pdopt"))
                 if global_step >= args.max_steps:
+                    print("delete the data loader")
                     del train_data_loader
                     return
 
             del train_data_loader
-            train_data_loader, data_file = dataset_future.result(timeout=None)
-    """
+            train_data_loader = dataset_future.result(timeout=None)
 
 
 if __name__ == "__main__":
