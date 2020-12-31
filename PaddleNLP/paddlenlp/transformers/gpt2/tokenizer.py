@@ -13,81 +13,178 @@
 # limitations under the License.
 
 import os
+import regex as re
 import unicodedata
 import json
 import sentencepiece
 import jieba
 
+from functools import lru_cache
+from collections import namedtuple
 from .. import PretrainedTokenizer
 from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize,\
     _is_whitespace, _is_control, _is_punctuation
 
 __all__ = ['GPT2Tokenizer', 'GPT2ChineseTokenizer']
 
+COMMAND_TUPLE = namedtuple('CommandToken', ('name', 'token', 'Id'))
+TYPE_TUPLE = namedtuple('TypeToken', ('name', 'token', 'Id'))
 
-class WordpieceTokenizer(object):
+
+class CommandToken(object):
+    def __init__(self, name, token, Id):
+        self.name = name
+        self.token = token
+        self.Id = Id
+
+    def __str__(self):
+        return str(COMMAND_TUPLE(self.name, self.token, self.Id))
+
+
+class TypeToken(object):
+    def __init__(self, name, token, Id):
+        self.name = name
+        self.token = token
+        self.Id = Id
+
+    def __str__(self):
+        return str(TYPE_TUPLE(self.name, self.token, self.Id))
+
+
+class Tokenization(object):
     """
-    Runs WordPiece tokenization.
-    Args:
-        vocab (Vocab|dict): Vocab of the word piece tokenizer.
-        unk_token (str):  A specific token to replace all unkown tokens.
-        max_input_chars_per_word (int):  If a word's length is more than
-            max_input_chars_per_word, it will be dealt as unknown word.
-            Default: 100.
+    Tokenization object to hold tokenization, (processed text),and original
+    text. Can hold tokenization as Ids or tokens.
+
+    It also holds command tokens (pad, unk, etc.) for the tokenization.
+    This allows functions to pad/operate on tokenizations without having
+    access to the full tokenizer, just the tokenization.
+
+    Several standard array operations are implemented (insert, append, extend).
     """
 
-    def __init__(self, vocab, unk_token, max_input_chars_per_word=100):
-        self.vocab = vocab
-        self.unk_token = unk_token
-        self.max_input_chars_per_word = max_input_chars_per_word
+    def __init__(self,
+                 tokenization,
+                 text=None,
+                 original_text=None,
+                 command_tokens=None,
+                 asIds=True):
+        self.tokenization = tokenization
+        self.text = text
+        if self.text is None:
+            self.text = self.tokenization
+        self.original_text = original_text
+        if self.original_text is None:
+            self.original_text = self.text
+        self.command_tokens = command_tokens
+        self.asIds = asIds
+        self.parse_command_tokens()
 
-    def tokenize(self, text):
-        """
-        Tokenizes a piece of text into its word pieces.
-        This uses a greedy longest-match-first algorithm to perform tokenization
-        using the given vocabulary.
-        Args:
-            text: A single token or whitespace separated tokens. This should have
-                already been passed through `BasicTokenizer`.
-        Returns:
-            list (str): A list of wordpiece tokens.
-        Example:
-            input = "unaffable"
-            output = ["un", "##aff", "##able"]
-        """
+    def set_command_tokens(self, command_tokens):
+        self.command_tokens = command_tokens
+        return self.parse_command_tokens()
 
-        output_tokens = []
-        for token in whitespace_tokenize(text):
-            chars = list(token)
-            if len(chars) > self.max_input_chars_per_word:
-                output_tokens.append(self.unk_token)
-                continue
-
-            is_bad = False
-            start = 0
-            sub_tokens = []
-            while start < len(chars):
-                end = len(chars)
-                cur_substr = None
-                while start < end:
-                    substr = "".join(chars[start:end])
-                    if start > 0:
-                        substr = "##" + substr
-                    if substr in self.vocab:
-                        cur_substr = substr
-                        break
-                    end -= 1
-                if cur_substr is None:
-                    is_bad = True
-                    break
-                sub_tokens.append(cur_substr)
-                start = end
-
-            if is_bad:
-                output_tokens.append(self.unk_token)
+    def parse_command_tokens(self):
+        if self.command_tokens is None:
+            return
+        for command_token in self.command_tokens:
+            if self.asIds:
+                setattr(self, command_token.name, command_token.Id)
             else:
-                output_tokens.extend(sub_tokens)
-        return output_tokens
+                setattr(self, command_token.name, command_token.token)
+
+    def __getitem__(self, index):
+        return self.tokenization[index]
+
+    def __len__(self):
+        return len(self.tokenization)
+
+    def insert(self, idx, other):
+        if isinstance(other, (CommandToken, TypeToken)):
+            self.tokenization.insert(idx, other.Id)
+            if idx == 0:
+                self.text = other.token + self.text
+                self.original_text = other.token + self.original_text
+            elif idx == len(self.tokenization) - 1:
+                self.text += other.token
+                self.original_text += other.token
+        elif isinstance(other, Tokenization):
+            self.tokenization = self.tokenization[:
+                                                  idx] + other.tokenization + self.tokenization[
+                                                      idx:]
+        else:
+            self.tokenization = self.tokenization[:
+                                                  idx] + other.tokenization + self.tokenization[
+                                                      idx:]
+
+    def append(self, other):
+        if isinstance(other, (CommandToken, TypeToken)):
+            self.tokenization.append(other.Id)
+            self.text += other.token
+            self.original_text += other.token
+        elif isinstance(other, Tokenization):
+            self.tokenization.extend(other.tokenization)
+            self.text += other.text
+            self.original_text += other.original_text
+        else:
+            self.tokenization.append(other)
+        return self
+
+    def extend(self, other):
+        if isinstance(other, (CommandToken, TypeToken)):
+            self.tokenization.append(other.Id)
+            self.text += other.token
+            self.original_text += other.token
+        elif isinstance(other, list) and isinstance(other[0],
+                                                    (CommandToken, TypeToken)):
+            self.tokenization.extend([o.Id for o in other])
+            self.text += [o.token for o in other]
+            self.original_text += [o.token for o in other]
+        elif isinstance(other, Tokenization):
+            self.tokenization.extend(other.tokenization)
+            self.text += other.text
+            self.original_text += other.original_text
+        else:
+            self.tokenization.extend(other)
+        return self
+
+
+@lru_cache()
+def bytes_to_unicode():
+    """
+    Returns list of utf-8 byte and a corresponding list of unicode strings.
+    The reversible bpe codes work on unicode strings.
+    This means you need a large # of unicode characters in your vocab if you want to avoid UNKs.
+    When you're at something like a 10B token dataset you end up needing around 5K for decent coverage.
+    This is a signficant percentage of your normal, say, 32K bpe vocab.
+    To avoid that, we want lookup tables between utf-8 bytes and unicode strings.
+    And avoids mapping to whitespace/control characters the bpe code barfs on.
+    """
+    _chr = chr
+    bs = list(range(ord("!"), ord("~") + 1)) + list(
+        range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
+    cs = bs[:]
+    n = 0
+    for b in range(2**8):
+        if b not in bs:
+            bs.append(b)
+            cs.append(2**8 + n)
+            n += 1
+    cs = [_chr(n) for n in cs]
+    return dict(zip(bs, cs))
+
+
+def get_pairs(word):
+    """Return set of symbol pairs in a word.
+
+    Word is represented as tuple of symbols (symbols being variable-length strings).
+    """
+    pairs = set()
+    prev_char = word[0]
+    for char in word[1:]:
+        pairs.add((prev_char, char))
+        prev_char = char
+    return pairs
 
 
 class GPT2ChineseTokenizer(PretrainedTokenizer):
@@ -174,10 +271,37 @@ class GPT2Tokenizer(PretrainedTokenizer):
                  merges_file,
                  errors='replace',
                  special_tokens=None,
-                 max_len=None):
-        self.max_len = max_len if max_len is not None else int(1e12)
+                 max_len=None,
+                 do_lower_case=True):
+        self.max_len = int(1e12)
+        self.num_command_tokens = 2
+        self.num_type_tokens = 2
+
         self.encoder = json.load(open(vocab_file))
         self.decoder = {v: k for k, v in self.encoder.items()}
+
+        # construct the command tokens
+        self._command_tokens = [
+            CommandToken('pad', '<|endoftext|>', self.encoder['<|endoftext|>']),
+            CommandToken('eos', '<|endoftext|>', self.encoder['<|endoftext|>']),
+        ]
+        self.command_name_map = {tok.name: tok for tok in self._command_tokens}
+        self.command_token_map = {
+            tok.token: tok
+            for tok in self._command_tokens
+        }
+        self.command_id_map = {tok.Id: tok for tok in self._command_tokens}
+
+        self.type_tokens = [
+            TypeToken('str0', '<str0>', 0),
+            TypeToken('str1', '<str1>', 1),
+        ]
+        self.type_name_map = {tok.name: tok for tok in self.type_tokens}
+        self.type_token_map = {tok.token: tok for tok in self.type_tokens}
+        self.type_id_map = {tok.Id: tok for tok in self.type_tokens}
+
+        self.num_tokens = len(self.encoder)
+        self.num_text_tokens = self.num_tokens - 1
         self.errors = errors  # how to handle errors in decoding
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
@@ -269,8 +393,7 @@ class GPT2Tokenizer(PretrainedTokenizer):
     def convert_tokens_to_ids(self, tokens):
         """ Converts a sequence of tokens into ids using the vocab. """
         ids = []
-        if isinstance(tokens, str) or (sys.version_info[0] == 2 and
-                                       isinstance(tokens, unicode)):
+        if isinstance(tokens, str):
             if tokens in self.special_tokens:
                 return self.special_tokens[tokens]
             else:
@@ -298,11 +421,21 @@ class GPT2Tokenizer(PretrainedTokenizer):
                 tokens.append(self.decoder[i])
         return tokens
 
-    def encode(self, text):
-        return self.convert_tokens_to_ids(self.tokenize(text))
+    def encode(self, text, fn=None):
+        processed_text = text
+        if fn is not None:
+            processed_text = fn(text)
+        ids = self.convert_tokens_to_ids(self.tokenize(processed_text))
+        tokenization = Tokenization(ids, processed_text, text)
+        tokenization.set_command_tokens(self._command_tokens)
+        return tokenization
 
     def decode(self, tokens):
+        # TODO
         text = ''.join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode(
             'utf-8', errors=self.errors)
         return text
+
+    def get_command(self, name):
+        return self.command_name_map[name]

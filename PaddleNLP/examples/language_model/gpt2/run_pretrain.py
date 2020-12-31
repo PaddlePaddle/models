@@ -30,21 +30,12 @@ import paddle.distributed as dist
 from paddle.io import DataLoader, Dataset
 
 from paddlenlp.data import Stack, Tuple, Pad
-from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
-from paddlenlp.transformers import BertTokenizer
+from paddlenlp.transformers import GPT2Model, GPT2ForPretraining
+from paddlenlp.transformers import GPT2Tokenizer
 from paddlenlp.utils.log import logger
+from data import GPT2Dataset
 
-MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer), }
-
-
-def create_pretrained_dataset(args):
-    split = args.split
-
-
-def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
+MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
 
 
 def parse_args():
@@ -82,7 +73,7 @@ def parse_args():
 
     parser.add_argument(
         "--batch_size",
-        default=8,
+        default=2,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
@@ -151,29 +142,45 @@ class WorkerInitObj(object):
         random.seed(self.seed + id)
 
 
+def create_pretrained_dataset(args, input_path, tokenizer, worker_init):
+    train_data = GPT2Dataset(file_path=input_path, tokenizer=tokenizer)
+
+    train_batch_sampler = paddle.io.BatchSampler(
+        train_data, batch_size=args.batch_size, shuffle=False)
+
+    train_data_loader = DataLoader(
+        dataset=train_data,
+        batch_sampler=train_batch_sampler,
+        num_workers=0,
+        worker_init_fn=worker_init,
+        collate_fn=Tuple(Stack(), Stack(), Stack(), Stack(), Stack()))
+    return train_data_loader
+
+
+def set_seed(args):
+    random.seed(args.seed + paddle.distributed.get_rank())
+    np.random.seed(args.seed + paddle.distributed.get_rank())
+    paddle.seed(args.seed + paddle.distributed.get_rank())
+
+
 def do_train(args):
-    paddle.enable_static() if not args.eager_run else None
-    paddle.set_device("gpu" if args.n_gpu else "cpu")
+    paddle.set_device("gpu")
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
     set_seed(args)
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
-
-    args.model_type = args.model_type.lower()
-    model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-
+    model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
-
-    model = BertForPretraining(
-        BertModel(**model_class.pretrained_init_configuration[
+    train_data_loader = create_pretrained_dataset(args, "./data.json",
+                                                  tokenizer, worker_init)
+    model = GPT2ForPretraining(
+        GPT2Model(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
-    criterion = BertPretrainingCriterion(
-        getattr(model, BertForPretraining.base_model_prefix).config[
-            "vocab_size"])
-    if paddle.distributed.get_world_size() > 1:
-        model = paddle.DataParallel(model)
 
+    for tokens, loss_mask, attention_mask, position_ids, labels in train_data_loader:
+        model(tokens, position_ids, attention_mask)
+    """
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
     lr_scheduler = paddle.optimizer.lr.LambdaDecay(
@@ -204,8 +211,8 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if os.path.isfile(os.path.join(args.input_dir, f)) and "training" in
-            f
+            if os.path.isfile(os.path.join(args.input_dir, f))
+            and "training" in f
         ]
         files.sort()
         num_files = len(files)
@@ -216,10 +223,10 @@ def do_train(args):
 
         if paddle.distributed.get_world_size() > num_files:
             remainder = paddle.distributed.get_world_size() % num_files
-            data_file = files[(
-                f_start_id * paddle.distributed.get_world_size() +
-                paddle.distributed.get_rank() + remainder * f_start_id) %
-                              num_files]
+            data_file = files[
+                (f_start_id * paddle.distributed.get_world_size() +
+                 paddle.distributed.get_rank() + remainder * f_start_id) %
+                num_files]
         else:
             data_file = files[(f_start_id * paddle.distributed.get_world_size()
                                + paddle.distributed.get_rank()) % num_files]
@@ -230,12 +237,16 @@ def do_train(args):
             data_file, args.max_predictions_per_seq, shared_file_list, args,
             worker_init)
 
-        for f_id in range(f_start_id + 1, len(files)):
+        # TODO(guosheng): better way to process single file
+        single_file = True if f_start_id + 1 == len(files) else False
+
+        for f_id in range(f_start_id, len(files)):
+            if not single_file and f_id == f_start_id:
+                continue
             if paddle.distributed.get_world_size() > num_files:
-                data_file = files[(
-                    f_id * paddle.distributed.get_world_size() +
-                    paddle.distributed.get_rank() + remainder * f_id) %
-                                  num_files]
+                data_file = files[(f_id * paddle.distributed.get_world_size() +
+                                   paddle.distributed.get_rank() +
+                                   remainder * f_id) % num_files]
             else:
                 data_file = files[(f_id * paddle.distributed.get_world_size() +
                                    paddle.distributed.get_rank()) % num_files]
@@ -290,8 +301,9 @@ def do_train(args):
 
             del train_data_loader
             train_data_loader, data_file = dataset_future.result(timeout=None)
+    """
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    do_train(args)

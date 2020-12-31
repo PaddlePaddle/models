@@ -598,7 +598,7 @@ class GPT2Embeddings(nn.Layer):
                                                 hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
-    def forward(self, input_ids, token_type_ids=None, position_ids=None):
+    def forward(self, input_ids, position_ids=None):
         if position_ids is None:
             ones = paddle.ones_like(input_ids, dtype="int64")
             seq_length = paddle.cumsum(ones, axis=1)
@@ -635,6 +635,19 @@ class GPT2PretrainedModel(PretrainedModel):
             "type_vocab_size": 1,  # no use
             "initializer_range": 0.02,
             "pad_token_id": 0,
+        },
+        "gpt2-medium-en": {
+            "vocab_size": 50256,
+            "hidden_size": 1024,
+            "num_hidden_layers": 16,
+            "num_attention_heads": 16,
+            "intermediate_size": 1024,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "attention_probs_dropout_prob": 0.1,
+            "max_position_embeddings": 1024,
+            "type_vocab_size": 1,  # no use
+            "initializer_range": 0.02,
         },
     }
     resource_files_names = {"model_state": "model_state.pdparams"}
@@ -698,7 +711,6 @@ class GPT2Model(GPT2PretrainedModel):
 
     def forward(self,
                 input_ids,
-                token_type_ids=None,
                 position_ids=None,
                 attention_mask=None,
                 use_cache=False,
@@ -710,17 +722,16 @@ class GPT2Model(GPT2PretrainedModel):
                     (length, length),
                     dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
                 1)
-        past_length = 0
-        if cache is not None:
-            past_length = cache[0].k.shape[-2]
-        position_ids = paddle.arange(
-            past_length, input_ids.shape[-1] + past_length, dtype='int64')
-        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+        if position_ids is not None:
+            past_length = 0
+            if cache is not None:
+                past_length = cache[0].k.shape[-2]
+            position_ids = paddle.arange(
+                past_length, input_ids.shape[-1] + past_length, dtype='int64')
+            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
 
         embedding_output = self.embeddings(
-            input_ids=input_ids,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids)
+            input_ids=input_ids, position_ids=position_ids)
         encoder_outputs = self.decoder(
             embedding_output,
             memory=None,
@@ -738,7 +749,6 @@ class GPT2ForPretraining(GPT2PretrainedModel):
 
     def forward(self,
                 input_ids,
-                token_type_ids=None,
                 position_ids=None,
                 attention_mask=None,
                 masked_positions=None,
@@ -746,7 +756,6 @@ class GPT2ForPretraining(GPT2PretrainedModel):
                 cache=None):
         outputs = self.gpt2(
             input_ids,
-            token_type_ids=token_type_ids,
             position_ids=position_ids,
             attention_mask=attention_mask,
             use_cache=use_cache,
