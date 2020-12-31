@@ -25,20 +25,6 @@ TASK_CLASSES = {
 }
 
 
-class CrossEntropyCriterion(nn.Layer):
-    def __init__(self):
-        super(CrossEntropyCriterion, self).__init__()
-
-    def forward(self, predict, label, mask):
-        cost = F.softmax_with_cross_entropy(
-            logits=predict, label=label, soft_label=False)
-        cost = paddle.squeeze(cost, axis=[1])
-        masked_cost = cost * mask
-        batch_mean_cost = paddle.mean(masked_cost, axis=[0])
-        seq_cost = paddle.sum(batch_mean_cost)
-        return seq_cost
-
-
 class BiLSTM(nn.Layer):
     def __init__(self,
                  embed_dim,
@@ -48,7 +34,7 @@ class BiLSTM(nn.Layer):
                  padding_idx=0,
                  num_layers=1,
                  direction='bidirectional',
-                 dropout_prob=0.5,
+                 dropout_prob=0.0,
                  init_scale=0.1):
         super(BiLSTM, self).__init__()
         self.embedder = nn.Embedding(
@@ -61,25 +47,35 @@ class BiLSTM(nn.Layer):
             embed_dim, hidden_size, num_layers, direction, dropout=dropout_prob)
         self.fc = nn.Linear(
             hidden_size * 2,
+            # hidden_size,
             output_dim,
             weight_attr=paddle.ParamAttr(initializer=I.Uniform(
                 low=-init_scale, high=init_scale)))
+        # self.fc_2 = nn.Linear(
+        #     hidden_size,
+        #     output_dim,
+        #     weight_attr=paddle.ParamAttr(initializer=I.Uniform(
+        #         low=-init_scale, high=init_scale)))
         self.dropout = nn.Dropout(dropout_prob)
 
     def forward(self, x, seq_len):
-        x_embed = self.dropout(self.embedder(x))
-        lstm_out, _ = self.lstm(x_embed, sequence_length=seq_len)
-        hidden = paddle.mean(lstm_out, axis=1)
-        # logits = self.fc(lstm_out[:, -1, :])
-        logits = self.fc(hidden)
-
+        x_embed = self.embedder(x)
+        lstm_out, (hidden, cell) = self.lstm(x_embed, sequence_length=seq_len)
+        # out = paddle.concat((hidden[-2, :, :], hidden[-1, :, :]), axis=1)
+        # out = paddle.mean(lstm_out, axis=1)
+        out = paddle.sum(lstm_out, axis=1)
+        # fc_1 = paddle.nn.ReLU()(self.fc_1(out))
+        # logits = self.fc_2(fc_1)
+        logits = self.fc(out)
+        logits = self.dropout(logits)
+        # import pdb; pdb.set_trace()
         return logits
 
 
 def do_train(task_name='sst-2',
-             num_epoch=20,
+             num_epoch=30,
              batch_size=128,
-             lr=0.5,
+             lr=0.005,
              max_seq_length=128,
              emb_dim=256,
              hidden_size=256,
@@ -87,35 +83,39 @@ def do_train(task_name='sst-2',
              vocab_size=30522,
              padding_idx=0,
              dropout_prob=0.5,
-             save_steps=100):
+             save_steps=50):
     metric_class = TASK_CLASSES[task_name][1]
     metric = metric_class()
     train_data_loader, dev_data_loader = create_data_loader(
-        task_name, batch_size, max_seq_length)
-    # from paddlenlp.models.senta import LSTMModel
-    # model = LSTMModel(vocab_size=vocab_size, num_classes=2, emb_dim=emb_dim, padding_idx=padding_idx, lstm_hidden_size=hidden_size, direction='bidirectional', dropout_rate=dropout_prob, fc_hidden_size=hidden_size / 2)
-    # model = LSTMModel(vocab_size=vocab_size, num_classes=2)
-    model = BiLSTM(emb_dim, hidden_size, vocab_size, output_dim, padding_idx)
-    # loss_fct = nn.CrossEntropyLoss()#NLLLoss()
-    loss_fct = CrossEntropyCriterion()
-    adam = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())
+        task_name, batch_size, max_seq_length, shuffle=True)
+    model = BiLSTM(
+        emb_dim,
+        hidden_size,
+        vocab_size,
+        output_dim,
+        padding_idx,
+        dropout_prob=dropout_prob)
+
+    loss_fct = nn.CrossEntropyLoss()
+    gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
+
+    adam = paddle.optimizer.Adam(
+        learning_rate=lr,
+        parameters=model.parameters())  #, grad_clip=gloabl_norm_clip)
+    # adam = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
 
     loss_list = []
     global_step = 0
     tic_train = time.time()
     for epoch in range(num_epoch):
-        metric.reset()
         for i, batch in enumerate(train_data_loader):
             input_ids, _, seq_len, labels = batch
-            # input_ids = input_ids[:, 1:]
             logits = model(input_ids, seq_len)
 
-            loss = loss_fct(logits, labels, seq_len)
+            loss = loss_fct(logits, labels)
             adam.clear_grad()
             loss.backward()
             adam.step()
-            correct = metric.compute(F.log_softmax(logits), labels)
-            metric.update(correct)
 
             if i % save_steps == 0:
                 with paddle.no_grad():
@@ -138,8 +138,6 @@ def do_train(task_name='sst-2',
                               (time.time() - tic_eval))
                 tic_train = time.time()
             global_step += 1
-        res = metric.accumulate()
-        print(res)
 
 
 if __name__ == '__main__':

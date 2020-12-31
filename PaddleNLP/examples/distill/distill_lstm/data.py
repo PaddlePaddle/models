@@ -3,6 +3,7 @@ from functools import partial
 import paddle
 from paddle.io import DataLoader
 from paddle.metric import Metric, Accuracy, Precision, Recall
+# import paddle.nn.functional as F
 
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
@@ -24,7 +25,10 @@ TASK_CLASSES = {
 }
 
 
-def create_data_loader(task_name='sst-2', batch_size=128, max_seq_length=128):
+def create_data_loader(task_name='sst-2',
+                       batch_size=128,
+                       max_seq_length=128,
+                       shuffle=True):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     dataset_class = TASK_CLASSES[task_name]
     train_dataset = GlueSST2.get_datasets(['train'])
@@ -35,7 +39,7 @@ def create_data_loader(task_name='sst-2', batch_size=128, max_seq_length=128):
         max_seq_length=max_seq_length)
     train_dataset = train_dataset.apply(trans_func, lazy=True)
     train_batch_sampler = paddle.io.DistributedBatchSampler(
-        train_dataset, batch_size=batch_size, shuffle=True)
+        train_dataset, batch_size=batch_size, shuffle=shuffle)
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
@@ -93,14 +97,12 @@ def create_data_loader(task_name='sst-2', batch_size=128, max_seq_length=128):
 def evaluate(model, loss_fct, metric, data_loader):
     model.eval()
     metric.reset()
-    loss_list = []
     for batch in data_loader:
         input_ids, _, seq_len, labels = batch
         logits = model(input_ids, seq_len)
-        loss = loss_fct(logits, labels, seq_len)
+        loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
-        loss_list.append(loss)
     res = metric.accumulate()
     if isinstance(metric, AccuracyAndF1):
         print(
