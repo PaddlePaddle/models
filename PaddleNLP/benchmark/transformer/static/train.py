@@ -95,6 +95,16 @@ def do_train(args):
         exec_strategy = paddle.static.ExecutionStrategy()
         dist_strategy = fleet.DistributedStrategy()
         dist_strategy.build_strategy = build_strategy
+        dist_strategy.execution_strategy = exec_strategy
+        dist_strategy.fuse_grad_size_in_MB = 16
+
+        if args.use_amp:
+            dist_strategy.amp = True
+            dist_strategy.amp_configs = {
+                'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
+                'init_loss_scaling': args.scale_loss,
+            }
+
         optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
         optimizer.minimize(avg_cost)
 
