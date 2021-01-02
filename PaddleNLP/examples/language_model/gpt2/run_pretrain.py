@@ -34,6 +34,7 @@ from paddlenlp.transformers import GPT2Model, GPT2ForPretraining, GPT2Pretrainin
 from paddlenlp.transformers import GPT2Tokenizer
 from paddlenlp.utils.log import logger
 from data import GPT2Dataset
+import lr
 
 MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
 
@@ -66,14 +67,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--max_predictions_per_seq",
-        default=80,
-        type=int,
-        help="The maximum total of masked tokens in input sequence")
-
-    parser.add_argument(
         "--batch_size",
-        default=2,
+        default=8,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
@@ -81,11 +76,13 @@ def parse_args():
         default=5e-5,
         type=float,
         help="The initial learning rate for Adam.")
+
     parser.add_argument(
         "--weight_decay",
         default=0.0,
         type=float,
         help="Weight decay if we apply some.")
+
     parser.add_argument(
         "--grad_clip",
         default=0.0,
@@ -105,20 +102,20 @@ def parse_args():
         help="Total number of training epochs to perform.", )
     parser.add_argument(
         "--max_steps",
-        default=10000,
+        default=320000,
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
     parser.add_argument(
-        "--warmup_steps",
-        default=0,
-        type=int,
+        "--warmup_rate",
+        default=0.01,
+        type=float,
         help="Linear warmup over warmup_steps.")
 
     parser.add_argument(
         "--logging_steps",
         type=int,
-        default=500,
+        default=1,
         help="Log every X updates steps.")
     parser.add_argument(
         "--save_steps",
@@ -127,8 +124,6 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="random seed for initialization")
-    parser.add_argument(
-        "--eager_run", type=eval, default=True, help="Use dygraph mode.")
     parser.add_argument(
         "--n_gpu",
         type=int,
@@ -168,12 +163,6 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def print_gradient(optimizer, paras):
-    parameter_list = optimizer._parameter_list
-    for parameter in parameter_list:
-        print(parameter)
-
-
 def do_train(args):
     paddle.set_device("gpu")
     if paddle.distributed.get_world_size() > 1:
@@ -195,26 +184,16 @@ def do_train(args):
 
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
-    """
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))),
-        last_epoch=0)
-    """
+    warmup_step = args.warmup_rate * args.max_steps
+    lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
+        args.learning_rate, warmup_step, args.max_steps)
 
     clip = None
     if args.grad_clip > 0:
         clip = paddle.nn.ClipGradByNorm(clip_norm=args.grad_clip)
 
     optimizer = paddle.optimizer.AdamW(
-        learning_rate=args.learning_rate,
+        learning_rate=lr_scheduler,
         epsilon=args.adam_epsilon,
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
@@ -280,24 +259,21 @@ def do_train(args):
                 loss_mask.stop_gradient = True
                 attention_mask.stop_gradient = True
 
-                preds, return_grad = model(tokens, position_ids, attention_mask)
+                preds = model(tokens, position_ids, attention_mask)
                 loss = criterion(preds, labels, loss_mask)
-                print("the loss :{}".format(loss))
 
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1
                         ) or paddle.distributed.get_rank() == 0:
                         logger.info(
-                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
-                            % (global_step, epoch, step, loss,
+                            "global step %d, epoch: %d, lr: %.10f, batch: %d, loss: %f, speed: %.2f step/s"
+                            % (global_step, epoch, optimizer.get_lr(), step,
+                               loss,
                                args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
                 loss.backward()
-                grad = return_grad.gradient()
-                print("grad:{} max:{}, min:{} std:{}".format(
-                    np.abs(grad).sum(), grad.max(), grad.min(), grad.std()))
                 optimizer.step()
-                #lr_scheduler.step()
+                lr_scheduler.step()
                 optimizer.clear_gradients()
                 if global_step % args.save_steps == 0:
                     if (not args.n_gpu > 1
