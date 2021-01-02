@@ -73,7 +73,7 @@ def parse_args():
 
     parser.add_argument(
         "--batch_size",
-        default=8,
+        default=2,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
@@ -87,6 +87,11 @@ def parse_args():
         type=float,
         help="Weight decay if we apply some.")
     parser.add_argument(
+        "--grad_clip",
+        default=0.0,
+        type=float,
+        help="Grad clip for the parameter.")
+    parser.add_argument(
         "--adam_epsilon",
         default=1e-8,
         type=float,
@@ -95,7 +100,7 @@ def parse_args():
         "--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
     parser.add_argument(
         "--num_train_epochs",
-        default=3,
+        default=1,
         type=int,
         help="Total number of training epochs to perform.", )
     parser.add_argument(
@@ -163,6 +168,12 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
+def print_gradient(optimizer, paras):
+    parameter_list = optimizer._parameter_list
+    for parameter in parameter_list:
+        print(parameter)
+
+
 def do_train(args):
     paddle.set_device("gpu")
     if paddle.distributed.get_world_size() > 1:
@@ -198,15 +209,23 @@ def do_train(args):
         last_epoch=0)
     """
 
+    clip = None
+    if args.grad_clip > 0:
+        clip = paddle.nn.ClipGradByNorm(clip_norm=args.grad_clip)
+
     optimizer = paddle.optimizer.AdamW(
         learning_rate=args.learning_rate,
         epsilon=args.adam_epsilon,
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
+        grad_clip=clip,
         apply_decay_param_fun=lambda x: x in [
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
         ])
+    name_dict = {}
+    for name, parameter in model.named_parameters():
+        name_dict[name] = parameter.name
 
     pool = ThreadPoolExecutor(1)
     global_step = 0
@@ -261,8 +280,9 @@ def do_train(args):
                 loss_mask.stop_gradient = True
                 attention_mask.stop_gradient = True
 
-                preds = model(tokens, position_ids, attention_mask)
+                preds, return_grad = model(tokens, position_ids, attention_mask)
                 loss = criterion(preds, labels, loss_mask)
+                print("the loss :{}".format(loss))
 
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1
@@ -273,6 +293,9 @@ def do_train(args):
                                args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
                 loss.backward()
+                grad = return_grad.gradient()
+                print("grad:{} max:{}, min:{} std:{}".format(
+                    np.abs(grad).sum(), grad.max(), grad.min(), grad.std()))
                 optimizer.step()
                 #lr_scheduler.step()
                 optimizer.clear_gradients()
@@ -295,7 +318,8 @@ def do_train(args):
                     print("delete the data loader")
                     del train_data_loader
                     return
-
+                if global_step == 50:
+                    return
             del train_data_loader
             train_data_loader = dataset_future.result(timeout=None)
 
