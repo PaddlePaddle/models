@@ -176,11 +176,11 @@ def do_train(args):
     model = GPT2ForPretraining(
         GPT2Model(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
-    # creat the critrion for the gpt model 
+    # creat the critrion for the gpt model
     criterion = GPT2PretrainingCriterion()
 
-    state_dict = paddle.load("./new_gpt2.pdparams")
-    model.set_state_dict(state_dict)
+    # state_dict = paddle.load("./new_gpt2.pdparams")
+    # model.set_state_dict(state_dict)
 
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
@@ -293,8 +293,6 @@ def do_train(args):
                 if global_step >= args.max_steps:
                     print("delete the data loader")
                     del train_data_loader
-                    return
-                if global_step == 50:
                     return
             del train_data_loader
             train_data_loader = dataset_future.result(timeout=None)

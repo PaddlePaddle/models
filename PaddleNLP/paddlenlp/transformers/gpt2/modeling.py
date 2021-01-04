@@ -410,6 +410,7 @@ class TransformerDecoder(nn.Layer):
                                     for i in range(num_layers)])
         self.num_layers = num_layers
         self.norm = norm
+        self.checkpoints = []
 
     def forward(self,
                 tgt,
@@ -461,6 +462,7 @@ class TransformerDecoder(nn.Layer):
         """
         output = tgt
         new_caches = []
+        self.checkpoints = []
         for i, mod in enumerate(self.layers):
             if cache is None:
                 if use_cache:
@@ -484,6 +486,7 @@ class TransformerDecoder(nn.Layer):
                                         use_cache=use_cache,
                                         cache=cache[i])
                 new_caches.append(new_cache)
+            self.checkpoints.append(output.name)
 
         if self.norm is not None:
             output = self.norm(output)
@@ -578,7 +581,10 @@ class TransformerDecoderLayer(nn.Layer):
         residual = tgt
         if self.normalize_before:
             tgt = self.norm2(tgt)
-        tgt = self.dropout2(self.linear2(openai_glue(self.linear1(tgt))))
+        # tgt = self.dropout2(self.linear2(openai_glue(self.linear1(tgt))))
+        tgt = self.dropout2(
+            self.linear2(F.gelu(
+                self.linear1(tgt), approximate=True)))
         tgt = residual + tgt
 
         if not self.normalize_before:
@@ -650,8 +656,21 @@ class GPT2PretrainedModel(PretrainedModel):
         "gpt2-medium-en": {
             "vocab_size": 50304,
             "hidden_size": 1024,
-            "num_hidden_layers": 16,
-            "num_attention_heads": 16,
+            "num_hidden_layers": 4,
+            "num_attention_heads": 4,
+            "intermediate_size": 4096,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.0,
+            "attention_probs_dropout_prob": 0.0,
+            "max_position_embeddings": 1024,
+            "type_vocab_size": 1,  # no use
+            "initializer_range": 0.02,
+        },
+        "gpt2-small-en": {
+            "vocab_size": 50304,
+            "hidden_size": 1024,
+            "num_hidden_layers": 4,
+            "num_attention_heads": 4,
             "intermediate_size": 4096,
             "hidden_act": "gelu",
             "hidden_dropout_prob": 0.0,
@@ -719,6 +738,7 @@ class GPT2Model(GPT2PretrainedModel):
         self.decoder = TransformerDecoder(
             decoder_layer, num_hidden_layers, norm=nn.LayerNorm(hidden_size))
         self.apply(self.init_weights)
+        self.checkpoints = []
 
     def forward(self,
                 input_ids,
@@ -726,6 +746,7 @@ class GPT2Model(GPT2PretrainedModel):
                 attention_mask=None,
                 use_cache=False,
                 cache=None):
+        self.checkpoints = []
         if attention_mask is None:
             length = input_ids.shape[1]
             attention_mask = paddle.tensor.triu(
@@ -751,6 +772,7 @@ class GPT2Model(GPT2PretrainedModel):
             tgt_mask=attention_mask,
             use_cache=use_cache,
             cache=cache)
+        self.checkpoints.extend(self.decoder.checkpoints)
         print("transformer output:{}".format(encoder_outputs.mean()))
         return encoder_outputs
 

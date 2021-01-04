@@ -236,7 +236,14 @@ def reset_program_state_dict(model, state_dict):
     return new_state_dict
 
 
-def dist_optimizer(args, optimizer):
+def copy_program_state_dict(model, static_dict, tensor_dict):
+    new_state_dict = dict()
+    for n, p in static_dict.items():
+        new_state_dict[p.name] = tensor_dict[n]
+    return new_state_dict
+
+
+def dist_optimizer(args, optimizer, model):
     build_strategy, exec_strategy = create_strategy(args)
 
     dist_strategy = fleet.DistributedStrategy()
@@ -259,7 +266,9 @@ def dist_optimizer(args, optimizer):
         }
     if args.use_recompute:
         dist_strategy.recompute = True
-        dist_strategy.recompute_configs = {"checkpoints": model.checkpoints}
+        dist_strategy.recompute_configs = {
+            "checkpoints": model.gpt2.checkpoints
+        }
 
     optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
     return optimizer
@@ -302,7 +311,7 @@ def do_train(args):
     preds = model(tokens, position_ids, attention_mask)
     loss = criterion(preds, labels, loss_mask)
 
-    # Create the learning_rate sheduler and optimizer 
+    # Create the learning_rate sheduler and optimizer
     warmup_step = args.warmup_rate * args.max_steps
     lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
         args.learning_rate, warmup_step, args.max_steps)
@@ -311,16 +320,18 @@ def do_train(args):
     if args.grad_clip > 0:
         clip = paddle.nn.ClipGradByNorm(clip_norm=args.grad_clip)
 
-    optimizer = paddle.optimizer.AdamW(
+    # TODO @ZHUI new fluid optimizer to use recompute
+    optimizer = paddle.fluid.optimizer.Adam(
         learning_rate=lr_scheduler,
         epsilon=args.adam_epsilon,
-        parameters=model.parameters(),
-        weight_decay=args.weight_decay,
+        #parameters=model.parameters(),
+        #weight_decay=args.weight_decay,
         grad_clip=clip,
-        apply_decay_param_fun=lambda x: x in [
-            p.name for n, p in model.named_parameters()
-            if not any(nd in n for nd in ["bias", "norm"])
-        ])
+        # apply_decay_param_fun=lambda x: x in [
+        #     p.name for n, p in model.named_parameters()
+        #     if not any(nd in n for nd in ["bias", "norm"])
+        # ]
+    )
 
     if worker_num == 1 and args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
@@ -333,21 +344,20 @@ def do_train(args):
 
     if worker_num > 1:
         # Use the fleet api to compile the distributed optimizer
-        optimizer = dist_optimizer(args, optimizer)
+        optimizer = dist_optimizer(args, optimizer, model)
     optimizer.minimize(loss)
 
     # Define the Executor for running the static model
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
     state_dict = model.state_dict()
-
     # Use the state dict to update the parameter
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
 
     if worker_num == 1:
         # Construct the compiled program
-        main_program = build_compiled_program(main_program, loss)
+        main_program = build_compiled_program(args, main_program, loss)
 
     pool = ThreadPoolExecutor(1)
     global_step = 0
