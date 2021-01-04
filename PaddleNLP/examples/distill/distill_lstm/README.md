@@ -1,9 +1,9 @@
 # distill lstm
 
-## 训练bert finetuneing模型
+## 训练bert finetuning模型
+以GLUE的SST-2任务为例
 
 ```shell
-export CUDA_VISIBLE_DEVICES=7
 export TASK_NAME=SST-2
 
 python -u ./run_bert_finetune.py \
@@ -20,9 +20,23 @@ python -u ./run_bert_finetune.py \
     --n_gpu 1 \
 
 ```
-##  训练蒸馏模型
+
+## 训练小模型（可选，用于对比蒸馏效果）
+```shell
+python small.py
+```
+
+## 训练蒸馏模型
 将bert的知识蒸馏到基于BiLSTM的小模型里
 
 ```shell
 python bert_distill.py
 ```
+
+## 蒸馏结果
+
+| Model             | **SST-2**          |
+| ----------------- | ------------------ |
+| bert-base         | 0.9288990825688074 |
+| Bi-LSTM           | 0.8165137614678899 |
+| Distilled Bi-LSTM | 0.8612385321100917 |
