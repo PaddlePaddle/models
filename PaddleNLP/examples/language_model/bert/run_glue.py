@@ -48,7 +48,10 @@ TASK_CLASSES = {
     "rte": (GlueRTE, Accuracy),
 }
 
-MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer)}
+MODEL_CLASSES = {
+    "bert": (BertForSequenceClassification, BertTokenizer),
+    "ernie": (ErnieForSequenceClassification, ErnieTokenizer)
+}
 
 
 def parse_args():

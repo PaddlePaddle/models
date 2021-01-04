@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
     "bert": (BertForPretraining, BertTokenizer),
-    "ernie": (ErnieForPretrainig, ErnieTokenizer)
+    "ernie": (ErnieForPretraining, ErnieTokenizer)
 }
 
 
@@ -142,7 +142,7 @@ def parse_args():
         help="Number cards for the training, only support multi cards in the gpu."
     )
     parser.add_argument(
-        "--select_devices",
+        "--select_device",
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
