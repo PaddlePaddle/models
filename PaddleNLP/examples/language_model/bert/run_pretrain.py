@@ -31,7 +31,8 @@ from paddle.io import DataLoader, Dataset
 
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
-from paddlenlp.transformers import BertTokenizer
+from paddlenlp.transformers import ErnieForPretraining, ErnieModel, ErniePretrainingCriterion
+from paddlenlp.transformers import BertTokenizer, ErnieTokenizer
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
     "bert": (BertForPretraining, BertTokenizer),
+    "ernie": (ErnieForPretrainig, ErnieTokenizer)
 }
 
 
@@ -50,8 +52,7 @@ def parse_args():
         type=str,
         required=True,
         help="Model type selected in the list: " +
-        ", ".join(MODEL_CLASSES.keys()),
-    )
+        ", ".join(MODEL_CLASSES.keys()), )
     parser.add_argument(
         "--model_name_or_path",
         default=None,
@@ -62,22 +63,19 @@ def parse_args():
             sum([
                 list(classes[-1].pretrained_init_configuration.keys())
                 for classes in MODEL_CLASSES.values()
-            ], [])),
-    )
+            ], [])), )
     parser.add_argument(
         "--input_dir",
         default=None,
         type=str,
         required=True,
-        help="The input directory where the data will be read from.",
-    )
+        help="The input directory where the data will be read from.", )
     parser.add_argument(
         "--output_dir",
         default=None,
         type=str,
         required=True,
-        help=
-        "The output directory where the model predictions and checkpoints will be written.",
+        help="The output directory where the model predictions and checkpoints will be written.",
     )
 
     parser.add_argument(
@@ -90,58 +88,64 @@ def parse_args():
         "--batch_size",
         default=8,
         type=int,
-        help="Batch size per GPU/CPU for training.",
-    )
-    parser.add_argument("--learning_rate",
-                        default=5e-5,
-                        type=float,
-                        help="The initial learning rate for Adam.")
-    parser.add_argument("--weight_decay",
-                        default=0.0,
-                        type=float,
-                        help="Weight decay if we apply some.")
-    parser.add_argument("--adam_epsilon",
-                        default=1e-8,
-                        type=float,
-                        help="Epsilon for Adam optimizer.")
-    parser.add_argument("--max_grad_norm",
-                        default=1.0,
-                        type=float,
-                        help="Max gradient norm.")
+        help="Batch size per GPU/CPU for training.", )
+    parser.add_argument(
+        "--learning_rate",
+        default=5e-5,
+        type=float,
+        help="The initial learning rate for Adam.")
+    parser.add_argument(
+        "--weight_decay",
+        default=0.0,
+        type=float,
+        help="Weight decay if we apply some.")
+    parser.add_argument(
+        "--adam_epsilon",
+        default=1e-8,
+        type=float,
+        help="Epsilon for Adam optimizer.")
+    parser.add_argument(
+        "--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
     parser.add_argument(
         "--num_train_epochs",
         default=3,
         type=int,
-        help="Total number of training epochs to perform.",
-    )
+        help="Total number of training epochs to perform.", )
     parser.add_argument(
         "--max_steps",
         default=-1,
         type=int,
-        help=
-        "If > 0: set total number of training steps to perform. Override num_train_epochs.",
+        help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
-    parser.add_argument("--warmup_steps",
-                        default=0,
-                        type=int,
-                        help="Linear warmup over warmup_steps.")
+    parser.add_argument(
+        "--warmup_steps",
+        default=0,
+        type=int,
+        help="Linear warmup over warmup_steps.")
 
-    parser.add_argument("--logging_steps",
-                        type=int,
-                        default=500,
-                        help="Log every X updates steps.")
-    parser.add_argument("--save_steps",
-                        type=int,
-                        default=500,
-                        help="Save checkpoint every X updates steps.")
-    parser.add_argument("--seed",
-                        type=int,
-                        default=42,
-                        help="random seed for initialization")
-    parser.add_argument("--n_gpu",
-                        type=int,
-                        default=1,
-                        help="number of gpus to use, 0 for cpu.")
+    parser.add_argument(
+        "--logging_steps",
+        type=int,
+        default=500,
+        help="Log every X updates steps.")
+    parser.add_argument(
+        "--save_steps",
+        type=int,
+        default=500,
+        help="Save checkpoint every X updates steps.")
+    parser.add_argument(
+        "--seed", type=int, default=42, help="random seed for initialization")
+    parser.add_argument(
+        "--n_cards",
+        default=1,
+        type=int,
+        help="Number cards for the training, only support multi cards in the gpu."
+    )
+    parser.add_argument(
+        "--select_devices",
+        type=str,
+        default="gpu",
+        help="Device for selecting for the training.")
     args = parser.parse_args()
     return args
 
@@ -163,12 +167,11 @@ class WorkerInitObj(object):
 
 def create_pretraining_dataset(input_file, max_pred_length, shared_list, args,
                                worker_init):
-    train_data = PretrainingDataset(input_file=input_file,
-                                    max_pred_length=max_pred_length)
+    train_data = PretrainingDataset(
+        input_file=input_file, max_pred_length=max_pred_length)
     # files have been sharded, no need to dispatch again
-    train_batch_sampler = paddle.io.BatchSampler(train_data,
-                                                 batch_size=args.batch_size,
-                                                 shuffle=True)
+    train_batch_sampler = paddle.io.BatchSampler(
+        train_data, batch_size=args.batch_size, shuffle=True)
 
     # DataLoader cannot be pickled because of its place.
     # If it can be pickled, use global function instead of lambda and use
@@ -187,7 +190,7 @@ def create_pretraining_dataset(input_file, max_pred_length, shared_list, args,
             size += 8 - (size % 8)
         # masked_lm_positions
         # Organize as a 1D tensor for gather or use gather_nd
-        out[3] = np.full(size, 0, dtype=np.int64)
+        out[3] = np.full(size, 0, dtype=np.int32)
         # masked_lm_labels
         out[4] = np.full([size, 1], -1, dtype=np.int64)
         mask_token_num = 0
@@ -200,12 +203,13 @@ def create_pretraining_dataset(input_file, max_pred_length, shared_list, args,
         out.append(np.asarray([mask_token_num], dtype=np.float32))
         return out
 
-    train_data_loader = DataLoader(dataset=train_data,
-                                   batch_sampler=train_batch_sampler,
-                                   collate_fn=_collate_data,
-                                   num_workers=0,
-                                   worker_init_fn=worker_init,
-                                   return_list=True)
+    train_data_loader = DataLoader(
+        dataset=train_data,
+        batch_sampler=train_batch_sampler,
+        collate_fn=_collate_data,
+        num_workers=0,
+        worker_init_fn=worker_init,
+        return_list=True)
     return train_data_loader, input_file
 
 
@@ -237,8 +241,8 @@ class PretrainingDataset(Dataset):
         ]
         # TODO: whether to use reversed mask by changing 1s and 0s to be
         # consistent with nv bert
-        input_mask = (1 - np.reshape(input_mask.astype(np.float32),
-                                     [1, 1, input_mask.shape[0]])) * -1e9
+        input_mask = (1 - np.reshape(
+            input_mask.astype(np.float32), [1, 1, input_mask.shape[0]])) * -1e9
 
         index = self.max_pred_length
         # store number of  masked tokens in index
@@ -265,7 +269,7 @@ class PretrainingDataset(Dataset):
 
 
 def do_train(args):
-    paddle.set_device("gpu" if args.n_gpu else "cpu")
+    paddle.set_device(args.select_device)
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
@@ -281,8 +285,8 @@ def do_train(args):
         BertModel(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
     criterion = BertPretrainingCriterion(
-        getattr(model,
-                BertForPretraining.base_model_prefix).config["vocab_size"])
+        getattr(model, BertForPretraining.base_model_prefix).config[
+            "vocab_size"])
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
@@ -316,8 +320,8 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if os.path.isfile(os.path.join(args.input_dir, f))
-            and "training" in f
+            if os.path.isfile(os.path.join(args.input_dir, f)) and "training" in
+            f
         ]
         files.sort()
         num_files = len(files)
@@ -328,10 +332,10 @@ def do_train(args):
 
         if paddle.distributed.get_world_size() > num_files:
             remainder = paddle.distributed.get_world_size() % num_files
-            data_file = files[
-                (f_start_id * paddle.distributed.get_world_size() +
-                 paddle.distributed.get_rank() + remainder * f_start_id) %
-                num_files]
+            data_file = files[(
+                f_start_id * paddle.distributed.get_world_size() +
+                paddle.distributed.get_rank() + remainder * f_start_id) %
+                              num_files]
         else:
             data_file = files[(f_start_id * paddle.distributed.get_world_size()
                                + paddle.distributed.get_rank()) % num_files]
@@ -349,9 +353,10 @@ def do_train(args):
             if not single_file and f_id == f_start_id:
                 continue
             if paddle.distributed.get_world_size() > num_files:
-                data_file = files[(f_id * paddle.distributed.get_world_size() +
-                                   paddle.distributed.get_rank() +
-                                   remainder * f_id) % num_files]
+                data_file = files[(
+                    f_id * paddle.distributed.get_world_size() +
+                    paddle.distributed.get_rank() + remainder * f_id) %
+                                  num_files]
             else:
                 data_file = files[(f_id * paddle.distributed.get_world_size() +
                                    paddle.distributed.get_rank()) % num_files]
@@ -374,7 +379,7 @@ def do_train(args):
                                  masked_lm_labels, next_sentence_labels,
                                  masked_lm_scale)
                 if global_step % args.logging_steps == 0:
-                    if (not args.n_gpu > 1
+                    if (not args.n_cards > 1
                         ) or paddle.distributed.get_rank() == 0:
                         logger.info(
                             "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
@@ -386,7 +391,7 @@ def do_train(args):
                 lr_scheduler.step()
                 optimizer.clear_gradients()
                 if global_step % args.save_steps == 0:
-                    if (not args.n_gpu > 1
+                    if (not args.n_cards > 1
                         ) or paddle.distributed.get_rank() == 0:
                         output_dir = os.path.join(args.output_dir,
                                                   "model_%d" % global_step)
@@ -410,7 +415,7 @@ def do_train(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.n_gpu > 1:
-        paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_gpu)
+    if args.n_cards > 1 and args.select_device == "gpu":
+        paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_cards)
     else:
         do_train(args)

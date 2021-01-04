@@ -148,10 +148,16 @@ def parse_args():
     parser.add_argument(
         "--seed", default=42, type=int, help="random seed for initialization")
     parser.add_argument(
-        "--n_gpu",
+        "--n_cards",
         default=1,
         type=int,
-        help="number of gpus to use, 0 for cpu.")
+        help="Number cards for the training, only support multi cards in the gpu."
+    )
+    parser.add_argument(
+        "--select_device",
+        type=str,
+        default="gpu",
+        help="Device for selecting for the training.")
     args = parser.parse_args()
     return args
 
@@ -265,7 +271,7 @@ def convert_example(example,
 
 
 def do_train(args):
-    paddle.set_device("gpu" if args.n_gpu else "cpu")
+    paddle.set_device(args.select_device)
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
@@ -402,10 +408,10 @@ def do_train(args):
                     evaluate(model, loss_fct, metric, dev_data_loader)
                     logger.info("eval done total : %s s" %
                                 (time.time() - tic_eval))
-                if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
-                    output_dir = os.path.join(
-                        args.output_dir, "%s_ft_model_%d.pdparams" %
-                        (args.task_name, global_step))
+                if (not args.n_cards > 1) or paddle.distributed.get_rank() == 0:
+                    output_dir = os.path.join(args.output_dir,
+                                              "%s_ft_model_%d.pdparams" %
+                                              (args.task_name, global_step))
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)
                     # Need better way to get inner model of DataParallel
@@ -426,7 +432,7 @@ def print_arguments(args):
 if __name__ == "__main__":
     args = parse_args()
     print_arguments(args)
-    if args.n_gpu > 1:
-        paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_gpu)
+    if args.n_cards > 1 and args.select_device == "gpu":
+        paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_cards)
     else:
         do_train(args)

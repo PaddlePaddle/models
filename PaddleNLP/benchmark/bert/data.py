@@ -45,7 +45,7 @@ def create_pretraining_dataset(input_file,
             size += 8 - (size % 8)
         # masked_lm_positions
         # Organize as a 1D tensor for gather or use gather_nd
-        out[3] = np.full(size, 0, dtype=np.int64)
+        out[3] = np.full(size, 0, dtype=np.int32)
         # masked_lm_labels
         out[4] = np.full([size, 1], -1, dtype=np.int64)
         mask_token_num = 0
@@ -78,7 +78,7 @@ def create_data_holder(args):
     input_mask = paddle.static.data(
         name="input_mask", shape=[-1, 1, 1, -1], dtype="float32")
     masked_lm_positions = paddle.static.data(
-        name="masked_lm_positions", shape=[-1], dtype="int64")
+        name="masked_lm_positions", shape=[-1], dtype="int32")
     masked_lm_labels = paddle.static.data(
         name="masked_lm_labels", shape=[-1, 1], dtype="int64")
     next_sentence_labels = paddle.static.data(

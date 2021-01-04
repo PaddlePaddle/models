@@ -48,11 +48,6 @@ def parse_args():
 
     # Required parameters
     parser.add_argument(
-        "--select_device",
-        default="gpu",
-        type=str,
-        help="The device that selecting for the training, must be gpu/xpu.")
-    parser.add_argument(
         "--task_name",
         default=None,
         type=str,
@@ -140,6 +135,11 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="Random seed for initialization")
+    parser.add_argument(
+        "--select_device",
+        type=str,
+        default="gpu",
+        help="Device for selecting for the training.")
     args = parser.parse_args()
     return args
 
