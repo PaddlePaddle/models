@@ -154,7 +154,7 @@ def do_train(args):
             train_reader_cost = time.time() - batch_start
 
             if args.is_distributed:
-                outs = exe.run(compiled_train_program,
+                outs = exe.run(train_program,
                                feed=[{
                                    'src_word': data[i][0],
                                    'trg_word': data[i][1],
@@ -162,7 +162,7 @@ def do_train(args):
                                } for i in range(trainer_count)],
                                fetch_list=[sum_cost.name, token_num.name])
             else:
-                outs = exe.run(train_program,
+                outs = exe.run(compiled_train_program,
                                feed=[{
                                    'src_word': data[i][0],
                                    'trg_word': data[i][1],
