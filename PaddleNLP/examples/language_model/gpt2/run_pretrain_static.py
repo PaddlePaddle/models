@@ -114,12 +114,22 @@ def parse_args():
 
     parser.add_argument(
         "--use_amp",
-        type=distutils.util.strtobool,
+        type=bool,
         default=False,
         help="Enable mixed precision training.")
     parser.add_argument(
+        "--use_sharding",
+        type=bool,
+        default=False,
+        help="Spliting the parameters to many cards.")
+    parser.add_argument(
+        "--use_recompute",
+        type=bool,
+        default=False,
+        help="Using the recompute to save the memory.")
+    parser.add_argument(
         "--enable_addto",
-        type=distutils.util.strtobool,
+        type=bool,
         default=False,
         help="Whether to enable the addto strategy for gradient accumulation or not. This is only used for AMP training."
     )
@@ -162,9 +172,9 @@ class WorkerInitObj(object):
 def create_data_holder(args):
     tokens = paddle.static.data(name="tokens", shape=[-1, -1], dtype="int64")
     loss_mask = paddle.static.data(
-        name="loss_mask", shape=[-1, -1], dtype="int64")
+        name="loss_mask", shape=[-1, -1], dtype="float32")
     attention_mask = paddle.static.data(
-        name="attention_mask", shape=[-1, -1, -1], dtype="float32")
+        name="attention_mask", shape=[-1, 1, -1, -1], dtype="float32")
     position_ids = paddle.static.data(
         name="position_ids", shape=[-1, -1], dtype="int64")
     labels = paddle.static.data(name="labels", shape=[-1, -1], dtype="int64")
@@ -181,7 +191,7 @@ def create_pretrained_dataset(args, input_path, data_holders, tokenizer,
     train_data_loader = DataLoader(
         dataset=train_data,
         places=places,
-        feed_lis=data_holders,
+        feed_list=data_holders,
         batch_sampler=train_batch_sampler,
         num_workers=0,
         worker_init_fn=worker_init,
@@ -213,7 +223,7 @@ def build_compiled_program(args, main_program, loss):
 
 def reset_program_state_dict(model, state_dict):
     scale = model.initializer_range if hasattr(model, "initializer_range")\
-        else model.bert.config["initializer_range"]
+        else model.gpt2.config["initializer_range"]
 
     new_state_dict = dict()
     for n, p in state_dict.items():
@@ -227,7 +237,7 @@ def reset_program_state_dict(model, state_dict):
 
 
 def dist_optimizer(args, optimizer):
-    build_strategy, exec_strategy = create_strategy()
+    build_strategy, exec_strategy = create_strategy(args)
 
     dist_strategy = fleet.DistributedStrategy()
     dist_strategy.execution_strategy = exec_strategy
@@ -247,7 +257,7 @@ def dist_optimizer(args, optimizer):
             "hybird_dp": True,
             "sharding_group_size": 8,
         }
-    if ars.use_recompute:
+    if args.use_recompute:
         dist_strategy.recompute = True
         dist_strategy.recompute_configs = {"checkpoints": model.checkpoints}
 
@@ -264,7 +274,7 @@ def set_seed(args):
 def do_train(args):
     # Initialize the paddle and paddle fleet execute enviroment
     paddle.enable_static()
-    place = paddle.set_device(args.select_device)
+    place = paddle.set_device("gpu")
     fleet.init(is_collective=True)
 
     worker_num = fleet.worker_num()
@@ -396,9 +406,8 @@ def do_train(args):
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1) or worker_index == 0:
                         logger.info(
-                            "global step %d, epoch: %d, lr: %.10f, batch: %d, loss: %f, speed: %.2f step/s"
-                            % (global_step, epoch, optimizer.get_lr(), step,
-                               loss_return[0],
+                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
+                            % (global_step, epoch, step, loss_return[0],
                                args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
                 if global_step % args.save_steps == 0:

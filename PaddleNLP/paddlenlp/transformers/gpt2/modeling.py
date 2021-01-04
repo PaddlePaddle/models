@@ -733,7 +733,8 @@ class GPT2Model(GPT2PretrainedModel):
                     (length, length),
                     dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
                 1)
-        if position_ids is not None:
+        if position_ids is None:
+            # TODO(wawltor) for the static mode, must use the shape to calculate the shape
             past_length = 0
             if cache is not None:
                 past_length = cache[0].k.shape[-2]

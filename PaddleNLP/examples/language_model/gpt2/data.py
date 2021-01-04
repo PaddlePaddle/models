@@ -69,7 +69,7 @@ class GPT2Dataset(paddle.io.Dataset):
             (1, seq_length, seq_length))
 
         # the pad and eod tokens do not contribute the loss
-        loss_mask = np.ones(seq_length)
+        loss_mask = np.ones(seq_length, dtype="float32")
         loss_mask[np.where(np.array(tokens) == self.eos_id)] = 0.0
         position_ids = np.arange(0, seq_length, dtype="int64")
 
@@ -84,6 +84,7 @@ class GPT2Dataset(paddle.io.Dataset):
                     position_ids[(pos_id + 1):] -= (pos_id + 1 - prev_index)
                     prev_index = i + 1
         attention_mask = (attention_mask - 1.0) * 10000.0
+        attention_mask = attention_mask.astype("float32")
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def __getitem__(self, index):
