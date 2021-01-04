@@ -7,7 +7,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.nn.initializer as I
 
-from data import create_data_loader, evaluate
+from data import create_data_loader
 from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
@@ -60,7 +60,7 @@ class BiLSTM(nn.Layer):
 
     def forward(self, x, seq_len):
         x_embed = self.embedder(x)
-        lstm_out, (hidden, cell) = self.lstm(x_embed, sequence_length=seq_len)
+        lstm_out, _ = self.lstm(x_embed, sequence_length=seq_len)
         # out = paddle.concat((hidden[-2, :, :], hidden[-1, :, :]), axis=1)
         # out = paddle.mean(lstm_out, axis=1)
         out = paddle.sum(lstm_out, axis=1)
@@ -68,8 +68,40 @@ class BiLSTM(nn.Layer):
         # logits = self.fc_2(fc_1)
         logits = self.fc(out)
         logits = self.dropout(logits)
-        # import pdb; pdb.set_trace()
         return logits
+
+
+def evaluate(model, loss_fct, metric, data_loader):
+    model.eval()
+    metric.reset()
+    for batch in data_loader:
+        input_ids, _, seq_len, labels = batch
+        logits = model(input_ids, seq_len)
+        loss = loss_fct(logits, labels)
+        correct = metric.compute(logits, labels)
+        metric.update(correct)
+    res = metric.accumulate()
+    if isinstance(metric, AccuracyAndF1):
+        print(
+            "eval loss: %f, acc: %s, precision: %s, recall: %s, f1: %s, acc and f1: %s, "
+            % (
+                loss.numpy(),
+                res[0],
+                res[1],
+                res[2],
+                res[3],
+                res[4], ),
+            end='')
+    elif isinstance(metric, Mcc):
+        print("eval loss: %f, mcc: %s, " % (loss.numpy(), res[0]), end='')
+    elif isinstance(metric, PearsonAndSpearman):
+        print(
+            "eval loss: %f, pearson: %s, spearman: %s, pearson and spearman: %s, "
+            % (loss.numpy(), res[0], res[1], res[2]),
+            end='')
+    else:
+        print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
+    model.train()
 
 
 def do_train(task_name='sst-2',
@@ -87,7 +119,11 @@ def do_train(task_name='sst-2',
     metric_class = TASK_CLASSES[task_name][1]
     metric = metric_class()
     train_data_loader, dev_data_loader = create_data_loader(
-        task_name, batch_size, max_seq_length, shuffle=True)
+        task_name,
+        batch_size,
+        max_seq_length,
+        shuffle=True,
+        data_augmentation=False)
     model = BiLSTM(
         emb_dim,
         hidden_size,
@@ -97,14 +133,13 @@ def do_train(task_name='sst-2',
         dropout_prob=dropout_prob)
 
     loss_fct = nn.CrossEntropyLoss()
-    gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
+    # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
 
     adam = paddle.optimizer.Adam(
         learning_rate=lr,
         parameters=model.parameters())  #, grad_clip=gloabl_norm_clip)
-    # adam = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
+    # sgd = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
 
-    loss_list = []
     global_step = 0
     tic_train = time.time()
     for epoch in range(num_epoch):

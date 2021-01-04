@@ -2,7 +2,6 @@ import time
 
 import paddle
 import paddle.nn as nn
-import paddle.nn.functional as F
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
@@ -11,7 +10,7 @@ from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 
 from small import BiLSTM
-from data import create_data_loader, evaluate
+from data import create_data_loader
 
 TASK_CLASSES = {
     "cola": (GlueCoLA, Mcc),
@@ -52,7 +51,6 @@ def evaluate(model,
         logits = model(input_ids, seq_len)
         loss = alpha * ce_loss(logits, labels) + (1 - alpha) * mse_loss(
             logits, teacher_logits)
-        # F.softmax(logits), F.softmax(teacher_logits))
 
         correct = metric.compute(logits, labels)
         metric.update(correct)
@@ -91,11 +89,22 @@ def do_train(task_name='sst-2',
              vocab_size=30522,
              padding_idx=0,
              dropout_prob=0.5,
-             save_steps=50,
+             save_steps=20,
              alpha=0):
-
-    train_data_loader, dev_data_loader = create_data_loader(
-        task_name, batch_size, max_seq_length, shuffle=False)
+    if task_name == 'mnli':
+        train_data_loader, dev_data_loader_matched, dev_data_loader_mismatched = create_data_loader(
+            task_name,
+            batch_size,
+            max_seq_length,
+            shuffle=True,
+            data_augmentation=True)
+    else:
+        train_data_loader, dev_data_loader = create_data_loader(
+            task_name,
+            batch_size,
+            max_seq_length,
+            shuffle=True,
+            data_augmentation=True)
 
     model = BiLSTM(
         emb_dim,
@@ -104,9 +113,11 @@ def do_train(task_name='sst-2',
         output_dim,
         padding_idx,
         dropout_prob=dropout_prob)
-    # adam = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
 
-    gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
+    # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
+
+    # sgd = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
+
     adam = paddle.optimizer.Adam(
         learning_rate=lr, parameters=model.parameters())
     # grad_clip=gloabl_norm_clip)
@@ -118,31 +129,23 @@ def do_train(task_name='sst-2',
     metric = metric_class()
 
     teacher = Teacher()
-    teacher_train_logits_list = []
     teacher_eval_logits_list = []
     with paddle.no_grad():
-        for i, batch in enumerate(train_data_loader):
-            input_ids, segment_ids, _, labels = batch
-            teacher_logits = teacher.model(input_ids, segment_ids)
-            teacher_train_logits_list.append(teacher_logits)
         for i, batch in enumerate(dev_data_loader):
             input_ids, segment_ids, _, labels = batch
             teacher_logits = teacher.model(input_ids, segment_ids)
             teacher_eval_logits_list.append(teacher_logits)
 
-    print("Teacher model's eval logits have been calculated. Start to train...")
     global_step = 0
     tic_train = time.time()
     for epoch in range(num_epoch):
         model.train()
         for i, batch in enumerate(train_data_loader):
             input_ids, segment_ids, seq_len, labels = batch
-            # with paddle.no_grad():
-            #     teacher.model.eval()
-            #     teacher_logits = teacher.model(input_ids, segment_ids)
+            with paddle.no_grad():
+                teacher.model.eval()
+                teacher_logits = teacher.model(input_ids, segment_ids)
             logits = model(input_ids, seq_len)
-            model.train()
-            teacher_logits = teacher_train_logits_list[i]
             loss = alpha * ce_loss(logits, labels) + (1 - alpha) * mse_loss(
                 logits, teacher_logits)
 
@@ -150,7 +153,6 @@ def do_train(task_name='sst-2',
             adam.step()
             adam.clear_grad()
 
-            global_step += 1
             if i % save_steps == 0:
                 print(
                     "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.4f step/s"
@@ -162,8 +164,9 @@ def do_train(task_name='sst-2',
                              dev_data_loader_matched, teacher_eval_logits_list,
                              alpha)
                     evaluate(model, ce_loss, mse_loss, metric,
-                             dev_data_loader_mismatched, teacher_logits_list,
-                             teacher_eval_logits_list, alpha)
+                             dev_data_loader_mismatched,
+                             teacher_eval_logits_list, teacher_eval_logits_list,
+                             alpha)
                     print("eval done total : %s s" % (time.time() - tic_eval))
 
                 else:
@@ -171,6 +174,7 @@ def do_train(task_name='sst-2',
                              teacher_eval_logits_list, alpha)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 tic_train = time.time()
+            global_step += 1
 
 
 if __name__ == '__main__':
