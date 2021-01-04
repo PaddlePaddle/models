@@ -179,8 +179,8 @@ def do_train(args):
     # creat the critrion for the gpt model
     criterion = GPT2PretrainingCriterion()
 
-    state_dict = paddle.load("./new_gpt2.pdparams")
-    model.set_state_dict(state_dict)
+    # state_dict = paddle.load("./new_gpt2.pdparams")
+    # model.set_state_dict(state_dict)
 
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
@@ -265,7 +265,6 @@ def do_train(args):
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1
                         ) or paddle.distributed.get_rank() == 0:
-                        print()
                         logger.info(
                             "global step %d, epoch: %d, lr: %.10f, batch: %d, loss: %f, speed: %.2f step/s"
                             % (global_step, epoch, optimizer.get_lr(), step,

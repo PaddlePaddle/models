@@ -43,12 +43,6 @@ class GPT2Dataset(paddle.io.Dataset):
         nltk.download("punkt")
         with open(self.file_path, "r") as input_file:
             for line in input_file.readlines():
-                # if "</doc>" in line:
-                #     continue
-                # if "<doc" in line:
-                #     continue
-                # if len(line) < 50:
-                #     continue
                 json_data = json.loads(line)
                 sent_list = []
                 for line in json_data['text'].split('\n'):
@@ -59,7 +53,6 @@ class GPT2Dataset(paddle.io.Dataset):
                 if len(sent_list) < 1:
                     continue
                 self.example_texts.append("\n".join(sent_list))
-                #self.example_texts.append(line.strip())
 
     def _pad_seq(self, seq):
         total_tokens = self.max_seq_len + 1

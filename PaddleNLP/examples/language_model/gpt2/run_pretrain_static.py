@@ -351,9 +351,8 @@ def do_train(args):
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
     state_dict = model.state_dict()
-    tensor_dict = paddle.load("new_gpt2.pdparams")
     # Use the state dict to update the parameter
-    reset_state_dict = copy_program_state_dict(model, state_dict, tensor_dict)
+    reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
 
     if worker_num == 1:
