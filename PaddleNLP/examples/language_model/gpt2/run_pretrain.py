@@ -176,7 +176,7 @@ def do_train(args):
     model = GPT2ForPretraining(
         GPT2Model(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
-    # creat the critrion for the gpt model 
+    # creat the critrion for the gpt model
     criterion = GPT2PretrainingCriterion()
 
     state_dict = paddle.load("./new_gpt2.pdparams")
@@ -265,6 +265,7 @@ def do_train(args):
                 if global_step % args.logging_steps == 0:
                     if (not args.n_gpu > 1
                         ) or paddle.distributed.get_rank() == 0:
+                        print()
                         logger.info(
                             "global step %d, epoch: %d, lr: %.10f, batch: %d, loss: %f, speed: %.2f step/s"
                             % (global_step, epoch, optimizer.get_lr(), step,
@@ -293,8 +294,6 @@ def do_train(args):
                 if global_step >= args.max_steps:
                     print("delete the data loader")
                     del train_data_loader
-                    return
-                if global_step == 50:
                     return
             del train_data_loader
             train_data_loader = dataset_future.result(timeout=None)
