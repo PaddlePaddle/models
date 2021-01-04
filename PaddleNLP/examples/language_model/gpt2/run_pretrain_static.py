@@ -68,7 +68,7 @@ def parse_args():
 
     parser.add_argument(
         "--batch_size",
-        default=8,
+        default=32,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
@@ -79,7 +79,7 @@ def parse_args():
 
     parser.add_argument(
         "--weight_decay",
-        default=0.0,
+        default=0.01,
         type=float,
         help="Weight decay if we apply some.")
 
@@ -94,15 +94,13 @@ def parse_args():
         type=float,
         help="Epsilon for Adam optimizer.")
     parser.add_argument(
-        "--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
-    parser.add_argument(
         "--num_train_epochs",
         default=1,
         type=int,
         help="Total number of training epochs to perform.", )
     parser.add_argument(
         "--max_steps",
-        default=320000,
+        default=3600000,
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
@@ -136,13 +134,12 @@ def parse_args():
     parser.add_argument(
         "--scale_loss",
         type=float,
-        default=1.0,
+        default=128,
         help="The value of scale_loss for fp16.")
-
     parser.add_argument(
         "--logging_steps",
         type=int,
-        default=1,
+        default=100,
         help="Log every X updates steps.")
     parser.add_argument(
         "--save_steps",
@@ -151,11 +148,6 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="random seed for initialization")
-    parser.add_argument(
-        "--n_gpu",
-        type=int,
-        default=1,
-        help="number of gpus to use, 0 for cpu.")
     args = parser.parse_args()
     return args
 
@@ -186,7 +178,7 @@ def create_pretrained_dataset(args, input_path, data_holders, tokenizer,
     train_data = GPT2Dataset(file_path=input_path, tokenizer=tokenizer)
 
     train_batch_sampler = paddle.io.BatchSampler(
-        train_data, batch_size=args.batch_size, shuffle=False)
+        train_data, batch_size=args.batch_size, shuffle=True)
 
     train_data_loader = DataLoader(
         dataset=train_data,
@@ -204,7 +196,7 @@ def create_strategy(args):
     build_strategy = paddle.static.BuildStrategy()
     exec_strategy = paddle.static.ExecutionStrategy()
 
-    build_strategy.enable_addto = args.enable_addto
+    build_strategy.enable_addto = a
 
     exec_strategy.num_threads = 1
     exec_strategy.num_iteration_per_drop_scope = 10000
@@ -367,7 +359,7 @@ def do_train(args):
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
             if os.path.isfile(os.path.join(args.input_dir, f))
         ]
-        #files.sort()
+        files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
         f_start_id = 0
@@ -414,7 +406,7 @@ def do_train(args):
                 # In the new 2.0 api, must call this function to change the learning_rate
                 lr_scheduler.step()
                 if global_step % args.logging_steps == 0:
-                    if (not args.n_gpu > 1) or worker_index == 0:
+                    if worker_index == 0:
                         logger.info(
                             "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
                             % (global_step, epoch, step, loss_return[0],

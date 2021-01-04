@@ -334,12 +334,9 @@ class MultiHeadAttention(nn.Layer):
         product = layers.matmul(
             x=q, y=k, transpose_y=True, alpha=self.head_dim**-0.5)
 
-        print("self score 1:{}".format(product.sum()))
-        print("self score 2:{}".format(product.sum()))
         if attn_mask is not None:
             # TODO(guosheng): support bool mask
             product = product + attn_mask
-        print("self weights 1:{}".format(product.sum()))
         weights = F.softmax(product)
         if self.dropout:
             weights = F.dropout(
@@ -353,11 +350,9 @@ class MultiHeadAttention(nn.Layer):
         # combine heads
         out = tensor.transpose(out, perm=[0, 2, 1, 3])
         out = tensor.reshape(x=out, shape=[0, 0, out.shape[2] * out.shape[3]])
-        print("self weights 2:{}".format(out.sum()))
 
         # project to output
         out = self.out_proj(out)
-        print("self weights 3:{}".format(out.sum()))
 
         outs = [out]
         if self.need_weights:
@@ -563,17 +558,14 @@ class TransformerDecoderLayer(nn.Layer):
 
     def forward(self, tgt, memory, tgt_mask=None, use_cache=False, cache=None):
         residual = tgt
-        print("before_norm:{}".format(tgt.sum()))
         if self.normalize_before:
             tgt = self.norm1(tgt)
 
-        print("after_norm:{}".format(tgt.abs().sum()))
         if use_cache is False:
             tgt = self.self_attn(tgt, tgt, tgt, tgt_mask, use_cache, cache)
         else:
             tgt, incremental_cache = self.self_attn(tgt, tgt, tgt, tgt_mask,
                                                     use_cache, cache)
-        print("attention_output:{}".format(tgt.abs().sum()))
         tgt = residual + self.dropout1(tgt)
         if not self.normalize_before:
             tgt = self.norm1(tgt)
@@ -765,7 +757,6 @@ class GPT2Model(GPT2PretrainedModel):
 
         embedding_output = self.embeddings(
             input_ids=input_ids, position_ids=position_ids)
-        print("ebedding mean:{}".format(embedding_output.mean()))
         encoder_outputs = self.decoder(
             embedding_output,
             memory=None,
@@ -773,7 +764,6 @@ class GPT2Model(GPT2PretrainedModel):
             use_cache=use_cache,
             cache=cache)
         self.checkpoints.extend(self.decoder.checkpoints)
-        print("transformer output:{}".format(encoder_outputs.mean()))
         return encoder_outputs
 
 
@@ -805,7 +795,6 @@ class GPT2ForPretraining(GPT2PretrainedModel):
             self.gpt2.embeddings.word_embeddings.weight,
             transpose_y=True)
 
-        print("before loss:{}".format(logits.mean()))
         if use_cache:
             return logits, cached_kvs
         else:
