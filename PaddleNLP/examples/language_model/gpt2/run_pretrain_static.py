@@ -238,9 +238,11 @@ def copy_program_state_dict(model, static_dict, tensor_dict):
 def dist_optimizer(args, optimizer, model, worker_num):
     build_strategy, exec_strategy = create_strategy(args)
 
+    exec_strategy.num_threads = 2
     dist_strategy = fleet.DistributedStrategy()
     dist_strategy.execution_strategy = exec_strategy
     dist_strategy.build_strategy = build_strategy
+    dist_strategy.nccl_comm_num = 1
 
     dist_strategy.fuse_grad_size_in_MB = 16
     if args.use_amp:
@@ -330,7 +332,6 @@ def do_train(args):
     #optimizer.apply_optimize = optimizer._apply_optimize
 
     if worker_num == 1 and args.use_amp:
-        print("in the amp")
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
             custom_white_list=['softmax', 'layer_norm', 'gelu'])
         optimizer = paddle.fluid.contrib.mixed_precision.decorate(

@@ -661,8 +661,8 @@ class GPT2PretrainedModel(PretrainedModel):
         "gpt2-medium-en": {
             "vocab_size": 50304,
             "hidden_size": 1024,
-            "num_hidden_layers": 24,
-            "num_attention_heads": 26,
+            "num_hidden_layers": 12,
+            "num_attention_heads": 16,
             "intermediate_size": 4096,
             "hidden_act": "gelu",
             "hidden_dropout_prob": 0.1,
