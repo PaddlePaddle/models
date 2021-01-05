@@ -54,7 +54,7 @@ class GPT2Dataset(paddle.io.Dataset):
         self.eos_id = tokenizer.get_command("eos").Id
         print("the eos is:{}".format(self.eos_id))
 
-        self.init_weighting()
+        self._init_weighting()
 
     def _read_json(self):
         nltk.download("punkt")
@@ -62,7 +62,7 @@ class GPT2Dataset(paddle.io.Dataset):
             for line in input_file.readlines():
                 self.example_texts.append(json.loads(line)['text'])
 
-    def init_weighting(self):
+    def _init_weighting(self):
         if self.weighted:
             lens = np.array([len(d) for d in self.example_texts])
             self.total_len = np.sum(lens)
@@ -70,7 +70,7 @@ class GPT2Dataset(paddle.io.Dataset):
         else:
             self.weighting = None
 
-    def get_weighted_samples(self, np_rng):
+    def _get_weighted_samples(self, np_rng):
         if self.weighting is not None:
             idx = np_rng.randint(self.total_len)
             return bisect_right(self.weighting, idx)
@@ -83,7 +83,7 @@ class GPT2Dataset(paddle.io.Dataset):
         seq += [self.tokenizer.get_command('pad').Id] * (num_pad_tokens)
         return seq
 
-    def getidx(self, data_idx):
+    def _getidx(self, data_idx):
         data = self.example_texts[data_idx]
         # tokenize
         tokenization = self.tokenizer.encode(data)
@@ -91,7 +91,7 @@ class GPT2Dataset(paddle.io.Dataset):
         tokens = tokenization.tokenization
         return tokens
 
-    def contains_sentence_end(self, tok):
+    def _contains_sentence_end(self, tok):
         tok = self.tokenizer.IdToToken(tok)
         if '.' in tok:
             return True
@@ -115,7 +115,7 @@ class GPT2Dataset(paddle.io.Dataset):
         position_ids = np.arange(0, seq_length, dtype="int64")
 
         if self.reset_attenion_mask or self.reset_position_id:
-            eos_indices = position_ids[np.weher(tokens == eod_token)]
+            eos_indices = position_ids[np.where(tokens == self.eos_id)]
             prev_index = 0
             for i in range(eos_indices.size()[0]):
                 pos_id = eos_indices[i]
@@ -135,8 +135,8 @@ class GPT2Dataset(paddle.io.Dataset):
             seed=[rng.randint(0, 2**32 - 1) for _ in range(16)])
 
         # get possibly weighted random index from dataset
-        data_idx = self.get_weighted_samples(rng)
-        tokens = self.getidx(data_idx)
+        data_idx = self._get_weighted_samples(rng)
+        tokens = self._getidx(data_idx)
 
         # truncate or pad tokens
         num_tokens = len(tokens)
@@ -149,7 +149,7 @@ class GPT2Dataset(paddle.io.Dataset):
                 not_done = True
                 while (len(token_copy) > 0) and not_done:
                     tok = token_copy.pop(0)
-                    if self.contains_sentence_end(tok):
+                    if self._contains_sentence_end(tok):
                         tokens = token_copy
                         not_done = False
             strip_right_rokens = len(tokens) - self.max_seq_len - 1
@@ -159,10 +159,10 @@ class GPT2Dataset(paddle.io.Dataset):
         if self.sample_across_doc:
             while (len(tokens) < (self.max_seq_len + 1)):
                 if self.random_across_doc_sampling:
-                    data_idx = self.get_weighted_samples(rng)
+                    data_idx = self._get_weighted_samples(rng)
                 else:
                     data_idx = (data_idx + 1) % self.num_example_texts
-                tokens += self.getidx(data_idx)
+                tokens += self._getidx(data_idx)
             tokens = tokens[:(self.max_seq_len + 1)]
 
         tokens = self._pad_seq(tokens)
