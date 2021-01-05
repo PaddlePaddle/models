@@ -175,7 +175,7 @@ def evaluate(model, loss_fct, metric, data_loader):
     model.eval()
     metric.reset()
     for batch in data_loader:
-        input_ids, segment_ids, _, labels = batch
+        input_ids, segment_ids, labels = batch
         logits = model(input_ids, segment_ids)
         loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
@@ -389,7 +389,7 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
             global_step += 1
-            input_ids, segment_ids, _, labels = batch
+            input_ids, segment_ids, labels = batch
             logits = model(input_ids, segment_ids)
             loss = loss_fct(logits, labels)
             loss.backward()

@@ -10,7 +10,7 @@ from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 
 from small import BiLSTM
-from data import create_data_loader
+from data import create_data_loader, load_embedding
 
 TASK_CLASSES = {
     "cola": (GlueCoLA, Mcc),
@@ -27,7 +27,7 @@ TASK_CLASSES = {
 class Teacher(object):
     def __init__(self,
                  model_name='bert-base-uncased',
-                 param_path='model/SST-2/best_model_350/model_state.pdparams',
+                 param_path='model/SST-2/best_model_610/model_state.pdparams',
                  max_seq_len=128):
         self.max_seq_len = max_seq_len
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
@@ -81,10 +81,10 @@ def evaluate(model,
 def do_train(task_name='sst-2',
              num_epoch=60,
              batch_size=128,
-             lr=0.005,
+             lr=1.0,
              max_seq_length=128,
-             emb_dim=256,
-             hidden_size=256,
+             emb_dim=300,
+             hidden_size=300,
              output_dim=2,
              vocab_size=30522,
              padding_idx=0,
@@ -93,34 +93,23 @@ def do_train(task_name='sst-2',
              alpha=0):
     if task_name == 'mnli':
         train_data_loader, dev_data_loader_matched, dev_data_loader_mismatched = create_data_loader(
-            task_name,
-            batch_size,
-            max_seq_length,
-            shuffle=True,
-            data_augmentation=True)
+            task_name, batch_size, max_seq_length, data_augmentation=True)
     else:
         train_data_loader, dev_data_loader = create_data_loader(
-            task_name,
-            batch_size,
-            max_seq_length,
-            shuffle=True,
-            data_augmentation=True)
+            task_name, batch_size, max_seq_length, data_augmentation=True)
 
+    emb_tensor = load_embedding()
     model = BiLSTM(
         emb_dim,
         hidden_size,
         vocab_size,
         output_dim,
         padding_idx,
-        dropout_prob=dropout_prob)
+        dropout_prob=dropout_prob,
+        embed_weight=emb_tensor)
 
-    # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
-
-    # sgd = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
-
-    adam = paddle.optimizer.Adam(
-        learning_rate=lr, parameters=model.parameters())
-    # grad_clip=gloabl_norm_clip)
+    optimizer = paddle.optimizer.Adadelta(
+        learning_rate=lr, rho=0.95, parameters=model.parameters())
 
     ce_loss = nn.CrossEntropyLoss()
     mse_loss = nn.MSELoss()
@@ -150,8 +139,8 @@ def do_train(task_name='sst-2',
                 logits, teacher_logits)
 
             loss.backward()
-            adam.step()
-            adam.clear_grad()
+            optimizer.step()
+            optimizer.clear_grad()
 
             if i % save_steps == 0:
                 print(

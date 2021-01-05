@@ -1,4 +1,7 @@
+import io
+import os
 from functools import partial
+import gensim
 import numpy as np
 
 import paddle
@@ -28,7 +31,7 @@ def apply_data_augmentation(train_dataset,
                             n_iter=20,
                             p_mask=0.1,
                             p_ng=0.25,
-                            ngram_range=(1, 5)):
+                            ngram_range=(2, 6)):
     used_texts = [data[0] for data in train_dataset]
     new_data = []
     for data in train_dataset:
@@ -79,7 +82,7 @@ def create_data_loader(task_name='sst-2',
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
         Stack(),  # length
         Stack(dtype="int64" if train_dataset.get_labels() else "float32")  # label
-    ): [data for i, data in enumerate(fn(samples))]  # if i != 2]
+    ): [data for i, data in enumerate(fn(samples))]
 
     # Create train loader
     train_data_loader = DataLoader(
@@ -124,4 +127,26 @@ def create_data_loader(task_name='sst-2',
         collate_fn=batchify_fn,
         num_workers=0,
         return_list=True)
+
     return train_data_loader, dev_data_loader
+
+
+def load_embedding(model_path='/root/.paddlenlp/models/bert-base-uncased',
+                   emb_dim=300,
+                   word2vec_path='GoogleNews-vectors-negative300.bin'):
+    vocab_path = os.path.join(model_path, 'bert-base-uncased-vocab.txt')
+    vocab_list = []
+    with io.open(vocab_path) as f:
+        for line in f:
+            vocab_list.append(line.strip())
+    vocab_size = len(vocab_list)
+    emb_np = np.zeros((vocab_size, emb_dim), dtype="float32")
+    word2vec_dict = gensim.models.KeyedVectors.load_word2vec_format(
+        word2vec_path, binary=True)
+
+    for i in range(vocab_size):
+        word = vocab_list[i]
+        if word in word2vec_dict:
+            emb_np[i] = word2vec_dict[word]
+    emb_tensor = paddle.to_tensor(emb_np)
+    return emb_tensor

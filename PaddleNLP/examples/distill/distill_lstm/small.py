@@ -7,7 +7,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.nn.initializer as I
 
-from data import create_data_loader
+from data import create_data_loader, load_embedding
 from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
@@ -35,37 +35,25 @@ class BiLSTM(nn.Layer):
                  num_layers=1,
                  direction='bidirectional',
                  dropout_prob=0.0,
-                 init_scale=0.1):
+                 init_scale=0.1,
+                 embed_weight=None):
         super(BiLSTM, self).__init__()
-        self.embedder = nn.Embedding(
-            vocab_size,
-            embed_dim,
-            padding_idx,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)))
+        self.embedder = nn.Embedding(vocab_size, embed_dim, padding_idx)
+        self.embedder.weight.set_value(embed_weight)
+
         self.lstm = nn.LSTM(
             embed_dim, hidden_size, num_layers, direction, dropout=dropout_prob)
         self.fc = nn.Linear(
             hidden_size * 2,
-            # hidden_size,
             output_dim,
             weight_attr=paddle.ParamAttr(initializer=I.Uniform(
                 low=-init_scale, high=init_scale)))
-        # self.fc_2 = nn.Linear(
-        #     hidden_size,
-        #     output_dim,
-        #     weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-        #         low=-init_scale, high=init_scale)))
         self.dropout = nn.Dropout(dropout_prob)
 
     def forward(self, x, seq_len):
         x_embed = self.embedder(x)
         lstm_out, _ = self.lstm(x_embed, sequence_length=seq_len)
-        # out = paddle.concat((hidden[-2, :, :], hidden[-1, :, :]), axis=1)
-        # out = paddle.mean(lstm_out, axis=1)
         out = paddle.sum(lstm_out, axis=1)
-        # fc_1 = paddle.nn.ReLU()(self.fc_1(out))
-        # logits = self.fc_2(fc_1)
         logits = self.fc(out)
         logits = self.dropout(logits)
         return logits
@@ -107,38 +95,42 @@ def evaluate(model, loss_fct, metric, data_loader):
 def do_train(task_name='sst-2',
              num_epoch=30,
              batch_size=128,
-             lr=0.005,
+             lr=1.0,
              max_seq_length=128,
-             emb_dim=256,
-             hidden_size=256,
+             emb_dim=300,
+             hidden_size=300,
              output_dim=2,
              vocab_size=30522,
              padding_idx=0,
-             dropout_prob=0.5,
-             save_steps=50):
+             dropout_prob=0.3,
+             save_steps=20):
     metric_class = TASK_CLASSES[task_name][1]
     metric = metric_class()
-    train_data_loader, dev_data_loader = create_data_loader(
-        task_name,
-        batch_size,
-        max_seq_length,
-        shuffle=True,
-        data_augmentation=False)
+    if task_name == 'mnli':
+        train_data_loader, dev_data_loader_matched, dev_data_loader_mismatched = create_data_loader(
+            task_name, batch_size, max_seq_length)
+    else:
+        train_data_loader, dev_data_loader = create_data_loader(
+            task_name, batch_size, max_seq_length)
+
+    emb_tensor = load_embedding()
     model = BiLSTM(
         emb_dim,
         hidden_size,
         vocab_size,
         output_dim,
         padding_idx,
-        dropout_prob=dropout_prob)
+        dropout_prob=dropout_prob,
+        embed_weight=emb_tensor)
 
     loss_fct = nn.CrossEntropyLoss()
     # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
 
-    adam = paddle.optimizer.Adam(
-        learning_rate=lr,
-        parameters=model.parameters())  #, grad_clip=gloabl_norm_clip)
-    # sgd = paddle.optimizer.SGD(learning_rate=lr, parameters=model.parameters())#, grad_clip=gloabl_norm_clip)
+    # optimizer = paddle.optimizer.Adam(
+    #     learning_rate=lr,
+    #     parameters=model.parameters())
+    optimizer = paddle.optimizer.Adadelta(
+        learning_rate=lr, rho=0.95, parameters=model.parameters())
 
     global_step = 0
     tic_train = time.time()
@@ -148,9 +140,9 @@ def do_train(task_name='sst-2',
             logits = model(input_ids, seq_len)
 
             loss = loss_fct(logits, labels)
-            adam.clear_grad()
+            optimizer.clear_grad()
             loss.backward()
-            adam.step()
+            optimizer.step()
 
             if i % save_steps == 0:
                 with paddle.no_grad():
