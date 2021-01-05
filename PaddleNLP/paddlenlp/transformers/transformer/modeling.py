@@ -167,7 +167,7 @@ class TransformerBeamSearchDecoder(nn.decode.BeamSearchDecoder):
         return c
 
     def _split_batch_beams_with_var_dim(self, c):
-        var_dim_size = c.shape[self.var_dim_in_state]
+        var_dim_size = paddle.shape(c)[self.var_dim_in_state]
         c = paddle.reshape(
             c, [-1, self.beam_size] +
             [int(size)
