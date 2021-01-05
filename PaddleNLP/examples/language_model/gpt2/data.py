@@ -56,46 +56,6 @@ class GPT2Dataset(paddle.io.Dataset):
 
         self.init_weighting()
 
-# defaults = {
-#     'world_size': 1,
-#     'rank': -1,
-#     'persist_state': 0,
-#     'lazy': False,
-#     'transpose': False,
-#     'data_set_type': 'GPT2',
-#     'seq_length': 256,
-#     'eval_seq_length': 256,
-#     'samples_per_shard': 100
-# }
-
-# data_set_args = {
-#     'path': args.train_data,
-#     'seq_length': seq_length,
-#     'lazy': args.lazy_loader,
-#     'delim': args.delim,
-#     'text_key': args.text_key,
-#     'label_key': 'label',
-#     'non_binary_cols': None,
-#     'ds_type': args.data_set_type,
-#     'split': split,
-#     'loose': args.loose_json,
-#     'tokenizer_type': args.tokenizer_type,
-#     'tokenizer_model_path': args.tokenizer_path,
-#     'vocab_size': args.vocab_size,
-#     'model_type': args.tokenizer_model_type,
-#     'cache_dir': args.cache_dir,
-#     'max_preds_per_seq': args.max_preds_per_seq,
-#     'presplit_sentences': args.presplit_sentences
-# text_key=text_key, label_key=label_key, binarize_sent=binarize_sent,
-# delim=delim, drop_unlabeled=drop_unlabeled, loose_json=loose
-
-# DeepSpeed流程： 
-# pretrain_gpt.py: configure_data().apply
-# configure_data: 配置参数
-# apply: make_loaders : 解析参数得到data_set_args， 
-#                       调用data_utils.make_dataset(**data_set_args)，get_dataset{ return corpora.NAMED_CORPORA[path](**kwargs)即wikipedia(**kwargs)}，（make_lazy，lazy_array_loader if lazy），make_tokenizer，split_ds，GPT2Dataset 
-#                       调用make_data_loader返回data loader
-
     def _read_json(self):
         nltk.download("punkt")
         with open(self.file_path, "r") as input_file:
