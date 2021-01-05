@@ -39,11 +39,6 @@ MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--select_device",
-        default="gpu",
-        type=str,
-        help="The device that selecting for the training, must be gpu/xpu.")
-    parser.add_argument(
         "--model_type",
         default=None,
         type=str,
@@ -141,6 +136,11 @@ def parse_args():
         type=float,
         default=1.0,
         help="The value of scale_loss for fp16.")
+    parser.add_argument(
+        "--select_device",
+        type=str,
+        default="gpu",
+        help="Device for selecting for the training.")
     args = parser.parse_args()
     return args
 

@@ -26,10 +26,14 @@ import distutils.util
 import paddle
 from paddle.io import DataLoader, Dataset
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
-from paddlenlp.transformers import BertTokenizer
+from paddlenlp.transformers import ErnieForPretraining, ErnieModel, ErniePretrainingCriterion
+from paddlenlp.transformers import BertTokenizer, ErnieTokenizer
 from data import create_data_holder, create_pretraining_dataset
 
-MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
+MODEL_CLASSES = {
+    "bert": (BertForPretraining, BertTokenizer),
+    "ernie": (ErnieForPretraining, ErnieTokenizer)
+}
 
 
 def parse_args():
@@ -141,7 +145,9 @@ def parse_args():
     return args
 
 
-def build_compiled_program(main_program, loss):
+def build_compiled_program(args, main_program, loss):
+    if args.select_device == "xpu":
+        return main_program
     exec_strategy = paddle.static.ExecutionStrategy()
     exec_strategy.num_threads = 1
     exec_strategy.num_iteration_per_drop_scope = 10000
@@ -250,7 +256,7 @@ def do_train(args):
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
     # Construct the compiled program
-    main_program = build_compiled_program(main_program, loss)
+    main_program = build_compiled_program(args, main_program, loss)
     global_step = 0
     tic_train = time.time()
     epoch = 0
