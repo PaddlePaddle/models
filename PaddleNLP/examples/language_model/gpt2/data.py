@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+import random
+from bisect import bisect_right
+from itertools import accumulate
+
 import nltk
 import numpy as np
 import pandas as pd
@@ -22,43 +26,120 @@ class GPT2Dataset(paddle.io.Dataset):
     def __init__(self,
                  file_path,
                  tokenizer,
+                 num_samples=None,
                  max_seq_len=1024,
-                 weighted=False,
+                 weighted=True,
                  sample_across_doc=True,
                  random_across_doc_sampling=True,
                  reset_attenion_mask=False,
                  reset_position_id=False,
+                 sentence_start=False,
                  mode="train"):
         self.file_path = file_path
         self.tokenizer = tokenizer
+
         self.max_seq_len = max_seq_len
+        self.weighted = weighted
+        self.sample_across_doc = sample_across_doc
+        self.random_across_doc_sampling = random_across_doc_sampling
         self.reset_attenion_mask = reset_attenion_mask
         self.reset_position_id = reset_position_id
+        self.sentence_start = sentence_start
+
         self.example_texts = []
         self._read_json()
+        self.num_example_texts = len(self.example_texts)
+        if num_samples is None:
+            self.num_samples = 1000 * self.num_example_texts
         self.eos_id = tokenizer.get_command("eos").Id
         print("the eos is:{}".format(self.eos_id))
+
+        self.init_weighting()
+
+# defaults = {
+#     'world_size': 1,
+#     'rank': -1,
+#     'persist_state': 0,
+#     'lazy': False,
+#     'transpose': False,
+#     'data_set_type': 'GPT2',
+#     'seq_length': 256,
+#     'eval_seq_length': 256,
+#     'samples_per_shard': 100
+# }
+
+# data_set_args = {
+#     'path': args.train_data,
+#     'seq_length': seq_length,
+#     'lazy': args.lazy_loader,
+#     'delim': args.delim,
+#     'text_key': args.text_key,
+#     'label_key': 'label',
+#     'non_binary_cols': None,
+#     'ds_type': args.data_set_type,
+#     'split': split,
+#     'loose': args.loose_json,
+#     'tokenizer_type': args.tokenizer_type,
+#     'tokenizer_model_path': args.tokenizer_path,
+#     'vocab_size': args.vocab_size,
+#     'model_type': args.tokenizer_model_type,
+#     'cache_dir': args.cache_dir,
+#     'max_preds_per_seq': args.max_preds_per_seq,
+#     'presplit_sentences': args.presplit_sentences
+# text_key=text_key, label_key=label_key, binarize_sent=binarize_sent,
+# delim=delim, drop_unlabeled=drop_unlabeled, loose_json=loose
+
+# DeepSpeed流程： 
+# pretrain_gpt.py: configure_data().apply
+# configure_data: 配置参数
+# apply: make_loaders : 解析参数得到data_set_args， 
+#                       调用data_utils.make_dataset(**data_set_args)，get_dataset{ return corpora.NAMED_CORPORA[path](**kwargs)即wikipedia(**kwargs)}，（make_lazy，lazy_array_loader if lazy），make_tokenizer，split_ds，GPT2Dataset 
+#                       调用make_data_loader返回data loader
 
     def _read_json(self):
         nltk.download("punkt")
         with open(self.file_path, "r") as input_file:
             for line in input_file.readlines():
-                json_data = json.loads(line)
-                sent_list = []
-                for line in json_data['text'].split('\n'):
-                    if line != '\n':
-                        if len(line) < 10:
-                            continue
-                    sent_list.extend(nltk.tokenize.sent_tokenize(line))
-                if len(sent_list) < 1:
-                    continue
-                self.example_texts.append("\n".join(sent_list))
+                self.example_texts.append(json.loads(line)['text'])
+
+    def init_weighting(self):
+        if self.weighted:
+            lens = np.array([len(d) for d in self.example_texts])
+            self.total_len = np.sum(lens)
+            self.weighting = list(accumulate(lens))
+        else:
+            self.weighting = None
+
+    def get_weighted_samples(self, np_rng):
+        if self.weighting is not None:
+            idx = np_rng.randint(self.total_len)
+            return bisect_right(self.weighting, idx)
+        else:
+            return np_rng.randint(0, self.num_example_texts)
 
     def _pad_seq(self, seq):
         total_tokens = self.max_seq_len + 1
         num_pad_tokens = max(0, total_tokens - len(seq))
         seq += [self.tokenizer.get_command('pad').Id] * (num_pad_tokens)
         return seq
+
+    def getidx(self, data_idx):
+        data = self.example_texts[data_idx]
+        # tokenize
+        tokenization = self.tokenizer.encode(data)
+        tokenization.append(self.tokenizer.get_command('eos'))
+        tokens = tokenization.tokenization
+        return tokens
+
+    def contains_sentence_end(self, tok):
+        tok = self.tokenizer.IdToToken(tok)
+        if '.' in tok:
+            return True
+        if '?' in tok:
+            return True
+        if '!' in tok:
+            return True
+        return False
 
     def _construct_sample(self, tokens):
         labels = tokens[1:]
@@ -88,21 +169,44 @@ class GPT2Dataset(paddle.io.Dataset):
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def __getitem__(self, index):
-        raw_text = self.example_texts[index]
-        tokenization = self.tokenizer.encode(raw_text)
-        tokenization.append(self.tokenizer.get_command('eos'))
-        tokens = tokenization.tokenization
+        # init rng
+        rng = random.Random(index)
+        rng = np.random.RandomState(
+            seed=[rng.randint(0, 2**32 - 1) for _ in range(16)])
+
+        # get possibly weighted random index from dataset
+        data_idx = self.get_weighted_samples(rng)
+        tokens = self.getidx(data_idx)
+
+        # truncate or pad tokens
         num_tokens = len(tokens)
-        # truncate the tokens
-        tokens_to_remove = num_tokens - self.max_seq_len - 1
-        if tokens_to_remove > 0:
-            remove_left_tokens = 0  #rng.randint(tokens_to_remove + 1)
-            tokens = tokens[remove_left_tokens:]
-            remove_right_rokens = len(tokens) - self.max_seq_len - 1
-            if remove_right_rokens > 0:
-                tokens = tokens[:-remove_right_rokens]
+        tokens_to_strip = num_tokens - self.max_seq_len - 1
+        if tokens_to_strip > 0:
+            strip_left_tokens = rng.randint(tokens_to_strip + 1)
+            tokens = tokens[strip_left_tokens:]
+            if self.sentence_start:
+                token_copy = list(tokens)
+                not_done = True
+                while (len(token_copy) > 0) and not_done:
+                    tok = token_copy.pop(0)
+                    if self.contains_sentence_end(tok):
+                        tokens = token_copy
+                        not_done = False
+            strip_right_rokens = len(tokens) - self.max_seq_len - 1
+            if strip_right_rokens > 0:
+                tokens = tokens[:-strip_right_rokens]
+
+        if self.sample_across_doc:
+            while (len(tokens) < (self.max_seq_len + 1)):
+                if self.random_across_doc_sampling:
+                    data_idx = self.get_weighted_samples(rng)
+                else:
+                    data_idx = (data_idx + 1) % self.num_example_texts
+                tokens += self.getidx(data_idx)
+            tokens = tokens[:(self.max_seq_len + 1)]
+
         tokens = self._pad_seq(tokens)
         return self._construct_sample(tokens)
 
     def __len__(self):
-        return len(self.example_texts)
+        return self.num_samples
