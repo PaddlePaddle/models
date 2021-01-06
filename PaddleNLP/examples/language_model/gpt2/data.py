@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+import random
+from bisect import bisect_right
+from itertools import accumulate
+
 import nltk
 import numpy as np
 import pandas as pd
@@ -22,43 +26,80 @@ class GPT2Dataset(paddle.io.Dataset):
     def __init__(self,
                  file_path,
                  tokenizer,
+                 num_samples=None,
                  max_seq_len=1024,
-                 weighted=False,
+                 weighted=True,
                  sample_across_doc=True,
                  random_across_doc_sampling=True,
                  reset_attenion_mask=False,
                  reset_position_id=False,
+                 sentence_start=False,
                  mode="train"):
         self.file_path = file_path
         self.tokenizer = tokenizer
+
         self.max_seq_len = max_seq_len
+        self.weighted = weighted
+        self.sample_across_doc = sample_across_doc
+        self.random_across_doc_sampling = random_across_doc_sampling
         self.reset_attenion_mask = reset_attenion_mask
         self.reset_position_id = reset_position_id
+        self.sentence_start = sentence_start
+
         self.example_texts = []
         self._read_json()
+        self.num_example_texts = len(self.example_texts)
+        if num_samples is None:
+            self.num_samples = 1000 * self.num_example_texts
         self.eos_id = tokenizer.get_command("eos").Id
         print("the eos is:{}".format(self.eos_id))
+
+        self._init_weighting()
 
     def _read_json(self):
         nltk.download("punkt")
         with open(self.file_path, "r") as input_file:
             for line in input_file.readlines():
-                json_data = json.loads(line)
-                sent_list = []
-                for line in json_data['text'].split('\n'):
-                    if line != '\n':
-                        if len(line) < 10:
-                            continue
-                    sent_list.extend(nltk.tokenize.sent_tokenize(line))
-                if len(sent_list) < 1:
-                    continue
-                self.example_texts.append("\n".join(sent_list))
+                self.example_texts.append(json.loads(line)['text'])
+
+    def _init_weighting(self):
+        if self.weighted:
+            lens = np.array([len(d) for d in self.example_texts])
+            self.total_len = np.sum(lens)
+            self.weighting = list(accumulate(lens))
+        else:
+            self.weighting = None
+
+    def _get_weighted_samples(self, np_rng):
+        if self.weighting is not None:
+            idx = np_rng.randint(self.total_len)
+            return bisect_right(self.weighting, idx)
+        else:
+            return np_rng.randint(0, self.num_example_texts)
 
     def _pad_seq(self, seq):
         total_tokens = self.max_seq_len + 1
         num_pad_tokens = max(0, total_tokens - len(seq))
         seq += [self.tokenizer.get_command('pad').Id] * (num_pad_tokens)
         return seq
+
+    def _getidx(self, data_idx):
+        data = self.example_texts[data_idx]
+        # tokenize
+        tokenization = self.tokenizer.encode(data)
+        tokenization.append(self.tokenizer.get_command('eos'))
+        tokens = tokenization.tokenization
+        return tokens
+
+    def _contains_sentence_end(self, tok):
+        tok = self.tokenizer.IdToToken(tok)
+        if '.' in tok:
+            return True
+        if '?' in tok:
+            return True
+        if '!' in tok:
+            return True
+        return False
 
     def _construct_sample(self, tokens):
         labels = tokens[1:]
@@ -74,7 +115,7 @@ class GPT2Dataset(paddle.io.Dataset):
         position_ids = np.arange(0, seq_length, dtype="int64")
 
         if self.reset_attenion_mask or self.reset_position_id:
-            eos_indices = position_ids[np.weher(tokens == eod_token)]
+            eos_indices = position_ids[np.where(tokens == self.eos_id)]
             prev_index = 0
             for i in range(eos_indices.size()[0]):
                 pos_id = eos_indices[i]
@@ -88,21 +129,44 @@ class GPT2Dataset(paddle.io.Dataset):
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def __getitem__(self, index):
-        raw_text = self.example_texts[index]
-        tokenization = self.tokenizer.encode(raw_text)
-        tokenization.append(self.tokenizer.get_command('eos'))
-        tokens = tokenization.tokenization
+        # init rng
+        rng = random.Random(index)
+        rng = np.random.RandomState(
+            seed=[rng.randint(0, 2**32 - 1) for _ in range(16)])
+
+        # get possibly weighted random index from dataset
+        data_idx = self._get_weighted_samples(rng)
+        tokens = self._getidx(data_idx)
+
+        # truncate or pad tokens
         num_tokens = len(tokens)
-        # truncate the tokens
-        tokens_to_remove = num_tokens - self.max_seq_len - 1
-        if tokens_to_remove > 0:
-            remove_left_tokens = 0  #rng.randint(tokens_to_remove + 1)
-            tokens = tokens[remove_left_tokens:]
-            remove_right_rokens = len(tokens) - self.max_seq_len - 1
-            if remove_right_rokens > 0:
-                tokens = tokens[:-remove_right_rokens]
+        tokens_to_strip = num_tokens - self.max_seq_len - 1
+        if tokens_to_strip > 0:
+            strip_left_tokens = rng.randint(tokens_to_strip + 1)
+            tokens = tokens[strip_left_tokens:]
+            if self.sentence_start:
+                token_copy = list(tokens)
+                not_done = True
+                while (len(token_copy) > 0) and not_done:
+                    tok = token_copy.pop(0)
+                    if self._contains_sentence_end(tok):
+                        tokens = token_copy
+                        not_done = False
+            strip_right_rokens = len(tokens) - self.max_seq_len - 1
+            if strip_right_rokens > 0:
+                tokens = tokens[:-strip_right_rokens]
+
+        if self.sample_across_doc:
+            while (len(tokens) < (self.max_seq_len + 1)):
+                if self.random_across_doc_sampling:
+                    data_idx = self._get_weighted_samples(rng)
+                else:
+                    data_idx = (data_idx + 1) % self.num_example_texts
+                tokens += self._getidx(data_idx)
+            tokens = tokens[:(self.max_seq_len + 1)]
+
         tokens = self._pad_seq(tokens)
         return self._construct_sample(tokens)
 
     def __len__(self):
-        return len(self.example_texts)
+        return self.num_samples
