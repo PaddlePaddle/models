@@ -92,12 +92,24 @@ python3 -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py
 
 ### 模型推断
 
-（目前仅有动态图模型推断方式，静态图模型推断方式后续补充）
 以英德翻译数据为例，模型训练完成后可以执行以下命令对指定文件中的文本进行翻译：
+
+#### 静态图
+``` sh
+# setting visible devices for prediction
+cd static/
+export CUDA_VISIBLE_DEVICES=0
+python predict.py --config ./configs/transformer.base.yaml
+```
+
+ 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
+
+ 需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前暂未支持将结果按照指定顺序写入文件。
 
 #### 动态图
 ``` sh
 # setting visible devices for prediction
+cd dygraph/
 export CUDA_VISIBLE_DEVICES=0
 python predict.py --config ./configs/transformer.base.yaml
 ```
