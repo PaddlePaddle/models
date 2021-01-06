@@ -33,8 +33,15 @@ def min_max_filer(data, max_len, min_len=0):
     return (data_min_len >= min_len) and (data_max_len <= max_len)
 
 
-def create_data_loader(args, places=None):
+def create_data_loader(args, places=None, use_all_vocab=False):
     root = None if args.root == "None" else args.root
+    if not use_all_vocab:
+        WMT14ende.VOCAB_INFO = (os.path.join(
+            "WMT14.en-de", "wmt14_ende_data_bpe",
+            "vocab_all.bpe.33712"), os.path.join(
+                "WMT14.en-de", "wmt14_ende_data_bpe", "vocab_all.bpe.33712"),
+                                "de485e3c2e17e23acf4b4b70b54682dd",
+                                "de485e3c2e17e23acf4b4b70b54682dd")
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
     padding_vocab = (
         lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
@@ -83,8 +90,15 @@ def create_data_loader(args, places=None):
     return data_loaders
 
 
-def create_infer_loader(args):
+def create_infer_loader(args, use_all_vocab=False):
     root = None if args.root == "None" else args.root
+    if not use_all_vocab:
+        WMT14ende.VOCAB_INFO = (os.path.join(
+            "WMT14.en-de", "wmt14_ende_data_bpe",
+            "vocab_all.bpe.33712"), os.path.join(
+                "WMT14.en-de", "wmt14_ende_data_bpe", "vocab_all.bpe.33712"),
+                                "de485e3c2e17e23acf4b4b70b54682dd",
+                                "de485e3c2e17e23acf4b4b70b54682dd")
     (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
     padding_vocab = (
         lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
