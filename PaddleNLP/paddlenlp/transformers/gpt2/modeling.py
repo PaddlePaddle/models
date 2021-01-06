@@ -98,7 +98,6 @@ class MultiHeadAttention(nn.Layer):
 
         self.head_dim = embed_dim // num_heads
         assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
-
         self.q_proj = nn.Linear(
             embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
         self.k_proj = nn.Linear(
@@ -601,7 +600,7 @@ class GPT2Embeddings(nn.Layer):
                  hidden_dropout_prob=0.1,
                  max_position_embeddings=512,
                  type_vocab_size=16,
-                 initializer_range=0.002):
+                 initializer_range=0.02):
         super(GPT2Embeddings, self).__init__()
         self.word_embeddings = nn.Embedding(
             vocab_size,
