@@ -83,7 +83,7 @@ def do_train(args):
         criterion = CrossEntropyCriterion(args.label_smooth_eps, args.bos_idx)
 
         logits = transformer(src_word=src_word, trg_word=trg_word)
-
+        #with paddle.static.amp.fp16_guard():
         sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
         scheduler = paddle.optimizer.lr.NoamDecay(
@@ -98,12 +98,14 @@ def do_train(args):
             parameters=transformer.parameters())
         if args.use_amp:
             amp_list = paddle.static.amp.AutoMixedPrecisionLists(
-                custom_white_list=['layer_norm', 'softmax'])
+                custom_white_list=['softmax', 'layer_norm'],
+                custom_black_list=['tril_triu'])
             optimizer = paddle.static.amp.decorate(
                 optimizer,
                 amp_list,
                 init_loss_scaling=args.scale_loss,
-                use_dynamic_loss_scaling=True)
+                use_dynamic_loss_scaling=True,
+                use_pure_fp16=args.use_pure_fp16)
 
         if args.is_distributed:
             build_strategy = paddle.static.BuildStrategy()
@@ -137,6 +139,9 @@ def do_train(args):
                 build_strategy=build_strategy,
                 exec_strategy=exec_strategy)
     exe.run(startup_program)
+
+    if args.use_amp:
+        optimizer.amp_init(places[0])
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
