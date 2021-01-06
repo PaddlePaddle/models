@@ -348,10 +348,10 @@ def do_train(args):
     # Define the Executor for running the static model
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
-    state_dict = model.state_dict()
+    # state_dict = model.state_dict()
     # Use the state dict to update the parameter
-    reset_state_dict = reset_program_state_dict(model, state_dict)
-    paddle.static.set_program_state(main_program, reset_state_dict)
+    # reset_state_dict = reset_program_state_dict(model, state_dict)
+    # paddle.static.set_program_state(main_program, reset_state_dict)
 
     if worker_num == 1:
         # Construct the compiled program
