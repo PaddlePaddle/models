@@ -19,7 +19,6 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-import paddle.fluid.layers as layers
 from ..utils.log import logger
 
 
