@@ -3,8 +3,7 @@ unset CUDA_VISIBLE_DEVICES
 #fleetrun --gpus 0,1,2,3 run_pretrain_static.py --model_name_or_path gpt2-medium-en --input_dir "./input_data"\
 export PADDLE_WITH_GLOO=0
 export FLAGS_call_stack_level=2
-export GLOG_v=3
-fleetrun --gpus 2,3 run_pretrain_static.py --model_name_or_path gpt2-medium-en --input_dir "./input_data"\
+fleetrun --gpus 6,7 run_pretrain_static.py --model_name_or_path gpt2-medium-en --input_dir "./input_data"\
     --output_dir "output"\
     --learning_rate 0.00015\
     --weight_decay 0.01\

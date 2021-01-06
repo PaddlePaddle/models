@@ -98,7 +98,6 @@ class MultiHeadAttention(nn.Layer):
 
         self.head_dim = embed_dim // num_heads
         assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
-
         self.q_proj = nn.Linear(
             embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
         self.k_proj = nn.Linear(
@@ -600,11 +599,19 @@ class GPT2Embeddings(nn.Layer):
                  hidden_size=768,
                  hidden_dropout_prob=0.1,
                  max_position_embeddings=512,
-                 type_vocab_size=16):
+                 type_vocab_size=16,
+                 initializer_range=0.02):
         super(GPT2Embeddings, self).__init__()
-        self.word_embeddings = nn.Embedding(vocab_size, hidden_size)
-        self.position_embeddings = nn.Embedding(max_position_embeddings,
-                                                hidden_size)
+        self.word_embeddings = nn.Embedding(
+            vocab_size,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(initializer=nn.initializer.Normal(
+                mean=0.0, std=initializer_range)))
+        self.position_embeddings = nn.Embedding(
+            max_position_embeddings,
+            hidden_size,
+            weight_attr=paddle.ParamAttr(initializer=nn.initializer.Normal(
+                mean=0.0, std=initializer_range)))
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
     def forward(self, input_ids, position_ids=None):
@@ -731,7 +738,7 @@ class GPT2Model(GPT2PretrainedModel):
         self.initializer_range = initializer_range
         self.embeddings = GPT2Embeddings(
             vocab_size, hidden_size, hidden_dropout_prob,
-            max_position_embeddings, type_vocab_size)
+            max_position_embeddings, type_vocab_size, self.initializer_range)
         decoder_layer = TransformerDecoderLayer(
             d_model=hidden_size,
             nhead=num_attention_heads,
@@ -739,7 +746,10 @@ class GPT2Model(GPT2PretrainedModel):
             dropout=hidden_dropout_prob,
             activation=hidden_act,
             attn_dropout=attention_probs_dropout_prob,
-            act_dropout=0)
+            act_dropout=0,
+            weight_attr=paddle.ParamAttr(initializer=nn.initializer.Normal(
+                mean=0.0, std=self.initializer_range)),
+            bias_attr=None)
         self.decoder = TransformerDecoder(
             decoder_layer, num_hidden_layers, norm=nn.LayerNorm(hidden_size))
         self.apply(self.init_weights)
