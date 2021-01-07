@@ -58,6 +58,7 @@ def do_train(args):
 
     train_program = paddle.static.Program()
     startup_program = paddle.static.Program()
+    test_program = paddle.static.Program()
     with paddle.static.program_guard(train_program, startup_program):
         src_word = paddle.static.data(
             name="src_word", shape=[None, None], dtype="int64")
