@@ -19,6 +19,7 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
+from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 from ..utils.log import logger
 
 
@@ -43,7 +44,7 @@ class DefaultAttention(Attention):
                 mode="upscale_in_train")
 
         out = paddle.matmul(weights, v)
-        return out
+        return out, weights
 
 
 class MultiHeadAttention(Layer):
@@ -142,7 +143,8 @@ class MultiHeadAttention(Layer):
         else:
             q, k, v, cache = self._prepare_qkv(query, key, value, cache)
 
-        out = self.attn_impl(q, k, v, self.head_dim, attn_mask, self.dropout)
+        out, weights = self.attn_impl(q, k, v, self.head_dim, attn_mask,
+                                      self.dropout)
 
         # combine heads
         out = paddle.transpose(out, perm=[0, 2, 1, 3])
