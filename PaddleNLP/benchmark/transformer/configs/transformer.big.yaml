@@ -69,7 +69,7 @@ trg_vocab_size: 10000
 # Used to pad vocab size to be multiple of pad_factor.
 pad_factor: 8
 # Used to pad sequence length to be multiple of pad_seq.
-pad_seq: 8
+pad_seq: 1
 # Used to make batch size to be multiple of bsz_multi.
 bsz_multi: 8
 # Index for <bos> token
