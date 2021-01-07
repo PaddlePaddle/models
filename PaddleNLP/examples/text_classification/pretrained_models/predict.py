@@ -129,7 +129,7 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
     examples = []
     for text in data:
         input_ids, segment_ids = convert_example(
-            [text],
+            text,
             tokenizer,
             label_list=label_map.values(),
             max_seq_length=args.max_seq_length,
