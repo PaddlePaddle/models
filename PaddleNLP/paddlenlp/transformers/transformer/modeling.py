@@ -276,8 +276,10 @@ class TransformerModel(nn.Layer):
         src_slf_attn_bias = paddle.cast(
             src_word == self.bos_id,
             dtype=paddle.get_default_dtype()).unsqueeze([1, 2]) * -1e9
+        src_slf_attn_bias.stop_gradient = True
         trg_slf_attn_bias = self.transformer.generate_square_subsequent_mask(
             trg_max_len)
+        trg_slf_attn_bias.stop_gradient = True
         trg_src_attn_bias = src_slf_attn_bias
         src_pos = paddle.cast(
             src_word != self.bos_id, dtype="int64") * paddle.arange(
