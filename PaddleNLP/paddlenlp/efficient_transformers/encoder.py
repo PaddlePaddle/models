@@ -30,7 +30,8 @@ class TransformerEncoderLayer(Layer):
                  act_dropout=None,
                  normalize_before=False,
                  weight_attr=None,
-                 bias_attr=None):
+                 bias_attr=None,
+                 attention_type=None):
         self._config = locals()
         self._config.pop("self")
         self._config.pop("__class__", None)  # py3
@@ -48,7 +49,8 @@ class TransformerEncoderLayer(Layer):
             nhead,
             dropout=attn_dropout,
             weight_attr=weight_attrs[0],
-            bias_attr=bias_attrs[0])
+            bias_attr=bias_attrs[0],
+            attention_type=attention_type)
         self.linear1 = Linear(
             d_model, dim_feedforward, weight_attrs[1], bias_attr=bias_attrs[1])
         self.dropout = Dropout(act_dropout, mode="upscale_in_train")

@@ -33,7 +33,8 @@ class Transformer(Layer):
                  weight_attr=None,
                  bias_attr=None,
                  custom_encoder=None,
-                 custom_decoder=None):
+                 custom_decoder=None,
+                 attention_type=None):
         super(Transformer, self).__init__()
         if isinstance(bias_attr, (list, tuple)):
             if len(bias_attr) == 1:
@@ -77,9 +78,17 @@ class Transformer(Layer):
             self.encoder = custom_encoder
         else:
             encoder_layer = TransformerEncoderLayer(
-                d_model, nhead, dim_feedforward, dropout, activation,
-                attn_dropout, act_dropout, normalize_before,
-                encoder_weight_attr, encoder_bias_attr)
+                d_model,
+                nhead,
+                dim_feedforward,
+                dropout,
+                activation,
+                attn_dropout,
+                act_dropout,
+                normalize_before,
+                encoder_weight_attr,
+                encoder_bias_attr,
+                attention_type=attention_type)
             encoder_norm = LayerNorm(d_model)
             self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers,
                                               encoder_norm)
@@ -88,9 +97,17 @@ class Transformer(Layer):
             self.decoder = custom_decoder
         else:
             decoder_layer = TransformerDecoderLayer(
-                d_model, nhead, dim_feedforward, dropout, activation,
-                attn_dropout, act_dropout, normalize_before,
-                decoder_weight_attr, decoder_bias_attr)
+                d_model,
+                nhead,
+                dim_feedforward,
+                dropout,
+                activation,
+                attn_dropout,
+                act_dropout,
+                normalize_before,
+                decoder_weight_attr,
+                decoder_bias_attr,
+                attention_type=attention_type)
             decoder_norm = LayerNorm(d_model)
             self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers,
                                               decoder_norm)

@@ -21,18 +21,32 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 from ..utils.log import logger
+from .registry import AttentionRegistry
 
 
 class Attention(Layer):
-    def forward(self, q, k, v, d, attn_mask=None, dropout=None):
+    def forward(self,
+                query_matrix,
+                key_matrix,
+                value_matrix,
+                d_head,
+                attn_mask=None,
+                dropout=None):
         raise NotImplementedError
 
 
+@AttentionRegistry.register("default_attention")
 class DefaultAttention(Attention):
-    def forward(self, q, k, v, d, attn_mask=None, dropout=None):
+    def forward(self,
+                query_matrix,
+                key_matrix,
+                value_matrix,
+                d_head,
+                attn_mask=None,
+                dropout=None):
         # scale dot product attention
-        product = paddle.matmul(x=q, y=k, transpose_y=True)
-        product = product * (d**-0.5)
+        product = paddle.matmul(x=query_matrix, y=key_matrix, transpose_y=True)
+        product = product * (d_head**-0.5)
         if attn_mask is not None:
             product = product + attn_mask
         weights = F.softmax(product)
@@ -43,8 +57,20 @@ class DefaultAttention(Attention):
                 training=self.training,
                 mode="upscale_in_train")
 
-        out = paddle.matmul(weights, v)
+        out = paddle.matmul(weights, value_matrix)
         return out, weights
+
+
+@AttentionRegistry.register("bigbird")
+class BigBirdSparseAttention(Attention):
+    def forward(self,
+                query_matrix,
+                key_matrix,
+                value_matrix,
+                d_head,
+                attn_mask=None,
+                dropout=None):
+        raise NotImplementedError
 
 
 class MultiHeadAttention(Layer):
@@ -61,7 +87,7 @@ class MultiHeadAttention(Layer):
                  need_weights=False,
                  weight_attr=None,
                  bias_attr=None,
-                 attn_impl=None):
+                 attention_type=None):
         super(MultiHeadAttention, self).__init__()
         self.embed_dim = embed_dim
         self.kdim = kdim if kdim is not None else embed_dim
@@ -82,10 +108,11 @@ class MultiHeadAttention(Layer):
         self.out_proj = nn.Linear(
             embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
 
-        if attn_impl is None:
+        if attention_type is None:
             self.attn_impl = DefaultAttention()
         else:
-            self.attn_impl = attn_impl
+            self.attn_impl = AttentionRegistry.cls_dict[attention_type]()
+            #self.attn_impl = attn_impl
 
     def _prepare_qkv(self, query, key, value, cache=None):
         q = self.q_proj(query)
