@@ -58,7 +58,9 @@ export CUDA_VISIBLE_DEVICES=0
 python3 train.py
 ```
 
-需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 中 `warmup_steps` 参数为 `16000`。
+需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中：
+* `warmup_steps` 参数为 `16000`。
+* `is_distributed` 参数为 `False`。
 
 #### 动态图
 如果使用单机单卡进行训练可以使用如下命令：
@@ -68,19 +70,34 @@ export CUDA_VISIBLE_DEVICES=0
 python3 train.py
 ```
 
-需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 中 `warmup_steps` 参数为 `16000`。
+需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中：
+* `warmup_steps` 参数为 `16000`。
+* `is_distributed` 参数为 `False`。
 
 ### 单机多卡
 
 同样，可以执行如下命令实现八卡训练：
 
 #### 静态图
+
 如果是需要单机单卡训练，则使用下面的命令进行训练：
+##### PE 的方式启动单机多卡：
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python3 train.py
 ```
+
+使用 PE 的方式启动单机多卡需要设置 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中 `is_distributed` 参数为 `False`。
+
+##### fleet 的方式启动单机多卡：
+``` shell
+cd static/
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+python -m paddle.distributed.launch --gpus="0,1,2,3,4,5,6,7" train.py
+```
+
+使用 fleet 的方式启动单机多卡需要设置 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中 `is_distributed` 参数为 `True`。
 
 #### 动态图
 如果使用单机多卡进行训练可以使用如下命令：
