@@ -167,7 +167,7 @@ class TransformerBeamSearchDecoder(nn.decode.BeamSearchDecoder):
         return c
 
     def _split_batch_beams_with_var_dim(self, c):
-        var_dim_size = c.shape[self.var_dim_in_state]
+        var_dim_size = paddle.shape(c)[self.var_dim_in_state]
         c = paddle.reshape(
             c, [-1, self.beam_size] +
             [int(size)
@@ -276,8 +276,10 @@ class TransformerModel(nn.Layer):
         src_slf_attn_bias = paddle.cast(
             src_word == self.bos_id,
             dtype=paddle.get_default_dtype()).unsqueeze([1, 2]) * -1e9
+        src_slf_attn_bias.stop_gradient = True
         trg_slf_attn_bias = self.transformer.generate_square_subsequent_mask(
             trg_max_len)
+        trg_slf_attn_bias.stop_gradient = True
         trg_src_attn_bias = src_slf_attn_bias
         src_pos = paddle.cast(
             src_word != self.bos_id, dtype="int64") * paddle.arange(
@@ -374,6 +376,7 @@ class InferTransformerModel(TransformerModel):
             max_step_num=self.max_out_len,
             memory=enc_output,
             trg_src_attn_bias=trg_src_attn_bias,
-            static_cache=static_cache)
+            static_cache=static_cache,
+            is_test=True)
 
         return rs

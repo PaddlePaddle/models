@@ -11,7 +11,7 @@ import paddle
 import paddle.distributed as dist
 
 import reader
-from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion, position_encoding_init
+from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 from paddlenlp.utils.log import logger
 
 

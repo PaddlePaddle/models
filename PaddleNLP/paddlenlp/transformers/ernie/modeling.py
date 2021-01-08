@@ -18,11 +18,9 @@ import paddle.nn as nn
 from .. import PretrainedModel, register_base_model
 
 __all__ = [
-    'ErnieModel',
-    'ErniePretrainedModel',
-    'ErnieForSequenceClassification',
-    'ErnieForTokenClassification',
-    'ErnieForQuestionAnswering',
+    'ErnieModel', 'ErniePretrainedModel', 'ErnieForSequenceClassification',
+    'ErnieForTokenClassification', 'ErnieForQuestionAnswering',
+    'ErnieForPretraining', 'ErniePretrainingCriterion'
 ]
 
 
@@ -50,8 +48,11 @@ class ErnieEmbeddings(nn.Layer):
     def forward(self, input_ids, token_type_ids=None, position_ids=None):
         if position_ids is None:
             # maybe need use shape op to unify static graph and dynamic graph
-            seq_length = input_ids.shape[1]
-            position_ids = paddle.arange(0, seq_length, dtype="int64")
+            #seq_length = input_ids.shape[1]
+            ones = paddle.ones_like(input_ids, dtype="int64")
+            seq_length = paddle.cumsum(ones, axis=1)
+            position_ids = seq_length - ones
+            position_ids.stop_gradient = True
         if token_type_ids is None:
             token_type_ids = paddle.zeros_like(input_ids, dtype="int64")
 
@@ -168,13 +169,14 @@ class ErniePretrainedModel(PretrainedModel):
         if isinstance(layer, (nn.Linear, nn.Embedding)):
             # only support dygraph, use truncated_normal and make it inplace
             # and configurable later
-            layer.weight.set_value(
-                paddle.tensor.normal(
-                    mean=0.0,
-                    std=self.initializer_range
-                    if hasattr(self, "initializer_range") else
-                    self.ernie.config["initializer_range"],
-                    shape=layer.weight.shape))
+            if isinstance(layer.weight, paddle.Tensor):
+                layer.weight.set_value(
+                    paddle.tensor.normal(
+                        mean=0.0,
+                        std=self.initializer_range
+                        if hasattr(self, "initializer_range") else
+                        self.ernie.config["initializer_range"],
+                        shape=layer.weight.shape))
 
 
 @register_base_model
@@ -320,3 +322,48 @@ class ErnieForTokenClassification(ErniePretrainedModel):
         sequence_output = self.dropout(sequence_output)
         logits = self.classifier(sequence_output)
         return logits
+
+
+class ErnieForPretraining(ErniePretrainedModel):
+    def __init__(self, ernie):
+        super(ErnieForPretraining, self).__init__()
+        self.ernie = bert
+        self.cls = ErniePretrainingHeads(
+            self.ernie.config["hidden_size"],
+            self.ernie.config["vocab_size"],
+            self.ernie.config["hidden_act"],
+            embedding_weights=self.ernie.embeddings.word_embeddings.weight)
+
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                masked_positions=None):
+        outputs = self.ernie(
+            input_ids,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            attention_mask=attention_mask)
+        sequence_output, pooled_output = outputs[:2]
+        prediction_scores, seq_relationship_score = self.cls(
+            sequence_output, pooled_output, masked_positions)
+        return prediction_scores, seq_relationship_score
+
+
+class ErniePretrainingCriterion(paddle.nn.Layer):
+    def __init__(self, vocab_size):
+        super(ErniePretrainingCriterion, self).__init__()
+        self.loss_fn = paddle.nn.loss.CrossEntropyLoss(ignore_index=-1)
+        self.vocab_size = vocab_size
+
+    def forward(self, prediction_scores, seq_relationship_score,
+                masked_lm_labels, next_sentence_labels, masked_lm_scale):
+        masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
+            prediction_scores, masked_lm_labels, ignore_index=-1)
+        masked_lm_loss = masked_lm_loss / masked_lm_scale
+        next_sentence_loss = paddle.nn.functional.softmax_with_cross_entropy(
+            seq_relationship_score, next_sentence_labels)
+        return paddle.sum(masked_lm_loss) + paddle.mean(next_sentence_loss)

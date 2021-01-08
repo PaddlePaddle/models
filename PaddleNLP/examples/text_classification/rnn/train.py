@@ -160,10 +160,12 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
+    callback = paddle.callbacks.ProgBarLogger(log_freq=10, verbose=3)
     model.fit(train_loader,
               dev_loader,
               epochs=args.epochs,
-              save_dir=args.save_dir)
+              save_dir=args.save_dir,
+              callbacks=callback)
 
     # Finally tests model.
     results = model.evaluate(test_loader)

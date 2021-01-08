@@ -339,7 +339,7 @@ class WMT14ende(TranslationDataset):
     BOS_TOKEN = "<s>"
     EOS_TOKEN = "<e>"
 
-    MD5 = "5506d213dba4124121c682368257bae4"
+    MD5 = "a2b8410709ff760a3b40b84bd62dfbd8"
 
     def __init__(self, mode="train", root=None, transform_func=None):
         if mode not in ("train", "dev", "test", "dev-eval", "test-eval"):
