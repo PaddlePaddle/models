@@ -96,4 +96,11 @@ dropout: 0.1
 # Vocabularies in source and target should be same for weight sharing.
 weight_sharing: True
 
+# Use amp or not
+use_amp: False
+scale_loss: 1.0
+
+# Whether to use multi-card/multi-node distributed training.
+is_distributed: True
+
 max_iter: None
