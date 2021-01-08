@@ -21,6 +21,20 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
+def cast_parameters_to_fp32(place, program, scope=None):
+    all_parameters = []
+    for block in program.blocks:
+        all_parameters.extend(block.all_parameters())
+
+    var_scope = scope if scope else paddle.static.global_scope()
+    for param in all_parameters:
+        tensor = var_scope.find_var(param.name).get_tensor()
+        if 'fp16' in str(tensor._dtype()).lower() and \
+            'fp32' in str(param.dtype).lower():
+            data = np.array(tensor)
+            tensor.set(np.float32(data), place)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -56,7 +70,7 @@ def do_train(args):
         place = paddle.set_device("cpu")
 
     # Define data loader
-    test_loader, to_tokens = reader.create_infer_loader(args)
+    test_loader, to_tokens = reader.create_infer_loader(args, use_all_vocab=True)
 
     test_program = paddle.static.Program()
     startup_program = paddle.static.Program()
@@ -92,6 +106,9 @@ def do_train(args):
     paddle.static.load(test_program,
                        os.path.join(args.init_from_params, "transformer"), exe)
     print("finish initing model from params from %s" % (args.init_from_params))
+
+    # cast weights from fp16 to fp32 after loading
+    cast_parameters_to_fp32(place, test_program)
 
     f = open(args.output_file, "w")
     for data in test_loader:
