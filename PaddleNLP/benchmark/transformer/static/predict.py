@@ -87,6 +87,11 @@ def do_train(args):
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
 
+    amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+                custom_white_list=['softmax', 'layer_norm'],
+                custom_black_list=['tril_triu'])
+    paddle.static.amp.cast_model_to_fp16(test_program, amp_list)
+
     assert (
         args.init_from_params), "must set init_from_params to load parameters"
     paddle.static.load(test_program,

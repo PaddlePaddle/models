@@ -287,29 +287,29 @@ class TransformerModel(nn.Layer):
         trg_pos = paddle.cast(
             trg_word != self.bos_id, dtype="int64") * paddle.arange(
                 start=0, end=trg_max_len)
-        #with paddle.static.amp.fp16_guard():
-        src_emb = self.src_word_embedding(src_word)
-        src_pos_emb = self.src_pos_embedding(src_pos)
-        src_emb = src_emb + src_pos_emb
-        enc_input = F.dropout(
-            src_emb, p=self.dropout,
-            training=self.training) if self.dropout else src_emb
+        with paddle.static.amp.fp16_guard():
+            src_emb = self.src_word_embedding(src_word)
+            src_pos_emb = self.src_pos_embedding(src_pos)
+            src_emb = src_emb + src_pos_emb
+            enc_input = F.dropout(
+                src_emb, p=self.dropout,
+                training=self.training) if self.dropout else src_emb
 
-        trg_emb = self.trg_word_embedding(trg_word)
-        trg_pos_emb = self.trg_pos_embedding(trg_pos)
-        trg_emb = trg_emb + trg_pos_emb
-        dec_input = F.dropout(
-            trg_emb, p=self.dropout,
-            training=self.training) if self.dropout else trg_emb
+            trg_emb = self.trg_word_embedding(trg_word)
+            trg_pos_emb = self.trg_pos_embedding(trg_pos)
+            trg_emb = trg_emb + trg_pos_emb
+            dec_input = F.dropout(
+                trg_emb, p=self.dropout,
+                training=self.training) if self.dropout else trg_emb
 
-        dec_output = self.transformer(
-            enc_input,
-            dec_input,
-            src_mask=src_slf_attn_bias,
-            tgt_mask=trg_slf_attn_bias,
-            memory_mask=trg_src_attn_bias)
+            dec_output = self.transformer(
+                enc_input,
+                dec_input,
+                src_mask=src_slf_attn_bias,
+                tgt_mask=trg_slf_attn_bias,
+                memory_mask=trg_src_attn_bias)
 
-        predict = self.linear(dec_output)
+            predict = self.linear(dec_output)
 
         return predict
 
@@ -355,28 +355,29 @@ class InferTransformerModel(TransformerModel):
                 start=0, end=src_max_len)
 
         # Run encoder
-        src_emb = self.src_word_embedding(src_word)
-        src_pos_emb = self.src_pos_embedding(src_pos)
-        src_emb = src_emb + src_pos_emb
-        enc_input = F.dropout(
-            src_emb, p=self.dropout,
-            training=False) if self.dropout else src_emb
-        enc_output = self.transformer.encoder(enc_input, src_slf_attn_bias)
+        with paddle.static.amp.fp16_guard():
+            src_emb = self.src_word_embedding(src_word)
+            src_pos_emb = self.src_pos_embedding(src_pos)
+            src_emb = src_emb + src_pos_emb
+            enc_input = F.dropout(
+                src_emb, p=self.dropout,
+                training=False) if self.dropout else src_emb
+            enc_output = self.transformer.encoder(enc_input, src_slf_attn_bias)
 
-        # Init states (caches) for transformer, need to be updated according to selected beam
-        incremental_cache, static_cache = self.transformer.decoder.gen_cache(
-            enc_output, do_zip=True)
+            # Init states (caches) for transformer, need to be updated according to selected beam
+            incremental_cache, static_cache = self.transformer.decoder.gen_cache(
+                enc_output, do_zip=True)
 
-        static_cache, enc_output, trg_src_attn_bias = TransformerBeamSearchDecoder.tile_beam_merge_with_batch(
-            (static_cache, enc_output, trg_src_attn_bias), self.beam_size)
+            static_cache, enc_output, trg_src_attn_bias = TransformerBeamSearchDecoder.tile_beam_merge_with_batch(
+                (static_cache, enc_output, trg_src_attn_bias), self.beam_size)
 
-        rs, _ = nn.decode.dynamic_decode(
-            decoder=self.decode,
-            inits=incremental_cache,
-            max_step_num=self.max_out_len,
-            memory=enc_output,
-            trg_src_attn_bias=trg_src_attn_bias,
-            static_cache=static_cache,
-            is_test=True)
+            rs, _ = nn.decode.dynamic_decode(
+                decoder=self.decode,
+                inits=incremental_cache,
+                max_step_num=self.max_out_len,
+                memory=enc_output,
+                trg_src_attn_bias=trg_src_attn_bias,
+                static_cache=static_cache,
+                is_test=True)
 
         return rs

@@ -18,8 +18,6 @@ from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 sys.path.append("../")
 import reader
 from utils.record import AverageStatistical
-import paddle.fluid.core as core
-import paddle.fluid.profiler as profiler
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -58,7 +56,6 @@ def do_train(args):
 
     train_program = paddle.static.Program()
     startup_program = paddle.static.Program()
-    test_program = paddle.static.Program()
     with paddle.static.program_guard(train_program, startup_program):
         src_word = paddle.static.data(
             name="src_word", shape=[None, None], dtype="int64")
@@ -84,7 +81,7 @@ def do_train(args):
         criterion = CrossEntropyCriterion(args.label_smooth_eps, args.bos_idx)
 
         logits = transformer(src_word=src_word, trg_word=trg_word)
-        #with paddle.static.amp.fp16_guard():
+
         sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
         scheduler = paddle.optimizer.lr.NoamDecay(
@@ -190,16 +187,6 @@ def do_train(args):
             reader_cost_avg.record(train_reader_cost)
             batch_cost_avg.record(train_batch_cost)
             batch_ips_avg.record(train_batch_cost, np.asarray(outs[1]).sum())
-            """
-            if step_idx == 100:
-                core.nvprof_start()
-                #profiler.start_profiler('GPU')
-                return
-            if step_idx == 110:
-                core.nvprof_stop()
-                #profiler.stop_profiler("total", "./profile")
-                return
-            """
 
             if step_idx % args.print_step == 0:
                 sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
