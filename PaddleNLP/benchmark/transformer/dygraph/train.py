@@ -126,13 +126,15 @@ def do_train(args):
             train_reader_cost = time.time() - batch_start
             (src_word, trg_word, lbl_word) = input_data
 
-            logits = transformer(src_word=src_word, trg_word=trg_word)
+            scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
+            with paddle.amp.auto_cast():
+                logits = transformer(src_word=src_word, trg_word=trg_word)
+                sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
 
-            sum_cost, avg_cost, token_num = criterion(logits, lbl_word)
+            scaled = scaler.scale(avg_cost)  # scale the loss
+            scaled.backward()  # do backward
 
-            avg_cost.backward()
-
-            optimizer.step()
+            scaler.minimize(optimizer, scaled)  # update parameters
             optimizer.clear_grad()
 
             tokens_per_cards = token_num.numpy()
