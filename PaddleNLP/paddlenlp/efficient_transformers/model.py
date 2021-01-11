@@ -34,7 +34,7 @@ class Transformer(Layer):
                  bias_attr=None,
                  custom_encoder=None,
                  custom_decoder=None,
-                 attention_type=None):
+                 attention_type="default_attention"):
         super(Transformer, self).__init__()
         if isinstance(bias_attr, (list, tuple)):
             if len(bias_attr) == 1:

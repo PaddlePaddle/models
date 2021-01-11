@@ -31,7 +31,7 @@ class TransformerEncoderLayer(Layer):
                  normalize_before=False,
                  weight_attr=None,
                  bias_attr=None,
-                 attention_type=None):
+                 attention_type="default_attention"):
         self._config = locals()
         self._config.pop("self")
         self._config.pop("__class__", None)  # py3
