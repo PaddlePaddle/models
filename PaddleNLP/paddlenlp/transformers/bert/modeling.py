@@ -476,7 +476,7 @@ class BertForPretraining(BertPretrainedModel):
                 position_ids=None,
                 attention_mask=None,
                 masked_positions=None):
-        with paddle.fluid.contrib.mixed_precision.fp16_guard():
+        with paddle.static.amp.fp16_guard():
             outputs = self.bert(
                 input_ids,
                 token_type_ids=token_type_ids,
@@ -497,7 +497,7 @@ class BertPretrainingCriterion(paddle.nn.Layer):
 
     def forward(self, prediction_scores, seq_relationship_score,
                 masked_lm_labels, next_sentence_labels, masked_lm_scale):
-        with paddle.fluid.contrib.mixed_precision.fp16_guard():
+        with paddle.static.amp.fp16_guard():
             masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
                 prediction_scores, masked_lm_labels, ignore_index=-1)
             masked_lm_loss = masked_lm_loss / masked_lm_scale

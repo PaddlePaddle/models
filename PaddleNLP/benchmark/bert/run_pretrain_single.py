@@ -244,9 +244,12 @@ def do_train(args):
         ],
         multi_precision=args.use_pure_fp16)
     if args.use_amp:
-        amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
-            custom_white_list=['layer_norm', 'softmax', 'gelu'])
-        optimizer = paddle.fluid.contrib.mixed_precision.decorate(
+        custom_black_list=(['lookup_table', 'lookup_table_v2']
+            if args.use_pure_fp16 else None)
+        amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+            custom_white_list=['layer_norm', 'softmax', 'gelu'],
+            custom_black_list=custom_black_list)
+        optimizer = paddle.static.amp.decorate(
             optimizer,
             amp_list,
             init_loss_scaling=args.scale_loss,
