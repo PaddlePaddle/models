@@ -32,6 +32,7 @@ def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
     return seq
 
 
+@paddle.fluid.dygraph.no_grad()
 def do_predict(args):
     if args.use_gpu:
         place = "gpu:0"
