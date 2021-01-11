@@ -186,7 +186,7 @@ def create_pretrained_dataset(args, input_path, data_holders, tokenizer,
         feed_list=data_holders,
         batch_sampler=train_batch_sampler,
         num_workers=0,
-        worker_init_fn=worker_init,
+        ## worker_init_fn=worker_init,
         collate_fn=Tuple(Stack(), Stack(), Stack(), Stack(), Stack()),
         return_list=False)
     return train_data_loader
@@ -272,10 +272,10 @@ def dist_optimizer(args, optimizer, model, worker_num):
     return optimizer
 
 
-def set_seed(args):
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    paddle.seed(args.seed)
+def set_seed(args, worker_index):
+    random.seed(args.seed + worker_index)
+    np.random.seed(args.seed + worker_index)
+    paddle.seed(args.seed + worker_index)
 
 
 def do_train(args):
@@ -288,7 +288,7 @@ def do_train(args):
     worker_index = fleet.worker_index()
 
     # Create the random seed for the worker
-    set_seed(args)
+    set_seed(args, worker_index)
     worker_init = WorkerInitObj(args.seed + worker_index)
 
     # Define the input data in the static mode
@@ -398,7 +398,7 @@ def do_train(args):
             else:
                 data_file = files[(f_id * worker_num + worker_index) %
                                   num_files]
-
+            print("the worker_index:{}, the train data file:{}".format(worker_index, data_file))
             previous_file = data_file
             dataset_future = pool.submit(create_pretrained_dataset, args,
                                          data_file, data_holders, tokenizer,
@@ -425,15 +425,15 @@ def do_train(args):
                         if not os.path.exists(output_dir):
                             os.makedirs(output_dir)
                         # TODO(fangzeyang): Udpate the save_params to paddle.static
-                        paddle.static.save_inference_model(
+                        paddle.fluid.io.save_inference_model(
                             output_dir,
-                            feed_vars=[
-                                tokens, loss_mask, attention_mask, position_ids,
-                                labels
+                            feeded_var_names=[
+                                tokens.name, loss_mask.name, attention_mask.name, position_ids.name,
+                                labels.name,
                             ],
-                            fetch_vars=[loss],
+                            target_vars=[loss],
                             executor=exe)
-                        tokenizer.save_pretrained(output_dir)
+                        #tokenizer.save_pretrained(output_dir)
                 if global_step >= args.max_steps:
                     del train_data_loader
                     return
