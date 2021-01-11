@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import paddle
 
 
 class Mask(object):
@@ -25,14 +26,9 @@ class Mask(object):
                  num_global_blocks,
                  num_rand_blocks,
                  seed=None):
-        self.query_length = query_length
-        self.key_length = key_length
-        self.block_size = block_size
-        self.num_heads = num_heads
-        self.window_size = window_size
-        self.num_global_blocks = num_global_blocks
-        self.num_rand_blocks = num_rand_blocks
-        self.seed = seed
+        for k, v in locals().items():
+            if k != "self":
+                setattr(self, k, v)
         self.mask = np.zeros_like(
             np.arange(query_length * key_length * num_heads).reshape((
                 num_heads, query_length, key_length)))
@@ -58,6 +54,11 @@ class Mask(object):
 
     def get_rand_mask(self):
         return self.rand_mask
+
+    def get_float_mask(self):
+        float_mask = np.array(self.mask, dtype='float32')
+        float_mask[float_mask != 1] = -np.inf
+        return float_mask
 
     def _create_global_mask(self):
         global_block_length = self.num_global_blocks * self.block_size
@@ -121,5 +122,6 @@ if __name__ == "__main__":
         window_size=3,
         num_global_blocks=1,
         num_rand_blocks=1)
-    #print(mask.get_mask())
-    print(mask.get_rand_mask())
+    print(mask.get_mask())
+    #print(mask.get_rand_mask())
+    print(mask.get_float_mask())

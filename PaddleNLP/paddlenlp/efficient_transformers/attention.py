@@ -22,9 +22,19 @@ import paddle.nn.functional as F
 from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 from ..utils.log import logger
 from .registry import AttentionRegistry
+from .masking import Mask
 
 
 class Attention(Layer):
+    def __init__(self,
+                 num_heads=1,
+                 block_size=1,
+                 window_size=1,
+                 num_global_blocks=1,
+                 num_rand_blocks=1,
+                 seed=None):
+        super().__init__()
+
     def forward(self,
                 query_matrix,
                 key_matrix,
@@ -61,8 +71,25 @@ class DefaultAttention(Attention):
         return out, weights
 
 
-@AttentionRegistry.register("bigbird")
-class BigBirdSparseAttention(Attention):
+@AttentionRegistry.register("bigbird_simulated")
+class BigBirdSimulatedAttention(Attention):
+    def __init__(self,
+                 num_heads=1,
+                 block_size=1,
+                 window_size=1,
+                 num_global_blocks=1,
+                 num_rand_blocks=1,
+                 seed=None):
+        super(BigBirdSimulatedAttention,
+              self).__init__(num_heads, block_size, window_size,
+                             num_global_blocks, num_rand_blocks, seed)
+        for k, v in locals().items():
+            if k != "self":
+                setattr(self, k, v)
+        self.attn_impl = DefaultAttention(num_heads, block_size, window_size,
+                                          num_global_blocks, num_rand_blocks,
+                                          seed)
+
     def forward(self,
                 query_matrix,
                 key_matrix,
@@ -70,6 +97,55 @@ class BigBirdSparseAttention(Attention):
                 d_head,
                 attn_mask=None,
                 dropout=None):
+        query_length = query_matrix.shape[2]
+        key_length = key_matrix.shape[2]
+        # bool matrix
+        mask = Mask(query_length, key_length, self.num_heads, self.block_size,
+                    self.window_size, self.num_global_blocks,
+                    self.num_rand_blocks, self.seed)
+        mask = paddle.to_tensor(
+            mask.get_float_mask(), dtype=paddle.get_default_dtype())
+        if attn_mask is None:
+            attn_mask = mask
+        else:
+            attn_mask = attn_mask + mask
+        return self.attn_impl(
+            query_matrix,
+            key_matrix,
+            value_matrix,
+            d_head,
+            attn_mask=attn_mask,
+            dropout=dropout)
+
+
+@AttentionRegistry.register("bigbird")
+class BigBirdSparseAttention(Attention):
+    def __init__(self):
+        self.window_size = 0
+        self.num_random_block = 0
+        self.num_global_block = 0
+
+    def forward(self,
+                query_matrix,
+                key_matrix,
+                value_matrix,
+                d_head,
+                attn_mask=None,
+                dropout=None):
+        '''
+            query_matrix: [B, H, T, D]
+            key_matrix: [B, H, T, D]
+            value_matrix: [B, H, T, D]
+            
+            Global Attention
+            Random Attention
+            Window Attention
+            key_matrix分为五块：
+            
+        '''
+        #
+        #
+        # 
         raise NotImplementedError
 
 
@@ -87,7 +163,13 @@ class MultiHeadAttention(Layer):
                  need_weights=False,
                  weight_attr=None,
                  bias_attr=None,
-                 attention_type=None):
+                 block_size=1,
+                 window_size=1,
+                 num_global_blocks=1,
+                 num_rand_blocks=1,
+                 seed=None,
+                 attention_type="default_attention"):
+
         super(MultiHeadAttention, self).__init__()
         self.embed_dim = embed_dim
         self.kdim = kdim if kdim is not None else embed_dim
@@ -108,11 +190,9 @@ class MultiHeadAttention(Layer):
         self.out_proj = nn.Linear(
             embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
 
-        if attention_type is None:
-            self.attn_impl = DefaultAttention()
-        else:
-            self.attn_impl = AttentionRegistry.cls_dict[attention_type]()
-            #self.attn_impl = attn_impl
+        self.attn_impl = AttentionRegistry.cls_dict[attention_type](
+            num_heads, block_size, window_size, num_global_blocks,
+            num_rand_blocks, seed)
 
     def _prepare_qkv(self, query, key, value, cache=None):
         q = self.q_proj(query)

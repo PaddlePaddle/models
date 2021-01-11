@@ -34,7 +34,12 @@ class Transformer(Layer):
                  bias_attr=None,
                  custom_encoder=None,
                  custom_decoder=None,
-                 attention_type="default_attention"):
+                 attention_type="default_attention",
+                 block_size=1,
+                 window_size=1,
+                 num_global_blocks=1,
+                 num_rand_blocks=1,
+                 seed=None):
         super(Transformer, self).__init__()
         if isinstance(bias_attr, (list, tuple)):
             if len(bias_attr) == 1:
@@ -88,7 +93,12 @@ class Transformer(Layer):
                 normalize_before,
                 encoder_weight_attr,
                 encoder_bias_attr,
-                attention_type=attention_type)
+                attention_type=attention_type,
+                block_size=block_size,
+                window_size=window_size,
+                num_global_blocks=num_global_blocks,
+                num_rand_blocks=num_rand_blocks,
+                seed=seed)
             encoder_norm = LayerNorm(d_model)
             self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers,
                                               encoder_norm)
@@ -107,7 +117,12 @@ class Transformer(Layer):
                 normalize_before,
                 decoder_weight_attr,
                 decoder_bias_attr,
-                attention_type=attention_type)
+                attention_type=attention_type,
+                block_size=block_size,
+                window_size=window_size,
+                num_global_blocks=num_global_blocks,
+                num_rand_blocks=num_rand_blocks,
+                seed=seed)
             decoder_norm = LayerNorm(d_model)
             self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers,
                                               decoder_norm)
