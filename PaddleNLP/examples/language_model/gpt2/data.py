@@ -50,7 +50,7 @@ class GPT2Dataset(paddle.io.Dataset):
         self._read_json()
         self.num_example_texts = len(self.example_texts)
         if num_samples is None:
-            self.num_samples = 1000 * self.num_example_texts
+            self.num_samples = 5 * self.num_example_texts
         self.eos_id = tokenizer.get_command("eos").Id
         print("the eos is:{}".format(self.eos_id))
 

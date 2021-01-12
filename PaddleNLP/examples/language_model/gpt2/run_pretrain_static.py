@@ -19,6 +19,7 @@ import logging
 import os
 import random
 import time
+import math
 import h5py
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
@@ -36,8 +37,16 @@ from paddlenlp.utils.log import logger
 from data import GPT2Dataset
 import lr
 
-MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
+#MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
+MODEL_CLASSES = {"gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer), "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer) }
 
+os.environ['FLAGS_enable_parallel_graph'] = "0"
+os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.1"
+os.environ['FLAGS_sync_nccl_allreduce'] = "1"
+os.environ['FLAGS_eager_delete_tensor_gb'] = "0"
+os.environ['FLAGS_fuse_parameter_memory_size'] = "32"
+os.environ['FLAGS_fuse_parameter_groups_size'] = "50"
+os.environ['FLAGS_check_nan_inf'] = "0"
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -197,9 +206,10 @@ def create_strategy(args):
     exec_strategy = paddle.static.ExecutionStrategy()
 
     build_strategy.enable_addto = args.enable_addto
+    build_strategy.enable_sequential_execution = args.use_recompute
 
     exec_strategy.num_threads = 1
-    exec_strategy.num_iteration_per_drop_scope = 10000
+    exec_strategy.num_iteration_per_drop_scope = 100
     return build_strategy, exec_strategy
 
 
@@ -248,9 +258,25 @@ def dist_optimizer(args, optimizer, model, worker_num):
     if args.use_amp:
         dist_strategy.amp = True
         dist_strategy.amp_configs = {
-            'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
-            'init_loss_scaling': args.scale_loss,
+        "custom_white_list": ['softmax', 'layer_norm', 'gelu'],
+        "init_loss_scaling": 32768,
+        "decr_every_n_nan_or_inf": 2,
+        "incr_every_n_steps": 10,
+        "incr_ratio": 2.0,
+        "use_dynamic_loss_scaling": True,
+        "decr_ratio": 0.5,
+        } 
+        """
+        dist_strategy.amp_configs = {
+            "custom_white_list": ['softmax', 'layer_norm', 'gelu'],
+            "init_loss_scaling": args.scale_loss,
+            "incr_every_n_steps": 10,
+            "decr_every_n_nan_or_inf": 1,
+            "incr_ratio": 2.0,
+            "decr_ratio": 10,
+            "use_dynamic_loss_scaling": True,
         }
+        """
     if args.use_sharding:
         dist_strategy.sharding = True
         if worker_num > 8:
@@ -360,6 +386,8 @@ def do_train(args):
     pool = ThreadPoolExecutor(1)
     global_step = 0
     tic_train = time.time()
+    #print([param.name for block in main_program.blocks for param in block.all_parameters()])
+    #exit()
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
@@ -368,56 +396,31 @@ def do_train(args):
         files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
-        f_start_id = 0
-
-        shared_file_list = {}
-
-        if worker_num > num_files:
-            remainder = worker_num % num_files
-            data_file = files[(
-                f_start_id * worker_num + worker_index + remainder * f_start_id)
-                              % num_files]
-        else:
-            data_file = files[(f_start_id * worker_num + worker_index) %
-                              num_files]
-
-        previous_file = data_file
-
-        train_data_loader = create_pretrained_dataset(
-            args, data_file, data_holders, tokenizer, worker_init,
-            paddle.static.cuda_places())
-        single_file = True if f_start_id + 1 == len(files) else False
-
-        for f_id in range(f_start_id, len(files)):
-            if not single_file and f_id == f_start_id:
-                continue
-            if worker_num > num_files:
-                data_file = files[(
-                    f_id * worker_num + worker_index + remainder * f_id) %
-                                  num_files]
-            else:
-                data_file = files[(f_id * worker_num + worker_index) %
+        for f_id in range(math.ceil(len(files)/worker_num)):
+            data_file = files[(f_id * worker_num + worker_index) %
                                   num_files]
             print("the worker_index:{}, the train data file:{}".format(worker_index, data_file))
-            previous_file = data_file
-            dataset_future = pool.submit(create_pretrained_dataset, args,
+            train_data_loader = create_pretrained_dataset(args,
                                          data_file, data_holders, tokenizer,
                                          worker_init,
                                          paddle.static.cuda_places())
             for step, batch in enumerate(train_data_loader):
                 global_step += 1
-                loss_return = exe.run(main_program,
+                loss_return, sclae_loss_numpy = exe.run(main_program,
                                       feed=batch,
-                                      fetch_list=[loss])
+                                      fetch_list=[loss.name, "loss_scaling_0"])
                 # In the new 2.0 api, must call this function to change the learning_rate
                 lr_scheduler.step()
                 if global_step % args.logging_steps == 0:
                     if worker_index == 0:
                         logger.info(
-                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
+                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s, sclae_loss:%d"
                             % (global_step, epoch, step, loss_return[0],
-                               args.logging_steps / (time.time() - tic_train)))
+                               args.logging_steps / (time.time() - tic_train), sclae_loss_numpy[0]))
                     tic_train = time.time()
+                #print(dir(paddle.fluid.global_scope().find_var('linear_3.b_0').get_tensor()))
+                print(np.array(paddle.static.global_scope().find_var('linear_3.b_0').get_tensor()).sum())
+			
                 if global_step % args.save_steps == 0:
                     if worker_index == 0:
                         output_dir = os.path.join(args.output_dir,
@@ -438,7 +441,6 @@ def do_train(args):
                     del train_data_loader
                     return
             del train_data_loader
-            train_data_loader = dataset_future.result(timeout=None)
         epoch += 1
 
 

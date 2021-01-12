@@ -255,13 +255,18 @@ class GPT2Tokenizer(PretrainedTokenizer):
     pretrained_resource_files_map = {
         "vocab_file": {
             "gpt2-medium-en": "http://10.255.129.12:8829/vocab.json",
+            "gpt2-small-en": "http://10.255.129.12:8829/vocab.json",
         },
         "merges_file": {
-            "gpt2-medium-en": "http://10.255.129.12:8829/merges.txt"
+            "gpt2-medium-en": "http://10.255.129.12:8829/merges.txt",
+            "gpt2-small-en": "http://10.255.129.12:8829/merges.txt",
         }
     }
     pretrained_init_configuration = {
         "gpt2-medium-en": {
+            "do_lower_case": True
+        },
+        "gpt2-small-en": {
             "do_lower_case": True
         },
     }
