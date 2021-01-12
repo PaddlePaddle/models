@@ -5,11 +5,11 @@
 MSRA-NER 数据集由微软亚研院发布，其目标是识别文本中具有特定意义的实体，主要包括人名、地名、机构名等。示例如下：
 
 ```
-海钓比赛地点在厦门与金门之间的海域。    OOOOOOOB-LOCI-LOCOB-LOCI-LOCOOOOOO
-这座依山傍水的博物馆由国内一流的设计师主持设计，整个建筑群精美而恢宏。    OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+不\002久\002前\002，\002中\002国\002共\002产\002党\002召\002开\002了\002举\002世\002瞩\002目\002的\002第\002十\002五\002次\002全\002国\002代\002表\002大\002会\002。    O\002O\002O\002O\002B-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002O\002O\002O\002O\002O\002O\002O\002O\002B-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002I-ORG\002O
+这\002次\002代\002表\002大\002会\002是\002在\002中\002国\002改\002革\002开\002放\002和\002社\002会\002主\002义\002现\002代\002化\002建\002设\002发\002展\002的\002关\002键\002时\002刻\002召\002开\002的\002历\002史\002性\002会\002议\002。    O\002O\002O\002O\002O\002O\002O\002O\002B-LOC\002I-LOC\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O\002O
 ```
 
-数据集中以特殊字符"\t"分隔文本、标签，以特殊字符"\002"分隔每个字。
+PaddleNLP集成的数据集MSRA-NER数据集对文件格式做了调整：每一行文本、标签以特殊字符"\t"进行分隔，每个字之间以特殊字符"\002"分隔。
 
 ## 2. 快速开始
 
@@ -52,22 +52,21 @@ python -u ./run_msra_ner.py \
 训练过程将按照 `logging_steps` 和 `save_steps` 的设置打印如下日志：
 
 ```
-global step 1496, epoch: 2, batch: 192, loss: 0.010747, speed: 4.77 step/s
-global step 1497, epoch: 2, batch: 193, loss: 0.004837, speed: 4.46 step/s
-global step 1498, epoch: 2, batch: 194, loss: 0.011281, speed: 4.24 step/s
-global step 1499, epoch: 2, batch: 195, loss: 0.005711, speed: 4.73 step/s
-global step 1500, epoch: 2, batch: 196, loss: 0.003150, speed: 4.52 step/s
-eval loss: 0.010307, precision: 0.884222, recall: 0.903190, f1: 0.893605
+global step 3996, epoch: 2, batch: 1184, loss: 0.008593, speed: 4.15 step/s
+global step 3997, epoch: 2, batch: 1185, loss: 0.008453, speed: 4.17 step/s
+global step 3998, epoch: 2, batch: 1186, loss: 0.002294, speed: 4.19 step/s
+global step 3999, epoch: 2, batch: 1187, loss: 0.005351, speed: 4.16 step/s
+global step 4000, epoch: 2, batch: 1188, loss: 0.004734, speed: 4.18 step/s
+eval loss: 0.006829, precision: 0.908957, recall: 0.926683, f1: 0.917734
 ```
 
 使用以上命令进行单卡 Fine-tuning ，在验证集上有如下结果：
  Metric                       | Result      |
 ------------------------------|-------------|
-precision                     | 0.884222    |
-recall                        | 0.903190    |
-f1                            | 0.893605    |
+precision                     | 0.908957    |
+recall                        | 0.926683    |
+f1                            | 0.917734    |
 
 ## 参考
 
-[Microsoft Research Asia Chinese Word-Segmentation Data Set](https://www.microsoft.com/en-us/download/details.aspx?id=52531)
 [The third international Chinese language processing bakeoff: Word segmentation and named entity recognition](https://faculty.washington.edu/levow/papers/sighan06.pdf)
