@@ -20,6 +20,18 @@ FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
+def cast_parameters_to_fp32(place, program, scope=None):
+    all_parameters = []
+    for block in program.blocks:
+        all_parameters.extend(block.all_parameters())
+
+    var_scope = scope if scope else paddle.static.global_scope()
+    for param in all_parameters:
+        tensor = var_scope.find_var(param.name).get_tensor()
+        if 'fp16' in str(tensor._dtype()).lower() and \
+            'fp32' in str(param.dtype).lower():
+            data = np.array(tensor)
+            tensor.set(np.float32(data), place)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -87,16 +99,15 @@ def do_predict(args):
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
 
-    amp_list = paddle.static.amp.AutoMixedPrecisionLists(
-                custom_white_list=['softmax', 'layer_norm'],
-                custom_black_list=['tril_triu'])
-    paddle.static.amp.cast_model_to_fp16(test_program, amp_list)
-
     assert (
         args.init_from_params), "must set init_from_params to load parameters"
     paddle.static.load(test_program,
                        os.path.join(args.init_from_params, "transformer"), exe)
     print("finish initing model from params from %s" % (args.init_from_params))
+
+    # cast weights from fp16 to fp32 after loading
+    if args.use_pure_fp16:
+        cast_parameters_to_fp32(place, test_program)
 
     f = open(args.output_file, "w")
     for data in test_loader:
