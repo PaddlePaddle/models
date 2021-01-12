@@ -21,6 +21,8 @@ root: None
 
 # Whether to use cuda
 use_gpu: True
+# Whether to use xpu
+use_xpu: False
 
 # Args for reader, see reader.py for details
 pool_size: 200000

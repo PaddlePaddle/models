@@ -40,10 +40,15 @@ def do_train(args):
     if args.is_distributed:
         fleet.init(is_collective=True)
         gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
-        places = paddle.CUDAPlace(gpu_id) if args.use_gpu else paddle.static.cpu_places()
+        places = paddle.CUDAPlace(
+            gpu_id) if args.use_gpu else paddle.static.cpu_places()
         trainer_count = 1 if args.use_gpu else len(places)
     else:
-        places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
+        if args.use_gpu:
+            places = paddle.static.cuda_places()
+        else:
+            places = paddle.static.cpu_places()
+            paddle.set_device("cpu")
         trainer_count = len(places)
 
     # Set seed for CE
@@ -110,23 +115,23 @@ def do_train(args):
                     'init_loss_scaling': args.scale_loss,
                 }
 
-            optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
+            optimizer = fleet.distributed_optimizer(
+                optimizer, strategy=dist_strategy)
         optimizer.minimize(avg_cost)
 
     if args.is_distributed:
         exe = paddle.static.Executor(places)
     else:
         exe = paddle.static.Executor()
-        build_strategy = paddle.static.BuildStrategy()	
-        exec_strategy = paddle.static.ExecutionStrategy()	
+        build_strategy = paddle.static.BuildStrategy()
+        exec_strategy = paddle.static.ExecutionStrategy()
 
-        compiled_train_program = paddle.static.CompiledProgram(	
-            train_program).with_data_parallel(	
-                loss_name=avg_cost.name,	
-                build_strategy=build_strategy,	
+        compiled_train_program = paddle.static.CompiledProgram(
+            train_program).with_data_parallel(
+                loss_name=avg_cost.name,
+                build_strategy=build_strategy,
                 exec_strategy=exec_strategy)
     exe.run(startup_program)
-
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(

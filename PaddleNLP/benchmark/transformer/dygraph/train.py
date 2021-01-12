@@ -38,9 +38,15 @@ def do_train(args):
     if args.use_gpu:
         rank = dist.get_rank()
         trainer_count = dist.get_world_size()
+    elif args.use_xpu:
+        # TODO(FrostML): only single xpu is supported using dygraph.
+        rank = 0
+        trainer_count = 1
+        paddle.set_device("xpu")
     else:
         rank = 0
         trainer_count = 1
+        paddle.set_device("cpu")
 
     if trainer_count > 1:
         dist.init_parallel_env()
