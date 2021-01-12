@@ -74,7 +74,7 @@ python -u ./run_pretrain.py \
     --logging_steps 1 \
     --save_steps 20000 \
     --max_steps 1000000 \
-    --n_gpu 1
+    --n_cards 1
 ```
 
 其中参数释义如下：
@@ -110,7 +110,7 @@ python -u ./run_glue.py \
     --logging_steps 1 \
     --save_steps 500 \
     --output_dir ./tmp/ \
-    --n_gpu 1 \
+    --n_cards 1
 ```
 
 其中参数释义如下：

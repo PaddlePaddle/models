@@ -28,6 +28,7 @@ from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueMNLI,
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
+from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
 from paddlenlp.metrics import Mcc, PearsonAndSpearman
 from paddlenlp.utils.log import logger
 
@@ -40,18 +41,16 @@ TASK_CLASSES = {
     "rte": (GlueRTE, Accuracy),
 }
 
-MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer), }
+MODEL_CLASSES = {
+    "bert": (BertForSequenceClassification, BertTokenizer),
+    "ernie": (ErnieForSequenceClassification, ErnieTokenizer),
+}
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument(
-        "--select_device",
-        default="gpu",
-        type=str,
-        help="The device that selecting for the training, must be gpu/xpu.")
     parser.add_argument(
         "--task_name",
         default=None,
@@ -140,6 +139,11 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="Random seed for initialization")
+    parser.add_argument(
+        "--select_device",
+        type=str,
+        default="gpu",
+        help="Device for selecting for the training.")
     args = parser.parse_args()
     return args
 
@@ -157,10 +161,10 @@ def create_data_holder(task_name):
     return [input_ids, segment_ids, label]
 
 
-def reset_program_state_dict(model, state_dict, pretrained_state_dict):
+def reset_program_state_dict(args, model, state_dict, pretrained_state_dict):
     reset_state_dict = {}
     scale = model.initializer_range if hasattr(model, "initializer_range")\
-        else model.bert.config["initializer_range"]
+        else getattr(model, args.model_type).config["initializer_range"]
     for n, p in state_dict.items():
         if n not in pretrained_state_dict:
             dtype_str = "float32"
@@ -410,7 +414,7 @@ def do_train(args):
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
     state_dict = model.state_dict()
-    reset_state_dict = reset_program_state_dict(model, state_dict,
+    reset_state_dict = reset_program_state_dict(args, model, state_dict,
                                                 pretrained_state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
 
