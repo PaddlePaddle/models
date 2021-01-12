@@ -476,15 +476,16 @@ class BertForPretraining(BertPretrainedModel):
                 position_ids=None,
                 attention_mask=None,
                 masked_positions=None):
-        outputs = self.bert(
-            input_ids,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            attention_mask=attention_mask)
-        sequence_output, pooled_output = outputs[:2]
-        prediction_scores, seq_relationship_score = self.cls(
-            sequence_output, pooled_output, masked_positions)
-        return prediction_scores, seq_relationship_score
+        with paddle.static.amp.fp16_guard():
+            outputs = self.bert(
+                input_ids,
+                token_type_ids=token_type_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask)
+            sequence_output, pooled_output = outputs[:2]
+            prediction_scores, seq_relationship_score = self.cls(
+                sequence_output, pooled_output, masked_positions)
+            return prediction_scores, seq_relationship_score
 
 
 class BertPretrainingCriterion(paddle.nn.Layer):
@@ -496,9 +497,10 @@ class BertPretrainingCriterion(paddle.nn.Layer):
 
     def forward(self, prediction_scores, seq_relationship_score,
                 masked_lm_labels, next_sentence_labels, masked_lm_scale):
-        masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
-            prediction_scores, masked_lm_labels, ignore_index=-1)
-        masked_lm_loss = masked_lm_loss / masked_lm_scale
-        next_sentence_loss = paddle.nn.functional.softmax_with_cross_entropy(
-            seq_relationship_score, next_sentence_labels)
+        with paddle.static.amp.fp16_guard():
+            masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
+                prediction_scores, masked_lm_labels, ignore_index=-1)
+            masked_lm_loss = masked_lm_loss / masked_lm_scale
+            next_sentence_loss = paddle.nn.functional.softmax_with_cross_entropy(
+                seq_relationship_score, next_sentence_labels)
         return paddle.sum(masked_lm_loss) + paddle.mean(next_sentence_loss)
