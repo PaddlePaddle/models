@@ -141,6 +141,13 @@ def parse_args():
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
+    parser.add_argument(
+        "--gradient_merge_steps",
+        type=int,
+        default=1,
+        help="Number of merge steps before gradient update."
+             "global_batch_size = gradient_merge_steps * batch_size."
+    )
     args = parser.parse_args()
     return args
 
@@ -223,6 +230,11 @@ def dist_optimizer(args, optimizer):
         dist_strategy.amp_configs = {
             'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
             'init_loss_scaling': args.scale_loss,
+        }
+    if args.gradient_merge_steps > 1:
+        dist_strategy.gradient_merge = True
+        dist_strategy.gradient_merge_configs = {
+            'k_steps': args.gradient_merge_steps
         }
 
     optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)

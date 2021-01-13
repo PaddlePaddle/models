@@ -8,7 +8,7 @@ import paddle.nn.functional as F
 from paddle.fluid.layers.utils import map_structure
 
 
-def position_encoding_init(n_position, d_pos_vec, dtype="float32"):
+def position_encoding_init(n_position, d_pos_vec):
     """
     Generate the initial values for the sinusoid position encoding table.
     """
@@ -24,7 +24,7 @@ def position_encoding_init(n_position, d_pos_vec, dtype="float32"):
     signal = np.concatenate([np.sin(scaled_time), np.cos(scaled_time)], axis=1)
     signal = np.pad(signal, [[0, 0], [0, np.mod(channels, 2)]], 'constant')
     position_enc = signal
-    return position_enc.astype(dtype)
+    return position_enc.astype("float32")
 
 
 class WordEmbedding(nn.Layer):
@@ -58,11 +58,9 @@ class PositionalEmbedding(nn.Layer):
         self.emb_dim = emb_dim
 
         self.pos_encoder = nn.Embedding(
-            num_embeddings=max_length,
-            embedding_dim=self.emb_dim,
-            weight_attr=paddle.ParamAttr(
-                initializer=paddle.nn.initializer.Assign(
-                    position_encoding_init(max_length, self.emb_dim))))
+            num_embeddings=max_length, embedding_dim=self.emb_dim)
+        self.pos_encoder.weight.set_value(
+            position_encoding_init(max_length, self.emb_dim))
 
     def forward(self, pos):
         pos_emb = self.pos_encoder(pos)
@@ -71,14 +69,11 @@ class PositionalEmbedding(nn.Layer):
 
 
 class CrossEntropyCriterion(nn.Layer):
-    def __init__(self, label_smooth_eps, pad_idx=0):
+    def __init__(self, label_smooth_eps):
         super(CrossEntropyCriterion, self).__init__()
         self.label_smooth_eps = label_smooth_eps
-        self.pad_idx = pad_idx
 
-    def forward(self, predict, label):
-        weights = paddle.cast(
-            label != self.pad_idx, dtype=paddle.get_default_dtype())
+    def forward(self, predict, label, weights):
         if self.label_smooth_eps:
             label = paddle.squeeze(label, axis=[2])
             label = F.label_smooth(
@@ -167,7 +162,7 @@ class TransformerBeamSearchDecoder(nn.decode.BeamSearchDecoder):
         return c
 
     def _split_batch_beams_with_var_dim(self, c):
-        var_dim_size = paddle.shape(c)[self.var_dim_in_state]
+        var_dim_size = c.shape[self.var_dim_in_state]
         c = paddle.reshape(
             c, [-1, self.beam_size] +
             [int(size)
@@ -182,7 +177,7 @@ class TransformerBeamSearchDecoder(nn.decode.BeamSearchDecoder):
             t)
 
     def step(self, time, inputs, states, **kwargs):
-        # Steps for decoding.
+        # Steps for decoding. 
         # Compared to RNN, Transformer has 3D data at every decoding step
         inputs = paddle.reshape(inputs, [-1, 1])  # token
         pos = paddle.ones_like(inputs) * time  # pos
@@ -252,14 +247,13 @@ class TransformerModel(nn.Layer):
             self.trg_pos_embedding = PositionalEmbedding(
                 emb_dim=d_model, max_length=max_length, bos_idx=self.bos_id)
 
-        self.transformer = paddle.nn.Transformer(
+        self.transformer = nn.Transformer(
             d_model=d_model,
             nhead=n_head,
             num_encoder_layers=n_layer,
             num_decoder_layers=n_layer,
             dim_feedforward=d_inner_hid,
             dropout=dropout,
-            activation="relu",
             normalize_before=True)
 
         if weight_sharing:
@@ -270,24 +264,8 @@ class TransformerModel(nn.Layer):
             self.linear = nn.Linear(
                 input_dim=d_model, output_dim=trg_vocab_size, bias_attr=False)
 
-    def forward(self, src_word, trg_word):
-        src_max_len = paddle.shape(src_word)[-1]
-        trg_max_len = paddle.shape(trg_word)[-1]
-        src_slf_attn_bias = paddle.cast(
-            src_word == self.bos_id,
-            dtype=paddle.get_default_dtype()).unsqueeze([1, 2]) * -1e9
-        src_slf_attn_bias.stop_gradient = True
-        trg_slf_attn_bias = self.transformer.generate_square_subsequent_mask(
-            trg_max_len)
-        trg_slf_attn_bias.stop_gradient = True
-        trg_src_attn_bias = src_slf_attn_bias
-        src_pos = paddle.cast(
-            src_word != self.bos_id, dtype="int64") * paddle.arange(
-                start=0, end=src_max_len)
-        trg_pos = paddle.cast(
-            trg_word != self.bos_id, dtype="int64") * paddle.arange(
-                start=0, end=trg_max_len)
-
+    def forward(self, src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+                trg_slf_attn_bias, trg_src_attn_bias):
         src_emb = self.src_word_embedding(src_word)
         src_pos_emb = self.src_pos_embedding(src_pos)
         src_emb = src_emb + src_pos_emb
@@ -344,16 +322,8 @@ class InferTransformerModel(TransformerModel):
         self.decode = TransformerBeamSearchDecoder(
             cell, bos_id, eos_id, beam_size, var_dim_in_state=2)
 
-    def forward(self, src_word):
-        src_max_len = paddle.shape(src_word)[-1]
-        src_slf_attn_bias = paddle.cast(
-            src_word == self.bos_id,
-            dtype=paddle.get_default_dtype()).unsqueeze([1, 2]) * -1e9
-        trg_src_attn_bias = src_slf_attn_bias
-        src_pos = paddle.cast(
-            src_word != self.bos_id, dtype="int64") * paddle.arange(
-                start=0, end=src_max_len)
-
+    def forward(self, src_word, src_pos, src_slf_attn_bias, trg_word,
+                trg_src_attn_bias):
         # Run encoder
         src_emb = self.src_word_embedding(src_word)
         src_pos_emb = self.src_pos_embedding(src_pos)
@@ -376,7 +346,6 @@ class InferTransformerModel(TransformerModel):
             max_step_num=self.max_out_len,
             memory=enc_output,
             trg_src_attn_bias=trg_src_attn_bias,
-            static_cache=static_cache,
-            is_test=True)
+            static_cache=static_cache)
 
         return rs
