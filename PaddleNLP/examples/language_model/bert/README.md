@@ -74,7 +74,8 @@ python -u ./run_pretrain.py \
     --logging_steps 1 \
     --save_steps 20000 \
     --max_steps 1000000 \
-    --n_cards 1
+    --n_cards 1 \
+    --use_amp False
 ```
 
 其中参数释义如下：
@@ -92,7 +93,8 @@ python -u ./run_pretrain.py \
 - `logging_steps` 表示日志打印间隔。
 - `save_steps` 表示模型保存及评估间隔。
 - `max_steps` 表示最大训练步数。若训练`num_train_epochs`轮包含的训练步数大于该值，则达到`max_steps`后就提前结束。
-- `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `n_cards` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可。
+- `use_amp` 指示是否启用自动混合精度训练。
 
 ### 执行Fine-tunning
 
@@ -110,7 +112,8 @@ python -u ./run_glue.py \
     --logging_steps 1 \
     --save_steps 500 \
     --output_dir ./tmp/ \
-    --n_cards 1
+    --n_cards 1 \
+    --use_amp False
 ```
 
 其中参数释义如下：
@@ -124,7 +127,8 @@ python -u ./run_glue.py \
 - `logging_steps` 表示日志打印间隔。
 - `save_steps` 表示模型保存及评估间隔。
 - `output_dir` 表示模型保存路径。
-- `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `n_cards` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可。
+- `use_amp` 指示是否启用自动混合精度训练。
 
 基于`bert-base-uncased`在GLUE各评测任务上Fine-tuning后，在验证集上有如下结果：
 
