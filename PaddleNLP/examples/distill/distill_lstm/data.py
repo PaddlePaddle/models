@@ -199,7 +199,7 @@ def create_distill_loader(
         data_augmentation=False):
     """
     Returns batch data for bert and small model.
-    Bert and small model has difference input representation.
+    Bert and small model have difference input representations.
     """
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
