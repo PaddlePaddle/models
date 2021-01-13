@@ -62,6 +62,7 @@ class Mask(object):
     def get_float_mask(self):
         float_mask = np.array(self.mask, dtype='float32')
         float_mask[float_mask != 1] = -np.inf
+        float_mask[float_mask == 1.] = 0
         return float_mask
 
     def _create_global_mask(self):

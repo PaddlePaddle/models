@@ -33,7 +33,7 @@ class TransformerEncoderLayer(Layer):
                  bias_attr=None,
                  attention_type="default_attention",
                  block_size=1,
-                 window_size=1,
+                 window_size=3,
                  num_global_blocks=1,
                  num_rand_blocks=1,
                  seed=None):
