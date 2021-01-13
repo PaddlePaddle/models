@@ -35,6 +35,7 @@ class Mask(object):
         self.rand_mask = np.zeros_like(
             np.arange(query_length * key_length * num_heads).reshape((
                 num_heads, query_length, key_length)))
+        self.rand_mask_idx = [[] for i in range(num_heads)]
         self.num_query_blocks = self.query_length // self.block_size     \
                 + int(self.query_length % self.block_size != 0)
         self.num_key_blocks = self.key_length // self.block_size         \
@@ -51,6 +52,9 @@ class Mask(object):
 
     def get_mask(self):
         return self.mask
+
+    def get_rand_mask_idx(self):
+        return self.rand_mask_idx
 
     def get_rand_mask(self):
         return self.rand_mask
@@ -86,12 +90,31 @@ class Mask(object):
             ]
             illegal_blocks_idx.extend(
                 [i for i in range(self.num_global_blocks)])
+            left_key_block_idx = query_block_idx - self.num_window_blocks
+            right_key_block_idx = query_block_idx + self.num_window_blocks
+            if self.num_global_blocks > left_key_block_idx:
+                num_fill_blocks = self.num_global_blocks - left_key_block_idx
+                illegal_blocks_idx.extend([
+                    i
+                    for i in range(self.num_key_blocks - num_fill_blocks,
+                                   self.num_key_blocks)
+                ])
+            if right_key_block_idx >= self.num_key_blocks:
+                num_fill_blocks = right_key_block_idx - self.num_key_blocks + 1
+                illegal_blocks_idx.extend([
+                    i
+                    for i in range(self.num_global_blocks,
+                                   self.num_global_blocks + num_fill_blocks)
+                ])
+
             illegal_blocks_idx = set(illegal_blocks_idx)
+
             query_left_idx = query_block_idx * self.block_size
             query_right_idx = min((query_block_idx + 1) * self.block_size,
                                   self.query_length)
             for i in range(self.num_heads):
                 legal_blocks_idx = []
+                legal_idx = []
                 perm_block = np.random.permutation(all_key_blocks_idx)
                 for j in perm_block:
                     if j not in illegal_blocks_idx:
@@ -100,10 +123,16 @@ class Mask(object):
                         break
                 for j in legal_blocks_idx:
                     key_left_idx = j * self.block_size
-                    key_right_idx = (j + 1) * self.block_size
+                    key_right_idx = min((j + 1) * self.block_size,
+                                        self.key_length)
+                    legal_idx.extend(
+                        [i for i in range(key_left_idx, key_right_idx)])
                     self.rand_mask[i, query_left_idx:query_right_idx,
                                    key_left_idx:key_right_idx] = 1
-
+                self.rand_mask_idx[i].append(legal_idx)
+        self.rand_mask_idx = np.stack(self.rand_mask_idx, axis=0)
+        self.rand_mask_idx = self.rand_mask_idx[:, self.num_global_blocks *
+                                                self.block_size:]
         self.mask = np.maximum(self.rand_mask, self.mask)
 
     def _get_window_block_idx(self, query_block_idx):
@@ -122,6 +151,7 @@ if __name__ == "__main__":
         window_size=3,
         num_global_blocks=1,
         num_rand_blocks=1)
-    print(mask.get_mask())
-    #print(mask.get_rand_mask())
-    print(mask.get_float_mask())
+    #print(mask.get_mask())
+    print(mask.get_rand_mask())
+    #print(mask.get_float_mask())
+    print(mask.get_rand_mask_idx())
