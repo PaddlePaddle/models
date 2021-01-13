@@ -2,11 +2,11 @@
 
 ## 蒸馏结果（Doing)
 
-| Model             | **SST-2(dev)**     |
-| ----------------- | ------------------ |
-| bert-based        | 0.930045871559633  |
-| Bi-LSTM           | 0.856651376146789  |
-| Distilled Bi-LSTM | 0.8612385321100917 |
+| Model             | **SST-2**          | ChnSentiCorp       | QQP                        |
+| ----------------- | ------------------ | ------------------ | -------------------------- |
+| bert-base         | 0.9288990825688074 | 0.9516666666666667 | 0.905813(acc)/0.873472(f1) |
+| Bi-LSTM           | 0.8165137614678899 | 0.9191666666666667 |                            |
+| Distilled Bi-LSTM | 0.8612385321100917 | 0.9216666666666666 |                            |
 
 
 ## 蒸馏实验步骤
@@ -14,18 +14,19 @@
 以GLUE的SST-2任务为例
 
 ```shell
-export TASK_NAME=SST-2
 
+export CUDA_VISIBLE_DEVICES=0
+export TASK_NAME=SST-2
 python -u ./run_bert_finetune.py \
     --model_type bert \
     --model_name_or_path bert-base-uncased \
     --task_name $TASK_NAME \
     --max_seq_length 128 \
-    --batch_size 32   \
+    --batch_size 128   \
     --learning_rate 3e-5 \
     --num_train_epochs 3 \
-    --logging_steps 1 \
-    --save_steps 100 \
+    --logging_steps 10 \
+    --save_steps 10 \
     --output_dir ./model/$TASK_NAME/ \
     --n_gpu 1 \
 

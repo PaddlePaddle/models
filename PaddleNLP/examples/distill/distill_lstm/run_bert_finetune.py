@@ -26,7 +26,7 @@ import paddle
 from paddle.io import DataLoader
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
+from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE, ChnSentiCorp
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
@@ -47,6 +47,7 @@ TASK_CLASSES = {
     "mnli": (GlueMNLI, Accuracy),
     "qnli": (GlueQNLI, Accuracy),
     "rte": (GlueRTE, Accuracy),
+    "chnsenticorp": (ChnSentiCorp, Accuracy),
 }
 
 MODEL_CLASSES = {
@@ -208,7 +209,8 @@ def convert_example(example,
                     tokenizer,
                     label_list,
                     max_seq_length=512,
-                    is_test=False):
+                    is_test=False,
+                    small_pair=False):
     """convert a glue example into necessary features"""
 
     def _truncate_seqs(seqs, max_seq_length):
@@ -261,6 +263,7 @@ def convert_example(example,
     tokens_raw = [tokenizer(l) for l in example]
     # Truncate to the truncate_length,
     tokens_trun = _truncate_seqs(tokens_raw, max_seq_length)
+
     # Concate the sequences with special tokens
     tokens_trun[0] = [tokenizer.cls_token] + tokens_trun[0]
     tokens, segment_ids, _ = _concat_seqs(tokens_trun, [[tokenizer.sep_token]] *
@@ -275,6 +278,8 @@ def convert_example(example,
         return input_ids, segment_ids, valid_length, label
     else:
         return input_ids, segment_ids, valid_length
+
+        return output_list
 
 
 def do_train(args):
