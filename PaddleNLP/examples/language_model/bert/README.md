@@ -138,3 +138,22 @@ python -u ./run_glue.py \
 | QQP   | Accuracy/F1                  |  0.90581/0.87347  |
 | MNLI  | Matched acc/MisMatched acc   |  0.84422/0.84825  |
 | RTE   | Accuracy                     |      0.711191     |
+
+
+### 导出预测模型
+
+在Fine-tuning完成后，我们可以使用如下方式导出希望使用的模型：
+
+```shell
+python -u ./export_model.py \
+    --model_path bert-base-uncased \
+    --output_path ./infer_model/model
+```
+
+其中参数释义如下：
+- `model_type` 指示了模型类型，使用BERT模型时设置为bert即可。
+- `model_name_or_path` 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
+- `task_name` 表示Fine-tuning的任务。
+
+### 预测
+
