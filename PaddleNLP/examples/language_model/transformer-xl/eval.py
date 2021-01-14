@@ -118,9 +118,9 @@ def do_eval(args):
 
     logger_info = ''
     if valid_loss is not None:
-        logger_info = logger_info + _logger(valid_loss)
+        logger_info = logger_info + _logger(valid_loss) + " | "
     if test_loss is not None:
-        logger_info = logger_info + _logger(test_loss)
+        logger_info = logger_info + _logger(test_loss) + " | "
     logger.info(logger_info)
 
 
