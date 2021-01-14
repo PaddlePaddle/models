@@ -45,7 +45,7 @@ def parse_args():
         type=str,
         required=True,
         help=
-        "The output file name prefix used to save the exported inference model.",
+        "The output file prefix used to save the exported inference model.",
     )
     args = parser.parse_args()
     return args
@@ -74,7 +74,7 @@ def main():
     paddle.jit.save(model, args.output_path)
     # also save tokenizer for inference usage
     tokenizer = tokenizer_class.from_pretrained(args.model_path)
-    tokenizer.save_pretrained(os.path.dirname(args.model_path))
+    tokenizer.save_pretrained(os.path.dirname(args.output_path))
 
 
 if __name__ == "__main__":

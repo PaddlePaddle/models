@@ -17,6 +17,7 @@ import os
 from functools import partial
 
 import paddle
+from paddle import inference
 from paddlenlp.data import Stack, Tuple, Pad
 
 from run_glue import convert_example, TASK_CLASSES, MODEL_CLASSES
@@ -106,13 +107,14 @@ class Predictor(object):
         return cls(predictor, input_handles, output_handles)
 
     def predict_batch(self, data):
-        for input_field, input_handle in zip(data, self.output_handles):
-            input_handle.copy_from_cpu(input_field)
+        for input_field, input_handle in zip(data, self.input_handles):
+            input_handle.copy_from_cpu(input_field.numpy(
+            ) if isinstance(input_field, paddle.Tensor) else input_field)
         self.predictor.run()
-        outputs = [
+        output = [
             output_handle.copy_to_cpu() for output_handle in self.output_handles
         ]
-        return outputs
+        return output
 
     def predict(self, dataset, collate_fn, batch_size=1):
         batch_sampler = paddle.io.BatchSampler(dataset,
@@ -123,8 +125,11 @@ class Predictor(object):
                                            collate_fn=collate_fn,
                                            num_workers=0,
                                            return_list=True)
+        outputs = []
         for data in data_loader:
-            self.predict_batch(data)
+            output = self.predict_batch(data)
+            outputs.append(output)
+        return outputs
 
 
 def main():
@@ -138,7 +143,8 @@ def main():
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
     dataset = dataset_class.get_datasets("test")
-    tokenizer = tokenizer_class.from_pretrained(args.model_path)
+    tokenizer = tokenizer_class.from_pretrained(os.path.dirname(
+        args.model_path))
     transform_fn = partial(convert_example,
                            tokenizer=tokenizer,
                            label_list=dataset.get_labels(),
