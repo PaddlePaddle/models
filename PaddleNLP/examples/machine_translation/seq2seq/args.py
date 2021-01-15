@@ -112,7 +112,7 @@ def parse_args():
         "--export_path",
         type=str,
         default=None,
-        help="The path of checkpoint to be loaded.")
+        help="The output file prefix used to save the exported inference model.")
 
     args = parser.parse_args()
     return args

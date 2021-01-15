@@ -77,7 +77,7 @@ python predict.py \
 ## 预测效果评价
 取第10个epoch的结果，用取beam_size为10的beam search解码，`predict.py`脚本在生成翻译结果之后，会调用`paddlenlp.metrics.BLEU`计算翻译结果的BLEU指标，最终计算出的BLEU分数为0.24074304399683688。
 
-## 保存部署模型
+## 保存预测模型
 这里指定的参数`export_path` 表示导出预测模型文件的前缀。保存时会添加后缀（`pdiparams`，`pdiparams.info`，`pdmodel`）。
 ```shell
 python export_model.py \

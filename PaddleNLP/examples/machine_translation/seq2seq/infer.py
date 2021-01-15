@@ -21,7 +21,6 @@ import numpy as np
 
 import paddle
 from paddle import inference
-from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.datasets import IWSLT15
 from paddlenlp.metrics import BLEU
 
