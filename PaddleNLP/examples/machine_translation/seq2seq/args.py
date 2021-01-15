@@ -97,7 +97,19 @@ def parse_args():
         help='Whether using gpu [True|False]')
 
     parser.add_argument(
+        "--select_device",
+        default="gpu",
+        choices=["gpu", "cpu", "xpu"],
+        help="Device selected for inference.")
+
+    parser.add_argument(
         "--init_from_ckpt",
+        type=str,
+        default=None,
+        help="The path of checkpoint to be loaded.")
+
+    parser.add_argument(
+        "--export_path",
         type=str,
         default=None,
         help="The path of checkpoint to be loaded.")

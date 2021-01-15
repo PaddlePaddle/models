@@ -5,11 +5,12 @@
 ```
 .
 ├── README.md              # 文档，本文件
-├── args.py                # 训练、预测以及模型参数配置程序
+├── args.py                # 训练、预测、导出模型以及模型参数配置程序
 ├── data.py                # 数据读入程序
-├── download.py            # 数据下载程序
 ├── train.py               # 训练主程序
 ├── predict.py             # 预测主程序
+├── export_model.py        # 导出预测模型的程序
+├── infer.py               # 用预测模型进行推理的程序
 └── seq2seq_attn.py        # 带注意力机制的翻译模型程序
 ```
 
@@ -47,7 +48,6 @@ python train.py \
     --max_grad_norm 5.0 \
     --use_gpu True \
     --model_path ./attention_models
-
 ```
 
 各参数的具体说明请参阅 `args.py` 。训练程序会在每个epoch训练结束之后，save一次模型。
@@ -76,3 +76,29 @@ python predict.py \
 
 ## 预测效果评价
 取第10个epoch的结果，用取beam_size为10的beam search解码，`predict.py`脚本在生成翻译结果之后，会调用`paddlenlp.metrics.BLEU`计算翻译结果的BLEU指标，最终计算出的BLEU分数为0.24074304399683688。
+
+## 保存部署模型
+这里指定的参数`export_path` 表示导出预测模型文件的前缀。保存时会添加后缀（`pdiparams`，`pdiparams.info`，`pdmodel`）。
+```shell
+python export_model.py \
+     --num_layers 2 \
+     --hidden_size 512 \
+     --batch_size 128 \
+     --dropout 0.2 \
+     --init_scale  0.1 \
+     --max_grad_norm 5.0 \
+     --init_from_ckpt attention_models/9.pdparams \
+     --beam_size 10 \
+     --export_path ./infer_model/model
+```
+
+## 基于预测引擎推理
+然后按照如下的方式对IWSLT15数据集中的测试集（有标注的）进行预测（基于Paddle的[Python预测API](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/guides/05_inference_deployment/inference/python_infer_cn.html)）：
+
+```shell
+python infer.py \
+    --export_path ./infer_model/model \
+    --select_device gpu \
+    --batch_size 128 \
+    --infer_output_file infer_output.txt
+```
