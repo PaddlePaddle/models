@@ -48,7 +48,7 @@ def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
     return seq
 
 
-def do_train(args):
+def do_predict(args):
     paddle.enable_static()
     if args.use_gpu:
         place = paddle.set_device("gpu:0")
@@ -118,4 +118,4 @@ if __name__ == "__main__":
         args = AttrDict(yaml.safe_load(f))
         pprint(args)
 
-    do_train(args)
+    do_predict(args)
