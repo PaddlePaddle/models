@@ -42,7 +42,7 @@ def do_train(args):
         # TODO(FrostML): only single xpu is supported using dygraph.
         rank = 0
         trainer_count = 1
-        paddle.set_device("xpu")
+        paddle.set_device("xpu:0")
     else:
         rank = 0
         trainer_count = 1
