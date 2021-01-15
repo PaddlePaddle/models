@@ -222,6 +222,10 @@ def do_train(args):
             step_idx += 1
             batch_start = time.time()
 
+    if args.save_model and dist.get_rank() == 0:
+        model_path = os.path.join(args.save_model, "step_final", "transformer")
+        paddle.static.save(train_program, model_path)
+
     paddle.disable_static()
 
 
