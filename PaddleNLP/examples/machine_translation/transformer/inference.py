@@ -41,11 +41,6 @@ def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
     return seq
 
 
-class Config(object):
-    def __init__(self, ):
-        pass
-
-
 class Predictor(object):
     def __init__(self, predictor, input_handles, output_handles):
         self.predictor = predictor
