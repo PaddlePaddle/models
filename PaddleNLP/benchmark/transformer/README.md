@@ -55,7 +55,7 @@ dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0
-python3 train.py
+python3 train.py --config ../configs/transformer.base.yaml
 ```
 
 需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中：
@@ -67,7 +67,7 @@ python3 train.py
 ``` shell
 cd dygraph/
 export CUDA_VISIBLE_DEVICES=0
-python3 train.py
+python3 train.py --config ../configs/transformer.base.yaml
 ```
 
 需要注意的是，单卡下的超参设置与多卡下的超参设置有些不同，单卡执行需要修改 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中：
@@ -85,7 +85,7 @@ python3 train.py
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python3 train.py
+python3 train.py --config ../configs/transformer.base.yaml
 ```
 
 使用 PE 的方式启动单机多卡需要设置 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中 `is_distributed` 参数为 `False`。
@@ -94,7 +94,7 @@ python3 train.py
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python -m paddle.distributed.launch --gpus="0,1,2,3,4,5,6,7" train.py
+python3 -m paddle.distributed.launch --gpus="0,1,2,3,4,5,6,7" train.py --config ../configs/transformer.base.yaml
 ```
 
 使用 fleet 的方式启动单机多卡需要设置 `configs/transformer.big.yaml` 或是 `configs/transformer.base.yaml` 中 `is_distributed` 参数为 `True`。
@@ -104,7 +104,7 @@ python -m paddle.distributed.launch --gpus="0,1,2,3,4,5,6,7" train.py
 ``` shell
 cd dygraph/
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python3 -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py
+python3 -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py --config ../configs/transformer.base.yaml
 ```
 
 ### 模型推断
@@ -116,7 +116,7 @@ python3 -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py
 # setting visible devices for prediction
 cd static/
 export CUDA_VISIBLE_DEVICES=0
-python predict.py --config ./configs/transformer.base.yaml
+python3 predict.py --config ../configs/transformer.base.yaml
 ```
 
  由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
@@ -128,7 +128,7 @@ python predict.py --config ./configs/transformer.base.yaml
 # setting visible devices for prediction
 cd dygraph/
 export CUDA_VISIBLE_DEVICES=0
-python predict.py --config ./configs/transformer.base.yaml
+python3 predict.py --config ../configs/transformer.base.yaml
 ```
 
  由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
