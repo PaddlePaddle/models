@@ -342,6 +342,12 @@ class BigBirdSparseAttention(Attention):
 
         global_product = global_product + attn_mask[:, 0:global_block_length]
         global_weights = F.softmax(global_product)
+        if dropout:
+            global_weights = F.dropout(
+                global_weights,
+                dropout,
+                training=self.training,
+                mode="upscale_in_train")
         global_out = paddle.matmul(global_weights, value_matrix)
         global_out = paddle.unsqueeze(global_out, 2)
 
@@ -395,6 +401,12 @@ class BigBirdSparseAttention(Attention):
         second_product = second_product * (d_head**-0.5)
         second_product = second_mask_matrix + second_product
         second_weights = F.softmax(second_product)
+        if dropout:
+            second_weights = F.dropout(
+                second_weights,
+                dropout,
+                training=self.training,
+                mode="upscale_in_train")
         second_out = paddle.matmul(second_weights, second_value_matrix)
         out = paddle.concat([global_out, second_out], axis=2)
         out = paddle.reshape(out,
