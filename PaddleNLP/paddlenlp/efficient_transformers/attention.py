@@ -136,36 +136,54 @@ class BigBirdSparseAttention(Attention):
 
     def _get_random_key_value(self, key_matrix, value_matrix, attn_mask,
                               rand_mask_idx):
-        rand_query_length = rand_mask_idx.shape[-2]
+        rand_query_blocks = rand_mask_idx.shape[-2]
         rand_num = rand_mask_idx.shape[-1]
         batch_size = key_matrix.shape[0]
         gathered_key_list = []
         gathered_value_list = []
         rand_mask_list = []
         global_block_length = self.num_global_blocks * self.block_size
+        query_blocks = attn_mask.shape[1] // self.block_size
+        key_blocks = key_matrix.shape[2] // self.block_size
+        value_blocks = value_matrix.shape[2] // self.block_size
+        reshape_key_matrix = paddle.reshape(
+            key_matrix,
+            [batch_size, self.num_heads, key_blocks, self.block_size, -1])
+        reshape_value_matrix = paddle.reshape(
+            value_matrix,
+            [batch_size, self.num_heads, value_blocks, self.block_size, -1])
+        reshape_attn_mask = paddle.reshape(attn_mask, [
+            self.num_heads, query_blocks, key_blocks, self.block_size,
+            self.block_size
+        ])
+
         for i in range(self.num_heads):
             rand_mask_idx_1d = paddle.reshape(rand_mask_idx[i], [-1])
             gathered_key_list.append(
                 paddle.gather(
-                    key_matrix[:, i], rand_mask_idx_1d, axis=1))
+                    reshape_key_matrix[:, i], rand_mask_idx_1d, axis=1))
             gathered_value_list.append(
                 paddle.gather(
-                    value_matrix[:, i], rand_mask_idx_1d, axis=1))
+                    reshape_value_matrix[:, i], rand_mask_idx_1d, axis=1))
             temp_rand_mask = [
-                paddle.gather(attn_mask[i, j + global_block_length],
+                paddle.gather(reshape_attn_mask[i, j + self.num_global_blocks],
                               rand_mask_idx[i][j])
-                for j in range(rand_query_length)
+                for j in range(rand_query_blocks)
             ]
             rand_mask_list.append(paddle.stack(temp_rand_mask, axis=0))
         gathered_key = paddle.stack(gathered_key_list, axis=1)
         gathered_value = paddle.stack(gathered_value_list, axis=1)
         rand_mask = paddle.stack(rand_mask_list, axis=0)
+        rand_mask = paddle.reshape(rand_mask, [
+            self.num_heads, rand_query_blocks * self.block_size,
+            rand_num * self.block_size
+        ])
         gathered_key = paddle.reshape(
-            gathered_key,
-            (batch_size, self.num_heads, rand_query_length, rand_num, -1))
+            gathered_key, (batch_size, self.num_heads, rand_query_blocks,
+                           rand_num * self.block_size, -1))
         gathered_value = paddle.reshape(
-            gathered_value,
-            (batch_size, self.num_heads, rand_query_length, rand_num, -1))
+            gathered_value, (batch_size, self.num_heads, rand_query_blocks,
+                             rand_num * self.block_size, -1))
         return gathered_key, gathered_value, rand_mask
 
     def _get_global_window_top_blocks(self, matrix, matrix_list,
@@ -223,6 +241,11 @@ class BigBirdSparseAttention(Attention):
                     paddle.unsqueeze(
                         matrix[:, :, left_key_length:right_key_length], axis=2))
             block_list = paddle.concat(block_list, axis=2)
+            block_shape = block_list.shape
+            block_list = paddle.reshape(block_list, [
+                block_shape[0], block_shape[1], block_shape[2] *
+                self.block_size, block_shape[3] // self.block_size, -1
+            ])
             block_list = paddle.transpose(block_list, [0, 1, 3, 2, 4])
             global_key = paddle.unsqueeze(
                 matrix[:, :, 0:global_block_length], axis=2)
@@ -243,8 +266,7 @@ class BigBirdSparseAttention(Attention):
                                             left_key_length:right_key_length])
             block_list = paddle.concat(block_list, axis=1)
             start_attn_idx = global_block_length
-            end_attn_idx = global_block_length + block_list.shape[
-                1] * self.block_size
+            end_attn_idx = global_block_length + block_list.shape[1]
             global_key_mask = attn_mask[:, start_attn_idx:end_attn_idx, 0:
                                         global_block_length]
             block_list = paddle.concat([block_list, global_key_mask], axis=2)

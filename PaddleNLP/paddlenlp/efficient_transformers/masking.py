@@ -130,10 +130,9 @@ class Mask(object):
                         [i for i in range(key_left_idx, key_right_idx)])
                     self.rand_mask[i, query_left_idx:query_right_idx,
                                    key_left_idx:key_right_idx] = 1
-                self.rand_mask_idx[i].append(legal_idx)
+                self.rand_mask_idx[i].append(legal_blocks_idx)
         self.rand_mask_idx = np.stack(self.rand_mask_idx, axis=0)
-        self.rand_mask_idx = self.rand_mask_idx[:, self.num_global_blocks *
-                                                self.block_size:]
+        self.rand_mask_idx = self.rand_mask_idx[:, self.num_global_blocks:]
         self.mask = np.maximum(self.rand_mask, self.mask)
 
     def _get_window_block_idx(self, query_block_idx):
