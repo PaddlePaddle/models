@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import math
 import collections
 import itertools
 import logging
@@ -21,7 +22,6 @@ import random
 import time
 import h5py
 from functools import partial
-from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -36,7 +36,7 @@ from paddlenlp.utils.log import logger
 from data import GPT2Dataset
 import lr
 
-MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
+MODEL_CLASSES = {"gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer), "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer) }
 
 
 def parse_args():
@@ -65,24 +65,16 @@ def parse_args():
         required=True,
         help="The output directory where the model predictions and checkpoints will be written.",
     )
-
     parser.add_argument(
         "--batch_size",
         default=8,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
-        "--learning_rate",
-        default=5e-5,
-        type=float,
-        help="The initial learning rate for Adam.")
-
-    parser.add_argument(
         "--weight_decay",
         default=0.0,
         type=float,
         help="Weight decay if we apply some.")
-
     parser.add_argument(
         "--grad_clip",
         default=0.0,
@@ -102,10 +94,26 @@ def parse_args():
         help="Total number of training epochs to perform.", )
     parser.add_argument(
         "--max_steps",
-        default=320000,
+        default=520000,
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
+    parser.add_argument(
+        "--decay_steps",
+        default=360000,
+        type=int,
+        help="The steps use to control the learing rate. If the step > decay_steps, will use the min_lr.",
+    )
+    parser.add_argument(
+        "--max_lr",
+        default=1e-5,
+        type=float,
+        help="The initial max learning rate for Adam.")
+    parser.add_argument(
+        "--min_lr",
+        default=5e-5,
+        type=float,
+        help="The initial min learning rate for Adam.")
     parser.add_argument(
         "--warmup_rate",
         default=0.01,
@@ -124,11 +132,6 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="random seed for initialization")
-    parser.add_argument(
-        "--n_gpu",
-        type=int,
-        default=1,
-        help="number of gpus to use, 0 for cpu.")
     args = parser.parse_args()
     return args
 
@@ -142,9 +145,11 @@ class WorkerInitObj(object):
         random.seed(self.seed + id)
 
 
-def create_pretrained_dataset(args, input_path, tokenizer, worker_init):
-    train_data = GPT2Dataset(file_path=input_path, tokenizer=tokenizer)
-
+def create_pretrained_dataset(args, input_path, worker_init, worker_index, eod_id):
+    train_data = GPT2Dataset(file_path=input_path, worker_index=worker_index, 
+                             num_samples=args.batch_size*args.max_steps,
+                             eod_id=eod_id,
+                             seed=args.seed+worker_index)
     train_batch_sampler = paddle.io.BatchSampler(
         train_data, batch_size=args.batch_size, shuffle=False)
 
@@ -168,25 +173,30 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
+    worker_index = paddle.distributed.get_rank() 
+    worker_num = paddle.distributed.get_world_size()
     set_seed(args)
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
     model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
+    eod_id = tokenizer.get_command("eod").Id
 
     model = GPT2ForPretraining(
         GPT2Model(**model_class.pretrained_init_configuration[
             args.model_name_or_path]))
     # creat the critrion for the gpt model
     criterion = GPT2PretrainingCriterion()
+    state_dict = paddle.load("./layernorm_gpt2.pdparams")
+    model.set_state_dict(state_dict)
 
-    # state_dict = paddle.load("./new_gpt2.pdparams")
-    # model.set_state_dict(state_dict)
-
-    # If use defalut last_epoch, lr of the first iteration is 0.
-    # Use `last_epoch = 0` to be consistent with nv bert.
-    warmup_step = args.warmup_rate * args.max_steps
+    if args.decay_steps is None:
+         args.decay_steps = args.max_steps
+    warmup_step = args.warmup_rate * args.decay_steps
     lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
-        args.learning_rate, warmup_step, args.max_steps)
+        max_lr=args.max_lr,
+        min_lr=args.min_lr,
+        warmup_step=warmup_step,
+        decay_steps=args.decay_steps)
 
     clip = None
     if args.grad_clip > 0:
@@ -202,56 +212,22 @@ def do_train(args):
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
         ])
-    name_dict = {}
-    for name, parameter in model.named_parameters():
-        name_dict[name] = parameter.name
 
-    pool = ThreadPoolExecutor(1)
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if os.path.isfile(os.path.join(args.input_dir, f))
+            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_" not in str(f))
         ]
         #files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
-        f_start_id = 0
-
-        shared_file_list = {}
-
-        if paddle.distributed.get_world_size() > num_files:
-            remainder = paddle.distributed.get_world_size() % num_files
-            data_file = files[(
-                f_start_id * paddle.distributed.get_world_size() +
-                paddle.distributed.get_rank() + remainder * f_start_id) %
-                              num_files]
-        else:
-            data_file = files[(f_start_id * paddle.distributed.get_world_size()
-                               + paddle.distributed.get_rank()) % num_files]
-
-        previous_file = data_file
-
-        train_data_loader = create_pretrained_dataset(args, data_file,
-                                                      tokenizer, worker_init)
-        single_file = True if f_start_id + 1 == len(files) else False
-
-        for f_id in range(f_start_id, len(files)):
-            if not single_file and f_id == f_start_id:
-                continue
-            if paddle.distributed.get_world_size() > num_files:
-                data_file = files[(
-                    f_id * paddle.distributed.get_world_size() +
-                    paddle.distributed.get_rank() + remainder * f_id) %
+        for f_id in range(math.ceil(len(files)/worker_num)):
+            data_file = files[(f_id * worker_num + worker_index) %
                                   num_files]
-            else:
-                data_file = files[(f_id * paddle.distributed.get_world_size() +
-                                   paddle.distributed.get_rank()) % num_files]
-
-            previous_file = data_file
-            dataset_future = pool.submit(create_pretrained_dataset, args,
-                                         data_file, tokenizer, worker_init)
+            train_data_loader = create_pretrained_dataset(args,
+                data_file, worker_init, worker_index, eod_id=eod_id)
             for step, batch in enumerate(train_data_loader):
                 global_step += 1
                 tokens, loss_mask, attention_mask, position_ids, labels = batch
@@ -263,8 +239,7 @@ def do_train(args):
                 loss = criterion(preds, labels, loss_mask)
 
                 if global_step % args.logging_steps == 0:
-                    if (not args.n_gpu > 1
-                        ) or paddle.distributed.get_rank() == 0:
+                    if worker_index == 0:
                         logger.info(
                             "global step %d, epoch: %d, lr: %.10f, batch: %d, loss: %f, speed: %.2f step/s"
                             % (global_step, epoch, optimizer.get_lr(), step,
@@ -276,8 +251,7 @@ def do_train(args):
                 lr_scheduler.step()
                 optimizer.clear_gradients()
                 if global_step % args.save_steps == 0:
-                    if (not args.n_gpu > 1
-                        ) or paddle.distributed.get_rank() == 0:
+                    if worker_index == 0:
                         output_dir = os.path.join(args.output_dir,
                                                   "model_%d" % global_step)
                         if not os.path.exists(output_dir):
@@ -286,17 +260,10 @@ def do_train(args):
                         model_to_save = model._layers if isinstance(
                             model, paddle.DataParallel) else model
                         model_to_save.save_pretrained(output_dir)
-                        tokenizer.save_pretrained(output_dir)
-                        paddle.save(
-                            optimizer.state_dict(),
-                            os.path.join(output_dir, "model_state.pdopt"))
                 if global_step >= args.max_steps:
-                    print("delete the data loader")
                     del train_data_loader
                     return
             del train_data_loader
-            train_data_loader = dataset_future.result(timeout=None)
-
 
 if __name__ == "__main__":
     args = parse_args()

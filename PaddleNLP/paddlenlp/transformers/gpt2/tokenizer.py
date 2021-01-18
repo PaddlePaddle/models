@@ -288,7 +288,7 @@ class GPT2Tokenizer(PretrainedTokenizer):
         # construct the command tokens
         self._command_tokens = [
             CommandToken('pad', '<|endoftext|>', self.encoder['<|endoftext|>']),
-            CommandToken('eos', '<|endoftext|>', self.encoder['<|endoftext|>']),
+            CommandToken('eod', '<|endoftext|>', self.encoder['<|endoftext|>']),
         ]
         self.command_name_map = {tok.name: tok for tok in self._command_tokens}
         self.command_token_map = {

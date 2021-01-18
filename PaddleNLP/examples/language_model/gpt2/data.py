@@ -1,16 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import os
 import json
 import random
 from bisect import bisect_right
@@ -21,87 +9,170 @@ import numpy as np
 import pandas as pd
 import paddle
 
+def construct_samples_and_shuffle_data(name, data_prefix, documents, sizes,
+                          num_samples, seq_length, seed, worker_index):
+    # Number of tokens in each epoch and number of required epochs.
+    tokens_per_epoch = _num_tokens(sizes)
+    num_epochs = _num_epochs(tokens_per_epoch, seq_length, num_samples)
+    # rng state
+    np_rng = np.random.RandomState(seed=seed)
+
+    # Filename of the index mappings.
+    _filename = data_prefix
+    _filename += '_{}_indexmap'.format(name)
+    _filename += '_{}ns'.format(num_samples)
+    _filename += '_{}sl'.format(seq_length)
+    _filename += '_{}s'.format(seed)
+    doc_idx_filename = _filename + '_doc_idx.npy'
+    sample_idx_filename = _filename + '_sample_idx.npy'
+    shuffle_idx_filename = _filename + '_shuffle_idx.npy'
+
+    # Build the indexed mapping if not exist.
+    if worker_index == 0:
+        if (not os.path.isfile(doc_idx_filename)) or \
+           (not os.path.isfile(sample_idx_filename)) or \
+           (not os.path.isfile(shuffle_idx_filename)):
+            if num_epochs == 1:
+                separate_last_epoch = False
+            else:
+                num_samples_from_epochs_minus_one = (
+                    (num_epochs - 1) * tokens_per_epoch - 1) // seq_length
+                last_epoch_num_samples = num_samples - \
+                                         num_samples_from_epochs_minus_one
+                assert last_epoch_num_samples >= 0, \
+                    'last epoch number of samples should be non-negative.'
+                num_samples_per_epoch = (tokens_per_epoch - 1) // seq_length
+                assert last_epoch_num_samples < (num_samples_per_epoch + 1), \
+                    'last epoch number of samples exceeded max value.'
+                separate_last_epoch = (last_epoch_num_samples <
+                                       int(0.80 * num_samples_per_epoch))
+            doc_idx = _build_doc_idx(documents, num_epochs, np_rng,
+                                     separate_last_epoch)
+            np.save(doc_idx_filename, doc_idx, allow_pickle=True)
+            # sample-idx.
+            assert doc_idx.dtype == np.int32
+            sample_idx = _build_sample_idx(sizes, doc_idx, seq_length,
+                                           num_epochs, tokens_per_epoch)
+            np.save(sample_idx_filename, sample_idx, allow_pickle=True)
+            if separate_last_epoch:
+                num_samples_ = num_samples_from_epochs_minus_one
+            else:
+                num_samples_ = sample_idx.shape[0] - 1
+            shuffle_idx = _build_shuffle_idx(num_samples_,
+                                             sample_idx.shape[0] - 1, np_rng)
+            np.save(shuffle_idx_filename, shuffle_idx, allow_pickle=True)
+    # Load mappings.
+    doc_idx = np.load(doc_idx_filename, allow_pickle=True, mmap_mode='r')
+    sample_idx = np.load(sample_idx_filename, allow_pickle=True, mmap_mode='r')
+    shuffle_idx = np.load(shuffle_idx_filename, allow_pickle=True, mmap_mode='r')
+    return doc_idx, sample_idx, shuffle_idx
+
+
+def _num_tokens(lens):
+    """Total number of tokens in the dataset."""
+    return np.sum(lens)
+
+
+def _num_epochs(tokens_per_epoch, seq_length, num_samples):
+    """Based on number of samples and sequence lenght, calculate how many
+    epochs will be needed."""
+    num_epochs = 0
+    total_tokens = 0
+    while True:
+        num_epochs += 1
+        total_tokens += tokens_per_epoch
+        if ((total_tokens - 1) // seq_length) >= num_samples:
+            return num_epochs
+
+
+def _build_doc_idx(documents, num_epochs, np_rng, separate_last_epoch):
+    """Build an array with length = number-of-epochs * number-of-dcuments.
+    Each index is mapped to a corresponding document."""
+    if not separate_last_epoch or num_epochs == 1:
+        doc_idx = np.mgrid[0:num_epochs, 0:len(documents)][1]
+        doc_idx[:] = documents
+        doc_idx = doc_idx.reshape(-1)
+        doc_idx = doc_idx.astype(np.int32)
+        #np_rng.shuffle(doc_idx)
+        return doc_idx
+
+    doc_idx_first = _build_doc_idx(documents, num_epochs-1, np_rng, False)
+    doc_idx_last = _build_doc_idx(documents, 1, np_rng, False)
+    return np.concatenate((doc_idx_first, doc_idx_last))
+
+
+def _build_sample_idx(sizes, doc_idx, seq_length,
+                      num_epochs, tokens_per_epoch):
+    num_samples = (num_epochs * tokens_per_epoch - 1) // seq_length
+    sample_idx = np.zeros([int(num_samples) + 1, 2], dtype=np.int32)
+
+    sample_index = 0
+    doc_idx_index = 0
+    doc_offset = 0
+    sample_idx[sample_index][0] = doc_idx_index
+    sample_idx[sample_index][1] = doc_offset
+    sample_index += 1
+    while sample_index <= num_samples:
+        remaining_seq_length = seq_length + 1
+        while remaining_seq_length != 0:
+            doc_id = doc_idx[doc_idx_index]
+            doc_length = sizes[doc_id] - doc_offset
+            remaining_seq_length -= doc_length
+            if remaining_seq_length <= 0:
+                doc_offset += (remaining_seq_length + doc_length - 1)
+                remaining_seq_length = 0
+            else:
+                doc_idx_index += 1
+                doc_offset = 0
+        sample_idx[sample_index][0] = doc_idx_index
+        sample_idx[sample_index][1] = doc_offset
+        sample_index += 1
+
+    return sample_idx
+
+
+def _build_shuffle_idx(num_samples, total_size, np_rng):
+    dtype_ = np.uint32
+    if total_size >= (np.iinfo(np.uint32).max - 1):
+        dtype_ = np.int64
+
+    shuffle_idx_first = np.arange(start=0, stop=num_samples,
+                                  step=1, dtype=dtype_)
+    #np_rng.shuffle(shuffle_idx_first)
+    if num_samples == total_size:
+        return shuffle_idx_first
+
+    shuffle_idx_last = np.arange(start=num_samples, stop=total_size,
+                                 step=1, dtype=dtype_)
+    #np_rng.shuffle(shuffle_idx_last)
+
+    return np.concatenate((shuffle_idx_first, shuffle_idx_last))
 
 class GPT2Dataset(paddle.io.Dataset):
     def __init__(self,
                  file_path,
-                 tokenizer,
-                 num_samples=None,
+                 worker_index,
+                 num_samples,
+                 eod_id,
+                 name="gpt2",
                  max_seq_len=1024,
-                 weighted=True,
-                 sample_across_doc=True,
-                 random_across_doc_sampling=True,
-                 reset_attenion_mask=False,
-                 reset_position_id=False,
-                 sentence_start=False,
-                 mode="train"):
+                 mode="train",
+                 seed=1234):
         self.file_path = file_path
-        self.tokenizer = tokenizer
-
         self.max_seq_len = max_seq_len
-        self.weighted = weighted
-        self.sample_across_doc = sample_across_doc
-        self.random_across_doc_sampling = random_across_doc_sampling
-        self.reset_attenion_mask = reset_attenion_mask
-        self.reset_position_id = reset_position_id
-        self.sentence_start = sentence_start
-
-        self.example_texts = []
-        self._read_json()
-        self.num_example_texts = len(self.example_texts)
-        if num_samples is None:
-            self.num_samples = 5 * self.num_example_texts
-        self.eos_id = tokenizer.get_command("eos").Id
-        print("the eos is:{}".format(self.eos_id))
-
-        self._init_weighting()
-
-    def _read_json(self):
-        nltk.download("punkt")
-        with open(self.file_path, "r") as input_file:
-            for line in input_file.readlines():
-                self.example_texts.append(json.loads(line)['text'])
-
-    def _init_weighting(self):
-        if self.weighted:
-            lens = np.array([len(d) for d in self.example_texts])
-            self.total_len = np.sum(lens)
-            self.weighting = list(accumulate(lens))
-        else:
-            self.weighting = None
-
-    def _get_weighted_samples(self, np_rng):
-        if self.weighting is not None:
-            idx = np_rng.randint(self.total_len)
-            return bisect_right(self.weighting, idx)
-        else:
-            return np_rng.randint(0, self.num_example_texts)
-
-    def _pad_seq(self, seq):
-        total_tokens = self.max_seq_len + 1
-        num_pad_tokens = max(0, total_tokens - len(seq))
-        seq += [self.tokenizer.get_command('pad').Id] * (num_pad_tokens)
-        return seq
-
-    def _getidx(self, data_idx):
-        data = self.example_texts[data_idx]
-        # tokenize
-        tokenization = self.tokenizer.encode(data)
-        tokenization.append(self.tokenizer.get_command('eos'))
-        tokens = tokenization.tokenization
-        return tokens
-
-    def _contains_sentence_end(self, tok):
-        tok = self.tokenizer.IdToToken(tok)
-        if '.' in tok:
-            return True
-        if '?' in tok:
-            return True
-        if '!' in tok:
-            return True
-        return False
+        self.name = name
+        process_datas = np.load(self.file_path, mmap_mode="r+", allow_pickle=True)
+        self.sample_ids = process_datas["ids"]
+        self.sample_lens = process_datas["lens"]
+        document_ids = np.arange(0, self.sample_lens.shape[0])
+        self.eod_id = eod_id 
+        self.doc_idx, self.sample_idx, self.shuffle_idx = \
+            construct_samples_and_shuffle_data(self.name, self.file_path, document_ids,\
+                self.sample_lens, num_samples, max_seq_len, seed, worker_index)
+        self.start_pos = [0] + np.cumsum(self.sample_lens).tolist()
 
     def _construct_sample(self, tokens):
+        tokens = np.array(tokens).astype("int64").tolist()
         labels = tokens[1:]
         tokens = tokens[:-1]
         seq_length = len(tokens)
@@ -111,62 +182,44 @@ class GPT2Dataset(paddle.io.Dataset):
 
         # the pad and eod tokens do not contribute the loss
         loss_mask = np.ones(seq_length, dtype="float32")
-        loss_mask[np.where(np.array(tokens) == self.eos_id)] = 0.0
+        loss_mask[np.where(np.array(tokens) == self.eod_id)] = 0.0
         position_ids = np.arange(0, seq_length, dtype="int64")
 
-        if self.reset_attenion_mask or self.reset_position_id:
-            eos_indices = position_ids[np.where(tokens == self.eos_id)]
-            prev_index = 0
-            for i in range(eos_indices.size()[0]):
-                pos_id = eos_indices[i]
-                if self.reset_attention_mask:
-                    attention_mask[0, (pos_id + 1):, :(pos_id + 1)] = 0
-                if self.reset_position_ids:
-                    position_ids[(pos_id + 1):] -= (pos_id + 1 - prev_index)
-                    prev_index = i + 1
-        attention_mask = (attention_mask - 1.0) * 10000.0
+        #attention_mask = (attention_mask - 1.0) * 10000.0
         attention_mask = attention_mask.astype("float32")
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
+    def _get_single_sample_from_idx(self, doc_index_f, doc_index_l, offset_f, offset_l):
+        if doc_index_f == doc_index_l:
+            current_start_pos = self.start_pos[doc_index_f] 
+            return self.sample_ids[current_start_pos+offset_f:\
+                       current_start_pos+offset_l+1].tolist()
+        else:
+            current_start_pos = self.start_pos[doc_index_f]
+            next_start_pos = self.start_pos[doc_index_f+1]
+            tokens = self.sample_ids[current_start_pos+offset_f:next_start_pos].tolist()
+            for i in range(doc_index_f + 1, doc_index_l):
+                current_start_pos = self.start_pos[i]
+                next_start_pos = self.start_pos[i+1]
+                tokens.extend(self.sample_ids[current_start_pos:next_start_pos].tolist())
+            last_start_pos = self.start_pos[doc_index_l]
+            tokens.extend(self.sample_ids[last_start_pos:last_start_pos+offset_l+1].tolist())
+        return tokens 
+            
+        
     def __getitem__(self, index):
-        # init rng
-        rng = random.Random(index)
-        rng = np.random.RandomState(
-            seed=[rng.randint(0, 2**32 - 1) for _ in range(16)])
-
-        # get possibly weighted random index from dataset
-        data_idx = self._get_weighted_samples(rng)
-        tokens = self._getidx(data_idx)
-
-        # truncate or pad tokens
-        num_tokens = len(tokens)
-        tokens_to_strip = num_tokens - self.max_seq_len - 1
-        if tokens_to_strip > 0:
-            strip_left_tokens = rng.randint(tokens_to_strip + 1)
-            tokens = tokens[strip_left_tokens:]
-            if self.sentence_start:
-                token_copy = list(tokens)
-                not_done = True
-                while (len(token_copy) > 0) and not_done:
-                    tok = token_copy.pop(0)
-                    if self._contains_sentence_end(tok):
-                        tokens = token_copy
-                        not_done = False
-            strip_right_rokens = len(tokens) - self.max_seq_len - 1
-            if strip_right_rokens > 0:
-                tokens = tokens[:-strip_right_rokens]
-
-        if self.sample_across_doc:
-            while (len(tokens) < (self.max_seq_len + 1)):
-                if self.random_across_doc_sampling:
-                    data_idx = self._get_weighted_samples(rng)
-                else:
-                    data_idx = (data_idx + 1) % self.num_example_texts
-                tokens += self._getidx(data_idx)
-            tokens = tokens[:(self.max_seq_len + 1)]
-
-        tokens = self._pad_seq(tokens)
+        idx = self.shuffle_idx[index]
+        # Start and end documents and offsets.
+        doc_index_f_raw = self.sample_idx[idx][0]
+        doc_index_l_raw = self.sample_idx[idx+1][0]
+        doc_index_f = self.doc_idx[self.sample_idx[idx][0]]
+        doc_index_l = self.doc_idx[self.sample_idx[idx+1][0]]
+        offset_f = self.sample_idx[idx][1]
+        offset_l = self.sample_idx[idx+1][1]
+        tokens = self._get_single_sample_from_idx(doc_index_f, doc_index_l, offset_f, offset_l)
+        token_arr = np.array(tokens, dtype="int64")
+        #print("fuck_data_warn, name:train, doc_f:{}, doc_l:{}, o_f:{}, o_l:{}, fmax:{}, mean:{}, sum:{}, std:{}, value:{}".format(doc_index_f_raw, doc_index_l_raw, offset_f, offset_l, np.max(token_arr), np.mean(token_arr), np.sum(token_arr), np.std(token_arr), " ".join([str(data) for data in token_arr.tolist()])), flush=True)
         return self._construct_sample(tokens)
 
     def __len__(self):
-        return self.num_samples
+        return self.sample_idx.shape[0]-1

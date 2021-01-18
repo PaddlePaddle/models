@@ -21,20 +21,30 @@ from paddle.optimizer.lr import LRScheduler
 
 class CosineAnnealingWithWarmupDecay(LRScheduler):
     def __init__(self,
-                 learning_rate,
-                 warmup_iter,
-                 num_iters,
+                 max_lr,
+                 min_lr,
+                 warmup_step,
+                 decay_steps,
                  last_epoch=-1,
                  verbose=False):
 
-        self.end_iter = num_iters
-        self.warmup_iter = warmup_iter
+        self.decay_steps = decay_steps 
+        self.warmup_step = warmup_step
+        self.max_lr = max_lr 
+        self.min_lr = min_lr
+        print(self.decay_steps, self.warmup_step, self.max_lr, self.min_lr)
         super(CosineAnnealingWithWarmupDecay, self).__init__(
-            learning_rate, last_epoch, verbose)
+            max_lr, last_epoch, verbose)
 
     def get_lr(self):
-        if self.warmup_iter > 0 and self.last_epoch <= self.warmup_iter:
-            return float(self.base_lr) * (self.last_epoch) / self.warmup_iter
-        return self.base_lr / 2.0 * (
-            math.cos(math.pi *
-                     (self.last_epoch - self.warmup_iter) / self.end_iter) + 1)
+        if self.warmup_step > 0 and self.last_epoch <= self.warmup_step:
+            return float(self.max_lr) * (self.last_epoch) / self.warmup_step
+
+        if self.last_epoch > self.decay_steps:
+            return self.min_lr
+
+        num_steps_ = self.last_epoch - self.warmup_step
+        decay_steps_ = self.decay_steps - self.warmup_step
+        decay_ratio = float(num_steps_) / float(decay_steps_)
+        coeff = 0.5 * (math.cos(math.pi * decay_ratio) + 1.0)
+        return self.min_lr + coeff * (self.max_lr - self.min_lr) 

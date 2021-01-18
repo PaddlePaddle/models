@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import argparse
+import math
 import collections
 import itertools
 import logging
 import os
 import random
 import time
-import math
 import h5py
 from functools import partial
-from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -74,24 +73,16 @@ def parse_args():
         required=True,
         help="The output directory where the model predictions and checkpoints will be written.",
     )
-
     parser.add_argument(
         "--batch_size",
-        default=32,
+        default=8,
         type=int,
         help="Batch size per GPU/CPU for training.", )
     parser.add_argument(
-        "--learning_rate",
-        default=5e-5,
-        type=float,
-        help="The initial learning rate for Adam.")
-
-    parser.add_argument(
         "--weight_decay",
-        default=0.01,
+        default=0.0,
         type=float,
         help="Weight decay if we apply some.")
-
     parser.add_argument(
         "--grad_clip",
         default=0.0,
@@ -103,6 +94,8 @@ def parse_args():
         type=float,
         help="Epsilon for Adam optimizer.")
     parser.add_argument(
+        "--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
+    parser.add_argument(
         "--num_train_epochs",
         default=1,
         type=int,
@@ -113,6 +106,22 @@ def parse_args():
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
+    parser.add_argument(
+        "--decay_steps",
+        default=360000,
+        type=int,
+        help="The steps use to control the learing rate. If the step > decay_steps, will use the min_lr.",
+    )
+    parser.add_argument(
+        "--max_lr",
+        default=1e-5,
+        type=float,
+        help="The initial max learning rate for Adam.")
+    parser.add_argument(
+        "--min_lr",
+        default=5e-5,
+        type=float,
+        help="The initial min learning rate for Adam.")
     parser.add_argument(
         "--warmup_rate",
         default=0.01,
@@ -148,7 +157,7 @@ def parse_args():
     parser.add_argument(
         "--logging_steps",
         type=int,
-        default=100,
+        default=1,
         help="Log every X updates steps.")
     parser.add_argument(
         "--save_steps",
@@ -181,13 +190,15 @@ def create_data_holder(args):
     labels = paddle.static.data(name="labels", shape=[-1, -1], dtype="int64")
     return [tokens, loss_mask, attention_mask, position_ids, labels]
 
-
-def create_pretrained_dataset(args, input_path, data_holders, tokenizer,
-                              worker_init, places):
-    train_data = GPT2Dataset(file_path=input_path, tokenizer=tokenizer)
+def create_pretrained_dataset(args, input_path, worker_init, worker_index, 
+                             eod_id, places, data_holders):
+    train_data = GPT2Dataset(file_path=input_path, worker_index=worker_index, 
+                             num_samples=args.batch_size*args.max_steps,
+                             eod_id=eod_id,
+                             seed=args.seed+worker_index)
 
     train_batch_sampler = paddle.io.BatchSampler(
-        train_data, batch_size=args.batch_size, shuffle=True)
+        train_data, batch_size=args.batch_size, shuffle=False)
 
     train_data_loader = DataLoader(
         dataset=train_data,
@@ -195,7 +206,7 @@ def create_pretrained_dataset(args, input_path, data_holders, tokenizer,
         feed_list=data_holders,
         batch_sampler=train_batch_sampler,
         num_workers=0,
-        ## worker_init_fn=worker_init,
+        worker_init_fn=worker_init,
         collate_fn=Tuple(Stack(), Stack(), Stack(), Stack(), Stack()),
         return_list=False)
     return train_data_loader
@@ -238,7 +249,7 @@ def reset_program_state_dict(model, state_dict):
     return new_state_dict
 
 
-def copy_program_state_dict(model, static_dict, tensor_dict):
+def copy_program_state_dict(static_dict, tensor_dict):
     new_state_dict = dict()
     for n, p in static_dict.items():
         new_state_dict[p.name] = tensor_dict[n]
@@ -325,6 +336,7 @@ def do_train(args):
 
     model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
+    eod_id = tokenizer.get_command("eod").Id
     config = model_class.pretrained_init_configuration[args.model_name_or_path]
     if config["vocab_size"] % 8 != 0:
         config["vocab_size"] += 8 - (config["vocab_size"] % 8)
@@ -336,9 +348,14 @@ def do_train(args):
     loss = criterion(preds, labels, loss_mask)
 
     # Create the learning_rate sheduler and optimizer
-    warmup_step = args.warmup_rate * args.max_steps
+    if args.decay_steps is None:
+         args.decay_steps = args.max_steps
+    warmup_step = args.warmup_rate * args.decay_steps
     lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
-        args.learning_rate, warmup_step, args.max_steps)
+        max_lr=args.max_lr,
+        min_lr=args.min_lr,
+        warmup_step=warmup_step,
+        decay_steps=args.decay_steps)
 
     clip = None
     if args.grad_clip > 0:
@@ -355,7 +372,6 @@ def do_train(args):
              if not any(nd in n for nd in ["bias", "norm"])
          ]
     )
-    #optimizer.apply_optimize = optimizer._apply_optimize
 
     if worker_num == 1 and args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
@@ -374,52 +390,48 @@ def do_train(args):
     # Define the Executor for running the static model
     exe = paddle.static.Executor(place)
     exe.run(startup_program)
-    # state_dict = model.state_dict()
-    # Use the state dict to update the parameter
-    # reset_state_dict = reset_program_state_dict(model, state_dict)
-    # paddle.static.set_program_state(main_program, reset_state_dict)
+    state_dict = model.state_dict()
+    #Use the state dict to update the parameter
+    #reset_state_dict = reset_program_state_dict(model, state_dict)
+    tensor_dict = paddle.load("./layernorm_gpt2.pdparams")
+    reset_state_dict = copy_program_state_dict(state_dict, tensor_dict)
+    paddle.static.set_program_state(main_program, reset_state_dict)
 
     if worker_num == 1:
         # Construct the compiled program
         main_program = build_compiled_program(args, main_program, loss)
 
-    pool = ThreadPoolExecutor(1)
     global_step = 0
     tic_train = time.time()
-    #print([param.name for block in main_program.blocks for param in block.all_parameters()])
-    #exit()
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if os.path.isfile(os.path.join(args.input_dir, f))
+            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_" not in str(f))
         ]
-        files.sort()
+        #files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
         for f_id in range(math.ceil(len(files)/worker_num)):
             data_file = files[(f_id * worker_num + worker_index) %
                                   num_files]
-            print("the worker_index:{}, the train data file:{}".format(worker_index, data_file))
             train_data_loader = create_pretrained_dataset(args,
-                                         data_file, data_holders, tokenizer,
-                                         worker_init,
-                                         paddle.static.cuda_places())
+                data_file, worker_init, worker_index, eod_id=eod_id, 
+                places=paddle.static.cuda_places(),
+                data_holders=data_holders)
             for step, batch in enumerate(train_data_loader):
                 global_step += 1
-                loss_return, sclae_loss_numpy = exe.run(main_program,
+                loss_return = exe.run(main_program,
                                       feed=batch,
-                                      fetch_list=[loss.name, "loss_scaling_0"])
+                                      fetch_list=[loss])
                 # In the new 2.0 api, must call this function to change the learning_rate
                 lr_scheduler.step()
                 if global_step % args.logging_steps == 0:
                     if worker_index == 0:
                         logger.info(
-                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s, sclae_loss:%d"
+                            "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.2f step/s"
                             % (global_step, epoch, step, loss_return[0],
-                               args.logging_steps / (time.time() - tic_train), sclae_loss_numpy[0]))
+                               args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
-                #print(dir(paddle.fluid.global_scope().find_var('linear_3.b_0').get_tensor()))
-                print(np.array(paddle.static.global_scope().find_var('linear_3.b_0').get_tensor()).sum())
 			
                 if global_step % args.save_steps == 0:
                     if worker_index == 0:
@@ -427,7 +439,6 @@ def do_train(args):
                                                   "model_%d" % global_step)
                         if not os.path.exists(output_dir):
                             os.makedirs(output_dir)
-                        # TODO(fangzeyang): Udpate the save_params to paddle.static
                         paddle.fluid.io.save_inference_model(
                             output_dir,
                             feeded_var_names=[
@@ -436,7 +447,6 @@ def do_train(args):
                             ],
                             target_vars=[loss],
                             executor=exe)
-                        #tokenizer.save_pretrained(output_dir)
                 if global_step >= args.max_steps:
                     del train_data_loader
                     return

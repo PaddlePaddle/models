@@ -1,11 +1,11 @@
-export PYTHONPATH=../../../
-export CUDA_VISIBLE_DEVICES=6 
-python run_pretrain.py --model_name_or_path gpt2-medium-en --input_dir "./input_data"\
+export CUDA_VISIBLE_DEVICES=3 
+python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./new_data"\
     --output_dir "output"\
-    --use_recompute true\
-    --learning_rate 0.00015\
+    --max_lr 0.00015\
+    --min_lr 0.00001\
     --weight_decay 0.01\
-    --max_steps 1000\
-    --warmup_rate .1\
+    --grad_clip 1.0\
+    --max_steps 500000\
+    --decay_steps 320000\
+    --warmup_rate 0.01\
     --batch_size 8\
-    --use_amp
