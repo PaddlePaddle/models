@@ -101,5 +101,17 @@ class TestBigBirdBlockSize1(TestBigBird):
         self.block_size = 2
 
 
+class TestBigBirdBlockSize2(TestBigBird):
+    def init_params(self):
+        self.src_len = 45
+        self.block_size = 3
+
+
+class TestBigBirdLongSeq(TestBigBird):
+    def init_params(self):
+        self.src_len = 4096
+        self.block_size = 64
+
+
 if __name__ == '__main__':
     unittest.main()
