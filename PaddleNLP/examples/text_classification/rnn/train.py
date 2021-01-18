@@ -28,6 +28,7 @@ from utils import load_vocab, convert_example
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
 parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
+parser.add_argument('--use_xpu', type=eval, default=False, help="Whether use XPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate used to train.")
 parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
@@ -89,7 +90,13 @@ def create_dataloader(dataset,
 
 if __name__ == "__main__":
     set_seed()
-    paddle.set_device('gpu') if args.use_gpu else paddle.set_device('cpu')
+    if args.use_gpu:
+        paddle.set_device('gpu')
+    elif args.use_xpu:
+        xpu_device = 'xpu:{0}'.format(os.getenv('FLAGS_selected_xpus', 0))
+        paddle.set_device(xpu_device)
+    else:
+        paddle.set_device('cpu')
 
     # Loads vocab.
     if not os.path.exists(args.vocab_path):
