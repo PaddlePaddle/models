@@ -6,14 +6,14 @@
 
 ```text
 .
-├── configs                 # 配置文件
+├── configs/                # 配置文件
 ├── eval.py                 # 预测脚本
 ├── gen_data.sh             # 数据下载脚本
 ├── mem_transformer.py      # 模型组网
 ├── reader.py               # 数据读取接口
 ├── README.md               # 文档
 ├── train.py                # 训练脚本
-└── utils                   # 数据处理工具
+└── utils/                  # 数据处理工具
 ```
 
 ## 模型简介
