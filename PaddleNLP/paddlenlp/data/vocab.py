@@ -251,6 +251,7 @@ class Vocab(object):
         if path:
             with io.open(path, 'w', encoding='utf-8') as f:
                 f.write(json_str)
+            f.close()
         return json_str
 
     @classmethod
@@ -263,7 +264,7 @@ class Vocab(object):
             Vocab: vocab generated from information contained in JSON string.
         """
         if os.path.isfile(json_str):
-            with io.open(json_str, 'w', encoding='utf-8') as f:
+            with io.open(json_str, 'r', encoding='utf-8') as f:
                 vocab_dict = json.load(f)
         else:
             vocab_dict = json.loads(json_str)
