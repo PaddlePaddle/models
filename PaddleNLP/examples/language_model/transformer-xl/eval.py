@@ -101,7 +101,7 @@ def do_eval(args):
 
     logger.info(
         "Evaluating with bsz {} tgt_len {} ext_len {} mem_len {} clamp_len {}".
-        format(args.batch_size, args.tgt_len, args.ext_len, args.mem_len,
+        format(args.eval_batch_size, args.tgt_len, args.ext_len, args.mem_len,
                args.clamp_len))
 
     mem_transformer.reset_length(args.tgt_len, args.ext_len, args.mem_len)
