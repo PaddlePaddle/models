@@ -188,13 +188,16 @@ class BigBirdSparseAttention(Attention):
                 block_list = paddle.concat(block_list, axis=2)
                 matrix_list.append(paddle.unsqueeze(block_list, axis=2))
             else:
+                query_block_start_length = query_block_id * self.block_size
+                query_block_end_length = (query_block_id + 1) * self.block_size
                 block_list = [
-                    attn_mask[:, query_block_id:query_block_id + 1, 0:
-                              right_block_length]
+                    attn_mask[:, query_block_start_length:
+                              query_block_end_length, 0:right_block_length]
                 ]
                 block_list.append(
-                    attn_mask[:, query_block_id:query_block_id + 1,
-                              -num_fill_blocks * self.block_size:])
+                    attn_mask[:, query_block_start_length:
+                              query_block_end_length, -num_fill_blocks *
+                              self.block_size:])
                 block_list = paddle.concat(block_list, axis=2)
                 matrix_list.append(block_list)
 
@@ -208,23 +211,17 @@ class BigBirdSparseAttention(Attention):
         global_block_length = self.num_global_blocks * self.block_size
         num_blocks = length // self.block_size \
                 + int(length % self.block_size != 0)
-
+        block_offset = num_blocks - w // 2 * 2 - g
         block_list = []
-        for query_block_id in range(g + w // 2, g + w + w // 2):
-            left_key_block_id = query_block_id - w // 2
-            block_offset = num_blocks - w
-            right_key_block_id = left_key_block_id + block_offset
-            left_key_length = left_key_block_id * self.block_size
-            right_key_length = right_key_block_id * self.block_size
-            if attn_mask is None:
+        if attn_mask is None:
+            for query_block_id in range(g + w // 2, g + w + w // 2):
+                left_key_block_id = query_block_id - w // 2
+                right_key_block_id = left_key_block_id + block_offset
+                left_key_length = left_key_block_id * self.block_size
+                right_key_length = right_key_block_id * self.block_size
                 block_list.append(
                     paddle.unsqueeze(
                         matrix[:, :, left_key_length:right_key_length], axis=2))
-            else:
-                block_list.append(
-                    attn_mask[:, query_block_id:query_block_id + 1,
-                              left_key_length:right_key_length])
-        if attn_mask is None:
             block_list = paddle.concat(block_list, axis=2)
             block_list = paddle.transpose(block_list, [0, 1, 3, 2, 4])
             global_key = paddle.unsqueeze(
@@ -234,8 +231,17 @@ class BigBirdSparseAttention(Attention):
             global_key = paddle.expand(global_key, global_key_shape)
             block_list = paddle.concat([block_list, global_key], axis=3)
         else:
+            for query_block_id in range(g + w // 2, g + w // 2 + block_offset):
+                left_key_block_id = query_block_id - w // 2
+                right_key_block_id = query_block_id + w // 2 + 1
+                left_key_length = left_key_block_id * self.block_size
+                right_key_length = right_key_block_id * self.block_size
+                query_block_start_length = query_block_id * self.block_size
+                query_block_end_length = (query_block_id + 1) * self.block_size
+                block_list.append(attn_mask[:, query_block_start_length:
+                                            query_block_end_length,
+                                            left_key_length:right_key_length])
             block_list = paddle.concat(block_list, axis=1)
-            block_list = paddle.transpose(block_list, [0, 2, 1])
             start_attn_idx = global_block_length
             end_attn_idx = global_block_length + block_list.shape[
                 1] * self.block_size
@@ -268,11 +274,15 @@ class BigBirdSparseAttention(Attention):
                 block_list = paddle.concat(block_list, axis=2)
                 matrix_list.append(paddle.unsqueeze(block_list, axis=2))
             else:
+                query_block_start_length = query_block_id * self.block_size
+                query_block_end_length = (query_block_id + 1) * self.block_size
                 block_list = [
-                    attn_mask[:, query_block_id:query_block_id + 1, 0:(
-                        num_fill_blocks + g) * self.block_size],
-                    attn_mask[:, query_block_id:query_block_id + 1,
-                              left_key_block_id * self.block_size:length]
+                    attn_mask[:, query_block_start_length:
+                              query_block_end_length, 0:(num_fill_blocks + g
+                                                         ) * self.block_size],
+                    attn_mask[:, query_block_start_length:
+                              query_block_end_length, left_key_block_id *
+                              self.block_size:length]
                 ]
                 block_list = paddle.concat(block_list, axis=2)
                 matrix_list.append(block_list)
@@ -329,6 +339,7 @@ class BigBirdSparseAttention(Attention):
             key_matrix,
             transpose_y=True)
         global_product = global_product * (d_head**-0.5)
+
         global_product = global_product + attn_mask[:, 0:global_block_length]
         global_weights = F.softmax(global_product)
         global_out = paddle.matmul(global_weights, value_matrix)
@@ -385,11 +396,9 @@ class BigBirdSparseAttention(Attention):
         second_product = second_mask_matrix + second_product
         second_weights = F.softmax(second_product)
         second_out = paddle.matmul(second_weights, second_value_matrix)
-
         out = paddle.concat([global_out, second_out], axis=2)
         out = paddle.reshape(out,
                              [batch_size, self.num_heads, query_length, -1])
-
         return out
 
 
