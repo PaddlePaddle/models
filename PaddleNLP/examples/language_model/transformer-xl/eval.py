@@ -55,6 +55,9 @@ def do_eval(args):
                           (loss, np.exp(loss))
         return logger_info
 
+    if not args.use_gpu:
+        paddle.set_device("cpu")
+
     vocab = get_lm_vocab(args)
     eval_loader = get_lm_data_loader(args, vocab, "valid")
     test_loader = get_lm_data_loader(args, vocab, "test")
