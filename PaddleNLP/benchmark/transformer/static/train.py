@@ -17,7 +17,7 @@ from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 
 sys.path.append("../")
 import reader
-from utils.record import AverageStatistical
+from util.record import AverageStatistical
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -117,6 +117,17 @@ def do_train(args):
 
             optimizer = fleet.distributed_optimizer(
                 optimizer, strategy=dist_strategy)
+        else:
+            if args.use_amp:
+                amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+                    custom_white_list=['softmax', 'layer_norm'],
+                    custom_black_list=['lookup_table_v2'])
+                optimizer = paddle.static.amp.decorate(
+                    optimizer,
+                    amp_list,
+                    init_loss_scaling=args.scale_loss,
+                    use_dynamic_loss_scaling=True,
+                    use_pure_fp16=args.use_pure_fp16)
         optimizer.minimize(avg_cost)
 
     if args.is_distributed:
@@ -132,6 +143,9 @@ def do_train(args):
                 build_strategy=build_strategy,
                 exec_strategy=exec_strategy)
     exe.run(startup_program)
+
+    if not args.is_distributed and args.use_amp:
+        optimizer.amp_init(places[0])
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
@@ -224,6 +238,10 @@ def do_train(args):
             batch_id += 1
             step_idx += 1
             batch_start = time.time()
+
+    if args.save_model and dist.get_rank() == 0:
+        model_path = os.path.join(args.save_model, "step_final", "transformer")
+        paddle.static.save(train_program, model_path)
 
     paddle.disable_static()
 

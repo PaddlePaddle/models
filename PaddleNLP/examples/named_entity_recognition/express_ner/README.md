@@ -12,7 +12,7 @@
 
 - paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b, 安装方式：`pip install paddlenlp>=2.0.0b`
+- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp\>=2.0.0b2`
 
 
 ### 2.2 数据准备
@@ -20,10 +20,10 @@
 数据集已经保存在data目录中，示例如下
 
 ```
-16620200077宣荣嗣甘肃省白银市会宁县河畔镇十字街金海超市西行50米    T-BT-IT-IT-IT-IT-IT-IT-IT-IT-IT-IP-BP-IP-IA1-BA1-IA1-IA2-BA2-IA2-IA3-BA3-IA3-IA4-BA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-IA4-I
-13552664307姜骏炜云南省德宏傣族景颇族自治州盈江县平原镇蜜回路下段    T-BT-IT-IT-IT-IT-IT-IT-IT-IT-IT-IP-BP-IP-IA1-BA1-IA1-IA2-BA2-IA2-IA2-IA2-IA2-IA2-IA2-IA2-IA2-IA3-BA3-IA3-IA4-BA4-IA4-IA4-IA4-IA4-IA4-IA4-I
+1^B6^B6^B2^B0^B2^B0^B0^B0^B7^B7^B宣^B荣^B嗣^B甘^B肃^B省^B白^B银^B市^B会^B宁^B县^B河^B畔^B镇^B十^B字^B街^B金^B海^B超^B市^B西^B行^B5^B0^B米    T-B^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BP-B^BP-I^BP-I^BA1-B^BA1-I^BA1-I^BA2-B^BA2-I^BA2-I^BA3-B^BA3-I^BA3-I^BA4-B^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I
+1^B3^B5^B5^B2^B6^B6^B4^B3^B0^B7^B姜^B骏^B炜^B云^B南^B省^B德^B宏^B傣^B族^B景^B颇^B族^B自^B治^B州^B盈^B江^B县^B平^B原^B镇^B蜜^B回^B路^B下^B段    T-B^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BT-I^BP-B^BP-I^BP-I^BA1-B^BA1-I^BA1-I^BA2-B^BA2-I^BA2-I^BA2-I^BA2-I^BA2-I^BA2-I^BA2-I^BA2-I^BA2-I^BA3-B^BA3-I^BA3-I^BA4-B^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I^BA4-I
 ```
-数据集中以特殊字符"\t"分隔文本、标签，以特殊字符"\002"分隔每个字。标签的定义如下：
+数据集中以特殊字符"\t"分隔文本、标签，以特殊字符"\002"(示例中显示为"^B")分隔每个字。标签的定义如下：
 
 | 标签 | 定义 |  标签 | 定义 |
 | -------- | -------- |-------- | -------- |

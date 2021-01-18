@@ -69,8 +69,7 @@ def evaluate(args):
                        test_dataset.num_labels)
     model = paddle.Model(network)
     chunk_evaluator = ChunkEvaluator(
-        int(math.ceil((test_dataset.num_labels + 1) / 2.0)),
-        "IOB")  # + 1 for SOS and EOS
+        label_list=test_dataset.label_vocab.keys(), suffix=True)
     model.prepare(None, None, chunk_evaluator)
 
     # Load the model and start predicting
