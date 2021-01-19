@@ -371,7 +371,12 @@ class BigBirdSparseAttention(Attention):
                 training=self.training,
                 mode="upscale_in_train")
         global_out = paddle.matmul(global_weights, value_matrix)
-        global_out = paddle.unsqueeze(global_out, 2)
+        global_out = paddle.reshape(
+            global_out,
+            shape=[
+                batch_size, self.num_heads, self.num_global_blocks,
+                self.block_size, -1
+            ])
 
         # roll & product
         # 某些行中window_block数量较少，需要补齐

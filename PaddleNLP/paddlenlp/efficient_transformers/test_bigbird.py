@@ -113,5 +113,17 @@ class TestBigBirdLongSeq(TestBigBird):
         self.block_size = 64
 
 
+class TestBigBirdMultiHead(TestBigBird):
+    def init_params(self):
+        self.nhead = 8
+
+
+class TestBigBirdMultiGlobalBlocks(TestBigBird):
+    def init_params(self):
+        self.src_len = 256
+        self.block_size = 4
+        self.num_global_blocks = 3
+
+
 if __name__ == '__main__':
     unittest.main()
