@@ -6,6 +6,7 @@ python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./new_dat
     --weight_decay 0.01\
     --grad_clip 1.0\
     --max_steps 500000\
+    --save_steps 100000\
     --decay_steps 320000\
     --warmup_rate 0.01\
     --batch_size 8\

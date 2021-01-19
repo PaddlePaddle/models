@@ -573,7 +573,6 @@ class TransformerDecoderLayer(nn.Layer):
         residual = tgt
         if self.normalize_before:
             tgt = self.norm2(tgt)
-        tgt = self.dropout2(self.linear2(openai_glue(self.linear1(tgt))))
         tgt = self.dropout2(
             self.linear2(F.gelu(
                 self.linear1(tgt), approximate=True)))
