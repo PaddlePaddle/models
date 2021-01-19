@@ -2,7 +2,7 @@ export PYTHONPATH=../../../
 unset CUDA_VISIBLE_DEVICES
 #fleetrun --gpus 0,1,2,3 run_pretrain_static.py --model_name_or_path gpt2-medium-en --input_dir "./input_data"\
 export FLAGS_call_stack_level=2
-fleetrun --gpus 3 run_pretrain_static.py --model_name_or_path gpt2-small-en --input_dir "./new_data"\
+fleetrun --gpus 5 --log_dir ./new_log run_pretrain_static.py --model_name_or_path gpt2-small-en --input_dir "./new_data"\
     --output_dir "output"\
     --max_lr 0.00015\
     --min_lr 0.00001\
