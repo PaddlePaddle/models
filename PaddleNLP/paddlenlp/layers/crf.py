@@ -159,7 +159,6 @@ class LinearChainCrf(nn.Layer):
             sequence_mask(
                 self._get_batch_seq_index(batch_size, seq_len), lengths),
             'float32')
-        # if self.with_start_stop_tag:
         mask = mask[:, :seq_len]
 
         mask_scores = scores * mask
@@ -335,14 +334,10 @@ class ViterbiDecoder(nn.Layer):
             # We don't include the emission scores here because the max does not depend on them (we add them in below)
             alpha_max = alpha_trn_sum.max(2)
             if i == 0:
-                if self.with_start_stop_tag:
-                    # the first antecedent tag must be START
-                    pass
-                else:
-                    # the first label has not antecedent tag
-                    pass
+                # if self.with_start_stop_tag, the first antecedent tag must be START, drop it.
+                # else, the first label has not antecedent tag, pass it.
+                pass
             else:
-                # alpha_argmax is variational, we record in historys
                 alpha_argmax = alpha_trn_sum.argmax(2)
                 historys.append(alpha_argmax)
             # Now add the emission scores
