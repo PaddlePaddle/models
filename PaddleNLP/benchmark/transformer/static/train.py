@@ -44,8 +44,11 @@ def do_train(args):
             gpu_id) if args.use_gpu else paddle.static.cpu_places()
         trainer_count = 1 if args.use_gpu else len(places)
     else:
-        places = paddle.static.cuda_places(
-        ) if args.use_gpu else paddle.static.cpu_places()
+        if args.use_gpu:
+            places = paddle.static.cuda_places()
+        else:
+            places = paddle.static.cpu_places()
+            paddle.set_device("cpu")
         trainer_count = len(places)
 
     # Set seed for CE

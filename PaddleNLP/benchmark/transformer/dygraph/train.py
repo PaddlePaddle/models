@@ -41,6 +41,7 @@ def do_train(args):
     else:
         rank = 0
         trainer_count = 1
+        paddle.set_device("cpu")
 
     if trainer_count > 1:
         dist.init_parallel_env()
