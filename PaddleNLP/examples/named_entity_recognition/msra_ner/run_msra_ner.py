@@ -245,8 +245,8 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
-    train_dataset, dev_dataset = ppnlp.datasets.MSRA_NER.get_datasets(
-        ["train", "dev"])
+    train_dataset, test_dataset = ppnlp.datasets.MSRA_NER.get_datasets(
+        ["train", "test"])
     tokenizer = BertTokenizer.from_pretrained(args.model_name_or_path)
 
     label_list = train_dataset.get_labels()
@@ -276,11 +276,11 @@ def do_train(args):
         num_workers=0,
         return_list=True)
 
-    dev_dataset = dev_dataset.apply(trans_func, lazy=True)
+    test_dataset = test_dataset.apply(trans_func, lazy=True)
     dev_batch_sampler = paddle.io.BatchSampler(
-        dev_dataset, batch_size=args.batch_size, shuffle=False, drop_last=True)
-    dev_data_loader = DataLoader(
-        dataset=dev_dataset,
+        test_dataset, batch_size=args.batch_size, shuffle=False, drop_last=True)
+    test_data_loader = DataLoader(
+        dataset=test_dataset,
         batch_sampler=dev_batch_sampler,
         collate_fn=batchify_fn,
         num_workers=0,
@@ -336,7 +336,7 @@ def do_train(args):
             lr_scheduler.step()
             optimizer.clear_gradients()
             if global_step % args.save_steps == 0:
-                evaluate(model, loss_fct, metric, dev_data_loader, label_num)
+                evaluate(model, loss_fct, metric, test_data_loader, label_num)
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
                     paddle.save(model.state_dict(),
                                 os.path.join(args.output_dir,
