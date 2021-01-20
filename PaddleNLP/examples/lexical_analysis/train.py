@@ -93,7 +93,7 @@ def train(args):
     # Prepare optimizer, loss and metric evaluator
     optimizer = paddle.optimizer.Adam(
         learning_rate=args.base_lr, parameters=model.parameters())
-    crf_loss = LinearChainCrfLoss(network.crf.transitions)
+    crf_loss = LinearChainCrfLoss(network.crf)
     chunk_evaluator = ChunkEvaluator(
         label_list=train_dataset.label_vocab.keys(), suffix=True)
     model.prepare(optimizer, crf_loss, chunk_evaluator)
@@ -101,7 +101,6 @@ def train(args):
         model.load(args.init_checkpoint)
 
     # Start training
-    callback = paddle.callbacks.ProgBarLogger(log_freq=10, verbose=3)
     model.fit(train_data=train_loader,
               eval_data=test_loader,
               batch_size=args.batch_size,
@@ -111,8 +110,7 @@ def train(args):
               save_dir=args.model_save_dir,
               save_freq=1,
               drop_last=True,
-              shuffle=True,
-              callbacks=callback)
+              shuffle=True)
 
 
 if __name__ == "__main__":

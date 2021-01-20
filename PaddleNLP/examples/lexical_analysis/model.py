@@ -39,7 +39,8 @@ class BiGruCrf(nn.Layer):
                  vocab_size,
                  num_labels,
                  emb_lr=2.0,
-                 crf_lr=0.2):
+                 crf_lr=0.2,
+                 with_start_stop_tag=True):
         super(BiGruCrf, self).__init__()
         self.word_emb_dim = word_emb_dim
         self.vocab_size = vocab_size
@@ -73,14 +74,17 @@ class BiGruCrf(nn.Layer):
 
         self.fc = nn.Linear(
             in_features=self.hidden_size * 2,
-            out_features=self.num_labels + 2,
+            out_features=self.num_labels + 2
+            if with_start_stop_tag else self.num_labels,
             weight_attr=paddle.ParamAttr(
                 initializer=nn.initializer.Uniform(
                     low=-self.init_bound, high=self.init_bound),
                 regularizer=paddle.regularizer.L2Decay(coeff=1e-4)))
 
-        self.crf = LinearChainCrf(self.num_labels, self.crf_lr)
-        self.viterbi_decoder = ViterbiDecoder(self.crf.transitions)
+        self.crf = LinearChainCrf(self.num_labels, self.crf_lr,
+                                  with_start_stop_tag)
+        self.viterbi_decoder = ViterbiDecoder(self.crf.transitions,
+                                              with_start_stop_tag)
 
     def forward(self, inputs, lengths):
         word_embed = self.word_embedding(inputs)
