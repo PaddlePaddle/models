@@ -6,7 +6,6 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 from paddle.fluid.layers.utils import map_structure
-from ...efficient_transformers import Transformer
 
 
 def position_encoding_init(n_position, d_pos_vec, dtype="float32"):
@@ -252,8 +251,8 @@ class TransformerModel(nn.Layer):
                 vocab_size=trg_vocab_size, emb_dim=d_model, bos_idx=self.bos_id)
             self.trg_pos_embedding = PositionalEmbedding(
                 emb_dim=d_model, max_length=max_length, bos_idx=self.bos_id)
-        # self.transformer = paddle.nn.Transformer(
-        self.transformer = Transformer(
+
+        self.transformer = paddle.nn.Transformer(
             d_model=d_model,
             nhead=n_head,
             num_encoder_layers=n_layer,
