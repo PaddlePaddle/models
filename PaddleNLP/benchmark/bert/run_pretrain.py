@@ -137,6 +137,11 @@ def parse_args():
         default=1.0,
         help="The value of scale_loss for fp16.")
     parser.add_argument(
+        "--use_pure_fp16",
+        type=distutils.util.strtobool,
+        default=False,
+        help="Whether to use pure fp16 training.")
+    parser.add_argument(
         "--select_device",
         type=str,
         default="gpu",
@@ -225,12 +230,6 @@ def dist_optimizer(args, optimizer):
     dist_strategy.build_strategy = build_strategy
 
     dist_strategy.fuse_grad_size_in_MB = 16
-    if args.use_amp:
-        dist_strategy.amp = True
-        dist_strategy.amp_configs = {
-            'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
-            'init_loss_scaling': args.scale_loss,
-        }
     if args.gradient_merge_steps > 1:
         dist_strategy.gradient_merge = True
         dist_strategy.gradient_merge_configs = {
@@ -240,6 +239,18 @@ def dist_optimizer(args, optimizer):
     optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
     return optimizer
 
+def mixed_precision_optimizer(args, optimizer):
+    amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+        custom_white_list=['softmax', 'layer_norm', 'gelu'])
+    optimizer = paddle.static.amp.decorate(
+        optimizer,
+        amp_list,
+        init_loss_scaling=args.scale_loss,
+        use_dynamic_loss_scaling=True,
+        use_pure_fp16=args.use_pure_fp16,
+        use_fp16_guard=True)
+
+    return optimizer
 
 def set_seed(seed):
     random.seed(seed)
@@ -316,15 +327,12 @@ def do_train(args):
         apply_decay_param_fun=lambda x: x in [
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
-        ])
-    if worker_num == 1 and args.use_amp:
-        amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
-            custom_white_list=['softmax', 'layer_norm', 'gelu'])
-        optimizer = paddle.fluid.contrib.mixed_precision.decorate(
-            optimizer,
-            amp_list,
-            init_loss_scaling=args.scale_loss,
-            use_dynamic_loss_scaling=True)
+        ],
+        multi_precision=args.use_pure_fp16)
+
+    # auto mixed precision training
+    if args.use_amp:
+        optimizer = mixed_precision_optimizer(args, optimizer)
 
     if worker_num > 1:
         # Use the fleet api to compile the distributed optimizer
@@ -339,6 +347,9 @@ def do_train(args):
     # Use the state dict to update the parameter
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
+
+    if args.use_amp:
+        optimizer.amp_init(place)
 
     if worker_num == 1:
         # Construct the compiled program
