@@ -37,7 +37,11 @@ from data import GPT2Dataset
 import lr
 
 #MODEL_CLASSES = {"gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer), }
-MODEL_CLASSES = {"gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer), "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer) }
+MODEL_CLASSES = {
+    "gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer),
+    "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer),
+    "gpt2-large-en": (GPT2ForPretraining, GPT2Tokenizer),
+}
 
 os.environ['FLAGS_enable_parallel_graph'] = "0"
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.1"
@@ -46,6 +50,7 @@ os.environ['FLAGS_eager_delete_tensor_gb'] = "0"
 os.environ['FLAGS_fuse_parameter_memory_size'] = "32"
 os.environ['FLAGS_fuse_parameter_groups_size'] = "50"
 os.environ['FLAGS_check_nan_inf'] = "0"
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -190,12 +195,15 @@ def create_data_holder(args):
     labels = paddle.static.data(name="labels", shape=[-1, -1], dtype="int64")
     return [tokens, loss_mask, attention_mask, position_ids, labels]
 
-def create_pretrained_dataset(args, input_path, worker_init, worker_index, 
-                             eod_id, places, data_holders):
-    train_data = GPT2Dataset(file_path=input_path, worker_index=worker_index, 
-                             num_samples=args.batch_size*args.max_steps,
-                             eod_id=eod_id,
-                             seed=args.seed+worker_index)
+
+def create_pretrained_dataset(args, input_path, worker_init, worker_index,
+                              eod_id, places, data_holders):
+    train_data = GPT2Dataset(
+        file_path=input_path,
+        worker_index=worker_index,
+        num_samples=args.batch_size * args.max_steps,
+        eod_id=eod_id,
+        seed=args.seed + worker_index)
 
     train_batch_sampler = paddle.io.BatchSampler(
         train_data, batch_size=args.batch_size, shuffle=False)
@@ -269,14 +277,14 @@ def dist_optimizer(args, optimizer, model, worker_num):
     if args.use_amp:
         dist_strategy.amp = True
         dist_strategy.amp_configs = {
-        "custom_white_list": ['softmax', 'layer_norm', 'gelu'],
-        "init_loss_scaling": 32768,
-        "decr_every_n_nan_or_inf": 2,
-        "incr_every_n_steps": 10,
-        "incr_ratio": 2.0,
-        "use_dynamic_loss_scaling": True,
-        "decr_ratio": 0.5,
-        } 
+            "custom_white_list": ['softmax', 'layer_norm', 'gelu'],
+            "init_loss_scaling": 32768,
+            "decr_every_n_nan_or_inf": 2,
+            "incr_every_n_steps": 10,
+            "incr_ratio": 2.0,
+            "use_dynamic_loss_scaling": True,
+            "decr_ratio": 0.5,
+        }
         """
         dist_strategy.amp_configs = {
             "custom_white_list": ['softmax', 'layer_norm', 'gelu'],
@@ -349,7 +357,7 @@ def do_train(args):
 
     # Create the learning_rate sheduler and optimizer
     if args.decay_steps is None:
-         args.decay_steps = args.max_steps
+        args.decay_steps = args.max_steps
     warmup_step = args.warmup_rate * args.decay_steps
     lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
         max_lr=args.max_lr,
@@ -372,7 +380,6 @@ def do_train(args):
              if not any(nd in n for nd in ["bias", "norm"])
          ]
     )
-
     if worker_num == 1 and args.use_amp:
         amp_list = paddle.fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
             custom_white_list=['softmax', 'layer_norm', 'gelu'])
@@ -381,6 +388,11 @@ def do_train(args):
             amp_list,
             init_loss_scaling=args.scale_loss,
             use_dynamic_loss_scaling=True)
+
+    if worker_num == 1 and args.use_recompute:
+        optimizer.apply_optimize = optimizer._apply_optimize
+        optimizer = paddle.fluid.optimizer.RecomputeOptimizer(optimizer)
+        optimizer._set_checkpoints(model.gpt2.checkpoints)
 
     if worker_num > 1:
         # Use the fleet api to compile the distributed optimizer
@@ -393,9 +405,9 @@ def do_train(args):
     state_dict = model.state_dict()
     #Use the state dict to update the parameter
     #reset_state_dict = reset_program_state_dict(model, state_dict)
-    tensor_dict = paddle.load("./layernorm_gpt2.pdparams")
-    reset_state_dict = copy_program_state_dict(state_dict, tensor_dict)
-    paddle.static.set_program_state(main_program, reset_state_dict)
+    # tensor_dict = paddle.load("./layernorm_gpt2.pdparams")
+    # reset_state_dict = copy_program_state_dict(state_dict, tensor_dict)
+    # paddle.static.set_program_state(main_program, reset_state_dict)
 
     if worker_num == 1:
         # Construct the compiled program
@@ -406,16 +418,20 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_" not in str(f))
+            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_"
+                not in str(f))
         ]
         #files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
-        for f_id in range(math.ceil(len(files)/worker_num)):
-            data_file = files[(f_id * worker_num + worker_index) %
-                                  num_files]
-            train_data_loader = create_pretrained_dataset(args,
-                data_file, worker_init, worker_index, eod_id=eod_id, 
+        for f_id in range(math.ceil(len(files) / worker_num)):
+            data_file = files[(f_id * worker_num + worker_index) % num_files]
+            train_data_loader = create_pretrained_dataset(
+                args,
+                data_file,
+                worker_init,
+                worker_index,
+                eod_id=eod_id,
                 places=paddle.static.cuda_places(),
                 data_holders=data_holders)
             for step, batch in enumerate(train_data_loader):
@@ -432,7 +448,7 @@ def do_train(args):
                             % (global_step, epoch, step, loss_return[0],
                                args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
-			
+
                 if global_step % args.save_steps == 0:
                     if worker_index == 0:
                         output_dir = os.path.join(args.output_dir,
@@ -442,7 +458,10 @@ def do_train(args):
                         paddle.fluid.io.save_inference_model(
                             output_dir,
                             feeded_var_names=[
-                                tokens.name, loss_mask.name, attention_mask.name, position_ids.name,
+                                tokens.name,
+                                loss_mask.name,
+                                attention_mask.name,
+                                position_ids.name,
                                 labels.name,
                             ],
                             target_vars=[loss],
