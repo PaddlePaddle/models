@@ -36,7 +36,12 @@ from paddlenlp.utils.log import logger
 from data import GPT2Dataset
 import lr
 
-MODEL_CLASSES = {"gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer), "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer) }
+MODEL_CLASSES = {
+    "gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer),
+    "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer),
+    "gpt2-large-en": (GPT2ForPretraining, GPT2Tokenizer),
+    "gpt2-1212m-en": (GPT2ForPretraining, GPT2Tokenizer),
+}
 
 
 def parse_args():
@@ -132,6 +137,11 @@ def parse_args():
         help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--seed", type=int, default=42, help="random seed for initialization")
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="gpu",
+        help="select cpu, gpu, xpu devices.")
     args = parser.parse_args()
     return args
 
@@ -145,11 +155,14 @@ class WorkerInitObj(object):
         random.seed(self.seed + id)
 
 
-def create_pretrained_dataset(args, input_path, worker_init, worker_index, eod_id):
-    train_data = GPT2Dataset(file_path=input_path, worker_index=worker_index, 
-                             num_samples=args.batch_size*args.max_steps,
-                             eod_id=eod_id,
-                             seed=args.seed+worker_index)
+def create_pretrained_dataset(args, input_path, worker_init, worker_index,
+                              eod_id):
+    train_data = GPT2Dataset(
+        file_path=input_path,
+        worker_index=worker_index,
+        num_samples=args.batch_size * args.max_steps,
+        eod_id=eod_id,
+        seed=args.seed + worker_index)
     train_batch_sampler = paddle.io.BatchSampler(
         train_data, batch_size=args.batch_size, shuffle=False)
 
@@ -163,17 +176,22 @@ def create_pretrained_dataset(args, input_path, worker_init, worker_index, eod_i
 
 
 def set_seed(args):
-    random.seed(args.seed + paddle.distributed.get_rank())
-    np.random.seed(args.seed + paddle.distributed.get_rank())
-    paddle.seed(args.seed + paddle.distributed.get_rank())
+    if args.device == "cpu":
+        idx = 0
+    else:
+        idx = paddle.distributed.get_rank()
+    random.seed(args.seed + idx)
+    np.random.seed(args.seed + idx)
+    paddle.seed(args.seed + idx)
 
 
 def do_train(args):
-    paddle.set_device("gpu")
+    assert args.device in ["cpu", "gpu", "xpu"], "invalid device!"
+    paddle.set_device(args.device)
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
 
-    worker_index = paddle.distributed.get_rank() 
+    worker_index = paddle.distributed.get_rank()
     worker_num = paddle.distributed.get_world_size()
     set_seed(args)
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
@@ -186,11 +204,9 @@ def do_train(args):
             args.model_name_or_path]))
     # creat the critrion for the gpt model
     criterion = GPT2PretrainingCriterion()
-    state_dict = paddle.load("./layernorm_gpt2.pdparams")
-    model.set_state_dict(state_dict)
 
     if args.decay_steps is None:
-         args.decay_steps = args.max_steps
+        args.decay_steps = args.max_steps
     warmup_step = args.warmup_rate * args.decay_steps
     lr_scheduler = lr.CosineAnnealingWithWarmupDecay(
         max_lr=args.max_lr,
@@ -218,16 +234,16 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         files = [
             os.path.join(args.input_dir, f) for f in os.listdir(args.input_dir)
-            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_" not in str(f))
+            if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_"
+                not in str(f))
         ]
         #files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
-        for f_id in range(math.ceil(len(files)/worker_num)):
-            data_file = files[(f_id * worker_num + worker_index) %
-                                  num_files]
-            train_data_loader = create_pretrained_dataset(args,
-                data_file, worker_init, worker_index, eod_id=eod_id)
+        for f_id in range(math.ceil(len(files) / worker_num)):
+            data_file = files[(f_id * worker_num + worker_index) % num_files]
+            train_data_loader = create_pretrained_dataset(
+                args, data_file, worker_init, worker_index, eod_id=eod_id)
             for step, batch in enumerate(train_data_loader):
                 global_step += 1
                 tokens, loss_mask, attention_mask, position_ids, labels = batch
@@ -264,6 +280,7 @@ def do_train(args):
                     del train_data_loader
                     return
             del train_data_loader
+
 
 if __name__ == "__main__":
     args = parse_args()

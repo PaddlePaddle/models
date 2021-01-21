@@ -1,4 +1,5 @@
-export CUDA_VISIBLE_DEVICES=3 
+export CUDA_VISIBLE_DEVICES=0
+export PYTHONPATH=../../../
 python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./new_data"\
     --output_dir "output"\
     --max_lr 0.00015\
@@ -9,4 +10,5 @@ python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./new_dat
     --save_steps 100000\
     --decay_steps 320000\
     --warmup_rate 0.01\
-    --batch_size 8\
+    --batch_size 1\
+    --device gpu
