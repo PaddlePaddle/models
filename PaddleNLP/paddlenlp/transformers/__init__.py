@@ -25,3 +25,4 @@ from .electra.modeling import *
 from .electra.tokenizer import *
 from .transformer.modeling import *
 from .ernie_gen.modeling import ErnieForGeneration
+from .bigbird.modeling import *

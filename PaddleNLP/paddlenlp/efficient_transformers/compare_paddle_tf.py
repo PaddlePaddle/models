@@ -3,7 +3,7 @@ from bigbird.core import encoder
 import numpy as np
 import paddle
 from paddle import fluid
-from paddlenlp.efficient_transformers import TransformerEncoderLayer, TransformerEncoder
+from paddlenlp.transformers import TransformerEncoderLayer, TransformerEncoder
 
 from tf_to_paddle import load_dict_from_tf
 config = {

@@ -1,6 +1,6 @@
 import paddle
 import numpy as np
-from paddlenlp.efficient_transformers import TransformerEncoderLayer, TransformerEncoder
+from paddlenlp.transformers import TransformerEncoderLayer, TransformerEncoder
 import unittest
 import paddle.fluid as fluid
 
