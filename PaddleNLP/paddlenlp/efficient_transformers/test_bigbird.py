@@ -17,25 +17,17 @@ class TestBigBird(unittest.TestCase):
         self.seed = 102
         self.src_len = 20
         self.batch_size = 2
-        self.d_model = 128
+        self.d_model = 32
         self.num_rand_blocks = 2
         self.encoder_layers = 1
-        self.initializer_const = 0.01
         self.nhead = 2
         self.dim_feedforward = 512
         self.block_size = 1
         self.window_size = 3
         self.num_global_blocks = 1
         self.init_params()
-
-        self.weight_attr = [
-            fluid.initializer.Constant(value=self.initializer_const),
-            fluid.initializer.Constant(value=self.initializer_const)
-        ]
-        self.bias_attr = [
-            fluid.initializer.Constant(value=self.initializer_const),
-            fluid.initializer.Constant(value=self.initializer_const)
-        ]
+        self.weight_attr = None
+        self.bias_attr = None
         self.input = paddle.rand((self.batch_size, self.src_len, self.d_model))
 
         bigbird_kwargs = {
@@ -66,13 +58,15 @@ class TestBigBird(unittest.TestCase):
                                                   self.encoder_layers)
         self.bigbird_simulated_encoder = TransformerEncoder(
             bigbird_simulated_layer, self.encoder_layers)
+        self.bigbird_encoder.set_state_dict(
+            self.bigbird_simulated_encoder.state_dict())
 
     def test_equal(self):
         bigbird_out = self.bigbird_encoder(self.input)
         bigbird_simulated_out = self.bigbird_simulated_encoder(self.input)
         self.assertTrue(
             np.allclose(
-                bigbird_out.numpy(), bigbird_simulated_out.numpy(), atol=1e-6))
+                bigbird_out.numpy(), bigbird_simulated_out.numpy(), atol=1e-5))
 
 
 class TestBigBirdGPU(TestBigBird):
@@ -87,7 +81,7 @@ class TestBigBirdMultiLayers1(TestBigBird):
 
 class TestBigBirdMultiLayers2(TestBigBird):
     def init_params(self):
-        self.encoder_layers = 5
+        self.encoder_layers = 3
 
 
 class TestBigBirdWindowSize1(TestBigBird):

@@ -71,6 +71,7 @@ class TransformerEncoderLayer(Layer):
         self.dropout1 = Dropout(dropout, mode="upscale_in_train")
         self.dropout2 = Dropout(dropout, mode="upscale_in_train")
         self.activation = getattr(F, activation)
+        self.d_model = d_model
 
     def forward(self, src, src_mask=None):
         residual = src
@@ -81,7 +82,6 @@ class TransformerEncoderLayer(Layer):
         src = residual + self.dropout1(src)
         if not self.normalize_before:
             src = self.norm1(src)
-
         residual = src
         if self.normalize_before:
             src = self.norm2(src)
@@ -93,21 +93,24 @@ class TransformerEncoderLayer(Layer):
 
 
 class TransformerEncoder(Layer):
-    def __init__(self, encoder_layer, num_layers, norm=None):
+    def __init__(self, encoder_layer, num_layers):
         super(TransformerEncoder, self).__init__()
         self.layers = LayerList([(encoder_layer if i == 0 else
                                   type(encoder_layer)(**encoder_layer._config))
                                  for i in range(num_layers)])
         self.num_layers = num_layers
-        self.norm = norm
+        self.norm = LayerNorm(self.layers[0].d_model)
+        self.normalize_before = self.layers[0].normalize_before
 
     def forward(self, src, src_mask=None):
         output = src
+        if not self.normalize_before:
+            output = self.norm(output)
 
         for mod in self.layers:
             output = mod(output, src_mask=src_mask)
 
-        if self.norm is not None:
+        if self.normalize_before:
             output = self.norm(output)
 
         return output

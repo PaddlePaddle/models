@@ -23,6 +23,7 @@ from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 from ..utils.log import logger
 from .registry import AttentionRegistry
 from .masking import Mask
+from .utils import Linear3D
 
 
 class Attention(Layer):
@@ -153,8 +154,7 @@ class BigBirdSparseAttention(Attention):
             value_matrix,
             [batch_size, self.num_heads, value_blocks, self.block_size, -1])
         reshape_attn_mask = paddle.reshape(attn_mask, [
-            self.num_heads, query_blocks, key_blocks, self.block_size,
-            self.block_size
+            self.num_heads, attn_mask.shape[1], key_blocks, self.block_size
         ])
 
         for i in range(self.num_heads):
@@ -166,11 +166,18 @@ class BigBirdSparseAttention(Attention):
                 paddle.gather(
                     reshape_value_matrix[:, i], rand_mask_idx_1d, axis=1))
             temp_rand_mask = [
-                paddle.gather(reshape_attn_mask[i, j + self.num_global_blocks],
-                              rand_mask_idx[i][j])
-                for j in range(rand_query_blocks)
+                paddle.gather(
+                    reshape_attn_mask[i, (
+                        j + self.num_global_blocks) * self.block_size:(
+                            j + self.num_global_blocks + 1) * self.block_size],
+                    rand_mask_idx[i][j],
+                    axis=1) for j in range(rand_query_blocks)
             ]
-            rand_mask_list.append(paddle.stack(temp_rand_mask, axis=0))
+            temp_rand_mask = paddle.stack(temp_rand_mask, axis=0)
+            temp_rand_mask = paddle.reshape(temp_rand_mask, [
+                rand_query_blocks * self.block_size, rand_num * self.block_size
+            ])
+            rand_mask_list.append(temp_rand_mask)
         gathered_key = paddle.stack(gathered_key_list, axis=1)
         gathered_value = paddle.stack(gathered_value_list, axis=1)
         rand_mask = paddle.stack(rand_mask_list, axis=0)
@@ -352,8 +359,6 @@ class BigBirdSparseAttention(Attention):
         # gather random key,value
         random_keys, random_values, random_mask = self._get_random_key_value(
             key_matrix, value_matrix, attn_mask, rand_mask_idx)
-
-        # global product [fix]
         # 所有global_block中的query与所有key做点积
         global_block_length = self.num_global_blocks * self.block_size
         global_product = paddle.matmul(
@@ -371,12 +376,6 @@ class BigBirdSparseAttention(Attention):
                 training=self.training,
                 mode="upscale_in_train")
         global_out = paddle.matmul(global_weights, value_matrix)
-        global_out = paddle.reshape(
-            global_out,
-            shape=[
-                batch_size, self.num_heads, self.num_global_blocks,
-                self.block_size, -1
-            ])
 
         # roll & product
         # 某些行中window_block数量较少，需要补齐
@@ -404,28 +403,43 @@ class BigBirdSparseAttention(Attention):
         second_key_matrix = paddle.concat(
             [random_keys, second_key_matrix], axis=3)
 
+        second_key_shape = second_key_matrix.shape
+        second_key_matrix = paddle.unsqueeze(second_key_matrix, axis=3)
+        second_key_matrix = paddle.expand(second_key_matrix, [
+            second_key_shape[0], second_key_shape[1], second_key_shape[2],
+            self.block_size, second_key_shape[3], second_key_shape[4]
+        ])
+        second_key_matrix = paddle.reshape(second_key_matrix, [
+            second_key_shape[0], second_key_shape[1], second_key_shape[2] *
+            self.block_size, second_key_shape[3], second_key_shape[4]
+        ])
+
         second_value_matrix = paddle.concat(second_value_matrix, axis=2)
         second_value_matrix = paddle.concat(
             [random_values, second_value_matrix], axis=3)
 
+        second_value_shape = second_value_matrix.shape
+        second_value_matrix = paddle.unsqueeze(second_value_matrix, axis=3)
+        second_value_matrix = paddle.expand(second_value_matrix, [
+            second_value_shape[0], second_value_shape[1], second_value_shape[2],
+            self.block_size, second_value_shape[3], second_value_shape[4]
+        ])
+        second_value_matrix = paddle.reshape(second_value_matrix, [
+            second_value_shape[0], second_value_shape[1], second_value_shape[2]
+            * self.block_size, second_value_shape[3], second_value_shape[4]
+        ])
+
         second_mask_matrix = paddle.concat(second_mask_matrix, axis=1)
         second_mask_matrix = paddle.concat(
             [random_mask, second_mask_matrix], axis=2)
-        mask_shape = list(second_mask_matrix.shape)
-        second_mask_matrix = paddle.reshape(second_mask_matrix, [
-            mask_shape[0], mask_shape[1] // self.block_size, self.block_size, -1
-        ])
 
         second_query_matrix = paddle.unsqueeze(
             query_matrix[:, :, global_block_length:], axis=3)
-        second_query_blocks = num_query_blocks - self.num_global_blocks
-        second_query_matrix = paddle.reshape(second_query_matrix, [
-            batch_size, self.num_heads, second_query_blocks, self.block_size, -1
-        ])
 
         second_product = paddle.matmul(
             second_query_matrix, second_key_matrix, transpose_y=True)
         second_product = second_product * (d_head**-0.5)
+        second_mask_matrix = paddle.unsqueeze(second_mask_matrix, 2)
         second_product = second_mask_matrix + second_product
         second_weights = F.softmax(second_product)
         if dropout:
@@ -435,9 +449,8 @@ class BigBirdSparseAttention(Attention):
                 training=self.training,
                 mode="upscale_in_train")
         second_out = paddle.matmul(second_weights, second_value_matrix)
+        second_out = paddle.squeeze(second_out, 3)
         out = paddle.concat([global_out, second_out], axis=2)
-        out = paddle.reshape(out,
-                             [batch_size, self.num_heads, query_length, -1])
         return out
 
 
@@ -471,12 +484,25 @@ class MultiHeadAttention(Layer):
         self.head_dim = embed_dim // num_heads
         assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
 
-        self.q_proj = nn.Linear(
-            embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
-        self.k_proj = nn.Linear(
-            self.kdim, embed_dim, weight_attr, bias_attr=bias_attr)
-        self.v_proj = nn.Linear(
-            self.vdim, embed_dim, weight_attr, bias_attr=bias_attr)
+        self.q_proj = Linear3D(
+            embed_dim,
+            num_heads,
+            self.head_dim,
+            weight_attr,
+            bias_attr=bias_attr)
+        self.k_proj = Linear3D(
+            embed_dim,
+            num_heads,
+            self.head_dim,
+            weight_attr,
+            bias_attr=bias_attr)
+        self.v_proj = Linear3D(
+            embed_dim,
+            num_heads,
+            self.head_dim,
+            weight_attr,
+            bias_attr=bias_attr)
+
         self.out_proj = nn.Linear(
             embed_dim, embed_dim, weight_attr, bias_attr=bias_attr)
 
@@ -486,8 +512,6 @@ class MultiHeadAttention(Layer):
 
     def _prepare_qkv(self, query, key, value, cache=None):
         q = self.q_proj(query)
-        q = paddle.reshape(x=q, shape=[0, 0, self.num_heads, self.head_dim])
-        q = paddle.transpose(x=q, perm=[0, 2, 1, 3])
 
         if isinstance(cache, self.StaticCache):
             # for encoder-decoder attention in inference and has cached
@@ -506,10 +530,6 @@ class MultiHeadAttention(Layer):
     def compute_kv(self, key, value):
         k = self.k_proj(key)
         v = self.v_proj(value)
-        k = paddle.reshape(x=k, shape=[0, 0, self.num_heads, self.head_dim])
-        k = paddle.transpose(x=k, perm=[0, 2, 1, 3])
-        v = paddle.reshape(x=v, shape=[0, 0, self.num_heads, self.head_dim])
-        v = paddle.transpose(x=v, perm=[0, 2, 1, 3])
         return k, v
 
     def gen_cache(self, key, value=None, type=Cache):
