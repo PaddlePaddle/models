@@ -254,16 +254,24 @@ class GPT2Tokenizer(PretrainedTokenizer):
     }  # for save_pretrained
     pretrained_resource_files_map = {
         "vocab_file": {
-            "gpt2-large-en": "http://10.255.129.12:8829/vocab.json",
-            "gpt2-medium-en": "http://10.255.129.12:8829/vocab.json",
-            "gpt2-small-en": "http://10.255.129.12:8829/vocab.json",
-            "gpt2-1212m-en": "http://10.255.129.12:8829/vocab.json",
+            "gpt2-large-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-large-en-vocab.json",
+            "gpt2-medium-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-medium-en-vocab.json",
+            "gpt2-small-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-small-en-vocab.json",
+            "gpt2-1212m-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-1212m-en-vocab.json",
         },
         "merges_file": {
-            "gpt2-large-en": "http://10.255.129.12:8829/merges.txt",
-            "gpt2-medium-en": "http://10.255.129.12:8829/merges.txt",
-            "gpt2-small-en": "http://10.255.129.12:8829/merges.txt",
-            "gpt2-1212m-en": "http://10.255.129.12:8829/merges.txt",
+            "gpt2-large-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-large-en-merges.txt",
+            "gpt2-medium-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-medium-en-merges.txt",
+            "gpt2-small-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-small-en-merges.txt",
+            "gpt2-1212m-en":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-1212m-en-merges.txt",
         }
     }
     pretrained_init_configuration = {

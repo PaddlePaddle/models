@@ -24,14 +24,11 @@ from .. import PretrainedModel, register_base_model
 from paddle.nn.layer.transformer import _convert_param_attr_to_list
 
 __all__ = [
-    'GPT2Model', "GPT2PretrainedModel", 'GPT2ForPretraining',
-    'GPT2PretrainingCriterion'
+    'GPT2Model',
+    "GPT2PretrainedModel",
+    'GPT2ForPretraining',
+    'GPT2PretrainingCriterion',
 ]
-
-
-def openai_glue(x):
-    return 0.5 * x * (1.0 + paddle.tanh(0.7978845608028654 * x *
-                                        (1.0 + 0.044715 * x * x)))
 
 
 class MultiHeadAttention(nn.Layer):
@@ -40,40 +37,6 @@ class MultiHeadAttention(nn.Layer):
     Multi-Head Attention performs multiple parallel attention to jointly attending
     to information from different representation subspaces.
 
-    Please refer to `Attention Is All You Need <https://arxiv.org/pdf/1706.03762.pdf>`_
-    for more details.
-
-    Parameters:
-        embed_dim (int): The expected feature size in the input and output.
-        num_heads (int): The number of heads in multi-head attention.
-        dropout (float, optional): The dropout probability used on attention
-            weights to drop some attention targets. 0 for no dropout. Default 0
-        kdim (int, optional): The feature size in key. If None, assumed equal to
-            `embed_dim`. Default None.
-        vdim (int, optional): The feature size in value. If None, assumed equal to
-            `embed_dim`. Default None.
-        need_weights (bool, optional): Indicate whether to return the attention
-            weights. Default False.
-        weight_attr(ParamAttr, optional):  To specify the weight parameter property.
-            Default: None, which means the default weight parameter property is used.
-            See usage for details in :code:`ParamAttr` .
-        bias_attr (ParamAttr, optional): To specify the bias parameter property.
-            Default: None, which means the default bias parameter property is used.
-            If it is set to False, this layer will not have trainable bias parameter.
-            See usage for details in :code:`ParamAttr` .
-
-    Examples:
-
-        .. code-block:: python
-
-            import paddle
-
-            # encoder input: [batch_size, sequence_length, d_model]
-            query = paddle.rand((2, 4, 128))
-            # self attention mask: [batch_size, num_heads, query_len, query_len]
-            attn_mask = paddle.rand((2, 2, 4, 4))
-            multi_head_attn = paddle.MultiHeadAttention(128, 2)
-            output = multi_head_attn(query, None, None, attn_mask=attn_mask)  # [2, 4, 128]
     """
 
     Cache = collections.namedtuple("Cache", ["k", "v"])
@@ -113,36 +76,6 @@ class MultiHeadAttention(nn.Layer):
         multiple parallel attention. If `cache` is not None, using cached results
         to reduce redundant calculations.
 
-        Parameters:
-            query (Tensor): The queries for multi-head attention. It is a
-                tensor with shape `[batch_size, query_length, embed_dim]`. The
-                data type should be float32 or float64.
-            key (Tensor): The keys for multi-head attention. It is
-                a tensor with shape `[batch_size, key_length, kdim]`. The
-                data type should be float32 or float64. If None, use `query` as
-                `key`.
-            value (Tensor): The values for multi-head attention. It
-                is a tensor with shape `[batch_size, value_length, vdim]`.
-                The data type should be float32 or float64. If None, use `query` as
-                `value`.
-            cache (MultiHeadAttention.Cache|MultiHeadAttention.StaticCache, optional):
-                It is a namedtuple with `k` and `v` as fields, and stores tensors
-                shaped `[batch_size, num_heads, length, embed_dim]` which are results
-                of linear projection, reshape and transpose calculations in
-                MultiHeadAttention. If is an instance of `Cache`, `k` and `v`
-                fields reserve intermediate results of previous positions, which
-                mostly used for decoder self attention. If it is an instance of
-                `StaticCache`, `key` and `value` args would be ignored, `k` and
-                `v` fields would be used as calculated results on `key` and
-                `value`, which mostly used for decoder-encoder cross attention.
-                It is only used for inference and should be None for training.
-                Default None.
-
-        Returns:
-            tuple: A tuple including linear projected keys and values. These two \
-                tensors have shapes `[batch_size, n_head, sequence_length, d_key]` \
-                and `[batch_size, n_head, sequence_length, d_value]` separately, \
-                and their data types are same as inputs.
         """
 
         q = self.q_proj(query)
@@ -175,18 +108,6 @@ class MultiHeadAttention(nn.Layer):
         a method to pre-compute and prefetch these results, thus we can use them
         to construct cache for inference.
 
-        Parameters:
-            key (Tensor): The keys for multi-head attention. It is a tensor
-                with shape `[batch_size, sequence_length, kdim]`. The data type
-                should be float32 or float64.
-            value (Tensor): The values for multi-head attention. It is a tensor
-                with shape `[batch_size, sequence_length, vdim]`. The data type
-                should be float32 or float64.
-
-        Returns:
-            tuple: A tuple including transformed keys and values. Their shapes \
-                both are `[batch_size, num_heads, sequence_length, embed_dim // num_heads]`, \
-                and their data types are same as inputs.
         """
         k = self.k_proj(key)
         v = self.v_proj(value)
@@ -201,49 +122,6 @@ class MultiHeadAttention(nn.Layer):
         Generates cache for `forward` usage in inference accroding to arguments.
         The generated cache is an instance of `MultiHeadAttention.Cache` or an
         instance of `MultiHeadAttention.StaticCache`.
-
-        `Cache` or `StaticCache` is namedtuple with `k` and `v` as fields,
-        and it stores tensors shaped `[batch_size, num_heads, length, embed_dim]`
-        which are results of linear projection, reshape and transpose calculations
-        in MultiHeadAttention.
-
-        If the generated cache is an instance of `Cache`, `k` and `v` fields
-        reserve intermediate result tensors of previous positions, and the tensors
-        are incremental among decoding steps, which mostly are used for decoder
-        decoder self attention.
-
-        If the generated cache is an instance of `StaticCache`, `k` and `v` fields
-        would be used as calculated result tensors on keys an values in `forward`,
-        and the tensors keep unchanged among decoding steps, which are mostly used
-        for decoder-encoder cross attention.
-
-        The cache is generated as follows:
-
-        1. If `type` is `StaticCache`, apply `compute_kv(key, value)` and use the
-        results to create an instance of `StaticCache`.
-
-        2. If `type` is `Cache` and `value` is None, generate empty tensors shaped
-        `[batch_size, num_heads, 0, embed_dim // num_heads]` and use the results
-        to create an instance of `Cache`, where `batch_size` is from the first
-        dimension of `key`.
-
-        3. If `type` is `Cache` and `value` is not None, use `key`, `value` to create
-        an instance of `Cache`.
-
-        Parameters:
-            key (Tensor): The keys for multi-head attention. It is
-                a tensor with shape `[batch_size, key_length, kdim]`. The
-                data type should be float32 or float64. If `value` is None,
-                it is only for batch size and data type reference.
-            value (Tensor, optional): The values for multi-head attention. It
-                is a tensor with shape `[batch_size, value_length, vdim]`.
-                The data type should be float32 or float64. If None, `key` is only
-                for batch size reference. Default None.
-            type (type): It should be `MultiHeadAttention.StaticCache` or
-                `MultiHeadAttention.Cache` to indicate the cache type to generate.
-
-        Returns:
-            namedtuple: an instance of `Cache` or `StaticCache` accordingly.
         """
         if type == MultiHeadAttention.StaticCache:  # static_kv
             k, v = self.compute_kv(key, value)
@@ -274,51 +152,6 @@ class MultiHeadAttention(nn.Layer):
         r"""
         Applies multi-head attention to map queries and a set of key-value pairs
         to outputs.
-
-        Parameters:
-            query (Tensor): The queries for multi-head attention. It is a
-                tensor with shape `[batch_size, query_length, embed_dim]`. The
-                data type should be float32 or float64.
-            key (Tensor, optional): The keys for multi-head attention. It is
-                a tensor with shape `[batch_size, key_length, kdim]`. The
-                data type should be float32 or float64. If None, use `query` as
-                `key`. Default None.
-            value (Tensor, optional): The values for multi-head attention. It
-                is a tensor with shape `[batch_size, value_length, vdim]`.
-                The data type should be float32 or float64. If None, use `query` as
-                `value`. Default None.
-            attn_mask (Tensor, optional): A tensor used in multi-head attention
-                to prevents attention to some unwanted positions, usually the
-                paddings or the subsequent positions. It is a tensor with shape
-                broadcasted to `[batch_size, n_head, sequence_length, sequence_length]`,
-                where the unwanted positions have `-INF` values and the others
-                have 0 values. The data type should be float32 or float64. It can
-                be None when nothing wanted or needed to be prevented attention to.
-                Default None
-            cache (MultiHeadAttention.Cache|MultiHeadAttention.StaticCache, optional):
-                It is a namedtuple with `k` and `v` as fields, and stores tensors
-                shaped `[batch_size, num_heads, length, embed_dim]` which are results
-                of linear projection, reshape and transpose calculations in
-                MultiHeadAttention. If it is an instance of `Cache`, `k` and `v`
-                fields reserve intermediate results of previous positions, which
-                mostly used for decoder self attention. If it is an instance of
-                `StaticCache`, `key` and `value` args would be ignored, `k` and
-                `v` fields would be used as calculated results on `key` and
-                `value`, which mostly used for decoder-encoder cross attention.
-                It is only used for inference and should be None for training.
-                Default None.
-
-        Returns:
-            Tensor|tuple: It is a tensor that has the same shape and data type \
-                as `query`, representing attention output. Or a tuple if \
-                `need_weights` is True or `cache` is not None. If `need_weights` \
-                is True, except for attention output, the tuple also includes \
-                the attention weights tensor shaped `[batch_size, num_heads, query_length, key_length]`. \
-                If `cache` is not None, the tuple then includes the new cache \
-                having the same type as `cache`, and if it is `StaticCache`, it \
-                is same as the input `cache`, if it is `Cache`, the new cache \
-                reserves tensors concatanating raw tensors with intermediate \
-                results of current query.
         """
         key = query if key is None else key
         value = query if value is None else value
@@ -365,36 +198,6 @@ class MultiHeadAttention(nn.Layer):
 class TransformerDecoder(nn.Layer):
     """
     TransformerDecoder is a stack of N decoder layers.
-
-    Parameters:
-        decoder_layer (Layer): an instance of the `TransformerDecoderLayer`. It
-            would be used as the first layer, and the other layers would be created
-            according to the configurations of it.
-        num_layers (int): The number of decoder layers to be stacked.
-        norm (LayerNorm, optional): the layer normalization component. If provided,
-            apply layer normalization on the output of last encoder layer.
-
-    Examples:
-
-        .. code-block:: python
-
-            import paddle
-            from paddle.nn import TransformerDecoderLayer, TransformerDecoder
-
-            # decoder input: [batch_size, tgt_len, d_model]
-            dec_input = paddle.rand((2, 4, 128))
-            # encoder output: [batch_size, src_len, d_model]
-            enc_output = paddle.rand((2, 6, 128))
-            # self attention mask: [batch_size, n_head, tgt_len, tgt_len]
-            self_attn_mask = paddle.rand((2, 2, 4, 4))
-            # cross attention mask: [batch_size, n_head, tgt_len, src_len]
-            cross_attn_mask = paddle.rand((2, 2, 4, 6))
-            decoder_layer = TransformerDecoderLayer(128, 2, 512)
-            decoder = TransformerDecoder(decoder_layer, 2)
-            output = decoder(dec_input,
-                             enc_output,
-                             self_attn_mask,
-                             cross_attn_mask)  # [2, 4, 128]
     """
 
     def __init__(self, decoder_layer, num_layers, norm=None):
@@ -418,42 +221,6 @@ class TransformerDecoder(nn.Layer):
         Applies a stack of N Transformer decoder layers on inputs. If `norm` is
         provided, also applies layer normalization on the output of last decoder
         layer.
-
-        Parameters:
-            tgt (Tensor): The input of Transformer decoder. It is a tensor
-                with shape `[batch_size, target_length, d_model]`. The data type
-                should be float32 or float64.
-            memory (Tensor): The output of Transformer encoder. It is a tensor
-                with shape `[batch_size, source_length, d_model]`. The data type
-                should be float32 or float64.
-            tgt_mask (Tensor, optional): A tensor used in self attention
-                to prevents attention to some unwanted positions, usually the
-                the subsequent positions. It is a tensor with shape broadcasted
-                to `[batch_size, n_head, target_length, target_length]`,
-                where the unwanted positions have `-INF` values and the others
-                have 0 values. The data type should be float32 or float64. It can
-                be None when nothing wanted or needed to be prevented attention to.
-                Default None
-            memory_mask (Tensor, optional): A tensor used in decoder-encoder
-                cross attention to prevents attention to some unwanted positions,
-                usually the paddings. It is a tensor with shape broadcasted to
-               `[batch_size, n_head, target_length, source_length]`, where the
-                unwanted positions have `-INF` values and the others have 0 values.
-                The data type should be float32 or float64. It can be None when
-                nothing wanted or needed to be prevented attention to. Default None
-            cache (list, optional): It is a list, and each element in the list
-                is a tuple( :code:`(incremental_cache, static_cache)` ). See
-                `TransformerDecoder.gen_cache` for more details. It is only
-                used for inference and should be None for training. Default None.
-
-        Returns:
-            Tensor|tuple: It is a tensor that has the same shape and data type \
-                as `tgt`, representing the output of Transformer decoder. \
-                Or a tuple if `cache` is not None, except for decoder output, \
-                the tuple includes the new cache which is same as input `cache` \
-                argument but `incremental_cache` in it has an incremental length. \
-                See `MultiHeadAttention.gen_cache` and `MultiHeadAttention.forward` \
-                for more details.
         """
         output = tgt
         new_caches = []
@@ -494,21 +261,7 @@ class TransformerDecoder(nn.Layer):
         produced by `TransformerDecoderLayer.gen_cache`. See `TransformerDecoderLayer.gen_cache`
         for more details. If `do_zip` is True, apply `zip` on these tuples to get
         a list with two elements.
-
-
-        Parameters:
-            memory (Tensor): The output of Transformer encoder. It is a tensor
-                with shape `[batch_size, source_length, d_model]`. The data type
-                should be float32 or float64.
-            do_zip (bool, optional): Indicate whether to apply `zip` on the tuples.
-                If True, return a list with two elements. Default False
-
-        Returns:
-            list: It is a list, and each element in the list is a tuple produced \
-                by `TransformerDecoderLayer.gen_cache(memory)`. See `TransformerDecoderLayer.gen_cache` \
-                for more details. If `do_zip` is True, apply `zip` on these tuples \
-                and return a list with two elements.
-        """
+       """
         cache = [layer.gen_cache(memory) for layer in self.layers]
         if do_zip:
             cache = list(zip(*cache))
