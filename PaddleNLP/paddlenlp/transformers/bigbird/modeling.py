@@ -715,10 +715,8 @@ class BigBirdEmbeddings(Layer):
             ones = paddle.ones_like(input_ids, dtype="int64")
             seq_length = paddle.cumsum(ones, axis=1)
             position_ids = seq_length - ones
-            position_ids.stop_gradient = True
         if token_type_ids is None:
             token_type_ids = paddle.zeros_like(input_ids, dtype="int64")
-
         input_embedings = self.word_embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
@@ -773,8 +771,31 @@ class BertWithBigBird(Layer):
         self.pooler = nn.Linear(hidden_size, hidden_size)
         self.pad_token_id = pad_token_id
 
-    def forawrd(self, input, token_type_ids=None, attention_mask=None):
-        pass
+    def _process_mask(input_ids, attention_mask_list=None):
+        #TODO: need to optimize mask processing
+        attention_mask = paddle.unsqueeze(
+            (input_ids == self.pad_token_id).astype(self.pooler.dtype),
+            axis=[1, 2])
+        attention_mask = paddle.matmul(
+            attention_mask, attention_mask, transpose_x=True) * -1e9
+        if attention_mask_list is not None:
+            for i in range(len(attention_mask_list)):
+                attention_mask_list[i] = paddle.unsqueeze(
+                    attention_mask_list[i], axis=0)
+                attention_mask_list[i] += attention_mask
+
+    def forawrd(self,
+                input_ids,
+                token_type_ids=None,
+                attention_mask_list=None,
+                rand_mask_idx_list=None):
+        embedding_output = self.embeddings(input_ids, token_type_ids)
+        self._process_mask(input_ids, attention_mask_list)
+        encoder_output = self.encoder(embedding_output, attention_mask_list,
+                                      rand_mask_idx_list)
+        first_token_output = encoder_output[:, 0, :]
+        pooled_output = paddle.tanh(self.pooler(first_token_output))
+        return encoder_output, pooled_output
 
 
 class TransformerWithBigBird(Layer):
