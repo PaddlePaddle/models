@@ -15,7 +15,149 @@ import paddle
 import numpy as np
 from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 import paddle.nn.functional as F
-from ..attention_utils import _convert_param_attr_to_list, MultiHeadAttention, AttentionRegistry, Mask
+import paddle.nn as nn
+from ..attention_utils import _convert_param_attr_to_list, MultiHeadAttention, AttentionRegistry
+
+
+class Mask(object):
+    def __init__(self,
+                 query_length,
+                 key_length,
+                 num_heads,
+                 block_size,
+                 window_size,
+                 num_global_blocks,
+                 num_rand_blocks,
+                 seed=None):
+        for k, v in locals().items():
+            if k != "self":
+                setattr(self, k, v)
+        self.mask = np.zeros_like(
+            np.arange(query_length * key_length * num_heads).reshape((
+                num_heads, query_length, key_length)))
+        self.rand_mask = np.zeros_like(
+            np.arange(query_length * key_length * num_heads).reshape((
+                num_heads, query_length, key_length)))
+        self.rand_mask_idx = [[] for i in range(num_heads)]
+        self.num_query_blocks = self.query_length // self.block_size     \
+                + int(self.query_length % self.block_size != 0)
+        self.num_key_blocks = self.key_length // self.block_size         \
+                + int(self.key_length % self.block_size != 0)
+        self.num_window_blocks = self.window_size // 2
+        if seed:
+            np.random.seed(seed)
+        # create global mask
+        self._create_global_mask()
+        # create window mask
+        self._create_window_mask()
+        # create random mask
+        self._create_random_mask()
+
+    def get_mask(self):
+        return self.mask
+
+    def get_rand_mask_idx(self):
+        return self.rand_mask_idx
+
+    def get_rand_mask(self):
+        return self.rand_mask
+
+    def get_float_mask(self):
+        float_mask = np.array(self.mask, dtype='float32')
+        float_mask[float_mask != 1] = -np.inf
+        float_mask[float_mask == 1.] = 0
+        return float_mask
+
+    def _create_global_mask(self):
+        global_block_length = self.num_global_blocks * self.block_size
+        self.mask[:, 0:global_block_length, :] = 1
+        self.mask[:, :, 0:global_block_length] = 1
+
+    def _create_window_mask(self):
+        for query_block_idx in range(self.num_query_blocks):
+            left_key_block_idx, right_key_block_idx = self._get_window_block_idx(
+                query_block_idx)
+            left_idx = left_key_block_idx * self.block_size
+            right_idx = (right_key_block_idx + 1) * self.block_size
+            query_left_idx = query_block_idx * self.block_size
+            query_right_idx = min((query_block_idx + 1) * self.block_size,
+                                  self.query_length)
+            self.mask[:, query_left_idx:query_right_idx, left_idx:right_idx] = 1
+
+    def _create_random_mask(self):
+        all_key_blocks_idx = np.arange(0, self.num_key_blocks, dtype=np.int32)
+        for query_block_idx in range(self.num_query_blocks):
+            left_key_block_idx, right_key_block_idx = self._get_window_block_idx(
+                query_block_idx)
+            illegal_blocks_idx = [
+                i for i in range(left_key_block_idx, right_key_block_idx + 1)
+            ]
+            illegal_blocks_idx.extend(
+                [i for i in range(self.num_global_blocks)])
+            left_key_block_idx = query_block_idx - self.num_window_blocks
+            right_key_block_idx = query_block_idx + self.num_window_blocks
+            if self.num_global_blocks > left_key_block_idx:
+                num_fill_blocks = self.num_global_blocks - left_key_block_idx
+                illegal_blocks_idx.extend([
+                    i
+                    for i in range(self.num_key_blocks - num_fill_blocks,
+                                   self.num_key_blocks)
+                ])
+            if right_key_block_idx >= self.num_key_blocks:
+                num_fill_blocks = right_key_block_idx - self.num_key_blocks + 1
+                illegal_blocks_idx.extend([
+                    i
+                    for i in range(self.num_global_blocks,
+                                   self.num_global_blocks + num_fill_blocks)
+                ])
+
+            illegal_blocks_idx = set(illegal_blocks_idx)
+
+            query_left_idx = query_block_idx * self.block_size
+            query_right_idx = min((query_block_idx + 1) * self.block_size,
+                                  self.query_length)
+            for i in range(self.num_heads):
+                legal_blocks_idx = []
+                legal_idx = []
+                perm_block = np.random.permutation(all_key_blocks_idx)
+                for j in perm_block:
+                    if j not in illegal_blocks_idx:
+                        legal_blocks_idx.append(j)
+                    if len(legal_blocks_idx) == self.num_rand_blocks:
+                        break
+                for j in legal_blocks_idx:
+                    key_left_idx = j * self.block_size
+                    key_right_idx = min((j + 1) * self.block_size,
+                                        self.key_length)
+                    legal_idx.extend(
+                        [i for i in range(key_left_idx, key_right_idx)])
+                    self.rand_mask[i, query_left_idx:query_right_idx,
+                                   key_left_idx:key_right_idx] = 1
+                self.rand_mask_idx[i].append(legal_blocks_idx)
+        self.rand_mask_idx = np.stack(self.rand_mask_idx, axis=0)
+        self.rand_mask_idx = self.rand_mask_idx[:, self.num_global_blocks:]
+        self.mask = np.maximum(self.rand_mask, self.mask)
+
+    def _get_window_block_idx(self, query_block_idx):
+        left_key_block_idx = max(0, query_block_idx - self.num_window_blocks)
+        right_key_block_idx = min(query_block_idx + self.num_window_blocks,
+                                  self.num_key_blocks - 1)
+        return left_key_block_idx, right_key_block_idx
+
+
+def create_bigbird_attention_mask_list(
+        num_layers, query_length, key_length, num_heads, block_size,
+        window_size, num_global_blocks, num_rand_blocks, seed):
+    attn_mask_list = []
+    rand_mask_idx_list = []
+    for i in range(num_layers):
+        mask = Mask(query_length, key_length, num_heads, block_size,
+                    window_size, num_global_blocks, num_rand_blocks, seed)
+        attn_mask = paddle.to_tensor(mask.get_float_mask())
+        rand_mask_idx = paddle.to_tensor(mask.get_rand_mask_idx())
+        attn_mask_list.append(attn_mask)
+        rand_mask_idx_list.append(rand_mask_idx)
+    return attn_mask_list, rand_mask_idx_list
 
 
 class Attention(Layer):
@@ -34,6 +176,7 @@ class Attention(Layer):
                 value_matrix,
                 d_head,
                 attn_mask=None,
+                rand_mask_idx=None,
                 dropout=None):
         raise NotImplementedError
 
@@ -46,6 +189,7 @@ class DefaultAttention(Attention):
                 value_matrix,
                 d_head,
                 attn_mask=None,
+                rand_mask_idx=None,
                 dropout=None):
         # scale dot product attention
         product = paddle.matmul(x=query_matrix, y=key_matrix, transpose_y=True)
@@ -89,17 +233,18 @@ class BigBirdSimulatedAttention(Attention):
                 value_matrix,
                 d_head,
                 attn_mask=None,
+                rand_mask_idx=None,
                 dropout=None):
         query_length = query_matrix.shape[2]
         key_length = key_matrix.shape[2]
         # bool matrix
-        mask = Mask(query_length, key_length, self.num_heads, self.block_size,
-                    self.window_size, self.num_global_blocks,
-                    self.num_rand_blocks, self.seed)
-        mask = paddle.to_tensor(
-            mask.get_float_mask(), dtype=paddle.get_default_dtype())
-        if attn_mask is None:
-            attn_mask = mask
+        # mask = Mask(query_length, key_length, self.num_heads, self.block_size,
+        #             self.window_size, self.num_global_blocks,
+        #             self.num_rand_blocks, self.seed)
+        # mask = paddle.to_tensor(
+        #     mask.get_float_mask(), dtype=paddle.get_default_dtype())
+        # if attn_mask is None:
+        #     attn_mask = mask
         # else:
         #     attn_mask = attn_mask + mask
         return self.attn_impl(
@@ -314,6 +459,7 @@ class BigBirdSparseAttention(Attention):
                 value_matrix,
                 d_head,
                 attn_mask=None,
+                rand_mask_idx=None,
                 dropout=None):
         '''
             query_matrix: [B, H, T, D]
@@ -336,17 +482,17 @@ class BigBirdSparseAttention(Attention):
                 + int(key_length % self.block_size != 0)
 
         # get mask
-        mask = Mask(query_length, key_length, self.num_heads, self.block_size,
-                    self.window_size, self.num_global_blocks,
-                    self.num_rand_blocks, self.seed)
-        rand_mask_idx = mask.get_rand_mask_idx()
-        mask = paddle.to_tensor(
-            mask.get_float_mask(), dtype=paddle.get_default_dtype())
-        rand_mask_idx = paddle.to_tensor(rand_mask_idx, dtype='int32')
-        if attn_mask is None:
-            attn_mask = mask
-        else:
-            attn_mask = attn_mask + mask
+        # mask = Mask(query_length, key_length, self.num_heads, self.block_size,
+        #             self.window_size, self.num_global_blocks,
+        #             self.num_rand_blocks, self.seed)
+        # rand_mask_idx = mask.get_rand_mask_idx()
+        # mask = paddle.to_tensor(
+        #     mask.get_float_mask(), dtype=paddle.get_default_dtype())
+        # rand_mask_idx = paddle.to_tensor(rand_mask_idx, dtype='int32')
+        # if attn_mask is None:
+        #     attn_mask = mask
+        # else:
+        #     attn_mask = attn_mask + mask
 
         # gather random key,value
         random_keys, random_values, random_mask = self._get_random_key_value(
@@ -500,12 +646,12 @@ class TransformerEncoderLayer(Layer):
         self.activation = getattr(F, activation)
         self.d_model = d_model
 
-    def forward(self, src, src_mask=None):
+    def forward(self, src, src_mask=None, rand_mask_idx=None):
         residual = src
         if self.normalize_before:
             src = self.norm1(src)
         # TODO(guosheng): Add cache for encoder for the usage like UniLM
-        src = self.self_attn(src, src, src, src_mask)
+        src = self.self_attn(src, src, src, src_mask, rand_mask_idx)
         src = residual + self.dropout1(src)
         if not self.normalize_before:
             src = self.norm1(src)
@@ -529,13 +675,16 @@ class TransformerEncoder(Layer):
         self.norm = LayerNorm(self.layers[0].d_model)
         self.normalize_before = self.layers[0].normalize_before
 
-    def forward(self, src, src_mask=None):
+    def forward(self, src, src_mask_list=None, rand_mask_idx_list=None):
         output = src
         if not self.normalize_before:
             output = self.norm(output)
 
-        for mod in self.layers:
-            output = mod(output, src_mask=src_mask)
+        for i, mod in enumerate(self.layers):
+            if src_mask_list is None:
+                output = mod(output)
+            else:
+                output = mod(output, src_mask_list[i], rand_mask_idx_list[i])
 
         if self.normalize_before:
             output = self.norm(output)
@@ -543,11 +692,92 @@ class TransformerEncoder(Layer):
         return output
 
 
-class Bert(Layer):
-    pass
+class BigBirdEmbeddings(Layer):
+    """
+    Include embeddings from word, position and token_type embeddings
+    """
+
+    def __init__(self,
+                 vocab_size,
+                 hidden_size=768,
+                 hidden_dropout_prob=0.1,
+                 max_position_embeddings=512,
+                 type_vocab_size=2):
+        super(BigBirdEmbeddings, self).__init__()
+        self.word_embeddings = nn.Embedding(vocab_size, hidden_size)
+        self.position_embeddings = nn.Embedding(max_position_embeddings,
+                                                hidden_size)
+        self.token_type_embeddings = nn.Embedding(type_vocab_size, hidden_size)
+        self.dropout = nn.Dropout(hidden_dropout_prob)
+
+    def forward(self, input_ids, token_type_ids=None, position_ids=None):
+        if position_ids is None:
+            ones = paddle.ones_like(input_ids, dtype="int64")
+            seq_length = paddle.cumsum(ones, axis=1)
+            position_ids = seq_length - ones
+            position_ids.stop_gradient = True
+        if token_type_ids is None:
+            token_type_ids = paddle.zeros_like(input_ids, dtype="int64")
+
+        input_embedings = self.word_embeddings(input_ids)
+        position_embeddings = self.position_embeddings(position_ids)
+        token_type_embeddings = self.token_type_embeddings(token_type_ids)
+
+        embeddings = input_embedings + position_embeddings + token_type_embeddings
+        if self.training:
+            embeddings = self.dropout(embeddings)
+        return embeddings
 
 
-class Transformer(Layer):
+class BertWithBigBird(Layer):
+    def __init__(self,
+                 num_layers,
+                 vocab_size,
+                 nhead,
+                 attn_dropout=0.1,
+                 dim_feedforward=3072,
+                 activation="gelu",
+                 normalize_before=False,
+                 attention_type="bigbird",
+                 block_size=1,
+                 window_size=3,
+                 num_global_blocks=1,
+                 num_rand_blocks=2,
+                 seed=None,
+                 pad_token_id=0,
+                 hidden_size=768,
+                 hidden_dropout_prob=0.1,
+                 max_position_embeddings=512,
+                 type_vocab_size=2):
+        # embedding
+        self.embeddings = BigBirdEmbeddings(
+            vocab_size, hidden_size, hidden_dropout_prob,
+            max_position_embeddings, type_vocab_size)
+
+        # encoder
+        encoder_layer = TransformerEncoderLayer(
+            hidden_size,
+            nhead,
+            dim_feedforward,
+            attn_dropout,
+            activation,
+            normalize_before=normalize_before,
+            attention_type=attention_type,
+            block_size=block_size,
+            window_size=window_size,
+            num_global_blocks=num_global_blocks,
+            num_rand_blocks=num_rand_blocks,
+            seed=seed)
+        self.encoder = TransformerEncoder(encoder_layer, num_layers)
+        # pooler
+        self.pooler = nn.Linear(hidden_size, hidden_size)
+        self.pad_token_id = pad_token_id
+
+    def forawrd(self, input, token_type_ids=None, attention_mask=None):
+        pass
+
+
+class TransformerWithBigBird(Layer):
     def __init__(self,
                  d_model=512,
                  nhead=8,
@@ -569,4 +799,4 @@ class Transformer(Layer):
                  num_global_blocks=1,
                  num_rand_blocks=1,
                  seed=None):
-        super(Transformer, self).__init__()
+        super(TransformerWithBigBird, self).__init__()
