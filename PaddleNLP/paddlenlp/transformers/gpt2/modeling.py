@@ -270,6 +270,12 @@ class TransformerDecoder(nn.Layer):
 
 
 class TransformerDecoderLayer(nn.Layer):
+    """
+    The transformer decoder layer.
+
+    It contains multiheadattention and some linear layers.
+    """
+
     def __init__(self,
                  d_model,
                  nhead,
@@ -484,6 +490,7 @@ class GPT2PretrainedModel(PretrainedModel):
 @register_base_model
 class GPT2Model(GPT2PretrainedModel):
     """
+    The base model of gpt2.
     """
 
     def __init__(self,
@@ -557,6 +564,12 @@ class GPT2Model(GPT2PretrainedModel):
 
 
 class GPT2ForPretraining(GPT2PretrainedModel):
+    """
+    The pretraining model of GPT2.
+
+    It returns some logits and cached_kvs.
+    """
+
     def __init__(self, gpt2):
         super(GPT2ForPretraining, self).__init__()
         self.gpt2 = gpt2
@@ -591,6 +604,12 @@ class GPT2ForPretraining(GPT2PretrainedModel):
 
 
 class GPT2PretrainingCriterion(paddle.nn.Layer):
+    """
+    Criterion for GPT2.
+
+    It calculates the final loss.
+    """
+
     def __init__(self):
         super(GPT2PretrainingCriterion, self).__init__()
         self.loss_func = paddle.nn.CrossEntropyLoss(reduction="none")

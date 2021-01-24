@@ -25,7 +25,10 @@ from .. import PretrainedTokenizer
 from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize,\
     _is_whitespace, _is_control, _is_punctuation
 
-__all__ = ['GPT2Tokenizer', 'GPT2ChineseTokenizer']
+__all__ = [
+    'GPT2Tokenizer',
+    'GPT2ChineseTokenizer',
+]
 
 COMMAND_TUPLE = namedtuple('CommandToken', ('name', 'token', 'Id'))
 TYPE_TUPLE = namedtuple('TypeToken', ('name', 'token', 'Id'))
