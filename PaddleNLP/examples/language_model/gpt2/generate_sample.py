@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Many thanks for following project.
+# Many thanks for following projects.
 # https://github.com/TsinghuaAI/CPM-Generate
 # https://github.com/jm12138/CPM-Generate-Paddle
 

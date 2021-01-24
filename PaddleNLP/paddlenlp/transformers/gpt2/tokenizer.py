@@ -202,10 +202,12 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
     }  # for save_pretrained
     pretrained_resource_files_map = {
         "vocab_file": {
-            "gpt2-base-cn": "http://10.255.129.12:8829/vocab.json",
+            "gpt2-base-cn":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-base-cn-vocab.json",
         },
         "model_file": {
-            "gpt2-base-cn": "http://10.255.129.12:8829/sentencepiece.model"
+            "gpt2-base-cn":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-base-cn-sentencepiece.model"
         }
     }
     pretrained_init_configuration = {"gpt2-base-cn": {"do_lower_case": True}, }
@@ -263,8 +265,6 @@ class GPT2Tokenizer(PretrainedTokenizer):
             "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-medium-en-vocab.json",
             "gpt2-small-en":
             "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-small-en-vocab.json",
-            "gpt2-1212m-en":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-1212m-en-vocab.json",
         },
         "merges_file": {
             "gpt2-large-en":
@@ -273,8 +273,6 @@ class GPT2Tokenizer(PretrainedTokenizer):
             "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-medium-en-merges.txt",
             "gpt2-small-en":
             "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-small-en-merges.txt",
-            "gpt2-1212m-en":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-1212m-en-merges.txt",
         }
     }
     pretrained_init_configuration = {
@@ -285,9 +283,6 @@ class GPT2Tokenizer(PretrainedTokenizer):
             "do_lower_case": True
         },
         "gpt2-small-en": {
-            "do_lower_case": True
-        },
-        "gpt2-1212m-en": {
             "do_lower_case": True
         },
     }

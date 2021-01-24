@@ -450,24 +450,12 @@ class GPT2PretrainedModel(PretrainedModel):
             "type_vocab_size": 1,  # no use
             "initializer_range": 0.02,
         },
-        "gpt2-1212m-en": {
-            "vocab_size": 50304,
-            "hidden_size": 1536,
-            "num_hidden_layers": 56,
-            "num_attention_heads": 16,
-            "intermediate_size": 6144,
-            "hidden_act": "gelu",
-            "hidden_dropout_prob": 0.1,
-            "attention_probs_dropout_prob": 0.1,
-            "max_position_embeddings": 1024,
-            "type_vocab_size": 1,  # no use
-            "initializer_range": 0.02,
-        },
     }
     resource_files_names = {"model_state": "model_state.pdparams"}
     pretrained_resource_files_map = {
         "model_state": {
-            "gpt2-base-cn": "http://10.255.129.12:8829/model_state.pdparams",
+            "gpt2-base-cn":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-base-cn.pdparams",
         }
     }
     base_model_prefix = "gpt2"
