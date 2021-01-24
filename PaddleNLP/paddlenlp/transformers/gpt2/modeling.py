@@ -167,9 +167,10 @@ class MultiHeadAttention(nn.Layer):
             x=q, y=k, transpose_y=True, alpha=self.head_dim**-0.5)
         if attn_mask is not None:
             # TODO(guosheng): support bool mask
-            product = product * attn_mask
-            mask_score = (attn_mask - 1.0) * 10000.0
-            product = product + mask_score
+            # product = product * attn_mask
+            # mask_score = (attn_mask - 1.0) * 10000.0
+            # product = product + mask_score
+            product = product + attn_mask
         weights = F.softmax(product)
         if self.dropout:
             weights = F.dropout(

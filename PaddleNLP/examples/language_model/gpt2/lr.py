@@ -28,13 +28,12 @@ class CosineAnnealingWithWarmupDecay(LRScheduler):
                  last_epoch=-1,
                  verbose=False):
 
-        self.decay_steps = decay_steps 
+        self.decay_steps = decay_steps
         self.warmup_step = warmup_step
-        self.max_lr = max_lr 
+        self.max_lr = max_lr
         self.min_lr = min_lr
-        print(self.decay_steps, self.warmup_step, self.max_lr, self.min_lr)
-        super(CosineAnnealingWithWarmupDecay, self).__init__(
-            max_lr, last_epoch, verbose)
+        super(CosineAnnealingWithWarmupDecay, self).__init__(max_lr, last_epoch,
+                                                             verbose)
 
     def get_lr(self):
         if self.warmup_step > 0 and self.last_epoch <= self.warmup_step:
@@ -47,4 +46,4 @@ class CosineAnnealingWithWarmupDecay(LRScheduler):
         decay_steps_ = self.decay_steps - self.warmup_step
         decay_ratio = float(num_steps_) / float(decay_steps_)
         coeff = 0.5 * (math.cos(math.pi * decay_ratio) + 1.0)
-        return self.min_lr + coeff * (self.max_lr - self.min_lr) 
+        return self.min_lr + coeff * (self.max_lr - self.min_lr)

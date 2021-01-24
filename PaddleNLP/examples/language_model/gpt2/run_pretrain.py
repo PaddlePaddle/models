@@ -40,7 +40,6 @@ MODEL_CLASSES = {
     "gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer),
     "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer),
     "gpt2-large-en": (GPT2ForPretraining, GPT2Tokenizer),
-    "gpt2-1212m-en": (GPT2ForPretraining, GPT2Tokenizer),
 }
 
 
