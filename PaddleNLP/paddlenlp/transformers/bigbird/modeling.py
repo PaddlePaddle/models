@@ -747,6 +747,7 @@ class BertWithBigBird(Layer):
                  hidden_dropout_prob=0.1,
                  max_position_embeddings=512,
                  type_vocab_size=2):
+        super(BertWithBigBird, self).__init__()
         # embedding
         self.embeddings = BigBirdEmbeddings(
             vocab_size, hidden_size, hidden_dropout_prob,
@@ -771,10 +772,10 @@ class BertWithBigBird(Layer):
         self.pooler = nn.Linear(hidden_size, hidden_size)
         self.pad_token_id = pad_token_id
 
-    def _process_mask(input_ids, attention_mask_list=None):
+    def _process_mask(self, input_ids, attention_mask_list=None):
         #TODO: need to optimize mask processing
         attention_mask = paddle.unsqueeze(
-            (input_ids == self.pad_token_id).astype(self.pooler.dtype),
+            (input_ids == self.pad_token_id).astype(self.pooler.weight.dtype),
             axis=[1, 2])
         attention_mask = paddle.matmul(
             attention_mask, attention_mask, transpose_x=True) * -1e9
@@ -784,7 +785,7 @@ class BertWithBigBird(Layer):
                     attention_mask_list[i], axis=0)
                 attention_mask_list[i] += attention_mask
 
-    def forawrd(self,
+    def forward(self,
                 input_ids,
                 token_type_ids=None,
                 attention_mask_list=None,
