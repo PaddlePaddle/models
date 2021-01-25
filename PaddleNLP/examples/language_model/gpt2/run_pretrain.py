@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
 
 import argparse
 import math
-import collections
-import itertools
-import logging
 import os
 import random
 import time
@@ -160,7 +157,7 @@ def create_pretrained_dataset(args, input_path, worker_init, worker_index,
         eod_id=eod_id,
         seed=args.seed + worker_index)
     train_batch_sampler = paddle.io.DistributedBatchSampler(
-        train_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
+        train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
 
     train_data_loader = DataLoader(
         dataset=train_data,
@@ -182,7 +179,9 @@ def set_seed(args):
 
 
 def do_train(args):
-    assert args.device in ["cpu", "gpu", "xpu"], "invalid device!"
+    assert args.device in [
+        "cpu", "gpu", "xpu"
+    ], "Invalid device! Available device should be cpu, gpu, or xpu."
     paddle.set_device(args.device)
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
@@ -208,7 +207,7 @@ def do_train(args):
         max_lr=args.max_lr,
         min_lr=args.min_lr,
         warmup_step=warmup_step,
-        decay_steps=args.decay_steps)
+        decay_step=args.decay_steps)
 
     clip = None
     if args.grad_clip > 0:

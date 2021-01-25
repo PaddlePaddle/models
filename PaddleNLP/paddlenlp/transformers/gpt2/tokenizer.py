@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -240,6 +240,12 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
         ]
         new_seg = " ".join(seg_list)
         return self.sp.encode(new_seg)
+
+    def encode(self, text):
+        return self.convert_tokens_to_ids(text)
+
+    def decode(self, tokens):
+        return self.convert_ids_to_tokens(tokens)
 
     def convert_tokens_to_ids(self, text):
         res = self.tokenize(text)
