@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import argparse
 import paddle
 import paddlenlp as ppnlp
 
-from utils import load_vocab, generate_batch, preprocess_prediction_data
+from utils import load_vocab
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
