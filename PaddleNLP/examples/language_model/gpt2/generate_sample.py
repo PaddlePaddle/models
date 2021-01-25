@@ -22,26 +22,33 @@ import numpy as np
 import paddle
 from paddlenlp.utils.tools import loadz
 from paddlenlp.transformers import GPT2Model, GPT2ForPretraining
-from paddlenlp.transformers import GPT2ChineseTokenizer
+from paddlenlp.transformers import GPT2ChineseTokenizer, GPT2Tokenizer
 from paddlenlp.utils.log import logger
+
+MODEL_CLASSES = {
+    "gpt2-base-cn": (GPT2ForPretraining, GPT2ChineseTokenizer),
+    "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer),
+}
 
 
 class Demo:
-    def __init__(self):
-        self.tokenizer = GPT2ChineseTokenizer.from_pretrained("gpt2-base-cn")
+    def __init__(self, model_name_or_path="gpt2-base-cn"):
+        model_class, tokenizer_class = MODEL_CLASSES[model_name_or_path]
+        self.tokenizer = tokenizer_class.from_pretrained(model_name_or_path)
         logger.info('Loading the model parameters, please wait...')
-        self.model = GPT2ForPretraining.from_pretrained("gpt2-base-cn")
+        self.model = model_class.from_pretrained(model_name_or_path)
         self.model.eval()
         logger.info('Model loaded.')
 
     # prediction function
     def predict(self, text, max_len=10):
-        ids = self.tokenizer.convert_tokens_to_ids(text)
+        ids = self.tokenizer.encode(text)
         input_id = paddle.to_tensor(
             np.array(ids).reshape(1, -1).astype('int64'))
         output, cached_kvs = self.model(input_id, use_cache=True, cache=None)
         nid = int(np.argmax(output[0, -1].numpy()))
-        ids += [nid]
+        print(ids)
+        ids.append(nid)
         out = [nid]
         for i in range(max_len):
             input_id = paddle.to_tensor(
@@ -49,13 +56,13 @@ class Demo:
             output, cached_kvs = self.model(
                 input_id, use_cache=True, cache=cached_kvs)
             nid = int(np.argmax(output[0, -1].numpy()))
-            ids += [nid]
+            ids.append(nid)
             # if nid is '\n', the predicion is over.
             if nid == 3:
                 break
             out.append(nid)
         logger.info(text)
-        logger.info(self.tokenizer.convert_ids_to_tokens(out))
+        logger.info(self.tokenizer.decode(out))
 
     # One shot example
     def ask_question(self, question, max_len=10):
@@ -67,6 +74,9 @@ class Demo:
 
 
 if __name__ == "__main__":
-    demo = Demo()
+    demo = Demo("gpt2-base-cn")
     demo.ask_question("百度的厂长是谁?")
     demo.dictation_poetry("举杯邀明月，")
+    del demo
+    # demo = Demo("gpt2-medium-en")
+    # demo.predict("Question: Where is the capital of China? Answer: Beijing. \nQuestion: Who is the CEO of Apple? Answer:", 20)

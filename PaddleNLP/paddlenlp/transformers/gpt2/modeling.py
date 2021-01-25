@@ -163,14 +163,9 @@ class MultiHeadAttention(nn.Layer):
             q, k, v, cache = self._prepare_qkv(query, key, value, use_cache,
                                                cache)
         # scale dot product attention
-        # TODO(guosheng): use tensor.matmul, however it doesn't support `alpha`
         product = layers.matmul(
             x=q, y=k, transpose_y=True, alpha=self.head_dim**-0.5)
         if attn_mask is not None:
-            # TODO(guosheng): support bool mask
-            # product = product * attn_mask
-            # mask_score = (attn_mask - 1.0) * 10000.0
-            # product = product + mask_score
             product = product + attn_mask
         weights = F.softmax(product)
         if self.dropout:
@@ -457,6 +452,8 @@ class GPT2PretrainedModel(PretrainedModel):
         "model_state": {
             "gpt2-base-cn":
             "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-base-cn.pdparams",
+            "gpt2-medium-en":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/gpt2-medium-en.pdparams",
         }
     }
     base_model_prefix = "gpt2"
@@ -532,7 +529,6 @@ class GPT2Model(GPT2PretrainedModel):
                     dtype=self.embeddings.word_embeddings.weight.dtype) * -1e9),
                 1)
         if position_ids is None:
-            # TODO(wawltor) for the static mode, must use the shape to calculate the shape
             past_length = 0
             if cache is not None:
                 past_length = cache[0].k.shape[-2]

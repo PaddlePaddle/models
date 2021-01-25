@@ -157,7 +157,7 @@ def create_pretrained_dataset(args, input_path, worker_init, worker_index,
         eod_id=eod_id,
         seed=args.seed + worker_index)
     train_batch_sampler = paddle.io.DistributedBatchSampler(
-        train_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
+        train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
 
     train_data_loader = DataLoader(
         dataset=train_data,
@@ -179,7 +179,9 @@ def set_seed(args):
 
 
 def do_train(args):
-    assert args.device in ["cpu", "gpu", "xpu"], "invalid device!"
+    assert args.device in [
+        "cpu", "gpu", "xpu"
+    ], "Invalid device! Available device should be cpu, gpu, or xpu."
     paddle.set_device(args.device)
     if paddle.distributed.get_world_size() > 1:
         paddle.distributed.init_parallel_env()
