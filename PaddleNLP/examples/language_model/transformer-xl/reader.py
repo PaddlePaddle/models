@@ -21,7 +21,9 @@ class LMDataset(IterableDataset):
 
         if self.dataset_name in ["wt103"]:
             self.data = self.read_raw_data(
-                filename=os.path.join(path, mode + ".txt"), ordered=True)
+                filename=os.path.join(path, mode + ".txt"),
+                ordered=True,
+                lower_case=False)
         elif self.dataset_name in ["enwik8", "text8"]:
             self.data = self.read_raw_data(
                 filename=os.path.join(path, mode + ".txt"),
