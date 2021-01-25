@@ -36,9 +36,6 @@ def construct_samples_and_shuffle_data(name, data_prefix, documents, sizes,
     doc_idx_filename = _filename + '_doc_idx.npy'
     sample_idx_filename = _filename + '_sample_idx.npy'
     shuffle_idx_filename = _filename + '_shuffle_idx.npy'
-    print(doc_idx_filename)
-    print(sample_idx_filename)
-    print(shuffle_idx_filename)
     # Build the indexed mapping if not exist.
     if worker_index == 0:
         if (not os.path.isfile(doc_idx_filename)) or \
@@ -74,9 +71,6 @@ def construct_samples_and_shuffle_data(name, data_prefix, documents, sizes,
                                              sample_idx.shape[0] - 1, np_rng)
             np.save(shuffle_idx_filename, shuffle_idx, allow_pickle=True)
     else:
-        print(os.path.isfile(doc_idx_filename))
-        print(os.path.isfile(sample_idx_filename))
-        print(os.path.isfile(shuffle_idx_filename))
         while True:
             if (not os.path.isfile(doc_idx_filename)) or \
                (not os.path.isfile(sample_idx_filename)) or \
@@ -118,7 +112,7 @@ def _build_doc_idx(documents, num_epochs, np_rng, separate_last_epoch):
         doc_idx[:] = documents
         doc_idx = doc_idx.reshape(-1)
         doc_idx = doc_idx.astype(np.int32)
-        np_rng.shuffle(doc_idx)
+        # np_rng.shuffle(doc_idx)
         return doc_idx
 
     doc_idx_first = _build_doc_idx(documents, num_epochs - 1, np_rng, False)
