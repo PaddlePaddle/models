@@ -32,14 +32,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--batch_size",
-        default=8,
+        default=2,
         type=int,
         help="Batch size per GPU/CPU for training.", )
-    parser.add_argument(
-        "--learning_rate",
-        default=5e-5,
-        type=float,
-        help="The initial learning rate for Adam.")
     parser.add_argument(
         "--n_gpu",
         type=int,
@@ -92,8 +87,8 @@ def parse_args():
         type=int,
         help="Linear warmup over warmup_steps.")
     parser.add_argument(
-        "--decay_steps",
-        default=100,
+        "--num_train_steps",
+        default=10000,
         type=int,
         help="Linear warmup over warmup_steps.")
     parser.add_argument(
@@ -141,7 +136,7 @@ class ImdbDataset(Dataset):
 
     def split(self, rate):
         num_samples = len(self.samples)
-        num_save = int(num_samples * rate)
+        num_save = int(num_samples * (1 - rate))
         random.shuffle(self.samples)
         split_dataset = ImdbDataset(None, None)
         split_dataset.samples = self.samples[num_save:]
@@ -255,24 +250,16 @@ def do_train(args):
     model = ClassifierModel(args.num_labels, **bertConfig)
 
     # define metric
-    # criterion = nn.CrossEntropyLoss()
-    log_softmax = nn.LogSoftmax()
+    criterion = nn.CrossEntropyLoss()
     softmax = nn.Softmax()
-    criterion = nn.NLLLoss()
     metric = paddle.metric.Accuracy()
 
     # define optimizer
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.lr,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.decay_steps if args.decay_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))),
-        last_epoch=0)
+
+    lr_scheduler = paddle.optimizer.lr.PolynomialDecay(args.lr,
+                                                       args.num_train_steps, 0)
+    lr_scheduler = paddle.optimizer.lr.LinearWarmup(
+        lr_scheduler, args.warmup_steps, start_lr=0, end_lr=args.lr)
 
     optimizer = paddle.optimizer.AdamW(
         parameters=model.parameters(),
@@ -285,8 +272,7 @@ def do_train(args):
             global_steps += 1
             (input_ids, labels) = batch
             output = model(input_ids)
-            log_prob = log_softmax(output)
-            loss = criterion(log_prob, labels)
+            loss = criterion(output, labels)
             prob = softmax(output)
             metric.update(prob, labels)
             loss.backward()
@@ -294,9 +280,14 @@ def do_train(args):
             lr_scheduler.step()
             optimizer.clear_gradients()
             # save model
-        # print loss
+            # print loss
+            if global_steps % 100 == 0:
+                logger.info("global step %d, epoch: %d, loss: %f, acc %f" %
+                            (global_steps, epoch, loss, metric.accumulate()))
+                metric.reset()
         logger.info("global step %d, epoch: %d, loss: %f, acc %f" %
                     (global_steps, epoch, loss, metric.accumulate()))
+        metric.reset()
 
 
 if __name__ == "__main__":
