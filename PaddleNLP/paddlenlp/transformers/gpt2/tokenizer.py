@@ -44,114 +44,6 @@ class CommandToken(object):
         return str(COMMAND_TUPLE(self.name, self.token, self.Id))
 
 
-class TypeToken(object):
-    def __init__(self, name, token, Id):
-        self.name = name
-        self.token = token
-        self.Id = Id
-
-    def __str__(self):
-        return str(TYPE_TUPLE(self.name, self.token, self.Id))
-
-
-class Tokenization(object):
-    """
-    Tokenization object to hold tokenization, (processed text),and original
-    text. Can hold tokenization as Ids or tokens.
-
-    It also holds command tokens (pad, unk, etc.) for the tokenization.
-    This allows functions to pad/operate on tokenizations without having
-    access to the full tokenizer, just the tokenization.
-
-    Several standard array operations are implemented (insert, append, extend).
-    """
-
-    def __init__(self,
-                 tokenization,
-                 text=None,
-                 original_text=None,
-                 command_tokens=None,
-                 asIds=True):
-        self.tokenization = tokenization
-        self.text = text
-        if self.text is None:
-            self.text = self.tokenization
-        self.original_text = original_text
-        if self.original_text is None:
-            self.original_text = self.text
-        self.command_tokens = command_tokens
-        self.asIds = asIds
-        self.parse_command_tokens()
-
-    def set_command_tokens(self, command_tokens):
-        self.command_tokens = command_tokens
-        return self.parse_command_tokens()
-
-    def parse_command_tokens(self):
-        if self.command_tokens is None:
-            return
-        for command_token in self.command_tokens:
-            if self.asIds:
-                setattr(self, command_token.name, command_token.Id)
-            else:
-                setattr(self, command_token.name, command_token.token)
-
-    def __getitem__(self, index):
-        return self.tokenization[index]
-
-    def __len__(self):
-        return len(self.tokenization)
-
-    def insert(self, idx, other):
-        if isinstance(other, (CommandToken, TypeToken)):
-            self.tokenization.insert(idx, other.Id)
-            if idx == 0:
-                self.text = other.token + self.text
-                self.original_text = other.token + self.original_text
-            elif idx == len(self.tokenization) - 1:
-                self.text += other.token
-                self.original_text += other.token
-        elif isinstance(other, Tokenization):
-            self.tokenization = self.tokenization[:
-                                                  idx] + other.tokenization + self.tokenization[
-                                                      idx:]
-        else:
-            self.tokenization = self.tokenization[:
-                                                  idx] + other.tokenization + self.tokenization[
-                                                      idx:]
-
-    def append(self, other):
-        if isinstance(other, (CommandToken, TypeToken)):
-            self.tokenization.append(other.Id)
-            self.text += other.token
-            self.original_text += other.token
-        elif isinstance(other, Tokenization):
-            self.tokenization.extend(other.tokenization)
-            self.text += other.text
-            self.original_text += other.original_text
-        else:
-            self.tokenization.append(other)
-        return self
-
-    def extend(self, other):
-        if isinstance(other, (CommandToken, TypeToken)):
-            self.tokenization.append(other.Id)
-            self.text += other.token
-            self.original_text += other.token
-        elif isinstance(other, list) and isinstance(other[0],
-                                                    (CommandToken, TypeToken)):
-            self.tokenization.extend([o.Id for o in other])
-            self.text += [o.token for o in other]
-            self.original_text += [o.token for o in other]
-        elif isinstance(other, Tokenization):
-            self.tokenization.extend(other.tokenization)
-            self.text += other.text
-            self.original_text += other.original_text
-        else:
-            self.tokenization.extend(other)
-        return self
-
-
 @lru_cache()
 def bytes_to_unicode():
     """
@@ -319,14 +211,6 @@ class GPT2Tokenizer(PretrainedTokenizer):
         }
         self.command_id_map = {tok.Id: tok for tok in self._command_tokens}
 
-        self.type_tokens = [
-            TypeToken('str0', '<str0>', 0),
-            TypeToken('str1', '<str1>', 1),
-        ]
-        self.type_name_map = {tok.name: tok for tok in self.type_tokens}
-        self.type_token_map = {tok.token: tok for tok in self.type_tokens}
-        self.type_id_map = {tok.Id: tok for tok in self.type_tokens}
-
         self.num_tokens = len(self.encoder)
         self.num_text_tokens = self.num_tokens - 1
         self.errors = errors  # how to handle errors in decoding
@@ -453,9 +337,7 @@ class GPT2Tokenizer(PretrainedTokenizer):
         if fn is not None:
             processed_text = fn(text)
         ids = self.convert_tokens_to_ids(self.tokenize(processed_text))
-        tokenization = Tokenization(ids, processed_text, text)
-        tokenization.set_command_tokens(self._command_tokens)
-        return tokenization
+        return ids
 
     def decode(self, tokens):
         # TODO
@@ -463,6 +345,3 @@ class GPT2Tokenizer(PretrainedTokenizer):
         text = bytearray([self.byte_decoder[c] for c in text]).decode(
             'utf-8', errors=self.errors)
         return text
-
-    def get_command(self, name):
-        return self.command_name_map[name]

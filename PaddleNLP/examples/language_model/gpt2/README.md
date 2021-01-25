@@ -61,7 +61,7 @@ python process_data.py --input_path raw_data \
  --workers 8
 ```
 
-为了方便用户运行测试本模型，本项目提供了处理好的300M的训练样本：
+运行命令后，产出`raw_data_ids.npz`文件。为了方便用户运行测试本模型，本项目提供了处理好的300M的训练样本：
 
 ```shell
 wget https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/train.data.json_ids.npz

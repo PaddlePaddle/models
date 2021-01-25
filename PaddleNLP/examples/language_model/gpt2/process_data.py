@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import argparse
 import json
 import multiprocessing
+
 import numpy as np
 from paddlenlp.transformers import GPT2Tokenizer
 from tqdm import tqdm
@@ -44,7 +46,7 @@ class Converter(object):
         self.append_eod = append_eod
         tokenizer = GPT2Tokenizer.from_pretrained(model_name)
         Converter.tokenizer = tokenizer
-        self.eod_id = tokenizer.get_command("eod").Id
+        self.eod_id = tokenizer.command_name_map["eod"].Id
         self.vocab_size = len(tokenizer)
 
     def encode(self, text):

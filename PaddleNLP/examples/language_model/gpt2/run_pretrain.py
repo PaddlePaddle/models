@@ -192,7 +192,7 @@ def do_train(args):
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
     model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
-    eod_id = tokenizer.get_command("eod").Id
+    eod_id = tokenizer.command_name_map["eod"].Id
 
     model = GPT2ForPretraining(
         GPT2Model(**model_class.pretrained_init_configuration[
