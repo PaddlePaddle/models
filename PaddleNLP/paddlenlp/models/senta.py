@@ -352,7 +352,8 @@ class SelfAttention(nn.Layer):
         # Shape: (batch_size, max_seq_len, hidden_size)
         h = paddle.add_n([forward_input, backward_input])
         # Shape: (batch_size, hidden_size, 1)
-        att_weight = self.att_weight.tile(shape=(paddle.shape(h)[0], 1, 1))
+        att_weight = self.att_weight.tile(
+            repeat_times=(paddle.shape(h)[0], 1, 1))
         # Shape: (batch_size, max_seq_len, 1)
         att_score = paddle.bmm(paddle.tanh(h), att_weight)
         if mask is not None:
