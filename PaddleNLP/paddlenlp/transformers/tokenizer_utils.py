@@ -306,8 +306,8 @@ class PretrainedTokenizer(object):
         Args:
             save_directory (str): Directory to save files into.
         """
-        #assert hasattr(self, 'vocab') and len(
-        #    self.resource_files_names) == 1, "Must overwrite `save_resources`"
+        assert hasattr(self, 'vocab') and len(
+            self.resource_files_names) == 1, "Must overwrite `save_resources`"
         file_name = os.path.join(save_directory,
                                  list(self.resource_files_names.values())[0])
         self.save_vocabulary(file_name, self.vocab)

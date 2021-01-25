@@ -14,14 +14,9 @@
 
 import argparse
 import math
-import collections
-import itertools
-import logging
 import os
 import random
 import time
-import h5py
-from functools import partial
 
 import numpy as np
 
@@ -211,7 +206,7 @@ def do_train(args):
         max_lr=args.max_lr,
         min_lr=args.min_lr,
         warmup_step=warmup_step,
-        decay_steps=args.decay_steps)
+        decay_step=args.decay_steps)
 
     clip = None
     if args.grad_clip > 0:
@@ -236,7 +231,7 @@ def do_train(args):
             if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_"
                 not in str(f))
         ]
-        #files.sort()
+        files.sort()
         num_files = len(files)
         random.Random(args.seed + epoch).shuffle(files)
         for f_id in range(math.ceil(len(files) / worker_num)):

@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
 import json
 import multiprocessing
-import pickle
-import mmap
 import numpy as np
 from paddlenlp.transformers import GPT2Tokenizer
 

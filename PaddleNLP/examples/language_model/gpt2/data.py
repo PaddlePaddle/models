@@ -13,14 +13,8 @@
 # limitations under the License.
 
 import os
-import json
-import random
-from bisect import bisect_right
-from itertools import accumulate
 
-import nltk
 import numpy as np
-import pandas as pd
 import paddle
 
 
@@ -110,7 +104,7 @@ def _build_doc_idx(documents, num_epochs, np_rng, separate_last_epoch):
         doc_idx[:] = documents
         doc_idx = doc_idx.reshape(-1)
         doc_idx = doc_idx.astype(np.int32)
-        #np_rng.shuffle(doc_idx)
+        np_rng.shuffle(doc_idx)
         return doc_idx
 
     doc_idx_first = _build_doc_idx(documents, num_epochs - 1, np_rng, False)
@@ -154,13 +148,13 @@ def _build_shuffle_idx(num_samples, total_size, np_rng):
 
     shuffle_idx_first = np.arange(
         start=0, stop=num_samples, step=1, dtype=dtype_)
-    #np_rng.shuffle(shuffle_idx_first)
+    np_rng.shuffle(shuffle_idx_first)
     if num_samples == total_size:
         return shuffle_idx_first
 
     shuffle_idx_last = np.arange(
         start=num_samples, stop=total_size, step=1, dtype=dtype_)
-    #np_rng.shuffle(shuffle_idx_last)
+    np_rng.shuffle(shuffle_idx_last)
 
     return np.concatenate((shuffle_idx_first, shuffle_idx_last))
 
