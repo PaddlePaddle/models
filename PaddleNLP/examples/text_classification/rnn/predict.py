@@ -15,16 +15,17 @@ import argparse
 
 import paddle
 import paddlenlp as ppnlp
+import paddle.nn.functional as F
 
 from utils import load_vocab, generate_batch, preprocess_prediction_data
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--use_gpu", type=eval, default=False, help="Whether use GPU for training, input should be True or False")
-parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
-parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The path to vocabulary.")
-parser.add_argument('--network', type=str, default="bilstm_attn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
-parser.add_argument("--params_path", type=str, default='./chekpoints/final.pdparams', help="The path of model parameter to be loaded.")
+parser.add_argument("--batch_size", type=int, default=1, help="Total examples' number of a batch for training.")
+parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The path to vocabulary.")
+parser.add_argument('--network', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
+parser.add_argument("--params_path", type=str, default='./checkpoints/final.pdparams', help="The path of model parameter to be loaded.")
 args = parser.parse_args()
 # yapf: enable
 
@@ -66,7 +67,8 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
             batch, pad_token_id=pad_token_id, return_label=False)
         texts = paddle.to_tensor(texts)
         seq_lens = paddle.to_tensor(seq_lens)
-        probs = model(texts, seq_lens)
+        logits = model(texts, seq_lens)
+        probs = F.softmax(logits, axis=1)
         idx = paddle.argmax(probs, axis=1).numpy()
         idx = idx.tolist()
         labels = [label_map[i] for i in idx]

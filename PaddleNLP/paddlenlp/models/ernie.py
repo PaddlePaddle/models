@@ -66,16 +66,13 @@ class Ernie(nn.Layer):
         if self.task in ['seq-cls', 'token-cls']:
             logits = self.model(input_ids, token_type_ids, position_ids,
                                 attention_mask)
-            probs = F.softmax(logits, axis=-1)
-            return probs
+            return logits
         elif self.task == 'qa':
             start_logits, end_logits = self.model(input_ids, token_type_ids,
                                                   position_ids, attention_mask)
             start_position = paddle.unsqueeze(start_position, axis=-1)
             end_position = paddle.unsqueeze(end_position, axis=-1)
-            start_probs = F.softmax(start_position, axis=-1)
-            end_probs = F.softmax(end_position, axis=-1)
-            return start_probs, end_probs
+            return start_position, end_position
         elif self.task is None:
             sequence_output, pooled_output = self.model(
                 input_ids, token_type_ids, position_ids, attention_mask)

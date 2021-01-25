@@ -17,6 +17,7 @@ import argparse
 
 import paddle
 import paddlenlp as ppnlp
+import paddle.nn.functional as F
 
 from utils import load_vocab, generate_batch, preprocess_prediction_data
 
@@ -70,7 +71,8 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
         titles = paddle.to_tensor(titles)
         query_seq_lens = paddle.to_tensor(query_seq_lens)
         title_seq_lens = paddle.to_tensor(title_seq_lens)
-        probs = model(queries, titles, query_seq_lens, title_seq_lens)
+        logits = model(queries, titles, query_seq_lens, title_seq_lens)
+        probs = F.softmax(logits, axis=1)
         idx = paddle.argmax(probs, axis=1).numpy()
         idx = idx.tolist()
         labels = [label_map[i] for i in idx]

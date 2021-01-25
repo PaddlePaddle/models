@@ -61,6 +61,7 @@ pip install paddlenlp==2.0.0b
 
 ```text
 pretrained_models/
+├── export_model.py # 动态图参数导出静态图参数脚本
 ├── predict.py # 预测脚本
 ├── README.md # 使用说明
 └── train.py # 训练评估脚本
@@ -109,6 +110,12 @@ checkpoints/
 **NOTE:**
 * 如需恢复模型训练，则可以设置`init_from_ckpt`， 如`init_from_ckpt=checkpoints/model_100/model_state.pdparams`。
 * 如需使用ernie-tiny模型，则需要提前先安装sentencepiece依赖，如`pip install sentencepiece`
+* 使用动态图训练结束之后，还可以将动态图参数导出成静态图参数，具体代码见export_model.py。静态图参数保存在`output_path`指定路径中。
+  运行方式：
+
+```shell
+python export_model.py --model_type=roberta --model_name=roberta-wwm-ext --params_path=./checkpoint/model_200/model_state.pdparams --output_path=./static_graph_params
+```
 
 ### 模型预测
 
