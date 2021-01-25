@@ -20,13 +20,10 @@ import logging
 import os
 import random
 import time
-import h5py
-from functools import partial
 
 import numpy as np
 
 import paddle
-import paddle.distributed as dist
 from paddle.io import DataLoader, Dataset
 
 from paddlenlp.data import Stack, Tuple, Pad
@@ -162,8 +159,8 @@ def create_pretrained_dataset(args, input_path, worker_init, worker_index,
         num_samples=args.batch_size * args.max_steps,
         eod_id=eod_id,
         seed=args.seed + worker_index)
-    train_batch_sampler = paddle.io.BatchSampler(
-        train_data, batch_size=args.batch_size, shuffle=False)
+    train_batch_sampler = paddle.io.DistributedBatchSampler(
+        train_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
 
     train_data_loader = DataLoader(
         dataset=train_data,
@@ -236,11 +233,10 @@ def do_train(args):
             if (os.path.isfile(os.path.join(args.input_dir, f)) and "npz_"
                 not in str(f))
         ]
-        #files.sort()
+        files.sort()
         num_files = len(files)
-        random.Random(args.seed + epoch).shuffle(files)
-        for f_id in range(math.ceil(len(files) / worker_num)):
-            data_file = files[(f_id * worker_num + worker_index) % num_files]
+        for f_id in range(num_files):
+            data_file = files[f_id]
             train_data_loader = create_pretrained_dataset(
                 args, data_file, worker_init, worker_index, eod_id=eod_id)
             for step, batch in enumerate(train_data_loader):

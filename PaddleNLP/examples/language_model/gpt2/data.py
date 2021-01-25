@@ -1,3 +1,4 @@
+import time
 import os
 import json
 import random
@@ -6,7 +7,6 @@ from itertools import accumulate
 
 import nltk
 import numpy as np
-import pandas as pd
 import paddle
 
 
@@ -24,11 +24,12 @@ def construct_samples_and_shuffle_data(name, data_prefix, documents, sizes,
     _filename += '_{}_indexmap'.format(name)
     _filename += '_{}ns'.format(num_samples)
     _filename += '_{}sl'.format(seq_length)
-    _filename += '_{}s'.format(seed)
     doc_idx_filename = _filename + '_doc_idx.npy'
     sample_idx_filename = _filename + '_sample_idx.npy'
     shuffle_idx_filename = _filename + '_shuffle_idx.npy'
-
+    print(doc_idx_filename)
+    print(sample_idx_filename)
+    print(shuffle_idx_filename)
     # Build the indexed mapping if not exist.
     if worker_index == 0:
         if (not os.path.isfile(doc_idx_filename)) or \
@@ -63,6 +64,18 @@ def construct_samples_and_shuffle_data(name, data_prefix, documents, sizes,
             shuffle_idx = _build_shuffle_idx(num_samples_,
                                              sample_idx.shape[0] - 1, np_rng)
             np.save(shuffle_idx_filename, shuffle_idx, allow_pickle=True)
+    else:
+        print(os.path.isfile(doc_idx_filename))
+        print(os.path.isfile(sample_idx_filename))
+        print(os.path.isfile(shuffle_idx_filename))
+        while True:
+            if (not os.path.isfile(doc_idx_filename)) or \
+               (not os.path.isfile(sample_idx_filename)) or \
+               (not os.path.isfile(shuffle_idx_filename)):
+                time.sleep(3)
+            else:
+                break
+
     # Load mappings.
     doc_idx = np.load(doc_idx_filename, allow_pickle=True, mmap_mode='r')
     sample_idx = np.load(sample_idx_filename, allow_pickle=True, mmap_mode='r')
