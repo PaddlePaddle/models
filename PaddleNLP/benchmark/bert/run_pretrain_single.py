@@ -26,13 +26,13 @@ import distutils.util
 import paddle
 from paddle.io import DataLoader, Dataset
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
-from paddlenlp.transformers import ErnieForPretraining, ErnieModel, ErniePretrainingCriterion
+#from paddlenlp.transformers import ErnieForPretraining, ErnieModel, ErniePretrainingCriterion
 from paddlenlp.transformers import BertTokenizer, ErnieTokenizer
 from data import create_data_holder, create_pretraining_dataset
 
 MODEL_CLASSES = {
     "bert": (BertForPretraining, BertTokenizer),
-    "ernie": (ErnieForPretraining, ErnieTokenizer)
+ #   "ernie": (ErnieForPretraining, ErnieTokenizer)
 }
 
 
@@ -151,8 +151,8 @@ def parse_args():
 
 
 def build_compiled_program(args, main_program, loss):
-    if args.select_device == "xpu":
-        return main_program
+    #if args.select_device == "xpu":
+    #    return main_program
     exec_strategy = paddle.static.ExecutionStrategy()
     exec_strategy.num_threads = 1
     exec_strategy.num_iteration_per_drop_scope = 10000
@@ -190,7 +190,12 @@ def set_seed(seed):
 def do_train(args):
     # Initialize the paddle execute enviroment
     paddle.enable_static()
-    place = paddle.set_device(args.select_device)
+    #place = paddle.set_device(args.select_device)
+    if args.select_device=="xpu":
+        places = paddle.static.xpu_places()
+        print("places:{}".format(places))
+    else:
+        places = paddle.static.cuda_places()
 
     # Set the random seed
     set_seed(args.seed)
@@ -203,7 +208,6 @@ def do_train(args):
         input_ids, segment_ids, input_mask, masked_lm_positions,
         masked_lm_labels, next_sentence_labels, masked_lm_scale
     ] = data_holders
-
     # Define the model structure in static mode
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
@@ -225,9 +229,8 @@ def do_train(args):
     lr_scheduler = paddle.optimizer.lr.LambdaDecay(
         args.learning_rate,
         lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
+        num_training_steps=args.max_steps 
+        :float(current_step) / float(max(1, num_warmup_steps))
         if current_step < num_warmup_steps else max(
             0.0,
             float(num_training_steps - current_step) / float(
@@ -258,7 +261,7 @@ def do_train(args):
     optimizer.minimize(loss)
 
     # Define the Executor for running the static model
-    exe = paddle.static.Executor(place)
+    exe = paddle.static.Executor(places[0])
     exe.run(startup_program)
     state_dict = model.state_dict()
 
@@ -283,12 +286,13 @@ def do_train(args):
 
         for f_id in range(0, len(files)):
             train_data_loader, _ = create_pretraining_dataset(
-                files[f_id], args.max_predictions_per_seq, args, data_holders)
+                files[f_id], args.max_predictions_per_seq, args, data_holders, places=places)
             train_reader_cost = 0.0
             train_run_cost = 0.0
             total_samples = 0
             reader_start = time.time()
             for step, batch in enumerate(train_data_loader):
+                print("batch:{}".format(batch))
                 train_reader_cost += time.time() - reader_start
                 global_step += 1
                 train_start = time.time()
@@ -304,7 +308,7 @@ def do_train(args):
                         "global step: %d, epoch: %d, batch: %d, loss: %f, "
                         "avg_reader_cost: %.5f sec, avg_batch_cost: %.5f sec, avg_samples: %.5f, ips: %.5f sequences/sec"
                         %
-                        (global_step, epoch, step, loss_return[0],
+                        (global_step, epoch, step, loss_return[0].mean(),
                          train_reader_cost / args.logging_steps,
                          (train_reader_cost + train_run_cost) /
                          args.logging_steps, total_samples / args.logging_steps,
