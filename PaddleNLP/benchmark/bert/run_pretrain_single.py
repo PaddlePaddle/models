@@ -32,7 +32,7 @@ from data import create_data_holder, create_pretraining_dataset
 
 MODEL_CLASSES = {
     "bert": (BertForPretraining, BertTokenizer),
- #   "ernie": (ErnieForPretraining, ErnieTokenizer)
+    #   "ernie": (ErnieForPretraining, ErnieTokenizer)
 }
 
 
@@ -191,7 +191,7 @@ def do_train(args):
     # Initialize the paddle execute enviroment
     paddle.enable_static()
     #place = paddle.set_device(args.select_device)
-    if args.select_device=="xpu":
+    if args.select_device == "xpu":
         places = paddle.static.xpu_places()
         print("places:{}".format(places))
     else:
@@ -229,7 +229,7 @@ def do_train(args):
     lr_scheduler = paddle.optimizer.lr.LambdaDecay(
         args.learning_rate,
         lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps 
+        num_training_steps=args.max_steps
         :float(current_step) / float(max(1, num_warmup_steps))
         if current_step < num_warmup_steps else max(
             0.0,
@@ -247,8 +247,8 @@ def do_train(args):
         ],
         multi_precision=args.use_pure_fp16)
     if args.use_amp:
-        custom_black_list=(['lookup_table', 'lookup_table_v2']
-            if args.use_pure_fp16 else None)
+        custom_black_list = (['lookup_table', 'lookup_table_v2']
+                             if args.use_pure_fp16 else None)
         amp_list = paddle.static.amp.AutoMixedPrecisionLists(
             custom_white_list=['layer_norm', 'softmax', 'gelu'],
             custom_black_list=custom_black_list)
@@ -286,13 +286,17 @@ def do_train(args):
 
         for f_id in range(0, len(files)):
             train_data_loader, _ = create_pretraining_dataset(
-                files[f_id], args.max_predictions_per_seq, args, data_holders, places=places)
+                files[f_id],
+                args.max_predictions_per_seq,
+                args,
+                data_holders,
+                places=places)
             train_reader_cost = 0.0
             train_run_cost = 0.0
             total_samples = 0
             reader_start = time.time()
             for step, batch in enumerate(train_data_loader):
-                print("batch:{}".format(batch))
+                #print("batch:{}".format(batch))
                 train_reader_cost += time.time() - reader_start
                 global_step += 1
                 train_start = time.time()
