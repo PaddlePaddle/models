@@ -17,6 +17,7 @@ import json
 import multiprocessing
 import numpy as np
 from paddlenlp.transformers import GPT2Tokenizer
+from tqdm import tqdm
 
 
 def get_args():
@@ -46,11 +47,10 @@ class Converter(object):
         self.eod_id = tokenizer.get_command("eod").Id
         self.vocab_size = len(tokenizer)
 
-    def encode(self, json_line):
-        data = json.loads(json_line)
-        ids = {}
-        text = data["text"]
-        doc_ids = []
+    def encode(self, text):
+        #data = json.loads(json_line)
+        #ids = {}
+        #text = data["text"]
         tokenization = self.tokenizer.encode(text)
         if self.append_eod:
             tokenization.append(self.eod_id)
@@ -60,21 +60,28 @@ class Converter(object):
 
 def main():
     args = get_args()
-    fin = open(args.input_path, 'r', encoding='utf-8')
-    convert = Converter(args.model_name, args.append_eod)
-    pool = multiprocessing.Pool(args.workers)
-    encoded_docs = pool.imap(convert.encode, fin, 25)
+    file_paths = []
+    if os.path.isfile(args.input_path):
+        file_paths.append(args.input_path)
+    else:
+        for root, _, fs in os.walk(args.input_path):
+            for f in fs:
+                file_paths.append(os.path.join(root, f))
     all_doc_ids = []
     lens = []
-    for tokens, sizes in encoded_docs:
-        all_doc_ids.extend(tokens)
-        lens.append(sizes)
-    # save the mmap for the tokens and lens 
-    save_dtype = None
+    convert = Converter(args.model_name, args.append_eod)
+    pool = multiprocessing.Pool(args.workers)
     if convert.vocab_size < 65500:
         save_dtype = np.uint16
     else:
         save_dtype = np.int32
+
+    for file_path in tqdm(file_paths):
+        text = open(file_path, 'r', encoding='utf-8').read()
+        encoded_docs = pool.imap(convert.encode, text, 25)
+        for tokens, sizes in encoded_docs:
+            all_doc_ids.extend(tokens)
+            lens.append(sizes)
     all_doc_ids = np.array(all_doc_ids, dtype=save_dtype)
     lens = np.array(lens, dtype=save_dtype)
     np.savez(args.input_path + "_ids.npz", ids=all_doc_ids, lens=lens)
