@@ -35,16 +35,45 @@
 
 ### 数据准备
 
-#### Pre-training数据准备
+#### 原始数据获取
 
-预训练公开数据集: [OpenWebTextCorpus](https://skylion007.github.io/OpenWebTextCorpus/)。此数据集包含了大约37GB的网页文本内容。为了方便用户运行测试本模型，本项目提供了处理好的300M的训练样本：
+[OpenWebTextCorpus](https://skylion007.github.io/OpenWebTextCorpus/)是一个开源的英文网页文本数据集，数据来源于Reddit，经过去重、清洗、提取，最终包含800多万个文档。
+
+下载以后通过以下命令解压：
 
 ```shell
-mkdir data && cd data
+xz -d openwebtext.tar.xz
+tar xJf openwebtext.tar
+mkdir raw_data
+bash decompress.sh  
+```
+
+解压以后得到的raw_data目录大小约为54GB。
+
+#### 数据预处理
+
+为了提升训练速度，我们在训练前将文本数据转成相应的id，并保存为npz格式：
+
+```shell
+python process_data.py --input_path raw_data \
+ --model_name gpt2-medium-en \
+ --append_eod \
+ --workers 8
+```
+
+为了方便用户运行测试本模型，本项目提供了处理好的300M的训练样本：
+
+```shell
 wget https://paddlenlp.bj.bcebos.com/models/transformers/gpt2/train.data.json_ids.npz
 ```
 
-运行命令，会在 ./data/ 路径下，下载好我们需要的数据。
+将所有预处理得到的npz文件统一放入一个文件夹中，以备训练使用：
+
+```
+mkdir data
+mv train.data.json_ids.npz data
+```
+
 
 #### 单卡训练
 
