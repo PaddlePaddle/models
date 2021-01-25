@@ -43,7 +43,7 @@
 
 ```shell
 xz -d openwebtext.tar.xz
-tar xJf openwebtext.tar
+tar xf openwebtext.tar
 mkdir raw_data
 bash decompress.sh  
 ```
