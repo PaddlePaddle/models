@@ -116,6 +116,7 @@ checkpoints/
 ```shell
 python export_model.py --model_type=roberta --model_name=roberta-wwm-ext --params_path=./checkpoint/model_200/model_state.pdparams --output_path=./static_graph_params
 ```
+其中`params_path`是指动态图训练保存的参数路径，`output_path`是指静态图参数导出路径。
 
 ### 模型预测
 

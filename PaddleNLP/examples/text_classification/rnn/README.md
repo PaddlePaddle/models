@@ -197,6 +197,8 @@ checkpoints/
 python export_model.py --vocab_path=./senta_word_dict.txt --network=bilstm --params_path=./checkpoints/final.pdparam --output_path=./static_graph_params
 ```
 
+其中`params_path`是指动态图训练保存的参数路径，`output_path`是指静态图参数导出路径。
+
 ### 模型预测
 
 启动预测：
