@@ -27,7 +27,23 @@ def convert_small_example(example,
         return input_ids, valid_length
 
 
+def convert_pair_example(example,
+                         vocab,
+                         language,
+                         max_seq_length=128,
+                         is_test=False):
+    seq1 = convert_small_example([example[0], example[2]], vocab, language,
+                                 max_seq_length, is_test)[:2]
+
+    seq2 = convert_small_example([example[1], example[2]], vocab, language,
+                                 max_seq_length, is_test)
+    pair_features = seq1 + seq2
+
+    return pair_features
+
+
 def convert_two_example(example,
+                        task_name,
                         tokenizer,
                         label_list,
                         max_seq_length,
@@ -40,21 +56,10 @@ def convert_two_example(example,
         label_list=label_list,
         max_seq_length=max_seq_length,
         is_test=is_test)
-
-    small_features = convert_small_example(example, vocab, language,
-                                           max_seq_length, is_test)
+    if task_name == 'qqp' or task_name == 'mnli':
+        small_features = convert_pair_example(example, vocab, language,
+                                              max_seq_length, is_test)
+    else:
+        small_features = convert_small_example(example, vocab, language,
+                                               max_seq_length, is_test)
     return bert_features[:2] + small_features
-
-
-def convert_pair_example(example,
-                         vocab,
-                         language,
-                         max_seq_length=128,
-                         is_test=False):
-    seq1 = convert_small_example([example[0], example[2]], vocab, language,
-                                 max_seq_length, is_test)[:2]
-
-    seq2 = convert_small_example([example[1], example[2]], vocab, language,
-                                 max_seq_length, is_test)
-    pair_features = seq1 + seq2
-    return pair_features

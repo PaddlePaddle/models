@@ -32,7 +32,8 @@ class Teacher(object):
         self.model.eval()
 
 
-def evaluate(model,
+def evaluate(task_name,
+             model,
              ce_loss,
              mse_loss,
              metric,
@@ -43,8 +44,14 @@ def evaluate(model,
     metric.reset()
     for i, batch in enumerate(data_loader):
         teacher_logits = teacher_eval_logits_list[i]
-        _, _, small_input_ids, seq_len, labels = batch
-        logits = model(small_input_ids, seq_len)
+        if task_name == 'qqp' or task_name == 'mnli':
+            _, _, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
+            logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
+                           seq_len_2)
+        else:
+            _, _, small_input_ids, seq_len, labels = batch
+            logits = model(small_input_ids, seq_len)
+
         loss = alpha * ce_loss(logits, labels) + (1 - alpha) * mse_loss(
             logits, teacher_logits)
 
@@ -77,7 +84,7 @@ def evaluate(model,
 def do_train(
         task_name='sst-2',
         language='en',
-        num_epoch=60,
+        num_epoch=6,
         batch_size=128,
         opt='adadelta',
         lr=1.0,
@@ -94,25 +101,17 @@ def do_train(
         teacher_path='model/SST-2/best_model_610/model_state.pdparams',
         vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
         use_pretrained_w2v=True,
-        data_augmentation=False):
-    if task_name == 'mnli':
-        train_data_loader, dev_data_loader_matched, dev_data_loader_mismatched = create_data_loader(
-            task_name,
-            language='en',
-            model_name=model_name,
-            vocab_path=vocab_path,
-            batch_size=batch_size,
-            max_seq_length=max_seq_length,
-            data_augmentation=data_augmentation)
-    else:
-        train_data_loader, dev_data_loader = create_distill_loader(
-            task_name,
-            language=language,
-            model_name=model_name,
-            vocab_path=vocab_path,
-            batch_size=batch_size,
-            max_seq_length=max_seq_length,
-            data_augmentation=data_augmentation)
+        data_augmentation=False,
+        n_iter=20):
+    train_data_loader, dev_data_loader = create_distill_loader(
+        task_name,
+        language=language,
+        model_name=model_name,
+        vocab_path=vocab_path,
+        batch_size=batch_size,
+        max_seq_length=max_seq_length,
+        data_augmentation=data_augmentation,
+        n_iter=n_iter)
 
     emb_tensor = load_embedding(
         vocab_path=vocab_path) if use_pretrained_w2v else None
@@ -134,6 +133,7 @@ def do_train(
 
     ce_loss = nn.CrossEntropyLoss()
     mse_loss = nn.MSELoss()
+    klloss = nn.KLDivLoss()
 
     metric_class = TASK_CLASSES[task_name][1]
     metric = metric_class()
@@ -142,21 +142,31 @@ def do_train(
     teacher_eval_logits_list = []
     with paddle.no_grad():
         for i, batch in enumerate(dev_data_loader):
-            input_ids, segment_ids, _, _, _ = batch
+            input_ids, segment_ids = batch[:2]
             teacher_logits = teacher.model(input_ids, segment_ids)
             teacher_eval_logits_list.append(teacher_logits)
-
+    print("Start to train distilling model.")
+    acc_list = []
     global_step = 0
     tic_train = time.time()
     for epoch in range(num_epoch):
         model.train()
         for i, batch in enumerate(train_data_loader):
-            bert_input_ids, bert_segment_ids, small_input_ids, seq_len, labels = batch
+            if task_name == 'qqp' or task_name == 'mnli':
+                bert_input_ids, bert_segment_ids, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
+            else:
+                bert_input_ids, bert_segment_ids, small_input_ids, seq_len, labels = batch
 
+            # Calculate teacher model's forward.
             with paddle.no_grad():
-                teacher.model.eval()
                 teacher_logits = teacher.model(bert_input_ids, bert_segment_ids)
-            logits = model(small_input_ids, seq_len)
+
+            # Calculate student model's forward.
+            if task_name == 'qqp' or task_name == 'mnli':
+                logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
+                               seq_len_2)
+            else:
+                logits = model(small_input_ids, seq_len)
 
             loss = alpha * ce_loss(logits, labels) + (1 - alpha) * mse_loss(
                 logits, teacher_logits)
@@ -172,60 +182,96 @@ def do_train(
                        save_steps / (time.time() - tic_train)))
                 tic_eval = time.time()
                 if task_name == 'mnli':
-                    evaluate(model, ce_loss, mse_loss, metric,
+                    evaluate(task_name, model, ce_loss, mse_loss, metric,
                              dev_data_loader_matched, teacher_eval_logits_list,
                              alpha)
-                    evaluate(model, ce_loss, mse_loss, metric,
+                    evaluate(task_name, model, ce_loss, mse_loss, metric,
                              dev_data_loader_mismatched,
                              teacher_eval_logits_list, teacher_eval_logits_list,
                              alpha)
                     print("eval done total : %s s" % (time.time() - tic_eval))
 
                 else:
-                    evaluate(model, ce_loss, mse_loss, metric, dev_data_loader,
-                             teacher_eval_logits_list, alpha)
+                    acc = evaluate(task_name, model, ce_loss, mse_loss, metric,
+                                   dev_data_loader, teacher_eval_logits_list,
+                                   alpha)
                     print("eval done total : %s s" % (time.time() - tic_eval))
+                    acc_list.append(acc)
                 tic_train = time.time()
             global_step += 1
 
+    # import matplotlib.pyplot as plt # 画图库
+    # x_list = list(range(len(acc_list)))
+    # x_list = [x * save_steps for x in x_list]
+    # plt.plot(x_list, acc_list)
+    # plt.ylabel('acc')
+    # plt.xlabel('step')
+    # plt.savefig(task_name+"_"+model_name+"_acc.png")
+
 
 if __name__ == '__main__':
+    paddle.seed(2021)
+    # paddle.seed(202)
+    # import numpy as np
     # task_name = 'senta'
     task_name = 'sst-2'
+    # task_name = 'qqp'
+
     vocab_size_dict = {
-        "senta": 1256608,
+        "senta": 29496,  #1256608,
         # "bert-base-chinese": 21128,
         # "bert-base-uncased": 30522,
-        "sst-2": 30522
+        "sst-2": 30522,
+        "qqp": 30522,
     }
-    teacher_path_dict = {
+    base_teacher_path_dict = {
         "sst-2": 'model/SST-2/best_model_610/model_state.pdparams',
-        "qqp": "model/QQP/best_model_18000_mengsi/model_state.pdparams",
+        "qqp": "model/QQP/best_model_17000/model_state.pdparams",
         "mnli": "model/MNLI/best_model_18000/model_state.pdparams",
         "senta": 'model/chnsenticorp/best_model_930/model_state.pdparams'
+    }
+    large_teacher_path_dict = {
+        "sst-2": 'model_large/SST-2/best_model_9450/model_state.pdparams',
     }
     if task_name == 'senta':
         do_train(
             task_name=task_name,
-            lr=1.0,
             alpha=0.0,
             dropout_prob=0.1,
+            lr=1.0,
             language='cn',
             data_augmentation=True,
             batch_size=64,
+            num_epoch=12,
             vocab_size=vocab_size_dict[task_name],
             model_name='bert-base-chinese',
-            teacher_path=teacher_path_dict[task_name],
+            teacher_path=base_teacher_path_dict[task_name],
             use_pretrained_w2v=True,
-            vocab_path='senta_word_dict.txt')
-    else:  # 'sst-2'
+            vocab_path='senta_word_dict_subset.txt')
+
+    elif task_name == 'sst-2':
         do_train(
             task_name=task_name,
             alpha=0.0,
+            dropout_prob=0.1,
             language='en',
             data_augmentation=True,
-            batch_size=64,
+            batch_size=32,
+            vocab_size=vocab_size_dict[task_name],
+            model_name='bert-base-uncased',  # 'bert-base-uncased',
+            teacher_path=base_teacher_path_dict[task_name],  # large_teacher
+            use_pretrained_w2v=False)  # ???
+    else:  # qqp
+        do_train(
+            task_name=task_name,
+            alpha=0.0,
+            dropout_prob=0.2,
+            language='en',
+            num_epoch=20,
+            data_augmentation=True,
+            batch_size=256,
             vocab_size=vocab_size_dict[task_name],
             model_name='bert-base-uncased',
-            teacher_path=teacher_path_dict[task_name],
-            use_pretrained_w2v=True)
+            teacher_path=base_teacher_path_dict[task_name],
+            use_pretrained_w2v=True,
+            n_iter=10)

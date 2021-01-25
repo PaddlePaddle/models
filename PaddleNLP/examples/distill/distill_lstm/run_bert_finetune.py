@@ -47,7 +47,7 @@ TASK_CLASSES = {
     "mnli": (GlueMNLI, Accuracy),
     "qnli": (GlueQNLI, Accuracy),
     "rte": (GlueRTE, Accuracy),
-    "chnsenticorp": (ChnSentiCorp, Accuracy),
+    "senta": (ChnSentiCorp, Accuracy),
 }
 
 MODEL_CLASSES = {
@@ -203,6 +203,7 @@ def evaluate(model, loss_fct, metric, data_loader):
     else:
         print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
     model.train()
+    return res[0]
 
 
 def convert_example(example,
@@ -388,9 +389,11 @@ def do_train(args):
     ) else paddle.nn.loss.MSELoss()
 
     metric = metric_class()
-
+    model.set_state_dict(
+        paddle.load("model_large/QQP/best_model_460/model_state.pdparams"))
     global_step = 0
     tic_train = time.time()
+    best_acc = 0.0
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
             global_step += 1
@@ -411,14 +414,18 @@ def do_train(args):
             if global_step % args.save_steps == 0:
                 tic_eval = time.time()
                 if args.task_name == "mnli":
-                    evaluate(model, loss_fct, metric, dev_data_loader_matched)
-                    evaluate(model, loss_fct, metric,
-                             dev_data_loader_mismatched)
+                    # TODO: Distinguish two acc
+                    acc = evaluate(model, loss_fct, metric,
+                                   dev_data_loader_matched)
+                    acc = evaluate(model, loss_fct, metric,
+                                   dev_data_loader_mismatched)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 else:
-                    evaluate(model, loss_fct, metric, dev_data_loader)
+                    acc = evaluate(model, loss_fct, metric, dev_data_loader)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
+                    if acc <= best_acc:
+                        continue
                     output_dir = os.path.join(args.output_dir,
                                               "%s_ft_model_%d.pdparams" %
                                               (args.task_name, global_step))
@@ -429,6 +436,7 @@ def do_train(args):
                         model, paddle.DataParallel) else model
                     model_to_save.save_pretrained(output_dir)
                     tokenizer.save_pretrained(output_dir)
+                    best_acc = acc
 
 
 def print_arguments(args):
