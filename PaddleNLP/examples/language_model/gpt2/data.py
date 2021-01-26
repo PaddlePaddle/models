@@ -217,12 +217,25 @@ class GPT2Dataset(paddle.io.Dataset):
             current_start_pos = self.start_pos[doc_index_f]
             return self.sample_ids[current_start_pos+offset_f:\
                        current_start_pos+offset_l+1].tolist()
-        else:
+        elif doc_index_f < doc_index_l:
             current_start_pos = self.start_pos[doc_index_f]
             next_start_pos = self.start_pos[doc_index_f + 1]
             tokens = self.sample_ids[current_start_pos + offset_f:
                                      next_start_pos].tolist()
             for i in range(doc_index_f + 1, doc_index_l):
+                current_start_pos = self.start_pos[i]
+                next_start_pos = self.start_pos[i + 1]
+                tokens.extend(self.sample_ids[current_start_pos:next_start_pos]
+                              .tolist())
+            last_start_pos = self.start_pos[doc_index_l]
+            tokens.extend(self.sample_ids[last_start_pos:last_start_pos +
+                                          offset_l + 1].tolist())
+        else:
+            current_start_pos = self.start_pos[doc_index_f]
+            next_start_pos = self.start_pos[-1]
+            tokens = self.sample_ids[current_start_pos + offset_f:
+                                     next_start_pos].tolist()
+            for i in range(0, doc_index_l):
                 current_start_pos = self.start_pos[i]
                 next_start_pos = self.start_pos[i + 1]
                 tokens.extend(self.sample_ids[current_start_pos:next_start_pos]
