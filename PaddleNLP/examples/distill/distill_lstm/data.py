@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import io
 import os
 from functools import partial
@@ -45,7 +46,7 @@ def load_embedding(
         for line in f:
             vocab_list.append(line.strip())
     vocab_size = len(vocab_list)
-    emb_np = np.zeros((vocab_size, emb_dim), dtype="float32")
+    emb_np = np.random.rand(vocab_size, emb_dim).astype("float32")
     word2vec_dict = gensim.models.KeyedVectors.load_word2vec_format(
         word2vec_path, binary=True)
 
@@ -197,17 +198,19 @@ def apply_data_augmentation_for_cn(train_dataset,
                                    ngram_range=(2, 6)):
     """Only Chinese dataset could be augmentated on raw data.
     Because bert-base-uncased and jieba could both convert 'UNK' to '[UNK]'.
+    text->(jieba)list->replace-mask->(join)new text
     """
     used_texts = [data[0] for data in train_dataset]
     used_texts = set(used_texts)
     new_data = []
     for data in train_dataset:
         new_data.append(data)
+
         for _ in range(n_iter):
             # masking
             words = [
                 "UNK" if np.random.rand() < p_mask else word
-                for word in data[0].split()
+                for word in jieba.cut(data[0])
             ]
             # n-gram sampling
             if np.random.rand() < p_ng:
@@ -216,7 +219,7 @@ def apply_data_augmentation_for_cn(train_dataset,
                 ngram_len = min(ngram_len, len(words))
                 start = np.random.randint(0, len(words) - ngram_len + 1)
                 words = words[start:start + ngram_len]
-            new_text = " ".join(words)
+            new_text = "".join(words)
             if new_text not in used_texts:
                 new_data.append([new_text, data[1]])
                 used_texts.add(new_text)
@@ -294,8 +297,8 @@ def create_distill_loader(
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
     tokenizer = BertTokenizer.from_pretrained(model_name)
     if language == 'cn':
-        train_ds = ChnSentiCorpDataAug.get_datasets("train")
-        print("ChnSentiCorp augmentation dataset has been loaded.")
+        # train_ds = ChnSentiCorpDataAug.get_datasets("train")
+        # print("ChnSentiCorp augmentation dataset has been loaded.")
         train_ds = apply_data_augmentation_for_cn(
             train_ds, n_iter=n_iter) if data_augmentation else train_ds
     else:
@@ -469,8 +472,7 @@ class ChnSentiCorpDataAug(paddle.io.Dataset):
                 for line in f:
                     line = line.strip()
 
-                    sentence = self.clean_sentence("".join(
-                        line.split("\t")[:-1]))
+                    sentence = self.clean_sentence("".join(line.split("\t")[0]))
                     label = line.split("\t")[-1]
                     data.append([sentence, label])
         return data
