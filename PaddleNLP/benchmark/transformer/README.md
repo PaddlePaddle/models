@@ -1,7 +1,7 @@
 # Transformer Benchmark with Fleet API
 
 ### 静态图
-如果是需要单机多卡训练，则使用下面的命令进行训练：
+如果是需要单机单卡训练，则使用下面的命令进行训练：
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0
