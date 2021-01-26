@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import argparse
 import json
 import multiprocessing
@@ -50,13 +51,9 @@ class Converter(object):
         self.vocab_size = len(tokenizer)
 
     def encode(self, text):
-        #data = json.loads(json_line)
-        #ids = {}
-        #text = data["text"]
-        tokenization = self.tokenizer.encode(text)
+        tokens = self.tokenizer.encode(text)
         if self.append_eod:
-            tokenization.append(self.eod_id)
-        tokens = tokenization.tokenization
+            tokens.append(self.eod_id)
         return tokens, len(tokens)
 
 
@@ -80,7 +77,9 @@ def main():
 
     for file_path in tqdm(file_paths):
         text = open(file_path, 'r', encoding='utf-8').read()
-        encoded_docs = pool.imap(convert.encode, text, 25)
+        text = re.sub('[\n]+', '\n', text)
+        text = re.sub('[ ]+', ' ', text)
+        encoded_docs = pool.imap(convert.encode, [text], 25)
         for tokens, sizes in encoded_docs:
             all_doc_ids.extend(tokens)
             lens.append(sizes)
