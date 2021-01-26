@@ -8,12 +8,13 @@
 ```text
 .
 ├── data.py                 # 数据处理
+├── decompress.sh           # 数据集解压脚本
 ├── generate_sample.py      # inference demo
 ├── lr.py                   # 学习率控制
 ├── process_data.py         # 数据预处理脚本
 ├── README.md               # 文档
 ├── run_pretrain.py         # 预训练入口
-└── run.sh                  # 训练脚本
+└── scripts                 # 训练脚本
 ```
 
 ## 快速开始
@@ -146,5 +147,5 @@ python generate_sample.py
 ```
 
 ## 参考文献
-[Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
-[CPM: A Large-scale Generative Chinese Pre-trained Language Model](https://arxiv.org/abs/2012.00413)
+- [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
+- [CPM: A Large-scale Generative Chinese Pre-trained Language Model](https://arxiv.org/abs/2012.00413)
