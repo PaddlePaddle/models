@@ -146,7 +146,7 @@ def do_train(
             teacher_logits = teacher.model(input_ids, segment_ids)
             teacher_eval_logits_list.append(teacher_logits)
     print("Start to train distilling model.")
-    acc_list = []
+
     global_step = 0
     tic_train = time.time()
     for epoch in range(num_epoch):
@@ -196,29 +196,19 @@ def do_train(
                                    dev_data_loader, teacher_eval_logits_list,
                                    alpha)
                     print("eval done total : %s s" % (time.time() - tic_eval))
-                    acc_list.append(acc)
                 tic_train = time.time()
             global_step += 1
-
-    # import matplotlib.pyplot as plt # 画图库
-    # x_list = list(range(len(acc_list)))
-    # x_list = [x * save_steps for x in x_list]
-    # plt.plot(x_list, acc_list)
-    # plt.ylabel('acc')
-    # plt.xlabel('step')
-    # plt.savefig(task_name+"_"+model_name+"_acc.png")
 
 
 if __name__ == '__main__':
     paddle.seed(2021)
     # paddle.seed(202)
-    # import numpy as np
-    # task_name = 'senta'
-    task_name = 'sst-2'
+    task_name = 'senta'
+    # task_name = 'sst-2'
     # task_name = 'qqp'
 
     vocab_size_dict = {
-        "senta": 29496,  #1256608,
+        "senta": 29496,
         # "bert-base-chinese": 21128,
         # "bert-base-uncased": 30522,
         "sst-2": 30522,
@@ -242,11 +232,11 @@ if __name__ == '__main__':
             language='cn',
             data_augmentation=True,
             batch_size=64,
-            num_epoch=12,
+            num_epoch=20,
             vocab_size=vocab_size_dict[task_name],
             model_name='bert-base-chinese',
             teacher_path=base_teacher_path_dict[task_name],
-            use_pretrained_w2v=True,
+            use_pretrained_w2v=False,
             vocab_path='senta_word_dict_subset.txt')
 
     elif task_name == 'sst-2':
@@ -258,9 +248,9 @@ if __name__ == '__main__':
             data_augmentation=True,
             batch_size=32,
             vocab_size=vocab_size_dict[task_name],
-            model_name='bert-base-uncased',  # 'bert-base-uncased',
-            teacher_path=base_teacher_path_dict[task_name],  # large_teacher
-            use_pretrained_w2v=False)  # ???
+            model_name='bert-base-uncased',
+            teacher_path=base_teacher_path_dict[task_name],
+            use_pretrained_w2v=True)
     else:  # qqp
         do_train(
             task_name=task_name,

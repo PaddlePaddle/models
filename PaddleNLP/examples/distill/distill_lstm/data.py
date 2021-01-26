@@ -57,12 +57,17 @@ def load_embedding(
     return emb_tensor
 
 
-def apply_data_augmentation(task_name,
-                            train_dataset,
-                            n_iter=20,
-                            p_mask=0.1,
-                            p_ng=0.25,
-                            ngram_range=(2, 6)):
+def apply_data_augmentation_for_text(task_name,
+                                     train_dataset,
+                                     n_iter=20,
+                                     p_mask=0.1,
+                                     p_ng=0.25,
+                                     ngram_range=(2, 6)):
+    """
+    Data augmentation for text, not for tokenized text list. Maybe its'
+    a wrong method, because '[MASK]' in text will not be transformed to
+    '[UNK]' or '[MASK]' in English mode, but '[ mask ]'.
+    """
     used_texts = [data[0] for data in train_dataset]
     if task_name == 'qqp' or task_name == 'mnli':
         used_texts += [data[1] for data in train_dataset]
@@ -102,11 +107,119 @@ def apply_data_augmentation(task_name,
                     new_data.append([new_text, new_text_2, data[2]])
                     used_texts.add(new_text)
                     used_texts.add(new_text_2)
-
             else:
                 if new_text not in used_texts:
                     new_data.append([new_text, data[1]])
                     used_texts.add(new_text)
+
+    train_dataset.data.data = new_data
+    print("Data augmentation is applied.")
+    return train_dataset
+
+
+def apply_data_augmentation(task_name,
+                            train_dataset,
+                            tokenizer,
+                            n_iter=20,
+                            p_mask=0.1,
+                            p_ng=0.25,
+                            ngram_range=(2, 6)):
+    """
+    Data Augmentation after texts are tokenized. 
+    For example:
+    train_ds[0] = [['hide', 'new', 'secret', '##ions', 'from', 'the', 'parental', 'units'], '0']
+    """
+    used_texts = []
+    if task_name == 'qqp' or task_name == 'mnli':
+        tokenized_text = [[tokenizer(data[0]), tokenizer(data[1]), data[2]]
+                          for data in train_dataset]
+        used_texts += [" ".join(token_list[0]) for token_list in tokenized_text]
+        used_texts += [" ".join(token_list[1]) for token_list in tokenized_text]
+    else:
+        tokenized_text = [[tokenizer(data[0]), data[1]]
+                          for data in train_dataset]
+        used_texts += [" ".join(token_list[0]) for token_list in tokenized_text]
+
+    used_texts = set(used_texts)
+    new_data = []
+
+    for idx in range(len(tokenized_text)):
+        new_data.append(tokenized_text[idx])
+        for _ in range(n_iter):
+            # masking
+            words = [
+                tokenizer.unk_token if np.random.rand() < p_mask and
+                not word.startswith('##') else word
+                for word in tokenized_text[idx][0]
+            ]
+            # n-gram sampling
+            if np.random.rand() < p_ng:
+                ngram_len = np.random.randint(ngram_range[0],
+                                              ngram_range[1] + 1)
+                ngram_len = min(ngram_len, len(words))
+                start = np.random.randint(0, len(words) - ngram_len + 1)
+                words = words[start:start + ngram_len]
+            new_text = " ".join(words)
+            if task_name == 'qqp' or task_name == 'mnli':
+                # masking
+                words_2 = [
+                    tokenizer.unk_token if np.random.rand() < p_mask and
+                    not word.startswith('##') else word
+                    for word in tokenized_text[idx][1]
+                ]
+                # n-gram sampling
+                if np.random.rand() < p_ng:
+                    ngram_len = np.random.randint(ngram_range[0],
+                                                  ngram_range[1] + 1)
+                    ngram_len = min(ngram_len, len(words_2))
+                    start = np.random.randint(0, len(words_2) - ngram_len + 1)
+                    words_2 = words_2[start:start + ngram_len]
+                new_text_2 = " ".join(words)
+                if new_text not in used_texts or new_text_2 not in used_texts:
+                    new_data.append([words, words_2, tokenized_text[idx][2]])
+                    used_texts.add(new_text)
+                    used_texts.add(new_text_2)
+            else:
+                if new_text not in used_texts:
+                    new_data.append([words, tokenized_text[idx][1]])
+                    used_texts.add(new_text)
+
+    train_dataset.data.data = new_data
+    print("Data augmentation is applied.")
+
+    return train_dataset
+
+
+def apply_data_augmentation_for_cn(train_dataset,
+                                   n_iter=20,
+                                   p_mask=0.1,
+                                   p_ng=0.25,
+                                   ngram_range=(2, 6)):
+    """Only Chinese dataset could be augmentated on raw data.
+    Because bert-base-uncased and jieba could both convert 'UNK' to '[UNK]'.
+    """
+    used_texts = [data[0] for data in train_dataset]
+    used_texts = set(used_texts)
+    new_data = []
+    for data in train_dataset:
+        new_data.append(data)
+        for _ in range(n_iter):
+            # masking
+            words = [
+                "UNK" if np.random.rand() < p_mask else word
+                for word in data[0].split()
+            ]
+            # n-gram sampling
+            if np.random.rand() < p_ng:
+                ngram_len = np.random.randint(ngram_range[0],
+                                              ngram_range[1] + 1)
+                ngram_len = min(ngram_len, len(words))
+                start = np.random.randint(0, len(words) - ngram_len + 1)
+                words = words[start:start + ngram_len]
+            new_text = " ".join(words)
+            if new_text not in used_texts:
+                new_data.append([new_text, data[1]])
+                used_texts.add(new_text)
 
     train_dataset.data.data = new_data
     print("Data augmentation is applied.")
@@ -179,19 +292,17 @@ def create_distill_loader(
           max_seq_length, use_gpu, shuffle, data_augmentation)
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
-
+    tokenizer = BertTokenizer.from_pretrained(model_name)
     if language == 'cn':
-        # train_ds = ChnSentiCorpDataAug.get_datasets("train")
-        # print("ChnSentiCorp augmentation dataset has been loaded.")
-        train_ds = apply_data_augmentation(
-            task_name, train_ds,
-            n_iter=n_iter) if data_augmentation else train_ds
+        train_ds = ChnSentiCorpDataAug.get_datasets("train")
+        print("ChnSentiCorp augmentation dataset has been loaded.")
+        train_ds = apply_data_augmentation_for_cn(
+            train_ds, n_iter=n_iter) if data_augmentation else train_ds
     else:
         train_ds = apply_data_augmentation(
-            task_name, train_ds,
+            task_name, train_ds, tokenizer,
             n_iter=n_iter) if data_augmentation else train_ds
 
-    tokenizer = BertTokenizer.from_pretrained(model_name)
     if language == 'en':
         vocab = tokenizer
         pad_val = tokenizer.pad_token_id
@@ -211,6 +322,16 @@ def create_distill_loader(
         label_list=train_ds.get_labels(),
         max_seq_length=max_seq_length,
         vocab=vocab,
+        language=language)
+
+    trans_fn_dev = partial(
+        convert_two_example,
+        task_name=task_name,
+        tokenizer=tokenizer,
+        label_list=train_ds.get_labels(),
+        max_seq_length=max_seq_length,
+        vocab=vocab,
+        is_tokenized=False,
         language=language)
 
     if task_name == 'qqp' or task_name == 'mnli':
@@ -233,7 +354,7 @@ def create_distill_loader(
         ): [data for data in fn(samples)]
 
     train_ds = train_ds.apply(trans_fn, lazy=True)
-    dev_ds = dev_ds.apply(trans_fn, lazy=True)
+    dev_ds = dev_ds.apply(trans_fn_dev, lazy=True)
 
     train_data_loader, dev_data_loader = create_dataloader(
         train_ds, dev_ds, batch_size, batchify_fn, shuffle)

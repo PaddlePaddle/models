@@ -209,9 +209,9 @@ def evaluate(model, loss_fct, metric, data_loader):
 def convert_example(example,
                     tokenizer,
                     label_list,
+                    is_tokenized=False,
                     max_seq_length=512,
-                    is_test=False,
-                    small_pair=False):
+                    is_test=False):
     """convert a glue example into necessary features"""
 
     def _truncate_seqs(seqs, max_seq_length):
@@ -260,8 +260,11 @@ def convert_example(example,
             label = label_map[label]
         label = np.array([label], dtype=label_dtype)
 
-    # Tokenize raw text
-    tokens_raw = [tokenizer(l) for l in example]
+    if is_tokenized:
+        tokens_raw = example
+    else:
+        # Tokenize raw text
+        tokens_raw = [tokenizer(l) for l in example]
     # Truncate to the truncate_length,
     tokens_trun = _truncate_seqs(tokens_raw, max_seq_length)
 
