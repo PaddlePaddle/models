@@ -18,6 +18,7 @@ from .glue import *
 from .imdb import *
 from .lcqmc import *
 from .msra_ner import *
+from .peoples_daily_ner import *
 from .ptb import *
 from .squad import *
 from .translation import *

@@ -23,29 +23,34 @@ from paddlenlp.utils.env import DATA_HOME
 
 from .dataset import TSVDataset
 
-__all__ = ['MSRA_NER']
+__all__ = ['PeoplesDailyNER']
 
 
-class MSRA_NER(TSVDataset):
-    URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
+class PeoplesDailyNER(TSVDataset):
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/peoples_daily_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple(
         'META_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
     SPLITS = {
         'train': META_INFO(
-            os.path.join('msra_ner', 'train.tsv'),
+            os.path.join('peoples_daily_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
             (0, 1),
             1, ),
+        'dev': META_INFO(
+            os.path.join('peoples_daily_ner', 'dev.tsv'),
+            'ec772f3ba914bca5269f6e785bb3375d',
+            (0, 1),
+            1, ),
         'test': META_INFO(
-            os.path.join('msra_ner', 'test.tsv'),
+            os.path.join('peoples_daily_ner', 'test.tsv'),
             '2f27ae68b5f61d6553ffa28bb577c8a7',
             (0, 1),
             1, ),
     }
 
     def __init__(self, mode='train', root=None, **kwargs):
-        default_root = os.path.join(DATA_HOME, 'msra')
+        default_root = os.path.join(DATA_HOME, 'peoples_daily_ner')
         filename, data_hash, field_indices, num_discard_samples = self.SPLITS[
             mode]
         fullname = os.path.join(default_root,
@@ -59,7 +64,7 @@ class MSRA_NER(TSVDataset):
                         filename, self.__class__.__name__, default_root))
             path = get_path_from_url(self.URL, default_root, self.MD5)
             fullname = os.path.join(default_root, filename)
-        super(MSRA_NER, self).__init__(
+        super(PeoplesDailyNER, self).__init__(
             fullname,
             field_indices=field_indices,
             num_discard_samples=num_discard_samples,

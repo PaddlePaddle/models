@@ -129,13 +129,13 @@ class CNNEncoder(nn.Layer):
         self._activation = conv_layer_activation
         self._output_dim = output_dim
 
-        self.convs = [
+        self.convs = paddle.nn.LayerList([
             nn.Conv2D(
                 in_channels=1,
                 out_channels=self._num_filter,
                 kernel_size=(i, self._emb_dim),
                 **kwargs) for i in self._ngram_filter_sizes
-        ]
+        ])
 
         maxpool_output_dim = self._num_filter * len(self._ngram_filter_sizes)
         if self._output_dim:

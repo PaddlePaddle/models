@@ -44,7 +44,8 @@ def create_data_loader(args):
     transform_func = WMT14ende.get_default_transform_func(root=root)
     datasets = [
         WMT14ende.get_datasets(
-            mode=m, transform_func=transform_func) for m in ["train", "dev"]
+            mode=m, root=root, transform_func=transform_func)
+        for m in ["train", "dev"]
     ]
 
     data_loaders = [(None)] * 2
@@ -89,7 +90,7 @@ def create_infer_loader(args):
     args.trg_vocab_size = padding_vocab(len(trg_vocab))
     transform_func = WMT14ende.get_default_transform_func(root=root)
     dataset = WMT14ende.get_datasets(
-        mode="test", transform_func=transform_func).filter(
+        mode="test", root=root, transform_func=transform_func).filter(
             partial(
                 min_max_filer, max_len=args.max_length))
 

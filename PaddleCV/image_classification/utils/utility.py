@@ -141,7 +141,6 @@ def parse_args():
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     add_arg('use_amp',                  bool,   False,                   "Whether to enable mixed precision training with fp16." )
     add_arg('use_pure_fp16',            bool,   False,                  "Whether to enable all half precision training with fp16." )
-    add_arg('multi_precision',          bool,   False,                  "Whether to enable multi-precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
     add_arg('data_format',              str,    "NCHW",                 "Tensor data format when training.")
@@ -379,13 +378,10 @@ def create_data_loader(is_train, args):
         data_loader and the input data of net,
     """
     image_shape = args.image_shape
-    image_dtype = "float32"
-    if args.model == "ResNet50" and args.use_pure_fp16 and args.use_dali:
-        image_dtype = "float16"
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,
-        dtype=image_dtype,
+        dtype="float32",
         lod_level=0)
 
     feed_label = fluid.data(
@@ -399,7 +395,7 @@ def create_data_loader(is_train, args):
         feed_y_b = fluid.data(
             name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
         feed_lam = fluid.data(
-            name="feed_lam", shape=[None, 1], dtype=image_dtype, lod_level=0)
+            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
 
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
