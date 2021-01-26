@@ -47,7 +47,6 @@ class Demo:
             np.array(ids).reshape(1, -1).astype('int64'))
         output, cached_kvs = self.model(input_id, use_cache=True, cache=None)
         nid = int(np.argmax(output[0, -1].numpy()))
-        print(ids)
         ids.append(nid)
         out = [nid]
         for i in range(max_len):

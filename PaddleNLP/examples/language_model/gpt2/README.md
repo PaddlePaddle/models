@@ -101,12 +101,14 @@ CUDA_VISIBLE_DEVICES=0 python run_pretrain.py --model_name_or_path gpt2-small-en
 - `batch_size` 训练的batch大小
 - `device` 训练设备
 
+用户也可以使用提供的shell脚本直接训练`sh scripts/run.sh`.
+
 ### 单机多卡
 
 同样，可以执行如下命令实现八卡训练：
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+unset CUDA_VISIBLE_DEVICES
 python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" run_pretrain.py --model_name_or_path gpt2-small-en \
     --input_dir "./data"\
     --output_dir "output"\
@@ -120,5 +122,29 @@ python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" run_pretrain.py --m
 
 ```
 
+用户也可以使用提供的shell脚本直接训练`sh scripts/run_multi.sh`.
+
+#### 文本生成
+
+本项目提供了简单的文本生成的demo，供用户测试文本生成效果。
+
+```shell
+python generate_sample.py
+```
+
+生成效果展示:
+```text
+问题：中国的首都是哪里？答案：北京。
+问题：百度的厂长是谁? 答案：
+
+李彦宏。
+
+默写古诗: 大漠孤烟直，长河落日圆。
+举杯邀明月，
+
+对影成三人。
+```
+
 ## 参考文献
 [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
+[CPM: A Large-scale Generative Chinese Pre-trained Language Model](https://arxiv.org/abs/2012.00413)
