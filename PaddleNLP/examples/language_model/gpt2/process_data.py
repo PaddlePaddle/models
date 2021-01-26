@@ -19,8 +19,9 @@ import json
 import multiprocessing
 
 import numpy as np
-from paddlenlp.transformers import GPT2Tokenizer
 from tqdm import tqdm
+from paddlenlp.transformers import GPT2Tokenizer
+from paddlenlp.utils.log import logger
 
 
 def get_args():
@@ -75,6 +76,7 @@ def main():
     else:
         save_dtype = np.int32
 
+    logger.info("Processing raw files...")
     for file_path in tqdm(file_paths):
         text = open(file_path, 'r', encoding='utf-8').read()
         text = re.sub('[\n]+', '\n', text)
