@@ -1,6 +1,5 @@
 export CUDA_VISIBLE_DEVICES=0
-export PYTHONPATH=../../../
-python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./input_data"\
+python run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./data"\
     --output_dir "output"\
     --max_lr 0.00015\
     --min_lr 0.00001\
