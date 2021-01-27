@@ -56,6 +56,30 @@ print(test_token_embedding)
    0.123634  0.282932  0.140399 -0.076253 -0.087103  0.07262 ]]
 ```
 
+## 可视化embedding结果
+使用深度学习可视化工具[VisualDL](https://github.com/PaddlePaddle/VisualDL)的High Dimensional组件可以对embedding结果进行可视化展示，便于对其直观分析，步骤如下：
+```python
+labels = ["中国", "美国", "俄罗斯", "男人", "女人", "猫", "狗", "猪", "蓝色", "黄色"]
+test_token_embedding = token_embedding.search(labels)
+
+# 引入VisualDL的LogWriter记录日志
+from visualdl import LogWriter
+
+with LogWriter(logdir='./visualize') as writer:
+    writer.add_embeddings("test_embedding", labels, test_token_embedding)
+```
+执行完毕后会在当前路径下生成一个visualize目录，并将日志存放在其中，我们在命令行启动VisualDL即可进行查看，启动命令为：
+```shell
+visualdl logdir ./visualize
+```
+启动后打开浏览器即可看到可视化结果
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/28444161/105819449-2ce79c00-5ff3-11eb-978b-8567f86a93f4.png" width="80%"/>
+</p>
+
+使用VisualDL除可视化embedding结果外，还可以对标量、图片、音频等进行可视化，有效提升训练调参效率。关于VisualDL更多功能和详细介绍，可参考[VisualDL使用文档](https://github.com/PaddlePaddle/VisualDL/tree/develop/docs)。
+
 ## 计算词向量cosine相似度
 
 ```python
