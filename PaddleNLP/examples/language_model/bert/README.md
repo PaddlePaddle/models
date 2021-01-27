@@ -92,7 +92,7 @@ python -u ./run_pretrain.py \
 - `logging_steps` 表示日志打印间隔。
 - `save_steps` 表示模型保存及评估间隔。
 - `max_steps` 表示最大训练步数。若训练`num_train_epochs`轮包含的训练步数大于该值，则达到`max_steps`后就提前结束。
-- `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `n_cards` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU/XPU训练。
 
 ### 执行Fine-tunning
 
@@ -124,7 +124,26 @@ python -u ./run_glue.py \
 - `logging_steps` 表示日志打印间隔。
 - `save_steps` 表示模型保存及评估间隔。
 - `output_dir` 表示模型保存路径。
-- `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `n_cards` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU/XPU训练。
+
+目前飞桨（PaddlePaddle）2.0正式版本支持在**百度昆仑AI计算处理器**进行训练，**百度昆仑AI计算处理器**（Baidu KUNLUN AI Computing Processor）是百度集十年AI产业技术实践于2019年推出的全功能AI芯片，基于自主研发的先进XPU架构，为云端和边缘端的人工智能业务而设计。目前BERT的finetune任务切换到昆仑上进行训练十分简易，只要在训练的python脚本中*--select_device*选项指定'xpu'即可，下面是具体的训练脚本。
+
+```shell
+python -u ./run_glue.py \
+    --model_type bert \
+    --model_name_or_path bert-base-uncased \
+    --task_name SST-2 \
+    --max_seq_length 128 \
+    --batch_size 32   \
+    --learning_rate 2e-5 \
+    --num_train_epochs 3 \
+    --logging_steps 1 \
+    --save_steps 500 \
+    --output_dir ./tmp/ \
+    --n_cards 1 \
+	--select_device 'xpu'
+```
+
 
 基于`bert-base-uncased`在GLUE各评测任务上Fine-tuning后，在验证集上有如下结果：
 
