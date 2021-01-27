@@ -51,7 +51,7 @@ dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
 以提供的英德翻译数据为例，可以执行以下命令进行模型训练：
 
 #### 静态图
-如果是需要单机单卡训练，则使用如下的命令进行训练：
+如果是需要单机单卡训练，使用如下的命令进行训练：
 ``` shell
 cd static/
 export CUDA_VISIBLE_DEVICES=0
