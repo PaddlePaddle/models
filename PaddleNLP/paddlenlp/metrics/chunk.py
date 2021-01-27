@@ -112,12 +112,12 @@ class ChunkEvaluator(paddle.metric.Metric):
             float: mean precision, recall and f1 score.
         """
         precision = float(
-            self.num_correct_chunks
-        ) / self.num_infer_chunks if self.num_infer_chunks else 0
-        recall = float(self.num_correct_chunks
-                       ) / self.num_label_chunks if self.num_label_chunks else 0
-        f1_score = float(2 * precision * recall) / (
-            precision + recall) if self.num_correct_chunks else 0
+            self.num_correct_chunks /
+            self.num_infer_chunks) if self.num_infer_chunks else 0.
+        recall = float(self.num_correct_chunks /
+                       self.num_label_chunks) if self.num_label_chunks else 0.
+        f1_score = float(2 * precision * recall / (
+            precision + recall)) if self.num_correct_chunks else 0.
         return precision, recall, f1_score
 
     def reset(self):
