@@ -141,7 +141,7 @@ python -u ./run_glue.py \
     --save_steps 500 \
     --output_dir ./tmp/ \
     --n_cards 1 \
-	--select_device 'xpu'
+    --select_device 'xpu'
 ```
 
 
