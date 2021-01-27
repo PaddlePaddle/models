@@ -6,8 +6,8 @@ from paddle.metric import Metric, Accuracy, Precision, Recall
 
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.transformers.tokenizer_utils import whitespace_tokenize
-from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE, ChnSentiCorp
+from paddlenlp.metrics import AccuracyAndF1
+from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 
 from small import BiLSTM
 from data import create_distill_loader, load_embedding
@@ -15,7 +15,6 @@ from data import create_distill_loader, load_embedding
 TASK_CLASSES = {
     "sst-2": (GlueSST2, Accuracy),
     "qqp": (GlueQQP, AccuracyAndF1),
-    "mnli": (GlueMNLI, Accuracy),
     "senta": (ChnSentiCorp, Accuracy),
 }
 
@@ -38,13 +37,11 @@ def evaluate(task_name,
              mse_loss,
              metric,
              data_loader,
-             teacher_eval_logits_list,
              alpha=0.0):
     model.eval()
     metric.reset()
     for i, batch in enumerate(data_loader):
-        teacher_logits = teacher_eval_logits_list[i]
-        if task_name == 'qqp' or task_name == 'mnli':
+        if task_name == 'qqp':
             _, _, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
             logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
                            seq_len_2)
@@ -52,17 +49,12 @@ def evaluate(task_name,
             _, _, small_input_ids, seq_len, labels = batch
             logits = model(small_input_ids, seq_len)
 
-        loss = alpha * ce_loss(logits, labels) + (1 - alpha) * mse_loss(
-            logits, teacher_logits)
-
         correct = metric.compute(logits, labels)
         metric.update(correct)
     res = metric.accumulate()
     if isinstance(metric, AccuracyAndF1):
         print(
-            "eval loss: %f, acc: %s, precision: %s, recall: %s, f1: %s, acc and f1: %s, "
-            % (
-                loss.numpy(),
+            "acc: %s, precision: %s, recall: %s, f1: %s, acc and f1: %s, " % (
                 res[0],
                 res[1],
                 res[2],
@@ -70,20 +62,19 @@ def evaluate(task_name,
                 res[4], ),
             end='')
     elif isinstance(metric, Mcc):
-        print("eval loss: %f, mcc: %s, " % (loss.numpy(), res[0]), end='')
+        print("mcc: %s, " % (res[0]), end='')
     elif isinstance(metric, PearsonAndSpearman):
         print(
-            "eval loss: %f, pearson: %s, spearman: %s, pearson and spearman: %s, "
-            % (loss.numpy(), res[0], res[1], res[2]),
+            "pearson: %s, spearman: %s, pearson and spearman: %s, " %
+            (res[0], res[1], res[2]),
             end='')
     else:
-        print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
+        print("acc: %s, " % (res), end='')
     model.train()
 
 
 def do_train(
         task_name='sst-2',
-        language='en',
         num_epoch=6,
         batch_size=128,
         opt='adadelta',
@@ -105,7 +96,6 @@ def do_train(
         n_iter=20):
     train_data_loader, dev_data_loader = create_distill_loader(
         task_name,
-        language=language,
         model_name=model_name,
         vocab_path=vocab_path,
         batch_size=batch_size,
@@ -139,12 +129,7 @@ def do_train(
     metric = metric_class()
 
     teacher = Teacher(model_name=model_name, param_path=teacher_path)
-    teacher_eval_logits_list = []
-    with paddle.no_grad():
-        for i, batch in enumerate(dev_data_loader):
-            input_ids, segment_ids = batch[:2]
-            teacher_logits = teacher.model(input_ids, segment_ids)
-            teacher_eval_logits_list.append(teacher_logits)
+
     print("Start to train distilling model.")
 
     global_step = 0
@@ -152,7 +137,7 @@ def do_train(
     for epoch in range(num_epoch):
         model.train()
         for i, batch in enumerate(train_data_loader):
-            if task_name == 'qqp' or task_name == 'mnli':
+            if task_name == 'qqp':
                 bert_input_ids, bert_segment_ids, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
             else:
                 bert_input_ids, bert_segment_ids, small_input_ids, seq_len, labels = batch
@@ -162,7 +147,7 @@ def do_train(
                 teacher_logits = teacher.model(bert_input_ids, bert_segment_ids)
 
             # Calculate student model's forward.
-            if task_name == 'qqp' or task_name == 'mnli':
+            if task_name == 'qqp':
                 logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
                                seq_len_2)
             else:
@@ -181,21 +166,9 @@ def do_train(
                     % (global_step, epoch, i, loss,
                        save_steps / (time.time() - tic_train)))
                 tic_eval = time.time()
-                if task_name == 'mnli':
-                    evaluate(task_name, model, ce_loss, mse_loss, metric,
-                             dev_data_loader_matched, teacher_eval_logits_list,
-                             alpha)
-                    evaluate(task_name, model, ce_loss, mse_loss, metric,
-                             dev_data_loader_mismatched,
-                             teacher_eval_logits_list, teacher_eval_logits_list,
-                             alpha)
-                    print("eval done total : %s s" % (time.time() - tic_eval))
-
-                else:
-                    acc = evaluate(task_name, model, ce_loss, mse_loss, metric,
-                                   dev_data_loader, teacher_eval_logits_list,
-                                   alpha)
-                    print("eval done total : %s s" % (time.time() - tic_eval))
+                acc = evaluate(task_name, model, ce_loss, mse_loss, metric,
+                               dev_data_loader, alpha)
+                print("eval done total : %s s" % (time.time() - tic_eval))
                 tic_train = time.time()
             global_step += 1
 
@@ -203,8 +176,8 @@ def do_train(
 if __name__ == '__main__':
     paddle.seed(2021)
     # paddle.seed(202)
-    task_name = 'senta'
-    # task_name = 'sst-2'
+    # task_name = 'senta'
+    task_name = 'sst-2'
     # task_name = 'qqp'
 
     vocab_size_dict = {
@@ -217,8 +190,8 @@ if __name__ == '__main__':
     base_teacher_path_dict = {
         "sst-2": 'model/SST-2/best_model_610/model_state.pdparams',
         "qqp": "model/QQP/best_model_17000/model_state.pdparams",
-        "mnli": "model/MNLI/best_model_18000/model_state.pdparams",
-        "senta": 'model/chnsenticorp/best_model_930/model_state.pdparams'
+        # "senta": 'model/senta/best_bert_base_model_930/model_state.pdparams',
+        "senta": 'model/senta/best_bert_wwm_ext_model_880/model_state.pdparams',
     }
     large_teacher_path_dict = {
         "sst-2": 'model_large/SST-2/best_model_9450/model_state.pdparams',
@@ -229,9 +202,8 @@ if __name__ == '__main__':
             alpha=0.0,
             dropout_prob=0.1,
             lr=1.0,
-            language='cn',
             data_augmentation=True,
-            batch_size=64,
+            batch_size=128,
             num_epoch=20,
             vocab_size=vocab_size_dict[task_name],
             model_name='bert-base-chinese',
@@ -243,10 +215,9 @@ if __name__ == '__main__':
         do_train(
             task_name=task_name,
             alpha=0.0,
-            dropout_prob=0.1,
-            language='en',
+            dropout_prob=0.3,
             data_augmentation=True,
-            batch_size=32,
+            batch_size=128,
             vocab_size=vocab_size_dict[task_name],
             model_name='bert-base-uncased',
             teacher_path=base_teacher_path_dict[task_name],
@@ -256,7 +227,6 @@ if __name__ == '__main__':
             task_name=task_name,
             alpha=0.0,
             dropout_prob=0.2,
-            language='en',
             num_epoch=20,
             data_augmentation=True,
             batch_size=256,

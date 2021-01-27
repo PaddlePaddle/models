@@ -12,7 +12,7 @@ from paddle.metric import Metric, Accuracy, Precision, Recall
 
 from paddlenlp.data import Stack, Tuple, Pad, Vocab
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE, ChnSentiCorp
+from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 from run_bert_finetune import convert_example
@@ -21,7 +21,6 @@ from utils import convert_small_example, convert_two_example, convert_pair_examp
 TASK_CLASSES = {
     "sst-2": GlueSST2,
     "qqp": GlueQQP,
-    "mnli": GlueMNLI,
     "senta": ChnSentiCorp,
 }
 
@@ -41,6 +40,7 @@ def load_embedding(
         vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
         emb_dim=300,
         word2vec_path='GoogleNews-vectors-negative300.bin'):
+    """Load pre-trained embeddings to improve small models acc trained by English dataset."""
     vocab_list = []
     with io.open(vocab_path) as f:
         for line in f:
@@ -70,7 +70,7 @@ def apply_data_augmentation_for_text(task_name,
     '[UNK]' or '[MASK]' in English mode, but '[ mask ]'.
     """
     used_texts = [data[0] for data in train_dataset]
-    if task_name == 'qqp' or task_name == 'mnli':
+    if task_name == 'qqp':
         used_texts += [data[1] for data in train_dataset]
     used_texts = set(used_texts)
     new_data = []
@@ -90,7 +90,7 @@ def apply_data_augmentation_for_text(task_name,
                 start = np.random.randint(0, len(words) - ngram_len + 1)
                 words = words[start:start + ngram_len]
             new_text = " ".join(words)
-            if task_name == 'qqp' or task_name == 'mnli':
+            if task_name == 'qqp':
                 # masking
                 words = [
                     "[MASK]" if np.random.rand() < p_mask else word
@@ -131,7 +131,7 @@ def apply_data_augmentation(task_name,
     train_ds[0] = [['hide', 'new', 'secret', '##ions', 'from', 'the', 'parental', 'units'], '0']
     """
     used_texts = []
-    if task_name == 'qqp' or task_name == 'mnli':
+    if task_name == 'qqp':
         tokenized_text = [[tokenizer(data[0]), tokenizer(data[1]), data[2]]
                           for data in train_dataset]
         used_texts += [" ".join(token_list[0]) for token_list in tokenized_text]
@@ -161,7 +161,7 @@ def apply_data_augmentation(task_name,
                 start = np.random.randint(0, len(words) - ngram_len + 1)
                 words = words[start:start + ngram_len]
             new_text = " ".join(words)
-            if task_name == 'qqp' or task_name == 'mnli':
+            if task_name == 'qqp':
                 # masking
                 words_2 = [
                     tokenizer.unk_token if np.random.rand() < p_mask and
@@ -231,7 +231,6 @@ def apply_data_augmentation_for_cn(train_dataset,
 
 def create_data_loader_for_small_model(
         task_name='sst-2',
-        language='en',
         vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
         batch_size=64,
         max_seq_length=128,
@@ -241,7 +240,7 @@ def create_data_loader_for_small_model(
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
 
-    if language == 'cn':
+    if task_name == 'senta':
         vocab = Vocab.load_vocabulary(
             vocab_path,
             unk_token='[UNK]',
@@ -256,8 +255,8 @@ def create_data_loader_for_small_model(
 
     trans_fn = partial(
         convert_small_example,
+        task_name=task_name,
         vocab=vocab,
-        language=language,
         max_seq_length=max_seq_length,
         is_test=False)
 
@@ -278,7 +277,6 @@ def create_data_loader_for_small_model(
 
 def create_distill_loader(
         task_name='sst-2',
-        language='en',
         model_name='bert-base-uncased',
         vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
         batch_size=64,
@@ -291,12 +289,12 @@ def create_distill_loader(
     Returns batch data for bert and small model.
     Bert and small model have difference input representations.
     """
-    print(task_name, language, model_name, vocab_path, batch_size,
-          max_seq_length, use_gpu, shuffle, data_augmentation)
+    print(task_name, model_name, vocab_path, batch_size, max_seq_length,
+          use_gpu, shuffle, data_augmentation)
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
     tokenizer = BertTokenizer.from_pretrained(model_name)
-    if language == 'cn':
+    if task_name == 'senta':
         # train_ds = ChnSentiCorpDataAug.get_datasets("train")
         # print("ChnSentiCorp augmentation dataset has been loaded.")
         train_ds = apply_data_augmentation_for_cn(
@@ -306,10 +304,7 @@ def create_distill_loader(
             task_name, train_ds, tokenizer,
             n_iter=n_iter) if data_augmentation else train_ds
 
-    if language == 'en':
-        vocab = tokenizer
-        pad_val = tokenizer.pad_token_id
-    else:
+    if task_name == 'senta':
         vocab = Vocab.load_vocabulary(
             vocab_path,
             unk_token='[UNK]',
@@ -317,6 +312,9 @@ def create_distill_loader(
             bos_token=None,
             eos_token=None, )
         pad_val = vocab['[PAD]']
+    else:
+        vocab = tokenizer
+        pad_val = tokenizer.pad_token_id
 
     trans_fn = partial(
         convert_two_example,
@@ -324,8 +322,7 @@ def create_distill_loader(
         tokenizer=tokenizer,
         label_list=train_ds.get_labels(),
         max_seq_length=max_seq_length,
-        vocab=vocab,
-        language=language)
+        vocab=vocab)
 
     trans_fn_dev = partial(
         convert_two_example,
@@ -334,10 +331,9 @@ def create_distill_loader(
         label_list=train_ds.get_labels(),
         max_seq_length=max_seq_length,
         vocab=vocab,
-        is_tokenized=False,
-        language=language)
+        is_tokenized=False)
 
-    if task_name == 'qqp' or task_name == 'mnli':
+    if task_name == 'qqp':
         batchify_fn = lambda samples, fn=Tuple(
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # bert input
             Pad(axis=0, pad_val=tokenizer.pad_token_id),  # bert segment
@@ -367,7 +363,6 @@ def create_distill_loader(
 
 def create_pair_loader_for_small_model(
         task_name='qqp',
-        language='en',
         vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
         batch_size=64,
         max_seq_length=128,
@@ -388,8 +383,9 @@ def create_pair_loader_for_small_model(
 
     trans_func = partial(
         convert_pair_example,
+        task_name=task_name,
         vocab=tokenizer,
-        language=language,
+        is_tokenized=False,
         max_seq_length=max_seq_length,
         is_test=is_test)
     train_ds = train_ds.apply(trans_func, lazy=True)
@@ -402,31 +398,6 @@ def create_pair_loader_for_small_model(
         Stack(),  # length
         Stack(dtype="int64" if train_ds.get_labels() else "float32")  # label
     ): [data for i, data in enumerate(fn(samples))]
-
-    # Create dev loader
-    if task_name == "mnli":
-        dev_dataset_matched, dev_dataset_mismatched = dataset_class.get_datasets(
-            ["dev_matched", "dev_mismatched"])
-        dev_dataset_matched = dev_dataset_matched.apply(trans_func, lazy=True)
-        dev_dataset_mismatched = dev_dataset_mismatched.apply(
-            trans_func, lazy=True)
-        dev_batch_sampler_matched = paddle.io.BatchSampler(
-            dev_dataset_matched, batch_size=batch_size, shuffle=False)
-        dev_data_loader_matched = DataLoader(
-            dataset=dev_dataset_matched,
-            batch_sampler=dev_batch_sampler_matched,
-            collate_fn=batchify_fn,
-            num_workers=0,
-            return_list=True)
-        dev_batch_sampler_mismatched = paddle.io.BatchSampler(
-            dev_dataset_mismatched, batch_size=batch_size, shuffle=False)
-        dev_data_loader_mismatched = DataLoader(
-            dataset=dev_dataset_mismatched,
-            batch_sampler=dev_batch_sampler_mismatched,
-            collate_fn=batchify_fn,
-            num_workers=0,
-            return_list=True)
-        return train_data_loader, dev_data_loader_matched, dev_data_loader_mismatched
 
     train_data_loader, dev_data_loader = create_dataloader(
         train_ds, dev_ds, batch_size, batchify_fn, shuffle)
@@ -471,7 +442,6 @@ class ChnSentiCorpDataAug(paddle.io.Dataset):
             with io.open(os.path.join(path, filename)) as f:
                 for line in f:
                     line = line.strip()
-
                     sentence = self.clean_sentence("".join(line.split("\t")[0]))
                     label = line.split("\t")[-1]
                     data.append([sentence, label])

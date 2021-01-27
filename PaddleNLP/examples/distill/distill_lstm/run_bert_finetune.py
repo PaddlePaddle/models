@@ -203,7 +203,8 @@ def evaluate(model, loss_fct, metric, data_loader):
     else:
         print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
     model.train()
-    return res[0]
+    return res[0] if isinstance(metric, Mcc) or isinstance(
+        metric, PearsonAndSpearman) else res
 
 
 def convert_example(example,
@@ -392,8 +393,6 @@ def do_train(args):
     ) else paddle.nn.loss.MSELoss()
 
     metric = metric_class()
-    model.set_state_dict(
-        paddle.load("model_large/QQP/best_model_460/model_state.pdparams"))
     global_step = 0
     tic_train = time.time()
     best_acc = 0.0
@@ -430,7 +429,7 @@ def do_train(args):
                     if acc <= best_acc:
                         continue
                     output_dir = os.path.join(args.output_dir,
-                                              "%s_ft_model_%d.pdparams" %
+                                              "%s_model_%d.pdparams" %
                                               (args.task_name, global_step))
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)

@@ -8,15 +8,14 @@ import paddle.nn.functional as F
 import paddle.nn.initializer as I
 
 from data import load_embedding, create_data_loader_for_small_model, create_pair_loader_for_small_model
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE, ChnSentiCorp
+from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
+from paddlenlp.metrics import AccuracyAndF1
 
 TASK_CLASSES = {
     "sst-2": (GlueSST2, Accuracy),
     "qqp": (GlueQQP, AccuracyAndF1),
-    "mnli": (GlueMNLI, Accuracy),
     "senta": (ChnSentiCorp, Accuracy),
 }
 
@@ -63,11 +62,7 @@ class BiLSTM(nn.Layer):
         x_embed_1 = self.embedder(x_1)
         lstm_out_1, (hidden_1, _) = self.lstm(
             x_embed_1, sequence_length=seq_len_1)
-        self.x_embed_1 = x_embed_1
-        # lstm_out_1, (hidden_1, _) = self.lstm(x_embed_1)
-        # out_1 = hidden_1[-1, :, :]
         out_1 = paddle.concat((hidden_1[-2, :, :], hidden_1[-1, :, :]), axis=1)
-        # out = paddle.sum(lstm_out, axis=1)
         if x_2 is not None:
             x_embed_2 = self.embedder(x_2)
             lstm_out_2, (hidden_2, _) = self.lstm(
@@ -80,9 +75,8 @@ class BiLSTM(nn.Layer):
             out = paddle.tanh(self.fc_1(out))
         else:
             out = paddle.tanh(self.fc(out_1))
-
         logits = self.output_layer(out)
-        logits = self.dropout(logits)
+
         return logits
 
 
@@ -90,7 +84,7 @@ def evaluate(task_name, model, loss_fct, metric, data_loader):
     model.eval()
     metric.reset()
     for batch in data_loader:
-        if task_name == 'qqp' or task_name == 'mnli':
+        if task_name == 'qqp':
             input_ids_1, seq_len_1, input_ids_2, seq_len_2, labels = batch
             logits = model(input_ids_1, seq_len_1, input_ids_2, seq_len_2)
         else:
@@ -110,13 +104,6 @@ def evaluate(task_name, model, loss_fct, metric, data_loader):
                 res[2],
                 res[3],
                 res[4], ),
-            end='')
-    elif isinstance(metric, Mcc):
-        print("eval loss: %f, mcc: %s, " % (loss.numpy(), res[0]), end='')
-    elif isinstance(metric, PearsonAndSpearman):
-        print(
-            "eval loss: %f, pearson: %s, spearman: %s, pearson and spearman: %s, "
-            % (loss.numpy(), res[0], res[1], res[2]),
             end='')
     else:
         print("eval loss: %f, acc: %s, " % (loss.numpy(), res), end='')
@@ -145,15 +132,13 @@ def do_train(
         train_data_loader, dev_data_loader = create_pair_loader_for_small_model(
             task_name=task_name,
             batch_size=batch_size,
-            language='en',
             max_seq_length=max_seq_length,
             vocab_path=vocab_path,
             use_gpu=True)
-    elif task_name == 'senta':  # lan: cn
+    elif task_name == 'senta':
         train_data_loader, dev_data_loader = create_data_loader_for_small_model(
             task_name=task_name,
             batch_size=batch_size,
-            language='cn',
             max_seq_length=max_seq_length,
             vocab_path=vocab_path,
             use_gpu=True)
@@ -161,7 +146,6 @@ def do_train(
         train_data_loader, dev_data_loader = create_data_loader_for_small_model(
             task_name=task_name,
             batch_size=batch_size,
-            language='en',
             max_seq_length=max_seq_length,
             vocab_path=vocab_path,
             use_gpu=True)
@@ -190,7 +174,7 @@ def do_train(
     tic_train = time.time()
     for epoch in range(num_epoch):
         for i, batch in enumerate(train_data_loader):
-            if task_name == 'qqp' or task_name == 'mnli':
+            if task_name == 'qqp':
                 input_ids_1, seq_len_1, input_ids_2, seq_len_2, labels = batch
                 logits = model(input_ids_1, seq_len_1, input_ids_2, seq_len_2)
             else:
@@ -210,19 +194,10 @@ def do_train(
                         % (global_step, epoch, i, loss,
                            save_steps / (time.time() - tic_train)))
                     tic_eval = time.time()
-                    if task_name == 'mnli':
-                        evaluate(task_name, model, loss_fct, metric,
-                                 dev_data_loader_matched)
-                        evaluate(task_name, model, loss_fct, metric,
-                                 dev_data_loader_mismatched)
-                        print("eval done total : %s s" %
-                              (time.time() - tic_eval))
 
-                    else:
-                        evaluate(task_name, model, loss_fct, metric,
-                                 dev_data_loader)
-                        print("eval done total : %s s" %
-                              (time.time() - tic_eval))
+                    evaluate(task_name, model, loss_fct, metric,
+                             dev_data_loader)
+                    print("eval done total : %s s" % (time.time() - tic_eval))
                 tic_train = time.time()
             global_step += 1
 
@@ -236,14 +211,14 @@ if __name__ == '__main__':
     }
     # task_name = 'senta'
     # task_name = 'sst-2'
-    paddle.seed(2021)  # (202)
+    paddle.seed(2021)
     task_name = 'qqp'
     if task_name == 'senta':
         do_train(
             task_name=task_name,
             vocab_size=vocab_size_dict[task_name],
             batch_size=64,
-            lr=3e-4,  # 2e-4
+            lr=3e-4,
             opt='adam',
             num_epoch=20,
             dropout_prob=0.2,
@@ -256,7 +231,7 @@ if __name__ == '__main__':
             batch_size=64,
             lr=1.0,
             num_epoch=10,
-            dropout_prob=0.3,
+            dropout_prob=0.4,
             use_pretrained_w2v=True)
     else:  # qqp
         do_train(

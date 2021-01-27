@@ -4,13 +4,13 @@ from run_bert_finetune import convert_example
 
 
 def convert_small_example(example,
+                          task_name,
                           vocab,
-                          language='en',
                           is_tokenized=False,
                           max_seq_length=128,
                           is_test=False):
     input_ids = []
-    if language == 'cn':
+    if task_name == 'senta':
         for i, token in enumerate(jieba.cut(example[0])):
             if i == max_seq_length:
                 break
@@ -22,6 +22,7 @@ def convert_small_example(example,
         else:
             tokens = vocab(example[0])[:max_seq_length]
         input_ids = vocab.convert_tokens_to_ids(tokens)
+
     valid_length = np.array(len(input_ids), dtype='int64')
 
     if not is_test:
@@ -32,15 +33,16 @@ def convert_small_example(example,
 
 
 def convert_pair_example(example,
+                         task_name,
                          vocab,
-                         language,
                          is_tokenized=True,
                          max_seq_length=128,
                          is_test=False):
-    seq1 = convert_small_example([example[0], example[2]], vocab, language,
+    is_tokenized &= (task_name != 'senta')
+    seq1 = convert_small_example([example[0], example[2]], task_name, vocab,
                                  is_tokenized, max_seq_length, is_test)[:2]
 
-    seq2 = convert_small_example([example[1], example[2]], vocab, language,
+    seq2 = convert_small_example([example[1], example[2]], task_name, vocab,
                                  is_tokenized, max_seq_length, is_test)
     pair_features = seq1 + seq2
 
@@ -54,9 +56,8 @@ def convert_two_example(example,
                         max_seq_length,
                         vocab,
                         is_tokenized=True,
-                        language='en',
                         is_test=False):
-    is_tokenized &= (language == 'en')
+    is_tokenized &= (task_name != 'senta')
     bert_features = convert_example(
         example,
         tokenizer=tokenizer,
@@ -66,8 +67,9 @@ def convert_two_example(example,
         is_test=is_test)
     if task_name == 'qqp' or task_name == 'mnli':
         small_features = convert_pair_example(
-            example, vocab, language, is_tokenized, max_seq_length, is_test)
+            example, task_name, vocab, is_tokenized, max_seq_length, is_test)
     else:
         small_features = convert_small_example(
-            example, vocab, language, is_tokenized, max_seq_length, is_test)
+            example, task_name, vocab, is_tokenized, max_seq_length, is_test)
+
     return bert_features[:2] + small_features
