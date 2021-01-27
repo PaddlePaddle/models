@@ -58,7 +58,8 @@ class LinearChainCrf(nn.Layer):
 
     def _initialize_alpha(self, batch_size):
         # alpha accumulate the path value to get the different next tag
-        if self._initial_alpha is None:
+        if self._initial_alpha is None or batch_size > self._initial_alpha.shape[
+                0]:
             # Initialized by a small value.
             initial_alpha = paddle.full(
                 (batch_size, self.num_tags - 1),
@@ -69,7 +70,7 @@ class LinearChainCrf(nn.Layer):
                 (batch_size, 1), dtype='float32', fill_value=0.)
             self._initial_alpha = paddle.concat(
                 [initial_alpha, alpha_start], axis=1)
-        return self._initial_alpha
+        return self._initial_alpha[:batch_size, :]
 
     def forward(self, inputs, lengths):
         """
@@ -99,7 +100,7 @@ class LinearChainCrf(nn.Layer):
 
         all_alpha = []
         if self.with_start_stop_tag:
-            alpha = self._initialize_alpha(batch_size).detach()
+            alpha = self._initialize_alpha(batch_size)
 
         for i, input_exp in enumerate(inputs_t_exp):
             # input_exp: batch_size, num_tags, num_tags
@@ -208,7 +209,8 @@ class LinearChainCrf(nn.Layer):
         return score
 
     def _get_start_stop_tensor(self, batch_size):
-        if self._start_tensor is None or self._stop_tensor is None:
+        if self._start_tensor is None or self._stop_tensor is None or batch_size != self._start_tensor.shape[
+                0]:
             self._start_tensor = paddle.full(
                 (batch_size, 1), dtype='int64', fill_value=self.start_idx)
             self._stop_tensor = paddle.full(
@@ -216,7 +218,8 @@ class LinearChainCrf(nn.Layer):
         return self._start_tensor, self._stop_tensor
 
     def _get_batch_index(self, batch_size):
-        if self._batch_index is None:
+        if self._batch_index is None or batch_size != self._batch_index.shape[
+                0]:
             self._batch_index = paddle.arange(end=batch_size, dtype="int64")
         return self._batch_index
 
@@ -227,13 +230,13 @@ class LinearChainCrf(nn.Layer):
 
     def _get_batch_seq_index(self, batch_size, length):
         if self._batch_seq_index is None or length + 2 > self._batch_seq_index.shape[
-                1]:
+                1] or batch_size > self._batch_seq_index.shape[0]:
             self._batch_seq_index = paddle.cumsum(
                 paddle.ones([batch_size, length + 2], "int64"), axis=1) - 1
         if self.with_start_stop_tag:
-            return self._batch_seq_index[:, :length + 2]
+            return self._batch_seq_index[:batch_size, :length + 2]
         else:
-            return self._batch_seq_index[:, :length]
+            return self._batch_seq_index[:batch_size, :length]
 
 
 class LinearChainCrfLoss(nn.Layer):
@@ -251,7 +254,7 @@ class LinearChainCrfLoss(nn.Layer):
         self.crf = crf
         if isinstance(crf, paddle.fluid.framework.ParamBase):
             raise ValueError(
-                "From paddlenlp >= 2.0.0b4, the first param of LinearChainCrfLoss shoule be a LinearChainCrf object, see the new example in https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/lexical_analysis"
+                "From paddlenlp >= 2.0.0b4, the first param of LinearChainCrfLoss shoule be a LinearChainCrf object. For input parameter 'crf.transitions', you can remove '.transitions' to 'crf'"
             )
 
     def forward(self, inputs, lengths, predictions, labels):
@@ -288,7 +291,8 @@ class ViterbiDecoder(nn.Layer):
 
     def _initialize_alpha(self, batch_size):
         # alpha accumulate the path value to get the different next tag
-        if self._initial_alpha is None:
+        if self._initial_alpha is None or batch_size > self._initial_alpha.shape[
+                0]:
             # Initialized by a small value.
             initial_alpha = paddle.full(
                 (batch_size, self.num_tags - 1),
@@ -299,7 +303,7 @@ class ViterbiDecoder(nn.Layer):
                 (batch_size, 1), dtype='float32', fill_value=0.)
             self._initial_alpha = paddle.concat(
                 [initial_alpha, alpha_start], axis=1)
-        return self._initial_alpha
+        return self._initial_alpha[:batch_size, :]
 
     def forward(self, inputs, lengths):
         """
@@ -321,7 +325,7 @@ class ViterbiDecoder(nn.Layer):
         historys = []
 
         if self.with_start_stop_tag:
-            alpha = self._initialize_alpha(batch_size).detach()
+            alpha = self._initialize_alpha(batch_size)
         else:
             alpha = paddle.zeros((batch_size, self.num_tags), dtype='float32')
 
@@ -378,6 +382,7 @@ class ViterbiDecoder(nn.Layer):
         return scores, batch_path
 
     def _get_batch_index(self, batch_size):
-        if self._batch_index is None:
+        if self._batch_index is None or batch_size != self._batch_index.shape[
+                0]:
             self._batch_index = paddle.arange(end=batch_size, dtype="int64")
         return self._batch_index
