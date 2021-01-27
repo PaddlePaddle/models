@@ -74,8 +74,8 @@ class BiGruCrf(nn.Layer):
 
         self.fc = nn.Linear(
             in_features=self.hidden_size * 2,
-            out_features=self.num_labels + 2
-            if with_start_stop_tag else self.num_labels,
+            out_features=self.num_labels + 2 \
+                if with_start_stop_tag else self.num_labels,
             weight_attr=paddle.ParamAttr(
                 initializer=nn.initializer.Uniform(
                     low=-self.init_bound, high=self.init_bound),
