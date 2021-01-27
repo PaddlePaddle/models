@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
 
 import io
 import os
-import six
 import string
 
 import numpy as np
 import paddle
 from paddle.io import Dataset
-from paddle.utils.download import get_path_from_url
+
 from paddlenlp.utils.env import DATA_HOME
+from paddlenlp.utils.downloader import get_path_from_url
 
 __all__ = ['Imdb']
 
@@ -73,7 +73,6 @@ class Imdb(Dataset):
             return all_samples
 
         data_set = _load_data("pos")
-        np.random.shuffle(data_set)
         data_set.extend(_load_data("neg"))
         np.random.shuffle(data_set)
 
