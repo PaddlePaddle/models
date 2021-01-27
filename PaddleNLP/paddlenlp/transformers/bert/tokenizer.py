@@ -342,17 +342,6 @@ class BertTokenizer(PretrainedTokenizer):
                 split_tokens.append(sub_token)
         return split_tokens
 
-    def __call__(self, text):
-        """
-        End-to-end tokenization for BERT models.
-        Args:
-            text (str): The text to be tokenized.
-        
-        Returns:
-            list: A list of string representing converted tokens.
-        """
-        return self._tokenize(text)
-
     def convert_tokens_to_string(self, tokens):
         """
         Converts a sequence of tokens (list of string) in a single string. Since
@@ -446,7 +435,7 @@ class BertTokenizer(PretrainedTokenizer):
                text,
                text_pair=None,
                max_seq_len=None,
-               pad_to_max_seq_len=True,
+               pad_to_max_seq_len=False,
                truncation_strategy="longest_first",
                return_position_ids=True,
                return_segment_ids=True,
@@ -552,6 +541,7 @@ class BertTokenizer(PretrainedTokenizer):
         total_len = len_ids + len_pair_ids + (self.num_special_tokens_to_add(
             pair=pair))
         if max_seq_len and total_len > max_seq_len:
+
             ids, pair_ids, overflowing_tokens = self.truncate_sequences(
                 ids,
                 pair_ids=pair_ids,
@@ -561,7 +551,7 @@ class BertTokenizer(PretrainedTokenizer):
                 encoded_inputs["overflowing_tokens"] = overflowing_tokens
                 encoded_inputs["num_truncated_tokens"] = total_len - max_seq_len
 
-        # Add special tokens
+# Add special tokens
         sequence = self.build_inputs_with_special_tokens(ids, pair_ids)
         segment_ids = self.create_token_type_ids_from_sequences(ids, pair_ids)
 
@@ -609,3 +599,210 @@ class BertTokenizer(PretrainedTokenizer):
                 range(len(encoded_inputs["input_ids"])))
 
         return encoded_inputs
+
+    def batch_encode(self,
+                     batch_text_or_text_pairs,
+                     max_seq_len=None,
+                     pad_to_max_seq_len=False,
+                     stride=0,
+                     is_split_into_words=False,
+                     truncation_strategy="longest_first",
+                     return_position_ids=True,
+                     return_segment_ids=True,
+                     return_input_mask=True,
+                     return_length=True,
+                     return_overflowing_tokens=False,
+                     return_special_tokens_mask=False):
+        """
+        Returns a dictionary containing the encoded sequence or sequence pair and additional information:
+        the mask for sequence classification and the overflowing elements if a ``max_seq_len`` is specified.
+
+        Args:
+            text (:obj:`str`, :obj:`List[str]` or :obj:`List[int]`):
+                The first sequence to be encoded. This can be a string, a list of strings (tokenized string using
+                the `tokenize` method) or a list of integers (tokenized string ids using the `convert_tokens_to_ids`
+                method)
+            text_pair (:obj:`str`, :obj:`List[str]` or :obj:`List[int]`, `optional`, defaults to :obj:`None`):
+                Optional second sequence to be encoded. This can be a string, a list of strings (tokenized
+                string using the `tokenize` method) or a list of integers (tokenized string ids using the
+                `convert_tokens_to_ids` method)
+            max_seq_len (:obj:`int`, `optional`, defaults to :int:`None`):
+                If set to a number, will limit the total sequence returned so that it has a maximum length.
+                If there are overflowing tokens, those will be added to the returned dictionary
+            pad_to_max_seq_len (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                If set to True, the returned sequences will be padded according to the model's padding side and
+                padding index, up to their max length. If no max length is specified, the padding is done up to the
+                model's max length.
+            truncation_strategy (:obj:`str`, `optional`, defaults to `longest_first`):
+                String selected in the following options:
+
+                - 'longest_first' (default) Iteratively reduce the inputs sequence until the input is under max_seq_len
+                  starting from the longest one at each token (when there is a pair of input sequences)
+                - 'only_first': Only truncate the first sequence
+                - 'only_second': Only truncate the second sequence
+                - 'do_not_truncate': Does not truncate (raise an error if the input sequence is longer than max_seq_len)
+            return_position_ids (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Set to True to return tokens position ids (default True).
+            return_segment_ids (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Whether to return token type IDs.
+            return_input_mask (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Whether to return the attention mask.
+            return_length (:obj:`int`, defaults to :obj:`True`):
+                If set the resulting dictionary will include the length of each encoded inputs
+            return_overflowing_tokens (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                Set to True to return overflowing token information (default False).
+            return_special_tokens_mask (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                Set to True to return special tokens mask information (default False).
+
+        Return:
+            A Dictionary of shape::
+
+                {
+                    input_ids: list[int],
+                    position_ids: list[int] if return_position_ids is True (default)
+                    segment_ids: list[int] if return_segment_ids is True (default)
+                    input_mask: list[int] if return_input_mask is True (default)
+                    seq_len: int if return_length is True (default)
+                    overflowing_tokens: list[int] if a ``max_seq_len`` is specified and return_overflowing_tokens is True
+                    num_truncated_tokens: int if a ``max_seq_len`` is specified and return_overflowing_tokens is True
+                    special_tokens_mask: list[int] if return_special_tokens_mask is True
+                }
+
+            With the fields:
+
+            - ``input_ids``: list of token ids to be fed to a model
+            - ``position_ids``: list of token position ids to be fed to a model
+            - ``segment_ids``: list of token type ids to be fed to a model
+            - ``input_mask``: list of indices specifying which tokens should be attended to by the model
+            - ``length``: the input_ids length
+            - ``overflowing_tokens``: list of overflowing tokens if a max length is specified.
+            - ``num_truncated_tokens``: number of overflowing tokens a ``max_seq_len`` is specified
+            - ``special_tokens_mask``: if adding special tokens, this is a list of [0, 1], with 0 specifying special added
+              tokens and 1 specifying sequence tokens.
+        """
+
+        def get_input_ids(text):
+            if isinstance(text, str):
+                tokens = self._tokenize(text)
+                return self.convert_tokens_to_ids(tokens)
+            elif isinstance(text,
+                            (list, tuple)) and len(text) > 0 and isinstance(
+                                text[0], str):
+                return self.convert_tokens_to_ids(text)
+            elif isinstance(text,
+                            (list, tuple)) and len(text) > 0 and isinstance(
+                                text[0], int):
+                return text
+            else:
+                raise ValueError(
+                    "Input is not valid. Should be a string, a list/tuple of strings or a list/tuple of integers."
+                )
+
+        input_ids = []
+        for ids_or_pair_ids in batch_text_or_text_pairs:
+            if not isinstance(ids_or_pair_ids, (list, tuple)):
+                ids, pair_ids = ids_or_pair_ids, None
+            elif is_split_into_words and not isinstance(ids_or_pair_ids[0],
+                                                        (list, tuple)):
+                ids, pair_ids = ids_or_pair_ids, None
+            else:
+                ids, pair_ids = ids_or_pair_ids
+
+            first_ids = get_input_ids(ids)
+            second_ids = get_input_ids(
+                pair_ids) if pair_ids is not None else None
+            input_ids.append((first_ids, second_ids))
+
+        batch_encode_inputs = []
+        for example_id, (first_ids, second_ids) in enumerate(input_ids):
+            if stride != 0 and second_ids is not None:
+
+                encoded_inputs = {}
+
+                max_len_for_pair = max_seq_len - len(first_ids) - 3
+
+                offset = 0
+                while offset < len(second_ids):
+                    length = len(second_ids) - offset
+                    if length > max_len_for_pair:
+                        length = max_len_for_pair
+
+                    ids = first_ids
+                    pair_ids = second_ids[offset:offset + length]
+
+                    sequence = self.build_inputs_with_special_tokens(ids,
+                                                                     pair_ids)
+                    segment_ids = self.create_token_type_ids_from_sequences(
+                        ids, pair_ids)
+
+                    # Build output dictionnary
+                    encoded_inputs["input_ids"] = sequence
+                    if return_segment_ids:
+                        encoded_inputs["segment_ids"] = segment_ids
+                    if return_special_tokens_mask:
+                        encoded_inputs[
+                            "special_tokens_mask"] = self.get_special_tokens_mask(
+                                ids, pair_ids)
+                    if return_length:
+                        encoded_inputs["seq_len"] = len(encoded_inputs[
+                            "input_ids"])
+
+                    # Check lengths
+                    assert max_seq_len is None or len(encoded_inputs[
+                        "input_ids"]) <= max_seq_len
+
+                    # Padding
+                    needs_to_be_padded = pad_to_max_seq_len and \
+                                        max_seq_len and len(encoded_inputs["input_ids"]) < max_seq_len
+
+                    if needs_to_be_padded:
+                        difference = max_seq_len - len(encoded_inputs[
+                            "input_ids"])
+                        if return_input_mask:
+                            encoded_inputs["input_mask"] = [1] * len(
+                                encoded_inputs["input_ids"]) + [0] * difference
+                        if return_segment_ids:
+                            # 0 for padding token mask
+                            encoded_inputs["segment_ids"] = (
+                                encoded_inputs["segment_ids"] + [0] * difference
+                            )
+                        if return_special_tokens_mask:
+                            encoded_inputs[
+                                "special_tokens_mask"] = encoded_inputs[
+                                    "special_tokens_mask"] + [1] * difference
+                        encoded_inputs["input_ids"] = encoded_inputs[
+                            "input_ids"] + [self.pad_token_id] * difference
+                    else:
+                        if return_input_mask:
+                            encoded_inputs["input_mask"] = [1] * len(
+                                encoded_inputs["input_ids"])
+
+                    if return_position_ids:
+                        encoded_inputs["position_ids"] = list(
+                            range(len(encoded_inputs["input_ids"])))
+
+                    encoded_inputs['offest'] = offset
+                    encoded_inputs['overflow_to_sample'] = example_id
+
+                    if offset + length == len(second_ids):
+                        break
+                    offset += min(length, stride)
+
+                    batch_encode_inputs.append(encoded_inputs)
+
+            else:
+                batch_encode_inputs.append(
+                    self.encode(
+                        first_ids,
+                        second_ids,
+                        max_seq_len=max_seq_len,
+                        pad_to_max_seq_len=pad_to_max_seq_len,
+                        truncation_strategy=truncation_strategy,
+                        return_position_ids=return_position_ids,
+                        return_segment_ids=return_segment_ids,
+                        return_input_mask=return_input_mask,
+                        return_length=return_length,
+                        return_overflowing_tokens=return_overflowing_tokens,
+                        return_special_tokens_mask=return_special_tokens_mask))
+
+        return batch_encode_inputs

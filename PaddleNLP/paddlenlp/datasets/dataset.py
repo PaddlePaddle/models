@@ -24,11 +24,9 @@ from paddle.io import Dataset
 from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME
+from typing import Iterable, Iterator, Optional, List, Any, Callable, Union
 
-__all__ = [
-    'MapDatasetWrapper',
-    'TSVDataset',
-]
+__all__ = ['MapDatasetWrapper', 'DatasetReader', 'TSVDataset']
 
 
 @classmethod
@@ -174,10 +172,193 @@ class MapDatasetWrapper(Dataset):
             self.new_data = [
                 fn(self.new_data[idx]) for idx in range(len(self.new_data))
             ]
+
+        return self
+
+    def map(self, fn, lazy=False):
+        """
+        Performs specific function on the dataset to transform every sample.
+        Args:
+            fn (callable): Transformations to be performed. It receives single
+                sample as argument rather than dataset.
+            lazy (bool, optional): If True, transformations would be delayed and
+                performed on demand. Otherwise, transforms all samples at once
+                and return a new MapDatasetWrapper instance. Note that if `fn` is
+                stochastic, `lazy` should be True or you will get the same
+                result on all epochs. Defalt: False.
+        Returns:
+            MapDatasetWrapper: A new MapDatasetWrapper instance if `lazy` is True, \
+                otherwise bind `fn` as a property to transform on demand.
+        """
+        if lazy:
+            self._transform_pipline.append(fn)
+        else:
+            self.new_data = fn(self.new_data)
         return self
 
     def __getattr__(self, name):
         return getattr(self.data, name)
+
+
+class DatasetReader:
+    def __init__(self, lazy: bool=False, max_examples: Optional[int]=None):
+
+        self.lazy = lazy
+        self.max_examples = max_examples
+
+    def get_datasets(self, *args):
+        datasets = []
+        for arg in args:
+            if os.path.exists(arg):
+                datasets.append(self.read(arg))
+            else:
+                root = self._get_data(arg)
+                datasets.append(self.read(root))
+
+        return datasets
+
+    def read(self, root):
+        """
+        Returns an dataset containing all the instances that can be read from the file path.
+        If `self.lazy` is `False`, this eagerly reads all instances from `self._read()`
+        and returns an `AllennlpDataset`.
+        If `self.lazy` is `True`, this returns an `AllennlpLazyDataset`, which internally
+        relies on the generator created from `self._read()` to lazily produce `Instance`s.
+        In this case your implementation of `_read()` must also be lazy
+        (that is, not load all instances into memory at once), otherwise
+        you will get a `ConfigurationError`.
+        In either case, the returned `Iterable` can be iterated
+        over multiple times. It's unlikely you want to override this function,
+        but if you do your result should likewise be repeatedly iterable.
+        """
+        if not isinstance(root, str):
+            root = str(root)
+
+        lazy = getattr(self, "lazy", None)
+        '''
+        if lazy is None:
+            warnings.warn(
+                "DatasetReader.lazy is not set, "
+                "did you forget to call the superclass constructor?",
+                UserWarning,
+            )
+        '''
+        if lazy:
+            pass
+            #return AllennlpLazyDataset(self._instance_iterator, root)
+        else:
+
+            examples = self._read(root)
+
+            # Then some validation.
+            if not isinstance(examples, list):
+                examples = list(examples)
+
+            if not examples:
+                raise ValueError(
+                    "No instances were read from the given filepath {}. "
+                    "Is the path correct?".format(root))
+
+            label_list = self.get_labels()
+
+            if label_list:
+                if 'label' not in examples[0].keys():
+                    raise ValueError(
+                        "Keyword 'label' should be in example if get_label() is specified."
+                    )
+
+                label_dict = {}
+                for i, label in enumerate(label_list):
+                    label_dict[label] = i
+
+                for idx in range(len(examples)):
+                    for label_idx in range(len(examples[idx]['label'])):
+                        examples[idx]['label'][label_idx] = label_dict[examples[
+                            idx]['label'][label_idx]]
+
+            return MapDatasetWrapper(examples)
+
+    def _read(self, file_path: str):
+        """
+        Reads the instances from the given file_path and returns them as an
+        `Iterable` (which could be a list or could be a generator).
+        You are strongly encouraged to use a generator, so that users can
+        read a dataset in a lazy way, if they so choose.
+        """
+        raise NotImplementedError
+
+    def _get_data(self, mode: str):
+        """
+        Reads the instances from the given file_path and returns them as an
+        `Iterable` (which could be a list or could be a generator).
+        You are strongly encouraged to use a generator, so that users can
+        read a dataset in a lazy way, if they so choose.
+        """
+        raise NotImplementedError
+
+    def get_labels(self):
+
+        return None
+
+    '''
+    def _instance_iterator(self, file_path: str) -> Iterable[Instance]:
+        cache_file: Optional[str] = None
+        if self._cache_directory:
+            cache_file = self._get_cache_location_for_file_path(file_path)
+
+        if cache_file is not None and os.path.exists(cache_file):
+            cache_file_lock = FileLock(cache_file + ".lock", timeout=self.CACHE_FILE_LOCK_TIMEOUT)
+            try:
+                cache_file_lock.acquire()
+                # We make an assumption here that if we can obtain the lock, no one will
+                # be trying to write to the file anymore, so it should be safe to release the lock
+                # before reading so that other processes can also read from it.
+                cache_file_lock.release()
+                logger.info("Reading instances from cache %s", cache_file)
+                with open(cache_file) as data_file:
+                    yield from self._multi_worker_islice(
+                        data_file, transform=self.deserialize_instance
+                    )
+            except Timeout:
+                logger.warning(
+                    "Failed to acquire lock on dataset cache file within %d seconds. "
+                    "Cannot use cache to read instances.",
+                    self.CACHE_FILE_LOCK_TIMEOUT,
+                )
+                yield from self._multi_worker_islice(self._read(file_path), ensure_lazy=True)
+        elif cache_file is not None and not os.path.exists(cache_file):
+            instances = self._multi_worker_islice(self._read(file_path), ensure_lazy=True)
+            # The cache file doesn't exist so we'll try writing to it.
+            if self.max_instances is not None:
+                # But we don't write to the cache when max_instances is specified.
+                logger.warning("Skipping writing to data cache since max_instances was specified.")
+                yield from instances
+            elif util.is_distributed() or (get_worker_info() and get_worker_info().num_workers):
+                # We also shouldn't write to the cache if there's more than one process loading
+                # instances since each worker only receives a partial share of the instances.
+                logger.warning(
+                    "Can't cache data instances when there are multiple processes loading data"
+                )
+                yield from instances
+            else:
+                try:
+                    with FileLock(cache_file + ".lock", timeout=self.CACHE_FILE_LOCK_TIMEOUT):
+                        with CacheFile(cache_file, mode="w+") as cache_handle:
+                            logger.info("Caching instances to temp file %s", cache_handle.name)
+                            for instance in instances:
+                                cache_handle.write(self.serialize_instance(instance) + "\n")
+                                yield instance
+                except Timeout:
+                    logger.warning(
+                        "Failed to acquire lock on dataset cache file within %d seconds. "
+                        "Cannot write to cache.",
+                        self.CACHE_FILE_LOCK_TIMEOUT,
+                    )
+                    yield from instances
+        else:
+            # No cache.
+            yield from self._multi_worker_islice(self._read(file_path), ensure_lazy=True)
+    '''
 
 
 class TSVDataset(Dataset):

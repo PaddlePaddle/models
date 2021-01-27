@@ -14,11 +14,7 @@
 
 import numpy as np
 
-__all__ = [
-    'Stack',
-    'Pad',
-    'Tuple',
-]
+__all__ = ['Stack', 'Pad', 'Tuple', 'Dict']
 
 
 class Stack(object):
@@ -195,6 +191,58 @@ class Tuple(object):
         ret = []
         for i, ele_fn in enumerate(self._fn):
             result = ele_fn([ele[i] for ele in data])
+            if isinstance(result, (tuple, list)):
+                ret.extend(result)
+            else:
+                ret.append(result)
+        return tuple(ret)
+
+
+class Dict(object):
+    """
+    Wrap multiple batchify functions together. The input functions will be applied
+    to the corresponding input fields.
+    
+    Each sample should be a list or tuple containing multiple fields. The i'th
+    batchify function stored in Tuple will be applied on the i'th field. 
+    
+    For example, when data sample is (nd_data, label), you can wrap two batchify
+    functions using `Tuple(DataBatchify, LabelBatchify)` to batchify nd_data and
+    label correspondingly.
+    Args:
+        fn (list|tuple|callable): The batchify functions to wrap.
+        *args (tuple of callable): The additional batchify functions to wrap.
+    Example:
+        .. code-block:: python
+            from paddle.incubate.hapi.text.data_utils import Tuple, Pad, Stack
+            batchify_fn = Tuple(Pad(axis=0, pad_val=0), Stack())
+    """
+
+    def __init__(self, fn):
+        assert isinstance(fn, (dict)), 'Input pattern not understood. The input of Dict must be a dict with key of input column name and value of collate_fn ' \
+                                   'Received fn=%s' % (str(fn))
+
+        self._fn = fn
+
+        for col_name, ele_fn in self._fn.items():
+            assert callable(
+                ele_fn
+            ), 'Batchify functions must be callable! type(fn[%d]) = %s' % (
+                i, str(type(ele_fn)))
+
+    def __call__(self, data):
+        """
+        Batchify data samples by applying each function on the corresponding data
+        field, and each data field is produced by stacking the field data of samples.
+        Args:
+            data (list): The samples to batchfy. Each sample should contain N fields.
+        Returns:
+            tuple: A tuple composed of results from all including batchifying functions.
+        """
+
+        ret = []
+        for col_name, ele_fn in self._fn.items():
+            result = ele_fn([ele[col_name] for ele in data])
             if isinstance(result, (tuple, list)):
                 ret.extend(result)
             else:

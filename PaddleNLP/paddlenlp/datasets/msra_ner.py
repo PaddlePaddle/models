@@ -20,13 +20,61 @@ from paddle.io import Dataset
 from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME
+from paddlenlp.datasets import DatasetReader
 
 from .dataset import TSVDataset
 
-__all__ = ['MSRA_NER']
+__all__ = ['MSRA_NER', 'MSRA_NER_old']
 
 
-class MSRA_NER(TSVDataset):
+class MSRA_NER(DatasetReader):
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
+    MD5 = None
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+    SPLITS = {
+        'train': META_INFO(os.path.join('msra_ner', 'train.tsv'), None),
+        'test': META_INFO(os.path.join('msra_ner', 'test.tsv'), None)
+    }
+
+    def _get_data(self, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, self.__class__.__name__)
+        filename, data_hash = self.SPLITS[mode]
+        fullname = os.path.join(default_root, filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+
+            get_path_from_url(self.URL, default_root, self.MD5)
+            fullname = os.path.join(default_root, filename)
+
+        return fullname
+
+    def _read(self, filename):
+        examples = []
+
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                line_stripped = line.strip().split('\t')
+
+                if not line_stripped:
+                    break
+
+                if len(line_stripped) == 2:
+                    tokens = line_stripped[0].split("\002")
+                    tags = line_stripped[1].split("\002")
+                else:
+                    tokens = line_stripped.split("\002")
+                    tags = []
+
+                examples.append({"tokens": tokens, "label": tags})
+
+        return examples
+
+    def get_labels(self):
+
+        return ["B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "O"]
+
+
+class MSRA_NER_old(TSVDataset):
     URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple(
@@ -36,12 +84,12 @@ class MSRA_NER(TSVDataset):
             os.path.join('msra_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
             (0, 1),
-            1, ),
+            0, ),
         'test': META_INFO(
             os.path.join('msra_ner', 'test.tsv'),
             '2f27ae68b5f61d6553ffa28bb577c8a7',
             (0, 1),
-            1, ),
+            0, ),
     }
 
     def __init__(self, mode='train', root=None, **kwargs):
@@ -59,7 +107,7 @@ class MSRA_NER(TSVDataset):
                         filename, self.__class__.__name__, default_root))
             path = get_path_from_url(self.URL, default_root, self.MD5)
             fullname = os.path.join(default_root, filename)
-        super(MSRA_NER, self).__init__(
+        super(MSRA_NER_old, self).__init__(
             fullname,
             field_indices=field_indices,
             num_discard_samples=num_discard_samples,

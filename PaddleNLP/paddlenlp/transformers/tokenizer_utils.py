@@ -21,6 +21,7 @@ import json
 import os
 import six
 import unicodedata
+from typing import Iterable, Iterator, Optional, List, Any, Callable, Union
 
 from paddlenlp.utils.downloader import get_path_from_url
 from paddlenlp.utils.env import MODEL_HOME
@@ -127,6 +128,87 @@ class PretrainedTokenizer(object):
     pretrained_init_configuration = {}
     resource_files_names = {}  # keys are arguments of __init__
     pretrained_resource_files_map = {}
+
+    def __call__(self,
+                 text,
+                 text_pair=None,
+                 max_seq_len: Optional[int]=None,
+                 stride=0,
+                 is_split_into_words=False,
+                 pad_to_max_seq_len=False,
+                 truncation_strategy="longest_first",
+                 return_position_ids=True,
+                 return_segment_ids=True,
+                 return_input_mask=True,
+                 return_length=True,
+                 return_overflowing_tokens=False,
+                 return_special_tokens_mask=False):
+        """
+        Main method to tokenize and prepare for the model one or several sequence(s) or one or several pair(s) of
+        sequences.
+
+        Args:
+            text (:obj:`str`, :obj:`List[str]`, :obj:`List[List[str]]`):
+                The sequence or batch of sequences to be encoded. Each sequence can be a string or a list of strings
+                (pretokenized string). If the sequences are provided as list of strings (pretokenized), you must set
+                :obj:`is_split_into_words=True` (to lift the ambiguity with a batch of sequences).
+            text_pair (:obj:`str`, :obj:`List[str]`, :obj:`List[List[str]]`):
+                The sequence or batch of sequences to be encoded. Each sequence can be a string or a list of strings
+                (pretokenized string). If the sequences are provided as list of strings (pretokenized), you must set
+                :obj:`is_split_into_words=True` (to lift the ambiguity with a batch of sequences).
+        """
+        # Input type checking for clearer error
+        assert isinstance(text, str) or (
+            isinstance(text, (list, tuple)) and (len(text) == 0 or (
+                isinstance(text[0], str) or
+                (isinstance(text[0], (list, tuple)) and
+                 (len(text[0]) == 0 or isinstance(text[0][0], str)))))
+        ), ("text input must of type `str` (single example), `List[str]` (batch or single pretokenized example) "
+            "or `List[List[str]]` (batch of pretokenized examples).")
+
+        assert (text_pair is None or isinstance(text_pair, str) or (
+            isinstance(text_pair, (list, tuple)) and (len(text_pair) == 0 or (
+                isinstance(text_pair[0], str) or
+                (isinstance(text_pair[0], (list, tuple)) and
+                 (len(text_pair[0]) == 0 or isinstance(text_pair[0][0], str)))))
+        )), (
+            "text_pair input must of type `str` (single example), `List[str]` (batch or single pretokenized example) "
+            "or `List[List[str]]` (batch of pretokenized examples).")
+
+        is_batched = bool(
+            (not is_split_into_words and isinstance(text, (list, tuple))) or
+            (is_split_into_words and isinstance(text, (list, tuple)) and
+             text and isinstance(text[0], (list, tuple))))
+
+        if is_batched:
+            batch_text_or_text_pairs = list(zip(
+                text, text_pair)) if text_pair is not None else text
+            return self.batch_encode(
+                batch_text_or_text_pairs=batch_text_or_text_pairs,
+                max_seq_len=max_seq_len,
+                stride=stride,
+                is_split_into_words=is_split_into_words,
+                pad_to_max_seq_len=pad_to_max_seq_len,
+                truncation_strategy="longest_first",
+                return_position_ids=return_position_ids,
+                return_segment_ids=return_segment_ids,
+                return_input_mask=return_input_mask,
+                return_length=return_length,
+                return_overflowing_tokens=return_overflowing_tokens,
+                return_special_tokens_mask=return_special_tokens_mask)
+        else:
+            return self.encode(
+                text=text,
+                text_pair=text_pair,
+                max_seq_len=max_seq_len,
+                pad_to_max_seq_len=pad_to_max_seq_len,
+                truncation_strategy="longest_first",
+                return_position_ids=return_position_ids,
+                return_segment_ids=return_segment_ids,
+                return_input_mask=return_input_mask,
+                return_length=return_length,
+                return_overflowing_tokens=return_overflowing_tokens,
+                return_special_tokens_mask=return_special_tokens_mask)
 
     def _wrap_init(self, original_init, *args, **kwargs):
         """
@@ -437,3 +519,101 @@ class PretrainedTokenizer(object):
                 "Truncation_strategy should be selected in ['longest_first', 'only_first', 'only_second', 'do_not_truncate']"
             )
         return (ids, pair_ids, overflowing_tokens)
+
+    def encode(self,
+               text,
+               text_pair=None,
+               max_seq_len=None,
+               pad_to_max_seq_len=True,
+               truncation_strategy="longest_first",
+               return_position_ids=True,
+               return_segment_ids=True,
+               return_input_mask=True,
+               return_length=True,
+               return_overflowing_tokens=False,
+               return_special_tokens_mask=False):
+        """
+        Returns a dictionary containing the encoded sequence or sequence pair and additional information:
+        the mask for sequence classification and the overflowing elements if a ``max_seq_len`` is specified.
+
+        Args:
+            text (:obj:`str`, :obj:`List[str]` or :obj:`List[int]`):
+                The first sequence to be encoded. This can be a string, a list of strings (tokenized string using
+                the `tokenize` method) or a list of integers (tokenized string ids using the `convert_tokens_to_ids`
+                method)
+            text_pair (:obj:`str`, :obj:`List[str]` or :obj:`List[int]`, `optional`, defaults to :obj:`None`):
+                Optional second sequence to be encoded. This can be a string, a list of strings (tokenized
+                string using the `tokenize` method) or a list of integers (tokenized string ids using the
+                `convert_tokens_to_ids` method)
+            max_seq_len (:obj:`int`, `optional`, defaults to :int:`None`):
+                If set to a number, will limit the total sequence returned so that it has a maximum length.
+                If there are overflowing tokens, those will be added to the returned dictionary
+            pad_to_max_seq_len (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                If set to True, the returned sequences will be padded according to the model's padding side and
+                padding index, up to their max length. If no max length is specified, the padding is done up to the
+                model's max length.
+            truncation_strategy (:obj:`str`, `optional`, defaults to `longest_first`):
+                String selected in the following options:
+
+                - 'longest_first' (default) Iteratively reduce the inputs sequence until the input is under max_seq_len
+                  starting from the longest one at each token (when there is a pair of input sequences)
+                - 'only_first': Only truncate the first sequence
+                - 'only_second': Only truncate the second sequence
+                - 'do_not_truncate': Does not truncate (raise an error if the input sequence is longer than max_seq_len)
+            return_position_ids (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Set to True to return tokens position ids (default True).
+            return_segment_ids (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Whether to return token type IDs.
+            return_input_mask (:obj:`bool`, `optional`, defaults to :obj:`True`):
+                Whether to return the attention mask.
+            return_length (:obj:`int`, defaults to :obj:`True`):
+                If set the resulting dictionary will include the length of each encoded inputs
+            return_overflowing_tokens (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                Set to True to return overflowing token information (default False).
+            return_special_tokens_mask (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                Set to True to return special tokens mask information (default False).
+
+        Return:
+            A Dictionary of shape::
+
+                {
+                    input_ids: list[int],
+                    position_ids: list[int] if return_position_ids is True (default)
+                    segment_ids: list[int] if return_segment_ids is True (default)
+                    input_mask: list[int] if return_input_mask is True (default)
+                    seq_len: int if return_length is True (default)
+                    overflowing_tokens: list[int] if a ``max_seq_len`` is specified and return_overflowing_tokens is True
+                    num_truncated_tokens: int if a ``max_seq_len`` is specified and return_overflowing_tokens is True
+                    special_tokens_mask: list[int] if return_special_tokens_mask is True
+                }
+
+            With the fields:
+
+            - ``input_ids``: list of token ids to be fed to a model
+            - ``position_ids``: list of token position ids to be fed to a model
+            - ``segment_ids``: list of token type ids to be fed to a model
+            - ``input_mask``: list of indices specifying which tokens should be attended to by the model
+            - ``length``: the input_ids length
+            - ``overflowing_tokens``: list of overflowing tokens if a max length is specified.
+            - ``num_truncated_tokens``: number of overflowing tokens a ``max_seq_len`` is specified
+            - ``special_tokens_mask``: if adding special tokens, this is a list of [0, 1], with 0 specifying special added
+              tokens and 1 specifying sequence tokens.
+        """
+        raise NotImplementedError
+
+    def batch_encode(self,
+                     batch_text_or_text_pairs=None,
+                     text_pair=None,
+                     max_seq_len=None,
+                     pad_to_max_seq_len=True,
+                     is_split_into_words=False,
+                     stride=0,
+                     truncation_strategy="longest_first",
+                     return_position_ids=True,
+                     return_segment_ids=True,
+                     return_input_mask=True,
+                     return_length=True,
+                     return_overflowing_tokens=False,
+                     return_special_tokens_mask=False):
+
+        raise NotImplementedError
