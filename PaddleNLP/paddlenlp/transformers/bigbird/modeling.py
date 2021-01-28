@@ -17,6 +17,7 @@ from paddle.nn import Linear, Dropout, LayerNorm, LayerList, Layer
 import paddle.nn.functional as F
 import paddle.nn as nn
 from ..attention_utils import _convert_param_attr_to_list, MultiHeadAttention, AttentionRegistry
+from .. import PretrainedModel, register_base_model
 
 
 class Mask(object):
@@ -692,6 +693,24 @@ class TransformerEncoder(Layer):
         return output
 
 
+class BigBirdPooler(Layer):
+    """
+    """
+
+    def __init__(self, hidden_size):
+        super(BigBirdPooler, self).__init__()
+        self.dense = nn.Linear(hidden_size, hidden_size)
+        self.activation = nn.Tanh()
+
+    def forward(self, hidden_states):
+        # We "pool" the model by simply taking the hidden state corresponding
+        # to the first token.
+        first_token_tensor = hidden_states[:, 0]
+        pooled_output = self.dense(first_token_tensor)
+        pooled_output = self.activation(pooled_output)
+        return pooled_output
+
+
 class BigBirdEmbeddings(Layer):
     """
     Include embeddings from word, position and token_type embeddings
@@ -702,7 +721,7 @@ class BigBirdEmbeddings(Layer):
                  hidden_size=768,
                  hidden_dropout_prob=0.1,
                  max_position_embeddings=512,
-                 type_vocab_size=2):
+                 type_vocab_size=16):
         super(BigBirdEmbeddings, self).__init__()
         self.word_embeddings = nn.Embedding(vocab_size, hidden_size)
         self.position_embeddings = nn.Embedding(max_position_embeddings,
@@ -715,19 +734,72 @@ class BigBirdEmbeddings(Layer):
             ones = paddle.ones_like(input_ids, dtype="int64")
             seq_length = paddle.cumsum(ones, axis=1)
             position_ids = seq_length - ones
+            position_ids.stop_gradient = True
         if token_type_ids is None:
             token_type_ids = paddle.zeros_like(input_ids, dtype="int64")
+
         input_embedings = self.word_embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
 
         embeddings = input_embedings + position_embeddings + token_type_embeddings
-        if self.training:
-            embeddings = self.dropout(embeddings)
+        embeddings = self.dropout(embeddings)
         return embeddings
 
 
-class BertWithBigBird(Layer):
+class BigBirdPretrainedModel(PretrainedModel):
+    """
+    An abstract class for pretrained BigBird models. It provides BigBird related
+    `model_config_file`, `resource_files_names`, `pretrained_resource_files_map`,
+    `pretrained_init_configuration`, `base_model_prefix` for downloading and
+    loading pretrained models. See `PretrainedModel` for more details.
+    """
+
+    model_config_file = "model_config.json"
+    pretrained_init_configuration = {
+        "bert-base-uncased": {
+            "vocab_size": 30522,
+            "hidden_size": 768,
+            "num_hidden_layers": 12,
+            "num_attention_heads": 12,
+            "intermediate_size": 3072,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.1,
+            "attention_probs_dropout_prob": 0.1,
+            "max_position_embeddings": 512,
+            "type_vocab_size": 2,
+            "initializer_range": 0.02,
+            "pad_token_id": 0,
+        },
+    }
+    resource_files_names = {"model_state": "model_state.pdparams"}
+    pretrained_resource_files_map = {
+        "model_state": {
+            "bert-base-uncased":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/bert-base-uncased.pdparams",
+        }
+    }
+    base_model_prefix = "bigbird"
+
+    def init_weights(self, layer):
+        """ Initialization hook """
+        if isinstance(layer, (nn.Linear, nn.Embedding)):
+            # In the dygraph mode, use the `set_value` to reset the parameter directly,
+            # and reset the `state_dict` to update parameter in static mode.
+            if isinstance(layer.weight, paddle.Tensor):
+                layer.weight.set_value(
+                    paddle.tensor.normal(
+                        mean=0.0,
+                        std=self.initializer_range
+                        if hasattr(self, "initializer_range") else
+                        self.bert.config["initializer_range"],
+                        shape=layer.weight.shape))
+        elif isinstance(layer, nn.LayerNorm):
+            layer._epsilon = 1e-12
+
+
+@register_base_model
+class BigBirdModel(BigBirdPretrainedModel):
     def __init__(self,
                  num_layers,
                  vocab_size,
@@ -747,7 +819,7 @@ class BertWithBigBird(Layer):
                  hidden_dropout_prob=0.1,
                  max_position_embeddings=512,
                  type_vocab_size=2):
-        super(BertWithBigBird, self).__init__()
+        super(BigBirdModel, self).__init__()
         # embedding
         self.embeddings = BigBirdEmbeddings(
             vocab_size, hidden_size, hidden_dropout_prob,
@@ -799,26 +871,97 @@ class BertWithBigBird(Layer):
         return encoder_output, pooled_output
 
 
-class TransformerWithBigBird(Layer):
+class BigBirdLMPredictionHead(Layer):
     def __init__(self,
-                 d_model=512,
-                 nhead=8,
-                 num_encoder_layers=6,
-                 num_decoder_layers=6,
-                 dim_feedforward=2048,
-                 dropout=0.1,
-                 activation="relu",
-                 attn_dropout=None,
-                 act_dropout=None,
-                 normalize_before=False,
-                 weight_attr=None,
-                 bias_attr=None,
-                 custom_encoder=None,
-                 custom_decoder=None,
-                 attention_type="default_attention",
-                 block_size=1,
-                 window_size=1,
-                 num_global_blocks=1,
-                 num_rand_blocks=1,
-                 seed=None):
-        super(TransformerWithBigBird, self).__init__()
+                 hidden_size,
+                 vocab_size,
+                 activation,
+                 embedding_weights=None):
+        super(BigBirdLMPredictionHead, self).__init__()
+        self.transform = nn.Linear(hidden_size, hidden_size)
+        self.activation = getattr(nn.functional, activation)
+        self.layer_norm = nn.LayerNorm(hidden_size)
+        self.decoder_weight = self.create_parameter(
+            shape=[hidden_size, vocab_size],
+            dtype=self.transform.weight.dtype,
+            is_bias=True) if embedding_weights is None else embedding_weights
+        self.decoder_bias = self.create_parameter(
+            shape=[vocab_size], dtype=self.decoder_weight.dtype, is_bias=True)
+
+    def forward(self, hidden_states, masked_positions=None):
+        if masked_positions is not None:
+            hidden_states = paddle.reshape(hidden_states,
+                                           [-1, hidden_states.shape[-1]])
+            hidden_states = paddle.tensor.gather(hidden_states,
+                                                 masked_positions)
+        # gather masked tokens might be more quick
+        hidden_states = self.transform(hidden_states)
+        hidden_states = self.activation(hidden_states)
+        hidden_states = self.layer_norm(hidden_states)
+        hidden_states = paddle.tensor.matmul(
+            hidden_states, self.decoder_weight,
+            transpose_y=True) + self.decoder_bias
+        return hidden_states
+
+
+class BigBirdPretrainingHeads(Layer):
+    def __init__(self,
+                 hidden_size,
+                 vocab_size,
+                 activation,
+                 embedding_weights=None):
+        super(BigBirdPretrainingHeads, self).__init__()
+        self.predictions = BigBirdLMPredictionHead(
+            hidden_size, vocab_size, activation, embedding_weights)
+        self.seq_relationship = nn.Linear(hidden_size, 2)
+
+    def forward(self, sequence_output, pooled_output, masked_positions=None):
+        prediction_scores = self.predictions(sequence_output, masked_positions)
+        seq_relationship_score = self.seq_relationship(pooled_output)
+        return prediction_scores, seq_relationship_score
+
+
+class BigBirdForPretraining(BigBirdPretrainedModel):
+    def __init__(self, bert):
+        super(BigBirdForPretraining, self).__init__()
+        self.bert = bert
+        self.cls = BigBirdPretrainingHeads(
+            self.bert.config["hidden_size"],
+            self.bert.config["vocab_size"],
+            self.bert.config["hidden_act"],
+            embedding_weights=self.bert.embeddings.word_embeddings.weight)
+
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                masked_positions=None):
+        outputs = self.bert(
+            input_ids,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            attention_mask=attention_mask)
+        sequence_output, pooled_output = outputs[:2]
+        prediction_scores, seq_relationship_score = self.cls(
+            sequence_output, pooled_output, masked_positions)
+        return prediction_scores, seq_relationship_score
+
+
+class BigBirdPretrainingCriterion(paddle.nn.Layer):
+    def __init__(self, vocab_size):
+        super(BigBirdPretrainingCriterion, self).__init__()
+        # CrossEntropyLoss is expensive since the inner reshape (copy)
+        self.loss_fn = paddle.nn.loss.CrossEntropyLoss(ignore_index=-1)
+        self.vocab_size = vocab_size
+
+    def forward(self, prediction_scores, seq_relationship_score,
+                masked_lm_labels, next_sentence_labels, masked_lm_scale):
+        masked_lm_loss = paddle.nn.functional.softmax_with_cross_entropy(
+            prediction_scores, masked_lm_labels, ignore_index=-1)
+        masked_lm_loss = masked_lm_loss / masked_lm_scale
+        next_sentence_loss = paddle.nn.functional.softmax_with_cross_entropy(
+            seq_relationship_score, next_sentence_labels)
+        return paddle.sum(masked_lm_loss) + paddle.mean(next_sentence_loss)
