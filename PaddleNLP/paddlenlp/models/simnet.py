@@ -56,8 +56,7 @@ class SimNet(nn.Layer):
 
     def forward(self, query, title, query_seq_len=None, title_seq_len=None):
         logits = self.model(query, title, query_seq_len, title_seq_len)
-        probs = F.softmax(logits, axis=-1)
-        return probs
+        return logits
 
 
 class BoWModel(nn.Layer):
