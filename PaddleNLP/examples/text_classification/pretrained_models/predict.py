@@ -32,8 +32,6 @@ MODEL_CLASSES = {
               ppnlp.transformers.ErnieTokenizer),
     'roberta': (ppnlp.transformers.RobertaForSequenceClassification,
                 ppnlp.transformers.RobertaTokenizer),
-    'electra': (ppnlp.transformers.ElectraForSequenceClassification,
-                ppnlp.transformers.ElectraTokenizer)
 }
 
 
