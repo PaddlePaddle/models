@@ -1,3 +1,17 @@
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserve.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import time
 
 import numpy as np
@@ -12,6 +26,8 @@ from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
 from paddlenlp.metrics import AccuracyAndF1
+
+from args import parse_args
 
 TASK_CLASSES = {
     "sst-2": (GlueSST2, Accuracy),
@@ -28,7 +44,6 @@ class BiLSTM(nn.Layer):
                  output_dim,
                  padding_idx=0,
                  num_layers=1,
-                 direction='bidirectional',
                  dropout_prob=0.0,
                  init_scale=0.1,
                  embed_weight=None):
@@ -38,7 +53,11 @@ class BiLSTM(nn.Layer):
             embed_weight) if embed_weight is not None else None
 
         self.lstm = nn.LSTM(
-            embed_dim, hidden_size, num_layers, direction, dropout=dropout_prob)
+            embed_dim,
+            hidden_size,
+            num_layers,
+            'bidirectional',
+            dropout=dropout_prob)
         self.fc = nn.Linear(
             hidden_size * 2,
             hidden_size,
@@ -110,71 +129,48 @@ def evaluate(task_name, model, loss_fct, metric, data_loader):
     model.train()
 
 
-def do_train(
-        task_name='sst-2',
-        num_epoch=30,
-        batch_size=128,
-        lr=1.0,
-        max_seq_length=128,
-        emb_dim=300,
-        hidden_size=300,
-        output_dim=2,
-        vocab_size=30522,
-        padding_idx=0,
-        dropout_prob=0.3,
-        save_steps=20,
-        opt='adadelta',
-        vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
-        use_pretrained_w2v=True):
-    metric_class = TASK_CLASSES[task_name][1]
+def do_train(args):
+    metric_class = TASK_CLASSES[args.task_name][1]
     metric = metric_class()
-    if task_name == 'qqp':
+    if args.task_name == 'qqp':
         train_data_loader, dev_data_loader = create_pair_loader_for_small_model(
-            task_name=task_name,
-            batch_size=batch_size,
-            max_seq_length=max_seq_length,
-            vocab_path=vocab_path,
-            use_gpu=True)
-    elif task_name == 'senta':
+            task_name=args.task_name,
+            vocab_path=args.vocab_path,
+            model_name=args.model_name,
+            batch_size=args.batch_size)
+    elif args.task_name == 'senta':
         train_data_loader, dev_data_loader = create_data_loader_for_small_model(
-            task_name=task_name,
-            batch_size=batch_size,
-            max_seq_length=max_seq_length,
-            vocab_path=vocab_path,
-            use_gpu=True)
-    else:
+            task_name=args.task_name,
+            vocab_path=args.vocab_path,
+            batch_size=args.batch_size)
+    else:  # sst-2
         train_data_loader, dev_data_loader = create_data_loader_for_small_model(
-            task_name=task_name,
-            batch_size=batch_size,
-            max_seq_length=max_seq_length,
-            vocab_path=vocab_path,
-            use_gpu=True)
+            task_name=args.task_name,
+            vocab_path=args.vocab_path,
+            model_name=args.model_name,
+            batch_size=args.batch_size)
 
-    emb_tensor = load_embedding(vocab_path) if use_pretrained_w2v else None
+    emb_tensor = load_embedding(
+        args.vocab_path) if args.use_pretrained_emb else None
 
-    model = BiLSTM(
-        emb_dim,
-        hidden_size,
-        vocab_size,
-        output_dim,
-        padding_idx,
-        dropout_prob=dropout_prob,
-        embed_weight=emb_tensor)
+    model = BiLSTM(args.emb_dim, args.hidden_size, args.vocab_size,
+                   args.output_dim, args.padding_idx, args.num_layers,
+                   args.dropout_prob, args.init_scale, emb_tensor)
 
     loss_fct = nn.CrossEntropyLoss()
     # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
-    if opt == 'adadelta':
+    if args.optimizer == 'adadelta':
         optimizer = paddle.optimizer.Adadelta(
-            learning_rate=lr, rho=0.95, parameters=model.parameters())
+            learning_rate=args.lr, rho=0.95, parameters=model.parameters())
     else:
         optimizer = paddle.optimizer.Adam(
-            learning_rate=lr, parameters=model.parameters())
+            learning_rate=args.lr, parameters=model.parameters())
 
     global_step = 0
     tic_train = time.time()
-    for epoch in range(num_epoch):
+    for epoch in range(args.max_epoch):
         for i, batch in enumerate(train_data_loader):
-            if task_name == 'qqp':
+            if args.task_name == 'qqp':
                 input_ids_1, seq_len_1, input_ids_2, seq_len_2, labels = batch
                 logits = model(input_ids_1, seq_len_1, input_ids_2, seq_len_2)
             else:
@@ -187,15 +183,15 @@ def do_train(
             optimizer.step()
             optimizer.clear_grad()
 
-            if i % save_steps == 0:
+            if i % args.log_freq == 0:
                 with paddle.no_grad():
                     print(
                         "global step %d, epoch: %d, batch: %d, loss: %f, speed: %.4f step/s"
                         % (global_step, epoch, i, loss,
-                           save_steps / (time.time() - tic_train)))
+                           args.log_freq / (time.time() - tic_train)))
                     tic_eval = time.time()
 
-                    evaluate(task_name, model, loss_fct, metric,
+                    evaluate(args.task_name, model, loss_fct, metric,
                              dev_data_loader)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 tic_train = time.time()
@@ -203,42 +199,8 @@ def do_train(
 
 
 if __name__ == '__main__':
-    vocab_size_dict = {
-        "senta": 29496,  #1256608,
-        "bert-base-chinese": 21128,
-        "sst-2": 30522,
-        "qqp": 30522
-    }
-    # task_name = 'senta'
-    # task_name = 'sst-2'
     paddle.seed(2021)
-    task_name = 'qqp'
-    if task_name == 'senta':
-        do_train(
-            task_name=task_name,
-            vocab_size=vocab_size_dict[task_name],
-            batch_size=64,
-            lr=3e-4,
-            opt='adam',
-            num_epoch=20,
-            dropout_prob=0.2,
-            vocab_path='senta_word_dict_subset.txt',
-            use_pretrained_w2v=True)
-    elif task_name == 'sst-2':
-        do_train(
-            task_name=task_name,
-            vocab_size=vocab_size_dict[task_name],
-            batch_size=64,
-            lr=1.0,
-            num_epoch=10,
-            dropout_prob=0.4,
-            use_pretrained_w2v=True)
-    else:  # qqp
-        do_train(
-            task_name=task_name,
-            vocab_size=vocab_size_dict[task_name],
-            batch_size=256,
-            lr=2.0,
-            num_epoch=35,
-            dropout_prob=0.4,
-            use_pretrained_w2v=True)
+    args = parse_args()
+    print(args)
+
+    do_train(args)

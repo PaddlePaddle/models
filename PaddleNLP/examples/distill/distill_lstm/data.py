@@ -1,4 +1,18 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserve.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import io
 import os
 from functools import partial
@@ -15,8 +29,7 @@ from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
-from run_bert_finetune import convert_example
-from utils import convert_small_example, convert_two_example, convert_pair_example
+from utils import convert_small_example, convert_two_example, convert_pair_example, convert_example
 
 TASK_CLASSES = {
     "sst-2": GlueSST2,
@@ -36,10 +49,9 @@ def load_vocab(vocab_file):
     return vocab
 
 
-def load_embedding(
-        vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
-        emb_dim=300,
-        word2vec_path='GoogleNews-vectors-negative300.bin'):
+def load_embedding(vocab_path,
+                   emb_dim=300,
+                   embedding_path='GoogleNews-vectors-negative300.bin'):
     """Load pre-trained embeddings to improve small models acc trained by English dataset."""
     vocab_list = []
     with io.open(vocab_path) as f:
@@ -48,7 +60,7 @@ def load_embedding(
     vocab_size = len(vocab_list)
     emb_np = np.random.rand(vocab_size, emb_dim).astype("float32")
     word2vec_dict = gensim.models.KeyedVectors.load_word2vec_format(
-        word2vec_path, binary=True)
+        embedding_path, binary=True)
 
     for i in range(vocab_size):
         word = vocab_list[i]
@@ -56,66 +68,6 @@ def load_embedding(
             emb_np[i] = word2vec_dict[word]
     emb_tensor = paddle.to_tensor(emb_np)
     return emb_tensor
-
-
-def apply_data_augmentation_for_text(task_name,
-                                     train_dataset,
-                                     n_iter=20,
-                                     p_mask=0.1,
-                                     p_ng=0.25,
-                                     ngram_range=(2, 6)):
-    """
-    Data augmentation for text, not for tokenized text list. Maybe its'
-    a wrong method, because '[MASK]' in text will not be transformed to
-    '[UNK]' or '[MASK]' in English mode, but '[ mask ]'.
-    """
-    used_texts = [data[0] for data in train_dataset]
-    if task_name == 'qqp':
-        used_texts += [data[1] for data in train_dataset]
-    used_texts = set(used_texts)
-    new_data = []
-    for data in train_dataset:
-        new_data.append(data)
-        for _ in range(n_iter):
-            # masking
-            words = [
-                "[MASK]" if np.random.rand() < p_mask else word
-                for word in data[0].split()
-            ]
-            # n-gram sampling
-            if np.random.rand() < p_ng:
-                ngram_len = np.random.randint(ngram_range[0],
-                                              ngram_range[1] + 1)
-                ngram_len = min(ngram_len, len(words))
-                start = np.random.randint(0, len(words) - ngram_len + 1)
-                words = words[start:start + ngram_len]
-            new_text = " ".join(words)
-            if task_name == 'qqp':
-                # masking
-                words = [
-                    "[MASK]" if np.random.rand() < p_mask else word
-                    for word in data[1].split()
-                ]
-                # n-gram sampling
-                if np.random.rand() < p_ng:
-                    ngram_len = np.random.randint(ngram_range[0],
-                                                  ngram_range[1] + 1)
-                    ngram_len = min(ngram_len, len(words))
-                    start = np.random.randint(0, len(words) - ngram_len + 1)
-                    words = words[start:start + ngram_len]
-                new_text_2 = " ".join(words)
-                if new_text not in used_texts or new_text_2 not in used_texts:
-                    new_data.append([new_text, new_text_2, data[2]])
-                    used_texts.add(new_text)
-                    used_texts.add(new_text_2)
-            else:
-                if new_text not in used_texts:
-                    new_data.append([new_text, data[1]])
-                    used_texts.add(new_text)
-
-    train_dataset.data.data = new_data
-    print("Data augmentation is applied.")
-    return train_dataset
 
 
 def apply_data_augmentation(task_name,
@@ -128,7 +80,8 @@ def apply_data_augmentation(task_name,
     """
     Data Augmentation after texts are tokenized. 
     For example:
-    train_ds[0] = [['hide', 'new', 'secret', '##ions', 'from', 'the', 'parental', 'units'], '0']
+    train_ds[0] = [['hide', 'new', 'secret', '##ions', 'from', 
+        'the', 'parental', 'units'], '0']
     """
     used_texts = []
     if task_name == 'qqp':
@@ -147,13 +100,13 @@ def apply_data_augmentation(task_name,
     for idx in range(len(tokenized_text)):
         new_data.append(tokenized_text[idx])
         for _ in range(n_iter):
-            # masking
+            # 1. Masking
             words = [
                 tokenizer.unk_token if np.random.rand() < p_mask and
                 not word.startswith('##') else word
                 for word in tokenized_text[idx][0]
             ]
-            # n-gram sampling
+            # 2. n-gram sampling
             if np.random.rand() < p_ng:
                 ngram_len = np.random.randint(ngram_range[0],
                                               ngram_range[1] + 1)
@@ -162,13 +115,13 @@ def apply_data_augmentation(task_name,
                 words = words[start:start + ngram_len]
             new_text = " ".join(words)
             if task_name == 'qqp':
-                # masking
+                # 1. Masking
                 words_2 = [
                     tokenizer.unk_token if np.random.rand() < p_mask and
                     not word.startswith('##') else word
                     for word in tokenized_text[idx][1]
                 ]
-                # n-gram sampling
+                # 2. n-gram sampling
                 if np.random.rand() < p_ng:
                     ngram_len = np.random.randint(ngram_range[0],
                                                   ngram_range[1] + 1)
@@ -186,7 +139,6 @@ def apply_data_augmentation(task_name,
                     used_texts.add(new_text)
 
     train_dataset.data.data = new_data
-    print("Data augmentation is applied.")
 
     return train_dataset
 
@@ -196,9 +148,9 @@ def apply_data_augmentation_for_cn(train_dataset,
                                    p_mask=0.1,
                                    p_ng=0.25,
                                    ngram_range=(2, 6)):
-    """Only Chinese dataset could be augmentated on raw data.
-    Because bert-base-uncased and jieba could both convert 'UNK' to '[UNK]'.
-    text->(jieba)list->replace-mask->(join)new text
+    """Only Chinese dataset could be applied data augmentation on raw data.
+    Because bert-base-chinese and jieba could both convert 'MASK' to '[UNK]',
+    and we could transform a same example in two ways(two Chinese tokenizer).
     """
     used_texts = [data[0] for data in train_dataset]
     used_texts = set(used_texts)
@@ -207,12 +159,12 @@ def apply_data_augmentation_for_cn(train_dataset,
         new_data.append(data)
 
         for _ in range(n_iter):
-            # masking
+            # 1. Masking
             words = [
-                "UNK" if np.random.rand() < p_mask else word
+                "MASK" if np.random.rand() < p_mask else word
                 for word in jieba.cut(data[0])
             ]
-            # n-gram sampling
+            # 2. n-gram sampling
             if np.random.rand() < p_ng:
                 ngram_len = np.random.randint(ngram_range[0],
                                               ngram_range[1] + 1)
@@ -225,18 +177,16 @@ def apply_data_augmentation_for_cn(train_dataset,
                 used_texts.add(new_text)
 
     train_dataset.data.data = new_data
-    print("Data augmentation is applied.")
     return train_dataset
 
 
-def create_data_loader_for_small_model(
-        task_name='sst-2',
-        vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
-        batch_size=64,
-        max_seq_length=128,
-        use_gpu=True,
-        shuffle=True):
-    """data loader for bi-lstm, not bert."""
+def create_data_loader_for_small_model(task_name,
+                                       vocab_path,
+                                       model_name=None,
+                                       batch_size=64,
+                                       max_seq_length=128,
+                                       shuffle=True):
+    """Data loader for bi-lstm, not bert."""
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
 
@@ -250,7 +200,7 @@ def create_data_loader_for_small_model(
         pad_val = vocab['[PAD]']
 
     else:
-        vocab = BertTokenizer.from_pretrained('bert-base-uncased')
+        vocab = BertTokenizer.from_pretrained(model_name)
         pad_val = vocab.pad_token_id
 
     trans_fn = partial(
@@ -275,34 +225,26 @@ def create_data_loader_for_small_model(
     return train_data_loader, dev_data_loader
 
 
-def create_distill_loader(
-        task_name='sst-2',
-        model_name='bert-base-uncased',
-        vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
-        batch_size=64,
-        max_seq_length=128,
-        use_gpu=True,
-        shuffle=True,
-        data_augmentation=False,
-        n_iter=20):
+def create_distill_loader(task_name,
+                          model_name,
+                          vocab_path,
+                          batch_size=64,
+                          max_seq_length=128,
+                          shuffle=True,
+                          n_iter=20):
     """
     Returns batch data for bert and small model.
-    Bert and small model have difference input representations.
+    Bert and small model have different input representations.
     """
-    print(task_name, model_name, vocab_path, batch_size, max_seq_length,
-          use_gpu, shuffle, data_augmentation)
     dataset_class = TASK_CLASSES[task_name]
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
     tokenizer = BertTokenizer.from_pretrained(model_name)
     if task_name == 'senta':
-        # train_ds = ChnSentiCorpDataAug.get_datasets("train")
-        # print("ChnSentiCorp augmentation dataset has been loaded.")
-        train_ds = apply_data_augmentation_for_cn(
-            train_ds, n_iter=n_iter) if data_augmentation else train_ds
+        train_ds = apply_data_augmentation_for_cn(train_ds, n_iter=n_iter)
     else:
         train_ds = apply_data_augmentation(
-            task_name, train_ds, tokenizer,
-            n_iter=n_iter) if data_augmentation else train_ds
+            task_name, train_ds, tokenizer, n_iter=n_iter)
+    print("Data augmentation has been applied.")
 
     if task_name == 'senta':
         vocab = Vocab.load_vocabulary(
@@ -361,16 +303,15 @@ def create_distill_loader(
     return train_data_loader, dev_data_loader
 
 
-def create_pair_loader_for_small_model(
-        task_name='qqp',
-        vocab_path='/root/.paddlenlp/models/bert-base-uncased/bert-base-uncased-vocab.txt',
-        batch_size=64,
-        max_seq_length=128,
-        use_gpu=True,
-        shuffle=True,
-        is_test=False,
-        data_augmentation=False):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+def create_pair_loader_for_small_model(task_name,
+                                       model_name,
+                                       vocab_path,
+                                       batch_size=64,
+                                       max_seq_length=128,
+                                       shuffle=True,
+                                       is_test=False):
+    """Only support QQP now."""
+    tokenizer = BertTokenizer.from_pretrained(model_name)
     dataset_class = TASK_CLASSES[task_name]
 
     train_ds, dev_ds = dataset_class.get_datasets(['train', 'dev'])
@@ -426,42 +367,3 @@ def create_dataloader(train_ds, dev_ds, batch_size, batchify_fn, shuffle=True):
         return_list=True)
 
     return train_data_loader, dev_data_loader
-
-
-class ChnSentiCorpDataAug(paddle.io.Dataset):
-    def __init__(self,
-                 mode="train",
-                 path='chnsenticorp-data/train-data-augmented/'):
-        self.data = self.read_raw_data(path)
-        self.add_raw_chn()
-
-    def read_raw_data(self, path):
-        filelist = os.listdir(path)
-        data = []
-        for filename in filelist:
-            with io.open(os.path.join(path, filename)) as f:
-                for line in f:
-                    line = line.strip()
-                    sentence = self.clean_sentence("".join(line.split("\t")[0]))
-                    label = line.split("\t")[-1]
-                    data.append([sentence, label])
-        return data
-
-    def add_raw_chn(self):
-        train_ds = ChnSentiCorp.get_datasets(["train"])
-        for i in range(len(train_ds)):
-            self.data.append(train_ds[i])
-
-    def clean_sentence(self, sentence):
-        while " " in sentence:
-            sentence = sentence.replace(" ", "")
-        return sentence
-
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-    def __len__(self):
-        return len(self.data)
-
-    def get_labels(self):
-        return ["0", "1"]
