@@ -25,3 +25,4 @@ from .translation import *
 from .dureader import *
 from .cnndm import *
 from .poetry import *
+from .couplet import *
