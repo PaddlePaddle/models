@@ -161,11 +161,11 @@ def parse_lac_result(words, preds, lengths, word_vocab, label_vocab):
     for sent_index in range(len(lengths)):
         sent = [
             id2word_dict[index]
-            for index in words[sent_index][:lengths[sent_index] - 1]
+            for index in words[sent_index][:lengths[sent_index]]
         ]
         tags = [
             id2label_dict[index]
-            for index in preds[sent_index][:lengths[sent_index] - 1]
+            for index in preds[sent_index][:lengths[sent_index]]
         ]
 
         sent_out = []
