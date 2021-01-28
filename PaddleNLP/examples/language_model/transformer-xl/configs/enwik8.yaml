@@ -29,7 +29,7 @@ eval_batch_size: 10
 
 # Hyparams for training:
 # The number of epoches for training
-epoch: 100
+epoch: 200
 # Max step for training.
 max_step: 400000
 
