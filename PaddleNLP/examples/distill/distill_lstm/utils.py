@@ -16,8 +16,6 @@ import jieba
 
 import numpy as np
 
-from run_bert_finetune import convert_example
-
 
 def convert_small_example(example,
                           task_name,
