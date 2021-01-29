@@ -20,6 +20,26 @@ __all__ = ['CoupletDataset']
 
 
 class CoupletDataset(TranslationDataset):
+    """
+    Couplet dataset. This dataset is from this github repository:
+    https://github.com/v-zich/couplet-clean-dataset, which filters dirty data
+    from the original repository https://github.com/wb14123/couplet-dataset.
+
+    Args:
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 
+            'train'.
+        root(str, optional): Data directory of dataset. If not
+            provided, dataset will be saved to default directory
+            `~/.paddlenlp/datasets/machine_translation/CoupletDataset`. If
+            provided, md5 check would be performed, and dataset would be
+            downloaded in default directory if failed. Default: None.
+    Example:
+        .. code-block:: python
+
+            from paddlenlp.datasets import CoupletDataset
+            couplet_dataset = CoupletDataset()
+    """
+
     URL = "https://paddlenlp.bj.bcebos.com/datasets/couplet.tar.gz"
     SPLITS = {
         'train': TranslationDataset.META_INFO(
