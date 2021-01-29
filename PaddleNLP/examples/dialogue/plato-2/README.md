@@ -23,7 +23,7 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
 * PaddleNLP 安装
 
    ```shell
-   pip install paddlenlp>=2.0.0b
+   pip install paddlenlp>=2.0.0rc
    ```
 
 * 环境依赖
@@ -35,26 +35,6 @@ PLATO-2的训练过程及其他细节详见 [Knover](https://github.com/PaddlePa
    ```shell
    pip install sentencepiece termcolor
    ```
-
-### 代码结构说明
-
-以下是本项目主要代码结构及说明：
-
-```text
-.
-├── interaction.py # 交互主程序入口
-├── model.py # 模型组网
-├── readers
-│   ├── dialog_reader.py # 模型输入数据生成
-│   ├── nsp_reader.py # 模型输入数据生成
-│   └── plato_reader.py # 模型输入数据生成
-├── utils
-│   ├── __init__.py # 基础函数
-│   ├── args.py # 运行参数配置
-│   ├── masking.py # mask相关函数
-│   └── tokenization.py # 分词相关函数
-└── README.md # 说明文档
-```
 
 ### 数据准备
 

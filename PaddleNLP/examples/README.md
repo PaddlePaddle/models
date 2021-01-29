@@ -3,7 +3,7 @@
 [**PaddleNLP**](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP) 是基于 PaddlePaddle 深度学习框架开发的自然语言处理 (NLP) 工具，算法，模型和数据的开源项目。百度在 NLP 领域十几年的深厚积淀为 PaddleNLP 提供了强大的核心动力。PaddleNLP 提供较为丰富的模型库，基本涵盖了主流的NLP任务，因为模型库中使用了PaddleNLP提供的基础NLP工具，例如数据集处理，高阶API，使得模型库的算法简洁易懂。下面是 PaddleNLP 支持任务的具体信息，具体主要是包括了 **NLP基础技术**, **NLP核心技术**, **NLP核心应用**。
 
 
-### 基础技术模型
+### 基础技术
 
 | 任务类型     | 目录                                                         | 简介                                                         |
 | ----------------------------------| ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -11,14 +11,14 @@
 | 预训练词向量 | [Word Embedding](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/word_embedding) | 提供了丰富的中文预训练词向量，通过简单配置即可使用词向量来进行热启训练，能支持较多的中文场景下的训练任务的热启训练，加快训练收敛速度。|
 
 
-### 核心技术模型
+### 核心技术
 | 任务类型     | 目录                                                         | 简介                                                         |
 | -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | ERNIE-GEN文本生成 | [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](./text_generation/ernie-gen) |ERNIE-GEN是百度发布的生成式预训练模型，是一种Multi-Flow结构的预训练和微调框架。ERNIE-GEN利用更少的参数量和数据，在摘要生成、问题生成、对话和生成式问答4个任务共5个数据集上取得了SOTA效果 |
 | BERT 预训练&GLUE下游任务 | [BERT(Bidirectional Encoder Representation from Transformers)](./language_model/bert) | BERT模型作为目前最为火热语义表示预训练模型，PaddleNLP提供了简洁功效的实现方式，同时易用性方面通过简单参数切换即可实现不同的BERT模型。 |
 | Electra 预训练&GLUE下游任务     | [Electra(Efficiently Learning an Encoder that Classifies Token Replacements Accurately)](./language_model/electra) |ELECTRA 创新性地引入GAN的思想对BERT预训练过程进行了改进，在和BERT具有相同的模型参数、预训练计算量一样的情况下，ELECTRA GLUE得分明显好。同时相比GPT、ELMo，在GLUE得分略好时，ELECTRA预训练模型只需要很少的参数和计算量。|
 
-### 核心应用模型
+### 核心应用
 
 #### 机器翻译 (Machine Translation)
 机器翻译是计算语言学的一个分支，是人工智能的终极目标之一，具有重要的科学研究价值。在机器翻译的任务上，提供了两大类模型，一类是传统的 Sequence to Sequence任务，简称Seq2Seq，通过RNN类模型进行编码，解码；另外一类是Transformer类模型，通过Self-Attention机制来提升Encoder和Decoder的效果，Transformer模型的具体信息可以参考论文, [Attention Is All You Need](https://arxiv.org/abs/1706.03762)。下面是具体的模型信息。
@@ -33,7 +33,6 @@
 命名实体识别（Named Entity Recognition，NER）是NLP中一项非常基础的任务。NER是信息提取、问答系统、句法分析、机器翻译等众多NLP任务的重要基础工具。命名实体识别的准确度，决定了下游任务的效果，是NLP中非常重要的一个基础问题。
 在NER任务提供了两种解决方案，一类LSTM/GRU + CRF(Conditional Random Field)，RNN类的模型来抽取底层文本的信息，而CRF(条件随机场)模型来学习底层Token之间的联系；另外一类是通过预训练模型，例如ERNIE，BERT模型，直接来预测Token的标签信息。
 因为该类模型较为抽象，提供了一份快递单信息抽取的训练脚本给大家使用，具体的任务是通过两类的模型来抽取快递单的核心信息，例如地址，姓名，手机号码，具体的[快递单任务链接](./named_entity_recognition/express_ner)。
-下面是具体的模型信息。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -51,17 +50,16 @@
 
 #### 文本生成 (Text Generation)
 
-文本生成是自然语言处理中一个重要的研究领域，具有广阔的应用前景。国内外已经有诸如Automated Insights、Narrative Science等文本生成系统投入使用，这些系统根据格式化数据或自然语言文本生成新闻、财报或者其他解释性文本。目前比较常见的文本生成任务两大类，文本写作和文本摘要。在这里主要提供百度自研的文本生成模型ERNIE-GEN, ERNIE-GEN是一种Multi-Flow结构的预训练和微调框架。ERNIE-GEN利用更少的参数量和数据，在摘要生成、问题生成、对话和生成式问答4个任务共5个数据集上取得了SOTA效果。我们基于ERNIE-GEN模型提供了一个自动关写诗的示例，来展示ERNIE-GEN的生成效果。下面是具体模型信息。
+文本生成是自然语言处理中一个重要的研究领域，具有广阔的应用前景。国内外已经有诸如Automated Insights、Narrative Science等文本生成系统投入使用，这些系统根据格式化数据或自然语言文本生成新闻、财报或者其他解释性文本。目前比较常见的文本生成任务两大类，文本写作和文本摘要。在这里主要提供百度自研的文本生成模型ERNIE-GEN, ERNIE-GEN是一种Multi-Flow结构的预训练和微调框架。ERNIE-GEN利用更少的参数量和数据，在摘要生成、问题生成、对话和生成式问答4个任务共5个数据集上取得了SOTA效果。我们基于ERNIE-GEN模型提供了一个自动关写诗的示例，来展示ERNIE-GEN的生成效果。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](./text_generation/ernie-gen) |ERNIE-GEN是百度发布的生成式预训练模型，通过Global-Attention的方式解决训练和预测曝光偏差的问题，同时使用Multi-Flow Attention机制来分别进行Global和Context信息的交互，同时通过片段生成的方式来增加语义相关性。|
+| [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](./text_generation/ernie-gen) | ERNIE-GEN是百度发布的生成式预训练模型，通过Global-Attention的方式解决训练和预测曝光偏差的问题，同时使用Multi-Flow Attention机制来分别进行Global和Context信息的交互，同时通过片段生成的方式来增加语义相关性。|
 
 
 
 #### 文本匹配 (Text Matching)
-文本匹配一直是自然语言处理（NLP）领域一个基础且重要的方向，一般研究两段文本之间的关系。文本相似度计算、自然语言推理、问答系统、信息检索等，都可以看作针对不同数据和场景的文本匹配应用。在文本匹配的任务上提供了传统的SimNet(Similarity Net)和SentenceBERT模型。SimNet是一个计算短文本相似度的框架，主要包括 BOW、CNN、RNN、MMDNN 等核心网络结构形式。SimNet 框架在百度各产品上广泛应用，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。SentenceBERT模型是通过强大语义信息的预训练模型来表征句子的语义信息，通过比较两个句子的语义信息来判断两个句子是否匹配。
-下面是具体的模型信息。
+文本匹配一直是自然语言处理（NLP）领域一个基础且重要的方向，一般研究两段文本之间的关系。文本相似度计算、自然语言推理、问答系统、信息检索等，都可以看作针对不同数据和场景的文本匹配应用。在文本匹配的任务上提供了百度自研的SimNet语义匹配框架，以及基于Transformer结构的SentenceBERT模型。SimNet是一个计算短文本相似度的框架，主要包括 BOW、CNN、RNN、MMDNN 等核心网络结构形式，在百度各产品上广泛应用，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。SentenceBERT模型是通过强大语义信息的预训练模型来表征句子的语义信息，通过比较两个句子的语义信息来判断两个句子是否匹配。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -70,7 +68,7 @@
 
 
 #### 语言模型 (Language Model)
-在自然语言处理（NLP）领域中，语言模型预训练方法在多项NLP任务上都获得了不错的提升，广泛受到了各界的关注。在这里主要是提供了目前两种语言模型，一种是RNNLM模型，通过RNN网络来进行序列任务的预测；另外一种是ELMo模型，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示；下面是具体的模型信息。
+在自然语言处理（NLP）领域中，语言模型预训练方法在多项NLP任务上都获得了不错的提升，广泛受到了各界的关注。在这里主要是提供了目前两种语言模型，一种是RNNLM模型，通过RNN网络来进行序列任务的预测；另外一种是ELMo模型，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -79,7 +77,6 @@
 
 #### 文本图学习 (Text Graph)
 在很多工业应用中，往往出现一种特殊的图：Text Graph。顾名思义，图的节点属性由文本构成，而边的构建提供了结构信息。如搜索场景下的Text Graph，节点可由搜索词、网页标题、网页正文来表达，用户反馈和超链信息则可构成边关系。百度图学习PGL((Paddle Graph Learning)团队提出ERNIESage(ERNIE SAmple aggreGatE)模型同时建模文本语义与图结构信息，有效提升Text Graph的应用效果。图学习是深度学习领域目前的研究热点，如果想对图学习有更多的了解，可以访问[PGL Github链接](https://github.com/PaddlePaddle/PGL/)。
-ERNIESage模型的具体信息如下。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -98,7 +95,7 @@ ERNIESage模型的具体信息如下。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DGU](./dialogue/dgu) |通过ERNIE/BERT等预训练模型的强大的语义表示能力，抽取对话中的文本语义信息，通过对文本分类等操作就可以完成对话中的诸多任务，例如意图识别，行文识别，状态跟踪等。|
+| [Dialogue General Understanding](./dialogue/dgu) | 提供基于BERT通用对话理解模型，通过对文本分类、序列标注等操作就可以完成对话中的意图识别，行文识别，状态跟踪等理解任务。|
 | [PLATO-2](./dialogue/plato-2) | 百度自研领先的开放域对话预训练模型。[PLATO-2: Towards Building an Open-Domain Chatbot via Curriculum Learning](https://arxiv.org/abs/2006.16779) |
 
 #### 时间序列预测(Time Series)
