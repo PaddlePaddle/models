@@ -401,6 +401,33 @@ class BertTokenizer(PretrainedTokenizer):
         _sep = [self.sep_token_id]
         return _cls + token_ids_0 + _sep + token_ids_1 + _sep
 
+    def build_inputs_with_special_tokens_offset_mapping(
+            self, offset_mapping_ids_0, offset_mapping_ids_1=None):
+        """
+        Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
+        adding special tokens. 
+        
+        A BERT sequence has the following format:
+        ::
+            - single sequence: ``[CLS] X [SEP]``
+            - pair of sequences: ``[CLS] A [SEP] B [SEP]``
+
+        Args:
+            token_ids_0 (:obj:`List[int]`):
+                List of IDs to which the special tokens will be added.
+            token_ids_1 (:obj:`List[int]`, `optional`):
+                Optional second list of IDs for sequence pairs.
+
+        Returns:
+            :obj:`List[int]`: List of input_id with the appropriate special tokens.
+        """
+        if offset_mapping_ids_1 is None:
+            return [(0, 0)] + offset_mapping_ids_0 + [(0, 0)]
+
+        return [(0, 0)] + offset_mapping_ids_0 + [
+            (0, 0)
+        ] + offset_mapping_ids_1 + [(0, 0)]
+
     def create_token_type_ids_from_sequences(self,
                                              token_ids_0,
                                              token_ids_1=None):
@@ -551,7 +578,8 @@ class BertTokenizer(PretrainedTokenizer):
                 encoded_inputs["overflowing_tokens"] = overflowing_tokens
                 encoded_inputs["num_truncated_tokens"] = total_len - max_seq_len
 
-# Add special tokens
+        # Add special tokens
+
         sequence = self.build_inputs_with_special_tokens(ids, pair_ids)
         segment_ids = self.create_token_type_ids_from_sequences(ids, pair_ids)
 
@@ -698,8 +726,8 @@ class BertTokenizer(PretrainedTokenizer):
                     "Input is not valid. Should be a string, a list/tuple of strings or a list/tuple of integers."
                 )
 
-        input_ids = []
-        for ids_or_pair_ids in batch_text_or_text_pairs:
+        batch_encode_inputs = []
+        for example_id, ids_or_pair_ids in enumerate(batch_text_or_text_pairs):
             if not isinstance(ids_or_pair_ids, (list, tuple)):
                 ids, pair_ids = ids_or_pair_ids, None
             elif is_split_into_words and not isinstance(ids_or_pair_ids[0],
@@ -711,18 +739,54 @@ class BertTokenizer(PretrainedTokenizer):
             first_ids = get_input_ids(ids)
             second_ids = get_input_ids(
                 pair_ids) if pair_ids is not None else None
-            input_ids.append((first_ids, second_ids))
 
-        batch_encode_inputs = []
-        for example_id, (first_ids, second_ids) in enumerate(input_ids):
             if stride != 0 and second_ids is not None:
-
-                encoded_inputs = {}
 
                 max_len_for_pair = max_seq_len - len(first_ids) - 3
 
+                token_ids = ids.split()
+                token_pair_ids = pair_ids.split()
+
+                token_ids_offset_mapping = []
+                token_pair_ids_offset_mapping = []
+
+                token_start_offset = 0
+                for token in token_ids:
+                    sub_tokens = self._tokenize(token)
+                    for i in range(len(sub_tokens)):
+                        if i == len(sub_tokens) - 1:
+                            token_ids_offset_mapping.append(
+                                (token_start_offset, token_start_offset +
+                                 len(sub_tokens[i].strip("##"))))
+                            token_start_offset += (
+                                len(sub_tokens[i].strip("##")) + 1)
+                        else:
+                            token_ids_offset_mapping.append(
+                                (token_start_offset, token_start_offset +
+                                 len(sub_tokens[i].strip("##"))))
+                            token_start_offset += (
+                                len(sub_tokens[i].strip("##")))
+
+                token_start_offset = 0
+                for token in token_pair_ids:
+                    sub_tokens = self._tokenize(token)
+                    for i in range(len(sub_tokens)):
+                        if i == len(sub_tokens) - 1:
+                            token_pair_ids_offset_mapping.append(
+                                (token_start_offset, token_start_offset +
+                                 len(sub_tokens[i].strip("##"))))
+                            token_start_offset += (
+                                len(sub_tokens[i].strip("##")) + 1)
+                        else:
+                            token_pair_ids_offset_mapping.append(
+                                (token_start_offset, token_start_offset +
+                                 len(sub_tokens[i].strip("##"))))
+                            token_start_offset += (
+                                len(sub_tokens[i].strip("##")))
+
                 offset = 0
                 while offset < len(second_ids):
+                    encoded_inputs = {}
                     length = len(second_ids) - offset
                     if length > max_len_for_pair:
                         length = max_len_for_pair
@@ -730,6 +794,12 @@ class BertTokenizer(PretrainedTokenizer):
                     ids = first_ids
                     pair_ids = second_ids[offset:offset + length]
 
+                    mapping = token_ids_offset_mapping
+                    pair_mapping = token_pair_ids_offset_mapping[offset:offset +
+                                                                 length]
+
+                    offset_mapping = self.build_inputs_with_special_tokens_offset_mapping(
+                        mapping, pair_mapping)
                     sequence = self.build_inputs_with_special_tokens(ids,
                                                                      pair_ids)
                     segment_ids = self.create_token_type_ids_from_sequences(
@@ -781,14 +851,12 @@ class BertTokenizer(PretrainedTokenizer):
                         encoded_inputs["position_ids"] = list(
                             range(len(encoded_inputs["input_ids"])))
 
-                    encoded_inputs['offest'] = offset
+                    encoded_inputs['offset_mapping'] = offset_mapping
                     encoded_inputs['overflow_to_sample'] = example_id
-
+                    batch_encode_inputs.append(encoded_inputs)
                     if offset + length == len(second_ids):
                         break
                     offset += min(length, stride)
-
-                    batch_encode_inputs.append(encoded_inputs)
 
             else:
                 batch_encode_inputs.append(
