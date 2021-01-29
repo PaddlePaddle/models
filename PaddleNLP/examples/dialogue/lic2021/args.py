@@ -9,10 +9,25 @@ def parse_args():
         type=str,
         help="The directory where the checkpoints will be saved.")
     parser.add_argument(
-        "--data_dir",
-        default=None,
+        "--output_dir",
+        default="./output",
         type=str,
-        help="The directory where the dataset will be load.")
+        help="The directory where the infer result will be saved.")
+    parser.add_argument(
+        "--train_data_path",
+        type=str,
+        default="./datasets/train.shuffle.txt",
+        help="Specify the path to load train data.")
+    parser.add_argument(
+        "--valid_data_path",
+        type=str,
+        default="./datasets/valid.txt",
+        help="Specify the path to load valid data.")
+    parser.add_argument(
+        "--test_data_path",
+        type=str,
+        default="./datasets/test.txt",
+        help="Specify the path to load test data.")
     parser.add_argument(
         "--vocab_file", default=None, type=str, help="The vocabulary filepath.")
     parser.add_argument(
@@ -42,6 +57,11 @@ def parse_args():
         default=8192,
         type=int,
         help="Batch size per GPU/CPU for training.")
+    parser.add_argument(
+        "--infer_batch_size",
+        default=4,
+        type=int,
+        help="Batch size per GPU/CPU for infer.")
     parser.add_argument(
         "--lr", default=1e-5, type=float, help="The initial learning rate.")
     parser.add_argument(
@@ -109,7 +129,7 @@ def parse_args():
         help='The pool size for sort in build batch data.')
     parser.add_argument(
         '--topk',
-        default=10,
+        default=5,
         type=int,
         help='The number of highest probability vocabulary tokens to keep for top-k sampling.'
     )
@@ -123,6 +143,11 @@ def parse_args():
         default=64,
         type=int,
         help='The maximum sequence length of generation.')
+    parser.add_argument(
+        '--num_samples',
+        default=20,
+        type=int,
+        help='The decode numbers in generation.')
 
     args = parser.parse_args()
     return args

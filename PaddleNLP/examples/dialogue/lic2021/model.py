@@ -63,7 +63,11 @@ class BaselineModel(nn.Layer):
         self.softmax = nn.Softmax()
 
     def forward(self, inputs):
-        token_ids, type_ids, pos_ids, generation_mask, tgt_pos = inputs
+        token_ids, type_ids, pos_ids, generation_mask = inputs[:4]
+        if self.is_infer:
+            tgt_ids, tgt_pos, tgt_generation_mask = inputs[4:]
+        else:
+            tgt_pos = inputs[4]
 
         src, src_mask = self.gen_input(token_ids, type_ids, pos_ids,
                                        generation_mask)
@@ -78,7 +82,8 @@ class BaselineModel(nn.Layer):
             enc_out = self.encoder(src, src_mask)
 
         if self.is_infer:
-            pred_ids = self.generate(inputs, new_cache)
+            pred_ids = self.generate(tgt_ids, tgt_pos, tgt_generation_mask,
+                                     new_cache)
             return pred_ids
         else:
             logits = self.calc_logits(enc_out, tgt_pos)
@@ -116,13 +121,11 @@ class BaselineModel(nn.Layer):
             transpose_y=True) + self.logits_bias
         return logits
 
-    def generate(self, inputs, cache):
-        tgt_ids = inputs['tgt_ids']
-        tgt_pos = inputs['tgt_pos']
-        tgt_generation_mask = inputs['tgt_generation_mask']
+    def generate(self, tgt_ids, tgt_pos, tgt_generation_mask, cache):
         predictions = tgt_ids
 
         step = 0
+        score = paddle.full(tgt_ids.shape, 0.0, dtype='float32')
         while step < self.max_dec_len:
             append_mask = paddle.cast(
                 tgt_ids != self.eos_id, dtype=tgt_generation_mask.dtype)

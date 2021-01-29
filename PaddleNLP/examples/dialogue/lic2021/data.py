@@ -243,8 +243,10 @@ class DialogueDataset(IterableDataset):
                 tgt_pos = np.array(tgt_start_idx, dtype="int64")
                 tgt_generation_mask = generation_mask[:, 0:1, :].astype(
                     "float32")
-                yield pad_token_ids, pad_type_ids, pad_pos_ids, generation_mask, tgt_ids, tgt_pos, tgt_generation_mask
+                yield (pad_token_ids, pad_type_ids, pad_pos_ids,
+                       generation_mask, tgt_ids, tgt_pos, tgt_generation_mask)
             else:
                 tgt_label, tgt_pos = self.gen_tgt_label_and_pos(token_ids,
                                                                 tgt_start_idx)
-                yield pad_token_ids, pad_type_ids, pad_pos_ids, generation_mask, tgt_label, tgt_pos
+                yield (pad_token_ids, pad_type_ids, pad_pos_ids,
+                       generation_mask, tgt_label, tgt_pos)

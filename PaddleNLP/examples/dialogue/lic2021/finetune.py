@@ -1,4 +1,6 @@
 import os
+import time
+import math
 import paddle
 import paddle.distributed as dist
 import paddle.nn as nn
@@ -58,14 +60,23 @@ def main(args):
     if world_size > 1:
         model = paddle.DataParallel(model)
 
-    dataset = DialogueDataset(
-        args.data_dir,
+    train_dataset = DialogueDataset(
+        args.train_data_path,
         vocab,
         args.batch_size,
         args.sort_pool_size,
         args.seed,
         mode='train')
-    dataloader = DataLoader(dataset, return_list=True, batch_size=None)
+    train_dataloader = DataLoader(
+        train_dataset, return_list=True, batch_size=None)
+    valid_dataset = DialogueDataset(
+        args.valid_data_path,
+        vocab,
+        args.batch_size,
+        args.sort_pool_size,
+        mode='valid')
+    valid_dataloader = DataLoader(
+        valid_dataset, return_list=True, batch_size=None)
 
     lr_scheduler = NoamDecay(1 / (args.warmup_steps * (args.lr**2)),
                              args.warmup_steps)
@@ -79,10 +90,12 @@ def main(args):
         load_ckpt(args.init_from_ckpt, model)
 
     step = 0
+    total_time = 0.0
     for epoch in range(args.epochs):
         if rank == 0:
             print('\nEpoch %d/%d' % (epoch + 1, args.epochs))
-        for inputs in dataloader:
+        batch_start_time = time.time()
+        for inputs in train_dataloader:
             step += 1
             token_ids, type_ids, pos_ids, generation_mask, tgt_label, tgt_pos = inputs
 
@@ -94,15 +107,42 @@ def main(args):
             lr_scheduler.step()
             optimizer.clear_gradients()
 
+            total_time += (time.time() - batch_start_time)
             if rank == 0:
                 if step % args.logging_steps == 0:
-                    print('step %d - loss: %.4f - lr: %.7f' %
-                          (step, loss, optimizer.get_lr()))
+                    ppl = paddle.exp(loss)
+                    print(
+                        'step %d - loss: %.4f - ppl: %.4f - lr: %.7f - %.3fs/step'
+                        % (step, loss, ppl, optimizer.get_lr(),
+                           total_time / args.logging_steps))
+                    total_time = 0.0
                 if step % args.save_steps == 0:
+                    evaluation(model, valid_data_loader)
                     save_ckpt(model, optimizer, args.save_dir, step)
+        batch_start_time = time.time()
 
-        #if rank == 0:
-        #    save_ckpt(model, optimizer, args.save_dir, batch)
+
+@paddle.no_grad()
+def evaluation(model, data_loader):
+    print('\nEval begin...')
+    model.eval()
+    total_tokens = 0
+    total_loss = 0.0
+    start_time = time.time()
+    for inputs in data_loader:
+        token_ids, type_ids, pos_ids, generation_mask, tgt_label, tgt_pos = inputs
+
+        logits = model((token_ids, type_ids, pos_ids, generation_mask, tgt_pos))
+        loss = F.cross_entropy(logits, tgt_label, reduction='sum')
+
+        total_loss += loos.numpy()[0]
+        total_tokens += tgt_label.shape[0]
+
+    avg_loss = total_loss / total_tokens
+    ppl = math.exp(avg_loss)
+    avg_speed = (time.time() - start_time) / len(data_loader)
+    print('loss: %.4f - ppl: %.4f - %.3fs/step' % (avg_loss, ppl, avg_speed))
+    model.train()
 
 
 if __name__ == '__main__':
