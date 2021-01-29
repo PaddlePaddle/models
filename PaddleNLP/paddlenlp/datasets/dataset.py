@@ -245,7 +245,7 @@ class DatasetReader:
         '''
         if lazy:
             pass
-            #return AllennlpLazyDataset(self._instance_iterator, root)
+
         else:
 
             examples = self._read(root)
