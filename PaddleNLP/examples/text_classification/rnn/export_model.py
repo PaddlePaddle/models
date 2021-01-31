@@ -22,9 +22,9 @@ from utils import load_vocab
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The path to vocabulary.")
-parser.add_argument('--network', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
-parser.add_argument("--params_path", type=str, default='./checkpoints/final.pdparams', help="The path of model parameter to be loaded.")
-parser.add_argument("--output_path", type=str, default='./static_graph_params', help="The path of model parameter in static graph to be saved.")
+parser.add_argument('--network', type=str, default="cnn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
+parser.add_argument("--params_path", type=str, default='./checkpoints_cnn/final.pdparams', help="The path of model parameter to be loaded.")
+parser.add_argument("--output_path", type=str, default='./static_graph_params_cnn', help="The path of model parameter in static graph to be saved.")
 args = parser.parse_args()
 # yapf: enable
 

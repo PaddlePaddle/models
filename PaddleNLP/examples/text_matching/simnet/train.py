@@ -20,14 +20,15 @@ import time
 
 import paddle
 import paddlenlp as ppnlp
+from paddlenlp.data import JiebaTokenizer, Stack, Tuple, Pad
 from paddlenlp.datasets import LCQMC
 
-from utils import load_vocab, generate_batch, convert_example
+from utils import convert_example
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
-parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
+parser.add_argument("--epochs", type=int, default=1, help="Number of epoches for training.")
+parser.add_argument('--use_gpu', type=eval, default=True, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate used to train.")
 parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
@@ -43,16 +44,19 @@ def create_dataloader(dataset,
                       mode='train',
                       batch_size=1,
                       use_gpu=False,
-                      pad_token_id=0):
+                      batchify_fn=None):
     """
     Creats dataloader.
 
     Args:
         dataset(obj:`paddle.io.Dataset`): Dataset instance.
+        trans_fn(obj:`callable`, optional, defaults to `None`): function to convert a data sample to input ids, etc.
         mode(obj:`str`, optional, defaults to obj:`train`): If mode is 'train', it will shuffle the dataset randomly.
         batch_size(obj:`int`, optional, defaults to 1): The sample number of a mini-batch.
         use_gpu(obj:`bool`, optional, defaults to obj:`False`): Whether to use gpu to run.
-        pad_token_id(obj:`int`, optional, defaults to 0): The pad token index.
+        batchify_fn(obj:`callable`, optional, defaults to `None`): function to generate mini-batch data by merging
+            the sample list, None for only stack each fields of sample in axis
+            0(same as :attr::`np.stack(..., axis=0)`).
 
     Returns:
         dataloader(obj:`paddle.io.DataLoader`): The dataloader which generates batches.
@@ -71,7 +75,7 @@ def create_dataloader(dataset,
         dataset,
         batch_sampler=sampler,
         return_list=True,
-        collate_fn=lambda batch: generate_batch(batch, pad_token_id=pad_token_id))
+        collate_fn=batchify_fn)
     return dataloader
 
 
@@ -82,31 +86,54 @@ if __name__ == "__main__":
     if not os.path.exists(args.vocab_path):
         raise RuntimeError('The vocab_path  can not be found in the path %s' %
                            args.vocab_path)
-    vocab = load_vocab(args.vocab_path)
+    vocab = ppnlp.data.Vocab.load_vocabulary(
+        args.vocab_path, unk_token='[UNK]', pad_token='[PAD]')
 
     # Loads dataset.
-    train_ds, dev_dataset, test_ds = LCQMC.get_datasets(
-        ['train', 'dev', 'test'])
+    train_ds, dev_ds, test_ds = LCQMC.get_datasets(['train', 'dev', 'test'])
 
     # Constructs the newtork.
     label_list = train_ds.get_labels()
     model = ppnlp.models.SimNet(
         network=args.network,
-        vocab_size=len(vocab),
+        vocab_size=len(vocab.token_to_idx),
         num_classes=len(label_list))
     model = paddle.Model(model)
+    new_vocab_file = open("./new_simnet_word_dict.txt", 'w', encoding='utf8')
+    for token, index in vocab.token_to_idx.items():
+        new_vocab_file.write(token + "\n")
 
-    # Reads data and generates mini-batches.
-    trans_fn = partial(convert_example, vocab=vocab, is_test=False)
+# Reads data and generates mini-batches.
+    batchify_fn = lambda samples, fn=Tuple(
+        Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # query_ids
+        Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # title_ids
+        Stack(dtype="int64"),  # query_seq_lens
+        Stack(dtype="int64"),  # title_seq_lens
+        Stack(dtype="int64")  # label
+    ): [data for data in fn(samples)]
+    tokenizer = ppnlp.data.JiebaTokenizer(vocab)
+    trans_fn = partial(convert_example, tokenizer=tokenizer, is_test=False)
     train_loader = create_dataloader(
-        train_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='train')
-    dev_loader = create_dataloader(
-        dev_dataset,
+        train_ds,
         trans_fn=trans_fn,
         batch_size=args.batch_size,
-        mode='validation')
+        mode='train',
+        use_gpu=args.use_gpu,
+        batchify_fn=batchify_fn)
+    dev_loader = create_dataloader(
+        dev_ds,
+        trans_fn=trans_fn,
+        batch_size=args.batch_size,
+        mode='validation',
+        use_gpu=args.use_gpu,
+        batchify_fn=batchify_fn)
     test_loader = create_dataloader(
-        test_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='test')
+        test_ds,
+        trans_fn=trans_fn,
+        batch_size=args.batch_size,
+        mode='test',
+        use_gpu=args.use_gpu,
+        batchify_fn=batchify_fn)
 
     optimizer = paddle.optimizer.Adam(
         parameters=model.parameters(), learning_rate=args.lr)

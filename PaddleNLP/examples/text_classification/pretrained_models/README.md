@@ -73,17 +73,12 @@ pretrained_models/
 ```shell
 # 设置使用的GPU卡号
 CUDA_VISIBLE_DEVICES=0
-python train.py --model_type ernie --model_name ernie-tiny --n_gpu 1 --save_dir ./checkpoints
+python train.py --n_gpu 1 --save_dir ./checkpoints
 ```
 
 可支持配置的参数：
 
-* `model_type`：必选，模型类型，可以选择bert，ernie，roberta。
-* `model_name`： 必选，具体的模型简称。
-   如`model_type=ernie`，则model_name可以选择`ernie-1.0`和`ernie-tiny`。
-   如`model_type=bert`，则model_name可以选择`bert-base-chinese`，`bert-wwm-chinese`，`bert-wwm-ext-chinese`。
-   如`model_type=roberta`，则model_name可以选择`roberta-wwm-ext-large`，`roberta-wwm-ext`，`rbt3`，`rbtl3`。
-* `save_dir`：必选，保存训练模型的目录。
+* `save_dir`：可选，保存训练模型的目录；默认保存在当前目录checkpoints文件夹下。
 * `max_seq_length`：可选，ERNIE/BERT模型使用的最大序列长度，最大不能超过512, 若出现显存不足，请适当调低这一参数；默认为128。
 * `batch_size`：可选，批处理大小，请结合显存情况进行调整，若出现显存不足，请适当调低这一参数；默认为32。
 * `learning_rate`：可选，Fine-tune的最大学习率；默认为5e-5。
@@ -93,6 +88,45 @@ python train.py --model_type ernie --model_name ernie-tiny --n_gpu 1 --save_dir 
 * `init_from_ckpt`：可选，模型参数路径，热启动模型训练；默认为None。
 * `seed`：可选，随机种子，默认为1000.
 * `n_gpu`：可选，训练过程中使用GPU卡数量，默认为1。若n_gpu=0，则使用CPU训练。
+
+代码示例中使用的预训练模型是ERNIE，如果想要使用其他预训练模型如BERT，RoBERTa，Electra等，只需更换`model` 和 `tokenizer`即可。
+
+```python
+# 使用ernie预训练模型
+# ernie
+model = ppnlp.transformers.ErnieForSequenceClassification.from_pretrained('ernie',num_classes=2))
+tokenizer = ppnlp.transformers.ErnieTokenizer.from_pretrained('ernie')
+
+# ernie-tiny
+# model = ppnlp.transformers.ErnieForSequenceClassification.rom_pretrained('ernie-tiny',num_classes=2))
+# tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained('ernie-tiny')
+
+
+# 使用bert预训练模型
+# bert-base-chinese
+model = ppnlp.transformers.BertForSequenceClassification.from_pretrained('bert-base-chinese', num_class=2)
+tokenizer = ppnlp.transformers.BertTokenizer.from_pretrained('bert-base-chinese')
+
+# bert-wwm-chinese
+# model = ppnlp.transformers.BertForSequenceClassification.from_pretrained('bert-wwm-chinese', num_class=2)
+# tokenizer = ppnlp.transformers.BertTokenizer.from_pretrained('bert-wwm-chinese')
+
+# bert-wwm-ext-chinese
+# model = ppnlp.transformers.BertForSequenceClassification.from_pretrained('bert-wwm-ext-chinese', num_class=2)
+# tokenizer = ppnlp.transformers.BertTokenizer.from_pretrained('bert-wwm-ext-chinese')
+
+
+# 使用roberta预训练模型
+# roberta-wwm-ext
+# model = ppnlp.transformers.RobertaForSequenceClassification.from_pretrained('roberta-wwm-ext', num_class=2)
+# tokenizer = ppnlp.transformers.RobertaTokenizer.from_pretrained('roberta-wwm-ext')
+
+# roberta-wwm-ext
+# model = ppnlp.transformers.RobertaForSequenceClassification.from_pretrained('roberta-wwm-ext-large', num_class=2)
+# tokenizer = ppnlp.transformers.RobertaTokenizer.from_pretrained('roberta-wwm-ext-large')
+
+```
+更多预训练模型，参考[transformers](../../../docs/embeddings.md)
 
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。
@@ -114,7 +148,7 @@ checkpoints/
   运行方式：
 
 ```shell
-python export_model.py --model_type=roberta --model_name=roberta-wwm-ext --params_path=./checkpoint/model_200/model_state.pdparams --output_path=./static_graph_params
+python export_model.py --params_path=./checkpoint/model_900/model_state.pdparams --output_path=./static_graph_params
 ```
 其中`params_path`是指动态图训练保存的参数路径，`output_path`是指静态图参数导出路径。
 
@@ -123,7 +157,7 @@ python export_model.py --model_type=roberta --model_name=roberta-wwm-ext --param
 启动预测：
 ```shell
 export CUDA_VISIBLE_DEVICES=0
-python predict.py --model_type ernie --model_name ernie-tiny --params_path checkpoints/model_400/model_state.pdparams
+python predict.py --params_path checkpoints/model_900/model_state.pdparams
 ```
 
 将待预测数据如以下示例：

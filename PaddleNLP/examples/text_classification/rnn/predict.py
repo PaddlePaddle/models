@@ -14,8 +14,9 @@
 import argparse
 
 import paddle
-import paddlenlp as ppnlp
 import paddle.nn.functional as F
+import paddlenlp as ppnlp
+from paddlenlp.data import JiebaTokenizer, Stack, Tuple, Pad
 
 from utils import load_vocab, generate_batch, preprocess_prediction_data
 
@@ -49,22 +50,27 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
     """
 
     # Seperates data into some batches.
-    batches = []
-    one_batch = []
-    for example in data:
-        one_batch.append(example)
-        if len(one_batch) == batch_size:
-            batches.append(one_batch)
-            one_batch = []
-    if one_batch:
-        # The last batch whose size is less than the config batch_size setting.
-        batches.append(one_batch)
+    batches = [
+        data[idx:idx + batch_size] for idx in range(0, len(data), batch_size)
+    ]
+    # one_batch = []
+    # for example in data:
+    #     one_batch.append(example)
+    #     if len(one_batch) == batch_size:
+    #         batches.append(one_batch)
+    #         one_batch = []
+    # if one_batch:
+    #     # The last batch whose size is less than the config batch_size setting.
+    #     batches.append(one_batch)
+    batchify_fn = lambda samples, fn=Tuple(
+        Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # input_ids
+        Stack(dtype="int64"),  # seq len
+    ): [data for data in fn(samples)]
 
     results = []
     model.eval()
     for batch in batches:
-        texts, seq_lens = collate_fn(
-            batch, pad_token_id=pad_token_id, return_label=False)
+        texts, seq_lens = batchify_fn(batch)
         texts = paddle.to_tensor(texts)
         seq_lens = paddle.to_tensor(seq_lens)
         logits = model(texts, seq_lens)
@@ -78,13 +84,16 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
 
 if __name__ == "__main__":
     paddle.set_device("gpu") if args.use_gpu else paddle.set_device("cpu")
-    # Loads vocab.
-    vocab = load_vocab(args.vocab_path)
+    # Loads vocab.s
+    vocab = ppnlp.data.Vocab.load_vocabulary(
+        args.vocab_path, unk_token='[UNK]', pad_token='[PAD]')
     label_map = {0: 'negative', 1: 'positive'}
 
     # Constructs the newtork.
     model = ppnlp.models.Senta(
-        network=args.network, vocab_size=len(vocab), num_classes=len(label_map))
+        network=args.network,
+        vocab_size=len(vocab.token_to_idx),
+        num_classes=len(label_map))
 
     # Loads model parameters.
     state_dict = paddle.load(args.params_path)
@@ -97,7 +106,8 @@ if __name__ == "__main__":
         '怀着十分激动的心情放映，可是看着看着发现，在放映完毕后，出现一集米老鼠的动画片',
         '作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。',
     ]
-    examples = preprocess_prediction_data(data, vocab)
+    tokenizer = ppnlp.data.JiebaTokenizer(vocab)
+    examples = preprocess_prediction_data(data, tokenizer)
 
     results = predict(
         model,
