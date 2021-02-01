@@ -675,10 +675,10 @@ class TCNEncoder(nn.Layer):
     such as LSTMs in many tasks. See https://arxiv.org/pdf/1803.01271.pdf for more details.
 
     Args:
-        input_size (obj:`int`, required): The number of expected features in the input (the last dimension).
-        num_channels (obj:`list` or obj:`tuple`, required): The number of channels in different layer. 
-        kernel_size (obj:`int`, optional): The kernel size. Defaults to 2.
-        dropout (obj:`float`, optional): The dropout probability. Defaults to 0.2.
+        input_size (int): The number of expected features in the input (the last dimension).
+        num_channels (list): The number of channels in different layer. 
+        kernel_size (int): The kernel size. Defaults to 2.
+        dropout (float): The dropout probability. Defaults to 0.2.
     """
 
     def __init__(self, input_size, num_channels, kernel_size=2, dropout=0.2):

@@ -112,13 +112,7 @@ class BoWModel(nn.Layer):
     a word embedding. Then, we encode these epresentations with a `BoWEncoder`.
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        hidden_size (obj:`int`, optional, defaults to 128): The first full-connected layer hidden size.
-        fc_hidden_size (obj:`int`, optional, defaults to 96): The second full-connected layer hidden size.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,
@@ -331,7 +325,7 @@ class SelfAttention(nn.Layer):
     Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification (Zhou et al., 2016).
     ref: https://www.aclweb.org/anthology/P16-2034/
     Args:
-        hidden_size (obj:`int`): The number of expected features in the input x.
+        hidden_size (int): The number of expected features in the input x.
     """
 
     def __init__(self, hidden_size):
@@ -343,9 +337,10 @@ class SelfAttention(nn.Layer):
     def forward(self, input, mask=None):
         """
         Args:
-            input (obj: `paddle.Tensor`) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
-            mask (obj: `paddle.Tensor`, optional, defaults to `None`) of shape (batch, seq_len) :
-                Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not.
+            input (paddle.Tensor) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
+            mask (paddle.Tensor) of shape (batch, seq_len) :
+                Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not. 
+                Defaults to `None`.
         """
         forward_input, backward_input = paddle.chunk(input, chunks=2, axis=2)
         # elementwise-sum forward_x and backward_x
@@ -378,7 +373,7 @@ class SelfInteractiveAttention(nn.Layer):
     A close implementation of attention network of NAACL 2016 paper, Hierarchical Attention Networks for Document Classiﬁcation (Yang et al., 2016).
     ref: https://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf
     Args:
-        hidden_size (obj:`int`): The number of expected features in the input x.
+        hidden_size (int): The number of expected features in the input x.
     """
 
     def __init__(self, hidden_size):
@@ -393,9 +388,10 @@ class SelfInteractiveAttention(nn.Layer):
     def forward(self, input, mask=None):
         """
         Args:
-            input (obj: `paddle.Tensor`) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
-            mask (obj: `paddle.Tensor`, optional, defaults to `None`) of shape (batch, seq_len) :
+            input (paddle.Tensor) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
+            mask (paddle.Tensor) of shape (batch, seq_len) :
                 Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not.
+                Defaults to `None
         """
         weight = self.input_weight.tile(
             repeat_times=(paddle.shape(input)[0], 1, 1))
@@ -434,11 +430,7 @@ class CNNModel(nn.Layer):
     outputs from the convolution layer and outputs the max. 
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,
@@ -483,11 +475,7 @@ class TextCNNModel(nn.Layer):
     outputs from the convolution layer and outputs the max. 
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,
