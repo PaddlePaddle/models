@@ -197,8 +197,9 @@ def do_train(args):
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     eod_id = tokenizer.command_name_map["eod"].Id
 
-    pretrained_models = list(model_class.pretrained_init_configuration.keys())
-    if args.model_name_or_path in pretrained_models:
+    pretrained_models_list = list(
+        model_class.pretrained_init_configuration.keys())
+    if args.model_name_or_path in pretrained_models_list:
         model = GPT2ForPretraining(
             GPT2Model(**model_class.pretrained_init_configuration[
                 args.model_name_or_path]))
@@ -228,7 +229,7 @@ def do_train(args):
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
         ])
-    if args.model_name_or_path not in pretrained_models:
+    if args.model_name_or_path not in pretrained_models_list:
         opt_dict = paddle.load(
             os.path.join(args.model_name_or_path, "model_state.pdopt"))
         optimizer.set_state_dict(opt_dict)
@@ -291,7 +292,6 @@ def do_train(args):
                     return
 
             del train_data_loader
-            train_data_loader, data_file = dataset_future.result(timeout=None)
 
 
 if __name__ == "__main__":
