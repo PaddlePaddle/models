@@ -356,6 +356,5 @@ class GPT2Tokenizer(PretrainedTokenizer):
             save_directory (str): Directory to save files into.
         """
         for name, file_name in self.resource_files_names.items():
-            ### TODO: make the name 'ernie-tiny' as a variable
             save_path = os.path.join(save_directory, file_name)
             shutil.copyfile(getattr(self, "_%s" % name), save_path)
