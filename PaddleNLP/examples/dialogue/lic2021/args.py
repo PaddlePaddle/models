@@ -9,10 +9,10 @@ def parse_args():
         type=str,
         help="The directory where the checkpoints will be saved.")
     parser.add_argument(
-        "--output_dir",
-        default="./output",
+        "--output_path",
+        default="./output/predict.txt",
         type=str,
-        help="The directory where the infer result will be saved.")
+        help="The file path where the infer result will be saved.")
     parser.add_argument(
         "--train_data_path",
         type=str,
@@ -29,7 +29,10 @@ def parse_args():
         default="./datasets/test.txt",
         help="Specify the path to load test data.")
     parser.add_argument(
-        "--vocab_file", default=None, type=str, help="The vocabulary filepath.")
+        "--vocab_file",
+        default='./datasets/vocab.txt',
+        type=str,
+        help="The vocabulary filepath.")
     parser.add_argument(
         "--init_from_ckpt",
         default=None,

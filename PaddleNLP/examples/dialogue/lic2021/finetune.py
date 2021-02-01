@@ -56,6 +56,7 @@ def main(args):
         vocab.bos_id,
         vocab.eos_id,
         vocab.mask_id,
+        vocab.pad_id,
         is_infer=False)
     if world_size > 1:
         model = paddle.DataParallel(model)
@@ -105,7 +106,7 @@ def main(args):
             loss.backward()
             optimizer.step()
             lr_scheduler.step()
-            optimizer.clear_gradients()
+            optimizer.clear_grad()
 
             total_time += (time.time() - batch_start_time)
             if rank == 0:
@@ -117,9 +118,9 @@ def main(args):
                            total_time / args.logging_steps))
                     total_time = 0.0
                 if step % args.save_steps == 0:
-                    evaluation(model, valid_data_loader)
+                    evaluation(model, valid_dataloader)
                     save_ckpt(model, optimizer, args.save_dir, step)
-        batch_start_time = time.time()
+            batch_start_time = time.time()
 
 
 @paddle.no_grad()
@@ -129,19 +130,21 @@ def evaluation(model, data_loader):
     total_tokens = 0
     total_loss = 0.0
     start_time = time.time()
+    step = 0
     for inputs in data_loader:
+        step += 1
         token_ids, type_ids, pos_ids, generation_mask, tgt_label, tgt_pos = inputs
 
         logits = model((token_ids, type_ids, pos_ids, generation_mask, tgt_pos))
         loss = F.cross_entropy(logits, tgt_label, reduction='sum')
 
-        total_loss += loos.numpy()[0]
+        total_loss += loss.numpy()[0]
         total_tokens += tgt_label.shape[0]
 
     avg_loss = total_loss / total_tokens
     ppl = math.exp(avg_loss)
-    avg_speed = (time.time() - start_time) / len(data_loader)
-    print('loss: %.4f - ppl: %.4f - %.3fs/step' % (avg_loss, ppl, avg_speed))
+    avg_speed = (time.time() - start_time) / step
+    print('loss: %.4f - ppl: %.4f - %.3fs/step\n' % (avg_loss, ppl, avg_speed))
     model.train()
 
 

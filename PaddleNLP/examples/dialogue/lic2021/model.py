@@ -23,6 +23,7 @@ class BaselineModel(nn.Layer):
                  bos_id,
                  eos_id,
                  mask_id,
+                 pad_id,
                  is_infer=False):
         super(BaselineModel, self).__init__()
 
@@ -34,8 +35,7 @@ class BaselineModel(nn.Layer):
         self.bos_id = bos_id
         self.eos_id = eos_id
         self.mask_id = mask_id
-        self.after_eos = paddle.ones([vocab_size]) * -1e9
-        self.after_eos[eos_id] = 0
+        self.pad_id = pad_id
         self.is_infer = is_infer
 
         self.word_embedding_layer = nn.Embedding(vocab_size, d_model)
@@ -64,28 +64,19 @@ class BaselineModel(nn.Layer):
 
     def forward(self, inputs):
         token_ids, type_ids, pos_ids, generation_mask = inputs[:4]
-        if self.is_infer:
-            tgt_ids, tgt_pos, tgt_generation_mask = inputs[4:]
-        else:
-            tgt_pos = inputs[4]
-
         src, src_mask = self.gen_input(token_ids, type_ids, pos_ids,
                                        generation_mask)
 
-        cache = None
         if self.is_infer:
+            tgt_ids, tgt_pos, tgt_generation_mask = inputs[4:]
             cache = self.encoder.gen_cache(src)
-
-        if self.is_infer:
             enc_out, new_cache = self.encoder(src, src_mask, cache)
-        else:
-            enc_out = self.encoder(src, src_mask)
-
-        if self.is_infer:
             pred_ids = self.generate(tgt_ids, tgt_pos, tgt_generation_mask,
                                      new_cache)
             return pred_ids
         else:
+            tgt_pos = inputs[4]
+            enc_out = self.encoder(src, src_mask)
             logits = self.calc_logits(enc_out, tgt_pos)
             return logits
 
@@ -107,11 +98,14 @@ class BaselineModel(nn.Layer):
 
         return emb_out, n_head_self_attn_mask
 
-    def calc_logits(self, enc_out, tgt_pos):
+    def calc_logits(self, enc_out, tgt_pos=None):
         # [batch_size * seq_len, d_model]
         enc_out = paddle.reshape(enc_out, [-1, enc_out.shape[-1]])
         # [x, d_model]
-        out = paddle.gather(enc_out, tgt_pos)
+        if tgt_pos is not None:
+            out = paddle.gather(enc_out, tgt_pos)
+        else:
+            out = enc_out
         out = self.fc_layer(out)
         out = self.gelu_layer(out)
         out = self.norm_layer(out)
@@ -122,11 +116,12 @@ class BaselineModel(nn.Layer):
         return logits
 
     def generate(self, tgt_ids, tgt_pos, tgt_generation_mask, cache):
-        predictions = tgt_ids
+        pred_ids = tgt_ids
+        cur_len = 0
+        unfinished_flag = paddle.full(tgt_ids.shape, 1, 'int64')
+        scores = paddle.full(tgt_ids.shape, 0.0, dtype='float32')
 
-        step = 0
-        score = paddle.full(tgt_ids.shape, 0.0, dtype='float32')
-        while step < self.max_dec_len:
+        while cur_len < self.max_dec_len:
             append_mask = paddle.cast(
                 tgt_ids != self.eos_id, dtype=tgt_generation_mask.dtype)
             tgt_generation_mask = paddle.concat(
@@ -135,28 +130,46 @@ class BaselineModel(nn.Layer):
             tgt_sent = paddle.ones(
                 [tgt_generation_mask.shape[0], 1], dtype=tgt_ids.dtype)
 
-            out, cache = self.encoder(cache, tgt_ids, tgt_sent, tgt_pos,
-                                      tgt_generation_mask)
+            src, src_mask = self.gen_input(tgt_ids, tgt_sent, tgt_pos,
+                                           tgt_generation_mask)
+            out, cache = self.encoder(src, src_mask, cache)
+            # [batch_size, vocab_size]
             logits = self.calc_logits(out)
 
+            # pre-process distribution
             logits[:, self.unk_id] = -1e9
-            logits[:, self.bos_id] = -1e9
             logits[:, self.mask_id] = -1e9
-            if step < self.min_dec_len:
+            logits[:, self.bos_id] = -1e9
+            if cur_len < self.min_dec_len:
                 logits[:, self.eos_id] = -1e9
-            logits = logits * append_mask + (1 - append_mask) * self.after_eos
-            probs = self.softmax(logits)
 
-            # [-1, topk]
-            topk_probs, _ = paddle.topk(probs, k=self.topk)
+            probs = F.softmax(logits)
+
+            # Top-k strategy
+            # [batch_size, topk]
+            topk_probs, topk_idx = paddle.topk(probs, k=self.topk)
             mask = paddle.cast(probs >= topk_probs[:, -1:], 'float32')
             sums = paddle.sum(topk_probs, axis=-1, keepdim=True)
             new_probs = probs * mask / sums
-            # [-1, 1]
-            sampling_ids = paddle.multinomial(new_probs)
+            # [batch_size, 1]
+            next_token_ids = paddle.multinomial(new_probs)
+            next_token_score = paddle.index_sample(probs, next_token_ids)
+            next_token_score = paddle.log(next_token_score)
 
-            step = step + 1
-            tgt_ids = sampling_ids
+            next_token_ids = next_token_ids * unfinished_flag + self.pad_id * (
+                1 - unfinished_flag)
+            next_token_score = next_token_score * unfinished_flag + scores * (
+                1 - unfinished_flag)
+            scores = (scores * cur_len + next_token_score) / (cur_len + 1)
+
+            unfinished_flag = unfinished_flag * (next_token_ids != self.eos_id)
+
+            cur_len += 1
+            tgt_ids = next_token_ids
             tgt_pos = tgt_pos + 1
-            predictions = paddle.concat([predictions, tgt_ids], axis=1)
-        return predictions
+            pred_ids = paddle.concat([pred_ids, tgt_ids], axis=1)
+
+            # Stop when there is a </s> in all sentences
+            if paddle.max(unfinished_flag) == 0:
+                break
+        return pred_ids, scores

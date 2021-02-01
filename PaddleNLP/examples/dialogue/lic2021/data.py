@@ -2,6 +2,7 @@ import random
 import numpy as np
 from glob import glob
 from contextlib import contextmanager
+from collections import defaultdict
 import paddle.distributed as dist
 from paddle.io import IterableDataset
 
@@ -79,6 +80,13 @@ class Vocabulary(object):
     @property
     def size(self):
         return len(self.id_to_word)
+
+    def convert_ids_to_tokens(self, ids):
+        """Converts a sequence of [tokens|ids] using the vocab."""
+        tokens = []
+        for id in ids:
+            tokens.append(self.id_to_word[id])
+        return tokens
 
 
 class DialogueDataset(IterableDataset):
@@ -240,7 +248,7 @@ class DialogueDataset(IterableDataset):
             if self.mode == 'test':
                 tgt_ids = np.array(
                     [[self.bos_id]] * len(token_ids), dtype="int64")
-                tgt_pos = np.array(tgt_start_idx, dtype="int64")
+                tgt_pos = np.array(tgt_start_idx, dtype="int64").reshape(-1, 1)
                 tgt_generation_mask = generation_mask[:, 0:1, :].astype(
                     "float32")
                 yield (pad_token_ids, pad_type_ids, pad_pos_ids,
@@ -250,3 +258,80 @@ class DialogueDataset(IterableDataset):
                                                                 tgt_start_idx)
                 yield (pad_token_ids, pad_type_ids, pad_pos_ids,
                        generation_mask, tgt_label, tgt_pos)
+
+
+def merge_subword(tokens):
+    """Merge subword."""
+    response = []
+    for token in tokens:
+        if token.startswith(u"▁"):
+            response.append(token[1:])
+        else:
+            if len(response):
+                response[-1] += token
+            else:
+                response.append(token)
+
+    response = [token for token in response if token]
+    return response
+
+
+def post_process_response(token_ids, vocab):
+    """
+    Post-process the decoded sequence. Truncate from the first
+    <eos> and remove the <bos> and <eos> tokens currently.
+    """
+    eos_pos = len(token_ids)
+    for i, tok_id in enumerate(token_ids):
+        if tok_id == vocab.eos_id:
+            eos_pos = i
+            break
+    token_ids = token_ids[1:eos_pos]
+    tokens = vocab.convert_ids_to_tokens(token_ids)
+    response = merge_subword(tokens)
+    return token_ids, response
+
+
+def get_in_turn_repetition(pred, is_cn=False):
+    """Get in-turn repetition."""
+    if len(pred) == 0:
+        return 1.0
+    if isinstance(pred[0], str):
+        pred = [tok.lower() for tok in pred]
+        if is_cn:
+            pred = "".join(pred)
+    tri_grams = set()
+    for i in range(len(pred) - 2):
+        tri_gram = tuple(pred[i:i + 3])
+        if tri_gram in tri_grams:
+            return True
+        tri_grams.add(tri_gram)
+    return False
+
+
+def select_response(data_id, ids, scores, vocab, max_dec_len=None):
+    ids = ids.numpy()
+    scores = scores.numpy()
+
+    group = defaultdict(list)
+    for idx, pred, score in zip(data_id, ids, scores):
+        pred_token_ids, pred_tokens = post_process_response(pred, vocab)
+        num_token = len(pred_token_ids)
+        response = " ".join(pred_tokens)
+
+        in_turn_repetition = get_in_turn_repetition(
+            pred_tokens, True) or get_in_turn_repetition(pred_token_ids)
+        # not ending
+        if max_dec_len is not None and num_token >= max_dec_len:
+            score -= 1e3
+        elif in_turn_repetition:
+            score -= 1e3
+
+        group[idx].append([response, score])
+
+    results = []
+    for idx in sorted(group.keys()):
+        preds = group[idx]
+        preds = sorted(preds, key=lambda x: -x[1])
+        results.append(preds[0][0])
+    return results
