@@ -32,6 +32,7 @@ from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
+from paddlenlp.transformers import get_linear_schedule_with_warmup
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
