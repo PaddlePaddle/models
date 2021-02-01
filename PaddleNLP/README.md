@@ -5,7 +5,7 @@
 </p>
 
 
-PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模型库、简洁易用的API，提供飞桨2.0的最佳实践并加速NLP领域产业应用落地效率。
+PaddleNLP 2.0拥有丰富的模型库、简洁易用的API与高性能的分布式训练的能力，旨在为飞桨开发者提升文本建模效率，并提供基于PaddlePaddle 2.0的NLP领域最佳实践。
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
@@ -16,7 +16,7 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
 
 - **丰富的模型库**
 
-  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等。
+  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等。更多介绍请查看[PaddleNLP模型库](./exmaples/README.md)
 
 - **简洁易用的API**
 
@@ -24,7 +24,7 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
 
 - **高性能分布式训练**
 
-  - 通过高度优化的Transformer网络实现，结合混合精度与Fleet分布式训练API，可充分利用GPU集群资源，高效完成大规模预训练模型的分布式训练。
+  - 通过深度优化的Transformer网络实现，结合混合精度与Fleet分布式训练API，可充分利用GPU集群资源，高效完成大规模预训练模型的分布式训练。
 
 
 # 安装
@@ -83,6 +83,19 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 请参考 [Pretrained-Models](./docs/transformers.md)查看目前支持的预训练模型。
 
+# 模型库及其应用
+
+- [词向量](./examples/word_embedding/README.md)
+- [词法分析](./examples/lexical_analysis/README.md)
+- [语言模型](./examples/language_model)
+- [文本分类](./examples/text_classification/README.md)
+- [文本生成](./examples/text_generation/README.md)
+- [语义匹配](./examples/text_matching/README.md)
+- [命名实体识别](./examples/named_entity_recognition/README.md)
+- [文本图学习](./examples/text_graph/README.md)
+- [通用对话](./examples/dialogue)
+- [机器翻译](./exmaples/machine_translation)
+- [阅读理解](./exmaples/machine_reading_comprehension)
 
 
 # API 使用文档
@@ -98,7 +111,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 - [Metrics API](./docs/metrics.md)
 
 
-# 可交互式Notebook教程
+# 交互式Notebook教程
 
 - [使用Seq2Vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
 - [如何通过预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
