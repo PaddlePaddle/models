@@ -1,9 +1,9 @@
-# PaddleNLP transformer类预训练模型
+# PaddleNLP Transformer API
 
-随着深度学习的发展，NLP领域涌现了一大批高质量的transformer类预训练模型，多次刷新各种NLP任务SOTA。PaddleNLP为用户提供了常用的BERT、ERNIE等预训练模型，让用户能够方便快捷的使用各种transformer类模型，完成自己所需的任务。
+随着深度学习的发展，NLP领域涌现了一大批高质量的Transformer类预训练模型，多次刷新各种NLP任务SOTA。PaddleNLP为用户提供了常用的BERT、ERNIE、RoBERTa等经典结构预训练模型，让开发者能够方便快捷应用各类Transformer预训练模型及其下游任务。
 
 
-## Transformer 类模型汇总
+## Transformer 预训练模型汇总
 
 下表汇总了目前PaddleNLP支持的各类预训练模型。用户可以使用PaddleNLP提供的模型，完成问答、序列分类、token分类等任务。同时我们提供了22种预训练的参数权重供用户使用，其中包含了11种中文语言模型的预训练权重。
 
@@ -12,7 +12,7 @@
 | [BERT](https://arxiv.org/abs/1810.04805) | BertTokenizer|BertModel<br> BertForQuestionAnswering<br> BertForSequenceClassification<br>BertForTokenClassification| `bert-base-uncased`<br> `bert-large-uncased` <br>`bert-base-multilingual-uncased` <br>`bert-base-cased`<br> `bert-base-chinese`<br> `bert-base-multilingual-cased`<br> `bert-large-cased`<br> `bert-wwm-chinese`<br> `bert-wwm-ext-chinese` |
 |[ERNIE](https://arxiv.org/abs/1904.09223)|ErnieTokenizer<br>ErnieTinyTokenizer|ErnieModel<br> ErnieForQuestionAnswering<br> ErnieForSequenceClassification<br> ErnieForTokenClassification<br> ErnieForGeneration| `ernie-1.0`<br> `ernie-tiny`<br> `ernie-2.0-en`<br> `ernie-2.0-large-en`<br>`ernie-gen-base-en`<br>`ernie-gen-large-en`<br>`ernie-gen-large-en-430g`|
 |[RoBERTa](https://arxiv.org/abs/1907.11692)|RobertaTokenizer| RobertaModel<br>RobertaForQuestionAnswering<br>RobertaForSequenceClassification<br>RobertaForTokenClassification| `roberta-wwm-ext`<br> `roberta-wwm-ext-large`<br> `rbt3`<br> `rbtl3`|
-|[ELECTRA](https://arxiv.org/abs/2003.10555) |ElectraTokenizer| ElectraModel<br>ElectraForSequenceClassification<br>ElectraForTokenClassification<br>|`electra-small`<br> `electra-base`<br> `electra-large`<br> `chinese-electra-small`<br> `chinese-electra-base`<br>|
+|[ELECTRA](https://arxiv.org/abs/2003.10555) | ElectraTokenizer| ElectraModel<br>ElectraForSequenceClassification<br>ElectraForTokenClassification<br>|`electra-small`<br> `electra-base`<br> `electra-large`<br> `chinese-electra-small`<br> `chinese-electra-base`<br>|
 |[Transformer](https://arxiv.org/abs/1706.03762) |- | TransformerModel | - |
 
 注：其中中文的预训练模型有 `bert-base-chinese, bert-wwm-chinese, bert-wwm-ext-chinese, ernie-1.0, ernie-tiny, roberta-wwm-ext, roberta-wwm-ext-large, rbt3, rbtl3, chinese-electra-base, chinese-electra-small`。生成模型`ernie-gen-base-en, ernie-gen-large-en, ernie-gen-large-en-430g`仅支持`ErnieForGeneration`任务。
@@ -47,7 +47,7 @@ for batch in train_data_loader:
     probs = paddle.nn.functional.softmax(logits, axis=1)
     loss.backward()
     optimizer.step()
-    optimizer.clear_gradients()
+    optimizer.clear_grad()
 ```
 
 上面的代码给出使用预训练模型的简要示例，更完整详细的示例代码，可以参考[使用预训练模型Fine-tune完成中文文本分类任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_classification/pretrained_models)。

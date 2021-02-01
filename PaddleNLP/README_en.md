@@ -20,10 +20,13 @@ PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-t
 
 * **Rich and Powerful Model Zoo**
   - Our Model Zoo covers mainstream NLP applications, including Lexical Analysis, Syntactic Parsing, Machine Translation, Text Classification, Text Generation, Text Matching, General Dialogue and Question Answering etc.
+
 * **Easy-to-use API**
   - The API is fully integrated with PaddlePaddle high-level API system. It minimizes the number of user actions required for common use cases like data loading, text pre-processing, training and evaluation. which enables you to deal with text problems more productively.
+
 * **High Performance and Large-scale Training**
   - We provide a highly optimized ditributed training implementation for BERT with Fleet API, it can fully utilize GPU clusters for large-scale model pre-training. Please refer to our [benchmark](./benchmark/bert) for more information.
+
 * **Detailed Tutorials and Industrial Practices**
   - We offers detailed and interactable notebook tutorials to show you the best practices of PaddlePaddle 2.0.
 
@@ -91,13 +94,9 @@ For more pretrained model selection, please refer to [Pretrained-Models](./paddl
 ## API Usage
 
 - [Transformer API](./docs/transformers.md)
-
 - [Data API](./docs/data.md)
-
 - [Dataset API](./docs/datasets.md)
-
 - [Embedding API](./docs/embeddings.md)
-
 - [Metrics API](./docs/metrics.md)
 
 
