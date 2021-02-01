@@ -72,14 +72,17 @@ class TranslationDataset(paddle.io.Dataset):
         Args:
             mode(str, optional): Data mode to download. It could be 'train',
                 'dev' or 'test'. Default: 'train'.
-            root (str, optional): data directory to save dataset. If not
-                provided, dataset will be saved in
-                `/root/.paddlenlp/datasets/machine_translation`. Default: None.
+            root (str, optional): Data directory of dataset. If not
+                provided, dataset will be saved to default directory
+                `~/.paddlenlp/datasets/machine_translation/`. If provided, md5
+                check would be performed, and dataset would be downloaded in
+                default directory if failed. Default: None.
         Returns:
             list: Raw data, a list of tuple.
 
         Examples:
             .. code-block:: python
+
                 from paddlenlp.datasets import IWSLT15
                 data_path = IWSLT15.get_data()
         """
@@ -90,6 +93,7 @@ class TranslationDataset(paddle.io.Dataset):
     @classmethod
     def _download_data(cls, mode="train", root=None):
         """Download dataset"""
+        print("download data!")
         default_root = os.path.join(DATA_HOME, 'machine_translation',
                                     cls.__name__)
         src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
@@ -103,6 +107,7 @@ class TranslationDataset(paddle.io.Dataset):
             fullname = os.path.join(default_root,
                                     filename) if root is None else os.path.join(
                                         os.path.expanduser(root), filename)
+            # print(fullname)
             fullname_list.append(fullname)
 
         data_hash_list = [
@@ -112,10 +117,12 @@ class TranslationDataset(paddle.io.Dataset):
             if not os.path.exists(fullname) or (
                     data_hash_list[i] and
                     not md5file(fullname) == data_hash_list[i]):
+                # print(os.path.exists(fullname))
                 if root is not None:  # not specified, and no need to warn
                     warnings.warn(
                         'md5 check failed for {}, download {} data to {}'.
                         format(filename, cls.__name__, default_root))
+                    print(root)
                 path = get_path_from_url(cls.URL, default_root, cls.MD5)
                 return default_root
         return root if root is not None else default_root
@@ -127,14 +134,16 @@ class TranslationDataset(paddle.io.Dataset):
         be downloaded.
 
         Args:
-            root (str, optional): Data directory to save dataset. If not provided,
-                dataset will be save in `/root/.paddlenlp/datasets/machine_translation`.
-                If vocab files exist, they won't be overwritten. Default: None.
+            root (str, optional): Data directory pf dataset. If not provided,
+                dataset will be save in `~/.paddlenlp/datasets/machine_translation`.
+                If provided, md5 check would be performed, and dataset would be
+                downloaded in default directory if failed. Default: None.
         Returns:
             tuple: Source vocab and target vocab.
 
         Examples:
             .. code-block:: python
+
                 from paddlenlp.datasets import IWSLT15
                 (src_vocab, tgt_vocab) = IWSLT15.get_vocab()
         """
@@ -197,6 +206,7 @@ class TranslationDataset(paddle.io.Dataset):
             tuple: Two transform functions, for source and target data. 
         Examples:
             .. code-block:: python
+
                 from paddlenlp.datasets import IWSLT15
                 transform_func = IWSLT15.get_default_transform_func()
         """
@@ -219,13 +229,17 @@ class IWSLT15(TranslationDataset):
     IWSLT15 Vietnames to English translation dataset.
 
     Args:
-        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
-        root(str, optional): If None, dataset will be downloaded in
-            `/root/.paddlenlp/datasets/machine_translation`. Default: None.
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 
+            'train'.
+        root(str, optional): If None, dataset will be downloaded in default
+            directory `~/paddlenlp/datasets/machine_translation/IWSLT15`. If
+            provided, md5 check would be performed and dataset would be
+            downloaded in default directory if failed. Default: None.
         transform_func(callable, optional): If not None, it transforms raw data
             to index data. Default: None.
     Examples:
         .. code-block:: python
+
             from paddlenlp.datasets import IWSLT15
             train_dataset = IWSLT15('train')
             train_dataset, valid_dataset = IWSLT15.get_datasets(["train", "dev"])
@@ -282,11 +296,14 @@ class WMT14ende(TranslationDataset):
     Args:
         mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
         root(str, optional): If None, dataset will be downloaded in
-            `/root/.paddlenlp/datasets/machine_translation/WMT14ende/`. Default: None.
+            `~/.paddlenlp/datasets/machine_translation/WMT14ende/`. If provided,
+            md5 check would be performed, and dataset would be downloaded in
+            default directory if failed. Default: None.
         transform_func(callable, optional): If not None, it transforms raw data
             to index data. Default: None.
     Examples:
         .. code-block:: python
+
             from paddlenlp.datasets import WMT14ende
             transform_func = WMT14ende.get_default_transform_func(root=root)
             train_dataset = WMT14ende.get_datasets(mode="train", transform_func=transform_func)
