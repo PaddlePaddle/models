@@ -4,13 +4,15 @@ English | [简体中文](./README.md)
   <img src="./docs/imgs/paddlenlp.png" width="520" height ="100" />
 </p>
 
+---------------------------------------------------------------------------------
+
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## Introduction
 
-PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
+PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials. It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
 **This project is still UNDER ACTIVE DEVELOPMENT.**
 
@@ -70,12 +72,27 @@ roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
-For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
+For more pretrained model selection, please refer to [Pretrained-Models](./paddlenlp/transformers/README.md)
+
+## Model Zoo and Applications
+
+- [Word Embedding](./examples/word_embedding/README.md)
+- [Lexical Analysis](./examples/lexical_analysis/README.md)
+- [Language Model](./examples/language_model)
+- [Text Classification](./examples/text_classification/README.md)
+- [Text Generation](./examples/text_generation/README.md)
+- [Semantic Matching](./examples/text_matching/README.md)
+- [Named Entity Recognition](./examples/named_entity_recognition/README.md)
+- [Text Graph](./examples/text_graph/README.md)
+- [General Dialogue](./examples/dialogue)
+- [Machine Translation](./exmaples/machine_translation)
+- [Question Answering](./exmaples/machine_reading_comprehension)
 
 ## API Usage
 
-
 - [Transformer API](./docs/transformers.md)
+
+- [Data API](./docs/data.md)
 
 - [Dataset API](./docs/datasets.md)
 
