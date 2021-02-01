@@ -4,8 +4,8 @@ __all__ = ['get_linear_schedule_with_warmup']
 
 
 def get_linear_schedule_with_warmup(learning_rate,
-                                    num_warmup_steps,
                                     num_training_steps,
+                                    num_warmup_steps,
                                     last_epoch=-1,
                                     verbose=False):
     """
@@ -16,8 +16,8 @@ def get_linear_schedule_with_warmup(learning_rate,
     Args:
         learning_rate (float): The initial learning rate. It is a python float
             number.
-        num_warmup_steps (int): The number of steps for warmup.
         num_training_steps (int): The number of training steps.
+        num_warmup_steps (int): The number of steps for warmup.
         last_epoch (int, optional): The index of last epoch. It can be set for
             resuming training. If None, it means initial learning rate. 
             Default: -1.

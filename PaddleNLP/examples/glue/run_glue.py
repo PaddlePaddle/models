@@ -357,15 +357,9 @@ def do_train(args):
         len(train_data_loader) * args.num_train_epochs)
     warmup_steps = args.warmup_steps if args.warmup_steps > 0 else (
         int(math.floor(num_training_steps * args.warmup_proportion)))
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=warmup_steps,
-        num_training_steps=num_training_steps : float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+
+    lr_scheduler = get_linear_schedule_with_warmup(
+        args.learning_rate, num_training_steps, warmup_steps)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
