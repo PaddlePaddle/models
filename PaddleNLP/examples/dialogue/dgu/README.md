@@ -37,31 +37,23 @@ DGU模型中的6个任务，分别采用不同的评估指标在test集上进行
 
 ### 安装说明
 
-* PaddlePaddle 安装
+* PaddlePaddle安装
 
-   本项目依赖于 PaddlePaddle 2.0rc1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于PaddlePaddle 2.0.0及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-* PaddleNLP 安装
+* PaddleNLP安装
 
-   ```shell
-   pip install paddlenlp>=2.0.0b
-   ```
+```shell
+pip install paddlenlp>=2.0.0rc
+```
 
 * 环境依赖
+  - python>=3.6
+  - sentencepiece
+  - termcolor
 
-   Python的版本要求 3.6+
-
-### 代码结构说明
-
-以下是本项目主要代码结构及说明：
-
-```text
-.
-├── args.py # 运行参数配置
-├── data.py # 数据读取
-├── main.py # 训练模型主程序入口，包括训练、评估
-├── metric.py # 模型评估指标
-└── README.md # 说明文档
+```shell
+pip install sentencepiece termcolor
 ```
 
 ### 数据准备
@@ -147,12 +139,12 @@ python -u main.py --task_name=udc --data_dir=./DGU_datasets/udc --output_dir=./c
 
 以上参数表示：
 
-* task_name：任务名称，可以为udc、dstc2、atis_slot、atis_intent、mrda或swda。
-* data_dir：训练数据路径。
-* output_dir：训练保存模型的文件路径。
-* n_gpu：训练所使用的GPU卡的数量，默认为1。
-* do_train：是否进行训练，默认为`True`。
-* init_from_ckpt：恢复模型参数的路径。
+* `task_name`：任务名称，可以为udc、dstc2、atis_slot、atis_intent、mrda或swda。
+* `data_dir`：训练数据路径。
+* `output_dir`：训练保存模型的文件路径。
+* `n_gpu`：训练所使用的GPU卡的数量，默认为1。
+* `do_train：是否进行训练，默认为`True`。
+* `init_from_ckpt`：恢复模型参数的路径。
 
 其他可选参数和参数的默认值请参考`args.py`。
 

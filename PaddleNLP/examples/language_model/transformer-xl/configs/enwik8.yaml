@@ -29,7 +29,9 @@ eval_batch_size: 10
 
 # Hyparams for training:
 # The number of epoches for training
-epoch: 30
+epoch: 200
+# Max step for training.
+max_step: 400000
 
 # The hyper parameters for optimizer.
 # Type of ptimizer. 
@@ -102,8 +104,6 @@ same_length: False
 clamp_len: -1
 # The number of samples in sample softmax. -1 means do not use sampled softmax. 
 sample_softmax: -1
-# Max step for training.
-max_step: 400000
 # Target length for evaluation. That is, the number of tokens to predict for evaluation. 
 eval_tgt_len: 128
 # What kind of mode for evaluation. valid, test or both("all"). 
