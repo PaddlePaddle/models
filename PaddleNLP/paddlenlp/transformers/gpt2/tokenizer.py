@@ -18,6 +18,7 @@ import unicodedata
 import json
 import sentencepiece
 import jieba
+import shutil
 
 from functools import lru_cache
 from collections import namedtuple
@@ -192,6 +193,8 @@ class GPT2Tokenizer(PretrainedTokenizer):
                  special_tokens=None,
                  max_len=None,
                  do_lower_case=True):
+        self._vocab_file = vocab_file
+        self._merges_file = merges_file
         self.max_len = int(1e12)
         self.num_command_tokens = 2
         self.num_type_tokens = 2
@@ -345,3 +348,14 @@ class GPT2Tokenizer(PretrainedTokenizer):
         text = bytearray([self.byte_decoder[c] for c in text]).decode(
             'utf-8', errors=self.errors)
         return text
+
+    def save_resources(self, save_directory):
+        """
+        Save tokenizer related resources to files under `save_directory`.
+        Args:
+            save_directory (str): Directory to save files into.
+        """
+        for name, file_name in self.resource_files_names.items():
+            ### TODO: make the name 'ernie-tiny' as a variable
+            save_path = os.path.join(save_directory, file_name)
+            shutil.copyfile(getattr(self, "_%s" % name), save_path)
