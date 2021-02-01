@@ -187,8 +187,8 @@ class CNNEncoder(nn.Layer):
             self._activation(conv(inputs)).squeeze(3) for conv in self.convs
         ]
         maxpool_out = [
-            F.max_pool1d(
-                t, kernel_size=t.shape[2]).squeeze(2) for t in convs_out
+            F.adaptive_max_pool1d(
+                t, output_size=1).squeeze(2) for t in convs_out
         ]
         result = paddle.concat(maxpool_out, axis=1)
 
