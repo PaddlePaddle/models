@@ -117,25 +117,15 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
             is_test=True)
         examples.append((input_ids, segment_ids))
 
+    # Seperates data into some batches.
+    batches = [
+        examples[idx:idx + batch_size]
+        for idx in range(0, len(examples), batch_size)
+    ]
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # segment
     ): fn(samples)
-
-    # Seperates data into some batches.
-    batches = [
-        examples[idx, idx + batch_size]
-        for idx in range(0, len(examples), batch_size)
-    ]
-    # one_batch = []
-    # for example in examples:
-    #     one_batch.append(example)
-    #     if len(one_batch) == batch_size:
-    #         batches.append(one_batch)
-    #         one_batch = []
-    # if one_batch:
-    #     # The last batch whose size is less than the config batch_size setting.
-    #     batches.append(one_batch)
 
     results = []
     model.eval()

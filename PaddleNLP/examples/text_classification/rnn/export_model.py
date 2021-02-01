@@ -17,26 +17,26 @@ import argparse
 import paddle
 import paddlenlp as ppnlp
 
-from utils import load_vocab
-
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The path to vocabulary.")
-parser.add_argument('--network', type=str, default="cnn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
-parser.add_argument("--params_path", type=str, default='./checkpoints_cnn/final.pdparams', help="The path of model parameter to be loaded.")
-parser.add_argument("--output_path", type=str, default='./static_graph_params_cnn', help="The path of model parameter in static graph to be saved.")
+parser.add_argument('--network', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
+parser.add_argument("--params_path", type=str, default='./checkpoints/final.pdparams', help="The path of model parameter to be loaded.")
+parser.add_argument("--output_path", type=str, default='./static_graph_params', help="The path of model parameter in static graph to be saved.")
 args = parser.parse_args()
 # yapf: enable
 
 
 def main():
     # Load vocab.
-    vocab = load_vocab(args.vocab_path)
+    vocab = ppnlp.data.Vocab.load_vocabulary(args.vocab_path)
     label_map = {0: 'negative', 1: 'positive'}
 
     # Construct the newtork.
     model = ppnlp.models.Senta(
-        network=args.network, vocab_size=len(vocab), num_classes=len(label_map))
+        network=args.network,
+        vocab_size=len(vocab.token_to_idx),
+        num_classes=len(label_map))
 
     # Load model parameters.
     state_dict = paddle.load(args.params_path)

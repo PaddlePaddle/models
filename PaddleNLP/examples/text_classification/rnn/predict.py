@@ -18,7 +18,7 @@ import paddle.nn.functional as F
 import paddlenlp as ppnlp
 from paddlenlp.data import JiebaTokenizer, Stack, Tuple, Pad
 
-from utils import load_vocab, generate_batch, preprocess_prediction_data
+from utils import preprocess_prediction_data
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -31,7 +31,7 @@ args = parser.parse_args()
 # yapf: enable
 
 
-def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
+def predict(model, data, label_map, batch_size=1, pad_token_id=0):
     """
     Predicts the data labels.
 
@@ -40,8 +40,6 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
         data (obj:`List(Example)`): The processed data whose each element is a Example (numedtuple) object.
             A Example object contains `text`(word_ids) and `se_len`(sequence length).
         label_map(obj:`dict`): The label id (key) to label str (value) map.
-        collate_fn(obj: `callable`): function to generate mini-batch data by merging
-            the sample list.
         batch_size(obj:`int`, defaults to 1): The number of batch.
         pad_token_id(obj:`int`, optional, defaults to 0): The pad token index.
 
@@ -53,17 +51,8 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
     batches = [
         data[idx:idx + batch_size] for idx in range(0, len(data), batch_size)
     ]
-    # one_batch = []
-    # for example in data:
-    #     one_batch.append(example)
-    #     if len(one_batch) == batch_size:
-    #         batches.append(one_batch)
-    #         one_batch = []
-    # if one_batch:
-    #     # The last batch whose size is less than the config batch_size setting.
-    #     batches.append(one_batch)
     batchify_fn = lambda samples, fn=Tuple(
-        Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # input_ids
+        Pad(axis=0, pad_val=pad_token_id),  # input_ids
         Stack(dtype="int64"),  # seq len
     ): [data for data in fn(samples)]
 
@@ -114,7 +103,6 @@ if __name__ == "__main__":
         examples,
         label_map=label_map,
         batch_size=args.batch_size,
-        collate_fn=generate_batch)
-
+        pad_token_id=vocab.token_to_idx.get("[PAD]", 0))
     for idx, text in enumerate(data):
         print('Data: {} \t Label: {}'.format(text, results[idx]))

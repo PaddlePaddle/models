@@ -27,10 +27,10 @@ from utils import convert_example
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--epochs", type=int, default=1, help="Number of epoches for training.")
-parser.add_argument('--use_gpu', type=eval, default=True, help="Whether use GPU for training, input should be True or False")
+parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
+parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate used to train.")
-parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
+parser.add_argument("--save_dir", type=str, default='checkpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
 parser.add_argument("--vocab_path", type=str, default="./simnet_word_dict.txt", help="The directory to dataset.")
 parser.add_argument('--network', type=str, default="lstm", help="Which network you would like to choose bow, cnn, lstm or gru ?")
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     for token, index in vocab.token_to_idx.items():
         new_vocab_file.write(token + "\n")
 
-# Reads data and generates mini-batches.
+    # Reads data and generates mini-batches.
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # query_ids
         Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # title_ids

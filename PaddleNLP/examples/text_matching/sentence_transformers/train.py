@@ -39,7 +39,7 @@ parser.add_argument("--epochs", default=3, type=int, help="Total number of train
 parser.add_argument("--warmup_proption", default=0.0, type=float, help="Linear warmup proption over the training process.")
 parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 parser.add_argument("--seed", type=int, default=1000, help="random seed for initialization")
-parser.add_argument("--n_gpu", type=int, default=3, help="Number of GPUs to use, 0 for CPU.")
+parser.add_argument("--n_gpu", type=int, default=1, help="Number of GPUs to use, 0 for CPU.")
 args = parser.parse_args()
 # yapf: enable
 

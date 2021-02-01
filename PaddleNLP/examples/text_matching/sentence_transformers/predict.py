@@ -28,7 +28,7 @@ from model import SentenceTransformer
 
 # yapf: disable
 parser = argparse.ArgumentParser()
-parser.add_argument("--params_path", type=str, default='./checkpoint/model_4900/model_state.pdparams', help="The path to model parameters to be loaded.")
+parser.add_argument("--params_path", type=str, default='./checkpoint/model_2700/model_state.pdparams', help="The path to model parameters to be loaded.")
 parser.add_argument("--max_seq_length", default=50, type=int, help="The maximum total input sequence length after tokenization. "
     "Sequences longer than this will be truncated, sequences shorter will be padded.")
 parser.add_argument("--batch_size", default=32, type=int, help="Batch size per GPU/CPU for training.")
@@ -128,18 +128,17 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
         examples.append((query_input_ids, query_segment_ids, title_input_ids,
                          title_segment_ids))
 
+    # Seperates data into some batches.
+    batches = [
+        examples[idx:idx + batch_size]
+        for idx in range(0, len(examples), batch_size)
+    ]
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_segment
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # title_input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # tilte_segment
     ): [data for data in fn(samples)]
-
-    # Seperates data into some batches.
-    batches = [
-        examples[idx:idx + batch_size]
-        for idx in range(0, len(examples), batch_size)
-    ]
 
     results = []
     model.eval()
@@ -165,7 +164,6 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
 
 
 if __name__ == "__main__":
-    args = parse_args()
     paddle.set_device("gpu" if args.n_gpu else "cpu")
 
     # ErnieTinyTokenizer is special for ernie-tiny pretained model.
@@ -179,7 +177,8 @@ if __name__ == "__main__":
     ]
     label_map = {0: 'dissimilar', 1: 'similar'}
 
-    pretrained_model = ppnlp.transformers.ErnieModel.from_pretrained("ernie")
+    pretrained_model = ppnlp.transformers.ErnieModel.from_pretrained(
+        "ernie-tiny")
     model = SentenceTransformer(pretrained_model)
 
     if args.params_path and os.path.isfile(args.params_path):
