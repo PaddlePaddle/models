@@ -30,10 +30,10 @@ PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-t
 ### Prerequisites
 
 * python >= 3.6
-* paddlepaddle >= 2.0.0-rc1
+* paddlepaddle >= 2.0.0
 
 ```
-pip install paddlenlp>=2.0.0a
+pip install paddlenlp>=2.0.0rc
 ```
 
 ## Quick Start
@@ -59,15 +59,6 @@ wordemb.cosine_sim("艺术", "火车")
 >>> 0.14792643
 ```
 
-### One-Line Classical Model Building
-
-```python
-from paddlenlp.models import Ernie
-
-ernie = Ernie(Ernie.Task.SeqCls)
-ernie.forward(input_ids, segment_ids)
-```
-
 ### Rich Chinsese Pre-trained Models
 
 ```python
@@ -91,11 +82,6 @@ For more pretrained model selection, please refer to [PretrainedModels](./paddle
 - [Embedding API](./docs/embeddings.md)
 
 - [Metrics API](./docs/metrics.md)
-
-- [Models API](./docs/models.md)
-
-
-
 
 
 ## Tutorials

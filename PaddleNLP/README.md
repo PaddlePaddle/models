@@ -5,7 +5,7 @@
 </p>
 
 
-PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模型库、简洁易用的API，提供飞桨2.0的最佳实践并加速NLP领域应用产业落地效率。
+PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模型库、简洁易用的API，提供飞桨2.0的最佳实践并加速NLP领域产业应用落地效率。
 
 ![License](https://img.shields.io/badge/license-Apache%202-red.svg)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
@@ -24,8 +24,7 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
 
 - **高性能分布式训练**
 
-  - 通过高度优化的Transformer网络实现，结合混合精度与Fleet分布式训练API，可充分利用GPU集群资源，高效完成预训练模型的分布式训练。
-
+  - 通过高度优化的Transformer网络实现，结合混合精度与Fleet分布式训练API，可充分利用GPU集群资源，高效完成大规模预训练模型的分布式训练。
 
 
 # 安装
@@ -33,10 +32,11 @@ PaddleNLP旨在帮助开发者提高文本建模的效率，通过丰富的模�
 ## 环境依赖
 
 - python >= 3.6
-- paddlepaddle >= 2.0.0-rc1
+- paddlepaddle >= 2.0.0
+
 
 ```
-pip install paddlenlp==2.0.0b
+pip install paddlenlp==2.0.0rc
 ```
 
 
@@ -66,19 +66,6 @@ wordemb.cosine_sim("艺术", "火车")
 
 内置50+中文词向量，更多使用方法请参考 [Embedding文档](./examples/word_embedding/README.md)。
 
-## 一键加载经典模型
-
-```python
-from paddlenlp.models import Ernie, Senta, SimNet
-
-ernie = Ernie("ernie-1.0", num_classes=2, task="seq-cls")
-
-senta = Senta(network="bow", vocab_size=1024, num_classes=2)
-
-simnet = SimNet(network="gru", vocab_size=1024, num_classes=2)
-```
-
-更多使用方法请参考[Models API](./docs/models.md)。
 
 ## 一键加载高质量中文预训练模型
 
@@ -110,13 +97,10 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 - [Metrics API](./docs/metrics.md)
 
-- [Models API](./docs/models.md)
-
-
 
 # 可交互式Notebook教程
 
-- [使用seq2vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
+- [使用Seq2Vec模块进行句子情感分类](https://aistudio.baidu.com/aistudio/projectdetail/1283423)
 - [如何通过预训练模型Fine-tune下游任务](https://aistudio.baidu.com/aistudio/projectdetail/1294333)
 - [使用BiGRU-CRF模型完成快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1317771)
 - [使用预训练模型ERNIE优化快递单信息抽取](https://aistudio.baidu.com/aistudio/projectdetail/1329361)
