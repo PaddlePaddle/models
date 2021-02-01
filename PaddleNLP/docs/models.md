@@ -1,4 +1,4 @@
-# paddlenlp.models
+# PaddleNLP Models API
 
 该模块提供了百度自研的模型的高阶API，如文本分类模型Senta，文本匹配模型SimNet，通用预训练模型ERNIE等。
 
