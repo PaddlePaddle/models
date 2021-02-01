@@ -13,21 +13,18 @@
 # limitations under the License.
 
 import time
-
 import numpy as np
 
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.nn.initializer as I
-
-from data import load_embedding, create_data_loader_for_small_model, create_pair_loader_for_small_model
-from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddle.metric import Metric, Accuracy, Precision, Recall
-
+from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
 from paddlenlp.metrics import AccuracyAndF1
 
 from args import parse_args
+from data import load_embedding, create_data_loader_for_small_model, create_pair_loader_for_small_model
 
 TASK_CLASSES = {
     "sst-2": (GlueSST2, Accuracy),
@@ -58,6 +55,7 @@ class BiLSTM(nn.Layer):
             num_layers,
             'bidirectional',
             dropout=dropout_prob)
+
         self.fc = nn.Linear(
             hidden_size * 2,
             hidden_size,
@@ -75,7 +73,6 @@ class BiLSTM(nn.Layer):
             output_dim,
             weight_attr=paddle.ParamAttr(initializer=I.Uniform(
                 low=-init_scale, high=init_scale)))
-        self.dropout = nn.Dropout(dropout_prob)
 
     def forward(self, x_1, seq_len_1, x_2=None, seq_len_2=None):
         x_embed_1 = self.embedder(x_1)
@@ -158,7 +155,7 @@ def do_train(args):
                    args.dropout_prob, args.init_scale, emb_tensor)
 
     loss_fct = nn.CrossEntropyLoss()
-    # gloabl_norm_clip = paddle.nn.ClipGradByNorm(5.0)
+
     if args.optimizer == 'adadelta':
         optimizer = paddle.optimizer.Adadelta(
             learning_rate=args.lr, rho=0.95, parameters=model.parameters())

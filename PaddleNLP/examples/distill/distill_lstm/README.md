@@ -23,7 +23,7 @@
 
 ## 蒸馏实验步骤
 ### 训练bert finetuning模型
-以GLUE的SST-2任务为例：
+以GLUE的SST-2任务为例，我们可以去本repo下example中的glue目录下，调用bert finetune的脚本，配置如下的参数，训练SST-2任务：
 
 ```shell
 cd ../../glue
@@ -43,17 +43,17 @@ python -u ./run_bert_finetune.py \
     --n_gpu 1 \
 
 ```
-训练完成之后，将训练效果最好的模型保存在该项目下的`models/$TASK_NAME/`下。该模型目录下有`model_config.json`, `model_state.pdparams`, `tokenizer_config.json`及`vocab.txt`这几个文件。
+训练完成之后，可将训练效果最好的模型保存在该项目下的`models/$TASK_NAME/`下。模型目录下有`model_config.json`, `model_state.pdparams`, `tokenizer_config.json`及`vocab.txt`这几个文件。
 
 ### 数据准备
 
-在中文数据集上的小模型训练是利用jieba分词的，词表是由senta提供，可通过运行以下命令进行下载
+在中文数据集上的小模型训练的输入是利用jieba分词的，词表是由senta提供，可通过运行以下命令进行下载
 ```shell
 wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
 ```
-进行下载，为了节省显存和运行时间，可以对ChnSentiCorp中出现的词先进行过滤，并将词表文件名配置在下面的参数中。
+为了节省显存和运行时间，可以对ChnSentiCorp中出现的词先进行过滤，并将词表文件名和词表大小配置在下面的参数中。
 
-本文下载并在对英文数据集的训练中使用了Google News语料进行[预训练的word2vec](https://code.google.com/archive/p/word2vec/)初始化网络的Embedding层。由于语料大多是英文，因此预训练的Embedding对于中文数据集的模型训练可能没有帮助，因此在中文中Embedding层的参数采用了随机初始化的方式。
+另外，本文下载并在对英文数据集的训练中使用了Google News语料进行[预训练的word2vec](https://code.google.com/archive/p/word2vec/)初始化小模型的Embedding层。由于语料大多是英文，因此中文任务上没有使用该预训练的Embedding，而是采用了默认参数初始化的方式。
 
 ### 训练小模型
 
@@ -61,7 +61,7 @@ wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
 
 
 ```shell
-CUDA_VISIBLE_DEVICES="0" nohup python small.py \
+CUDA_VISIBLE_DEVICES="0" python small.py \
     --task_name senta \
     --max_epoch 20 \
     --vocab_size 29496 \
@@ -71,36 +71,36 @@ CUDA_VISIBLE_DEVICES="0" nohup python small.py \
     --lr 3e-4 \
     --dropout_prob 0.2 \
     --use_pretrained_emb False \
-    --vocab_path senta_word_dict_subset.txt > senta_small.log &
+    --vocab_path senta_word_dict_subset.txt
 ```
 
 ```shell
-CUDA_VISIBLE_DEVICES="1" nohup python small.py \
+CUDA_VISIBLE_DEVICES="1" python small.py \
     --task_name sst-2 \
     --vocab_size 30522 \
     --max_epoch 10 \
     --batch_size 64 \
     --lr 1.0 \
     --dropout_prob 0.4 \
-    --use_pretrained_emb True > sst-2_small.log &
+    --use_pretrained_emb True
 ```
 
 ```shell
-CUDA_VISIBLE_DEVICES="2" nohup python small.py \
+CUDA_VISIBLE_DEVICES="2" python small.py \
     --task_name qqp \
     --vocab_size 30522 \
     --max_epoch 35 \
     --batch_size 256 \
     --lr 2.0 \
     --dropout_prob 0.4 \
-    --use_pretrained_emb True > qqp_small.log &
+    --use_pretrained_emb True
 ```
 
 ### 训练蒸馏模型
 这一步是将bert的知识蒸馏到基于BiLSTM的小模型中，可以运行下面的命令分别基于ChnSentiCorp、SST-2、QQP数据集对基于BiLSTM的小模型进行蒸馏。
 
 ```shell
-CUDA_VISIBLE_DEVICES="3" nohup python bert_distill.py \
+CUDA_VISIBLE_DEVICES="3" python bert_distill.py \
     --task_name senta \
     --vocab_size 29496 \
     --max_epoch 6 \
@@ -110,11 +110,11 @@ CUDA_VISIBLE_DEVICES="3" nohup python bert_distill.py \
     --model_name bert-wwm-ext-chinese \
     --use_pretrained_emb False \
     --teacher_path model/senta/best_bert_wwm_ext_model_880/model_state.pdparams \
-    --vocab_path senta_word_dict_subset.txt > senta_distill_wwm_ext.log &
+    --vocab_path senta_word_dict_subset.txt
 ```
 
 ```shell
-CUDA_VISIBLE_DEVICES="4" nohup python bert_distill.py \
+CUDA_VISIBLE_DEVICES="4" python bert_distill.py \
     --task_name sst-2 \
     --vocab_size 30522 \
     --max_epoch 6 \
@@ -124,11 +124,11 @@ CUDA_VISIBLE_DEVICES="4" nohup python bert_distill.py \
     --batch_size 128 \
     --model_name bert-base-uncased \
     --use_pretrained_emb True \
-    --teacher_path model/SST-2/best_model_610/model_state.pdparams > sst-2_distill.log &
+    --teacher_path model/SST-2/best_model_610/model_state.pdparams
 ```
 
 ```shell
-CUDA_VISIBLE_DEVICES="5" nohup python bert_distill.py \
+CUDA_VISIBLE_DEVICES="5" python bert_distill.py \
     --task_name qqp \
     --vocab_size 30522 \
     --max_epoch 6 \
@@ -138,5 +138,5 @@ CUDA_VISIBLE_DEVICES="5" nohup python bert_distill.py \
     --model_name bert-base-uncased \
     --use_pretrained_emb True \
     --n_iter 10 \
-    --teacher_path model/QQP/best_model_17000/model_state.pdparams > qqp_distill.log &
+    --teacher_path model/QQP/best_model_17000/model_state.pdparams
 ```

@@ -21,9 +21,7 @@ import numpy as np
 import jieba
 
 import paddle
-from paddle.io import DataLoader
 from paddle.metric import Metric, Accuracy, Precision, Recall
-
 from paddlenlp.data import Stack, Tuple, Pad, Vocab
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.datasets import GlueSST2, GlueQQP, ChnSentiCorp
@@ -352,14 +350,14 @@ def create_dataloader(train_ds, dev_ds, batch_size, batchify_fn, shuffle=True):
     dev_batch_sampler = paddle.io.BatchSampler(
         dev_ds, batch_size=batch_size, shuffle=False)
 
-    train_data_loader = DataLoader(
+    train_data_loader = paddle.io.DataLoader(
         dataset=train_ds,
         batch_sampler=train_batch_sampler,
         collate_fn=batchify_fn,
         num_workers=0,
         return_list=True)
 
-    dev_data_loader = DataLoader(
+    dev_data_loader = paddle.io.DataLoader(
         dataset=dev_ds,
         batch_sampler=dev_batch_sampler,
         collate_fn=batchify_fn,
