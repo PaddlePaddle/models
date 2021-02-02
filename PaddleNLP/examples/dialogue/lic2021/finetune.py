@@ -85,6 +85,9 @@ def main(args):
         learning_rate=lr_scheduler,
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
+        apply_decay_param_fun=lambda x: x in [
+            p.name for n, p in model.named_parameters()
+            if not any(nd in n for nd in ["bias", "norm"])],
         grad_clip=nn.ClipGradByGlobalNorm(args.max_grad_norm))
 
     if args.init_from_ckpt:

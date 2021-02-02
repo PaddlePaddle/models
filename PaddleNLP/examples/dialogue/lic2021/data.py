@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import gzip
 from glob import glob
 from contextlib import contextmanager
 from collections import defaultdict
