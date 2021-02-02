@@ -4,23 +4,31 @@ from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial
 from paddle.io import DataLoader
 
-train_ds, test_ds = MSRA_NER().get_datasets('train', 'test')
+train_ds, test_ds = MSRA_NER_new().get_datasets('train', 'test')
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-uncased')
+
+ignore_label = -100
 
 
 def tokenize_and_align_labels(examples, no_entity_id):
-    labels = [examples[i]['label'] for i in range(len(examples))]
+    labels = [examples[i]['labels'] for i in range(len(examples))]
     examples = [examples[i]['tokens'] for i in range(len(examples))]
     tokenized_inputs = tokenizer(
-        examples, is_split_into_words=True, max_seq_len=512)
+        examples,
+        is_split_into_words=True,
+        max_seq_len=512,
+        pad_to_max_seq_len=True)
 
     for i in range(len(tokenized_inputs)):
-        tokenized_inputs[i]['label'] = [no_entity_id] + labels[
+        tokenized_inputs[i]['labels'] = [no_entity_id] + labels[
             i] + [no_entity_id]
+        tokenized_inputs[i]['labels'] += [ignore_label] * (
+            len(tokenized_inputs[i]['input_ids']) -
+            len(tokenized_inputs[i]['labels']))
     return tokenized_inputs
 
 
-label_list = MSRA_NER().get_labels()
+label_list = MSRA_NER_new().get_labels()
 no_entity_id = len(label_list) - 1
 
 trans_func = partial(tokenize_and_align_labels, no_entity_id=no_entity_id)
@@ -31,7 +39,6 @@ print(train_ds[0])
 print(len(train_ds))
 print('-----------------------------------------------------')
 
-ignore_label = -100
 batchify_fn = lambda samples, fn=Dict({
     'input_ids': Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
     'segment_ids': Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
