@@ -17,15 +17,12 @@ PaddleNLP 2.0拥有丰富的模型库、简洁易用的API与高性能的分布�
 ## 特性
 
 - **丰富的模型库**
-
   - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等，更多详细介绍请查看[PaddleNLP模型库](./exmaples/README.md)。
 
 - **简洁易用的API**
-
   - 深度兼容飞桨2.0的高层API体系，提供可复用的文本建模模块，可大幅度减少数据处理、组网、训练环节的代码开发量，提升文本建模开发效率。
 
 - **高性能分布式训练**
-
   - 通过深度优化的混合精度训练策略与Fleet分布式训练API，可充分利用GPU集群资源，高效完成大规模预训练模型的分布式训练。
 
 
@@ -40,7 +37,6 @@ PaddleNLP 2.0拥有丰富的模型库、简洁易用的API与高性能的分布�
 pip install paddlenlp==2.0.0rc
 ```
 
-
 ## 快速开始
 
 ### 数据集快速加载
@@ -48,7 +44,7 @@ pip install paddlenlp==2.0.0rc
 ```python
 from paddlenlp.datasets import ChnSentiCorp
 
-train_dataset, dev_dataset, test_dataset= ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
+train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
 ```
 
 可参考[Dataset文档](./docs/datasets.md)查看更多数据集。
@@ -74,11 +70,8 @@ wordemb.cosine_sim("艺术", "火车")
 from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
 
 ernie = ErnieModel.from_pretrained('ernie-1.0')
-
 bert = BertModel.from_pretrained('bert-wwm-chinese')
-
 roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
-
 electra = ElectraModel.from_pretrained('chinese-electra-small')
 ```
 
@@ -102,7 +95,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 ## API 使用文档
 
 - [Transformer API](./docs/transformers.md)
-  * 基于Transformer结构相关的预训练模型API，包含ERNIE, BERT, RoBERTa, Electra等主流经典结构和下游任务。
+  * 基于Transformer结构相关的预训练模型API，包含ERNIE, BERT, RoBERTa, Electra等主流经典结构和下游任务。
 - [Data API](./docs/data.md)
   * 文本数据Pipeline相关的API说明。
 - [Dataset API](./docs/datasets.md)
