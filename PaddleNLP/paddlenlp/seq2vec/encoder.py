@@ -129,13 +129,13 @@ class CNNEncoder(nn.Layer):
         self._activation = conv_layer_activation
         self._output_dim = output_dim
 
-        self.convs = [
+        self.convs = paddle.nn.LayerList([
             nn.Conv2D(
                 in_channels=1,
                 out_channels=self._num_filter,
                 kernel_size=(i, self._emb_dim),
                 **kwargs) for i in self._ngram_filter_sizes
-        ]
+        ])
 
         maxpool_output_dim = self._num_filter * len(self._ngram_filter_sizes)
         if self._output_dim:
@@ -203,7 +203,7 @@ class GRUEncoder(nn.Layer):
     A GRUEncoder takes as input a sequence of vectors and returns a
     single vector, which is a combination of multiple GRU layers.
     The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-    The output is of shape `(batch_size, hidden_size*2)` if GRU is bidirectional;
+    The output is of shape `(batch_size, hidden_size*2)` if GRU is bidirection;
     If not, output is of shape `(batch_size, hidden_size)`.
 
     Paddle's GRU have two outputs: the hidden state for every time step at last layer, 
@@ -211,7 +211,7 @@ class GRUEncoder(nn.Layer):
     If `pooling_type` is None, we perform the pooling on the hidden state of every time 
     step at last layer to create a single vector. If not None, we use the hidden state 
     of the last time step at last layer as a single output (shape of `(batch_size, hidden_size)`); 
-    And if direction is bidirectional, the we concat the hidden state of the last forward 
+    And if direction is bidirection, the we concat the hidden state of the last forward 
     gru and backward gru layer to create a single vector (shape of `(batch_size, hidden_size*2)`).
 
     Args:
@@ -220,9 +220,9 @@ class GRUEncoder(nn.Layer):
         num_layers (obj:`int`, optional, defaults to 1): Number of recurrent layers. 
             E.g., setting num_layers=2 would mean stacking two GRUs together to form a stacked GRU, 
             with the second GRU taking in outputs of the first GRU and computing the final results.
-        direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward" and "bidirectional".
-            When "bidirectional", the way to merge outputs of forward and backward is concatenating.
+        direction (obj:`str`, optional, defaults to obj:`forward`): The direction of the network. 
+            It can be "forward" and "bidirect" (it means bidirection network).
+            When "bidirect", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each GRU layer except the last layer, with dropout probability equal to dropout.
         pooling_type (obj: `str`, optional, defaults to obj:`None`): If `pooling_type` is None, 
@@ -266,7 +266,7 @@ class GRUEncoder(nn.Layer):
         Returns the dimension of the final vector output by this `GRUEncoder`.  This is not
         the shape of the returned tensor, but the last element of that shape.
         """
-        if self._direction == "bidirectional":
+        if self._direction == "bidirect":
             return self._hidden_size * 2
         else:
             return self._hidden_size
@@ -276,7 +276,7 @@ class GRUEncoder(nn.Layer):
         GRUEncoder takes the a sequence of vectors and and returns a
         single vector, which is a combination of multiple GRU layers.
         The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-        The output is of shape `(batch_size, hidden_size*2)` if GRU is bidirectional;
+        The output is of shape `(batch_size, hidden_size*2)` if GRU is bidirection;
         If not, output is of shape `(batch_size, hidden_size)`.
 
         Args:
@@ -293,11 +293,11 @@ class GRUEncoder(nn.Layer):
         if not self._pooling_type:
             # We exploit the `last_hidden` (the hidden state at the last time step for every layer)
             # to create a single vector.
-            # If gru is not bidirectional, then output is the hidden state of the last time step 
+            # If gru is not bidirection, then output is the hidden state of the last time step 
             # at last layer. Output is shape of `(batch_size, hidden_size)`.
-            # If gru is bidirectional, then output is concatenation of the forward and backward hidden state 
+            # If gru is bidirection, then output is concatenation of the forward and backward hidden state 
             # of the last time step at last layer. Output is shape of `(batch_size, hidden_size*2)`.
-            if self._direction != 'bidirectional':
+            if self._direction != 'bidirect':
                 output = last_hidden[-1, :, :]
             else:
                 output = paddle.concat(
@@ -305,8 +305,8 @@ class GRUEncoder(nn.Layer):
         else:
             # We exploit the `encoded_text` (the hidden state at the every time step for last layer)
             # to create a single vector. We perform pooling on the encoded text.
-            # If gru is not bidirectional, output is shape of `(batch_size, hidden_size)`.
-            # If gru is bidirectional, then output is shape of `(batch_size, hidden_size*2)`.
+            # If gru is not bidirection, output is shape of `(batch_size, hidden_size)`.
+            # If gru is bidirection, then output is shape of `(batch_size, hidden_size*2)`.
             if self._pooling_type == 'sum':
                 output = paddle.sum(encoded_text, axis=1)
             elif self._pooling_type == 'max':
@@ -326,7 +326,7 @@ class LSTMEncoder(nn.Layer):
     A LSTMEncoder takes as input a sequence of vectors and returns a
     single vector, which is a combination of multiple LSTM layers.
     The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-    The output is of shape `(batch_size, hidden_size*2)` if LSTM is bidirectional;
+    The output is of shape `(batch_size, hidden_size*2)` if LSTM is bidirection;
     If not, output is of shape `(batch_size, hidden_size)`.
 
     Paddle's LSTM have two outputs: the hidden state for every time step at last layer, 
@@ -334,7 +334,7 @@ class LSTMEncoder(nn.Layer):
     If `pooling_type` is None, we perform the pooling on the hidden state of every time 
     step at last layer to create a single vector. If not None, we use the hidden state 
     of the last time step at last layer as a single output (shape of `(batch_size, hidden_size)`); 
-    And if direction is bidirectional, the we concat the hidden state of the last forward 
+    And if direction is bidirection, the we concat the hidden state of the last forward 
     lstm and backward lstm layer to create a single vector (shape of `(batch_size, hidden_size*2)`).
 
     Args:
@@ -344,8 +344,8 @@ class LSTMEncoder(nn.Layer):
             E.g., setting num_layers=2 would mean stacking two LSTMs together to form a stacked LSTM, 
             with the second LSTM taking in outputs of the first LSTM and computing the final results.
         direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward" and "bidirectional".
-            When "bidirectional", the way to merge outputs of forward and backward is concatenating.
+            It can be "forward" and "bidirect" (it means bidirection network).
+            When "bidirection", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each LSTM layer except the last layer, with dropout probability equal to dropout.
         pooling_type (obj: `str`, optional, defaults to obj:`None`): If `pooling_type` is None, 
@@ -390,7 +390,7 @@ class LSTMEncoder(nn.Layer):
         Returns the dimension of the final vector output by this `LSTMEncoder`.  This is not
         the shape of the returned tensor, but the last element of that shape.
         """
-        if self._direction == "bidirectional":
+        if self._direction == "bidirect":
             return self._hidden_size * 2
         else:
             return self._hidden_size
@@ -400,7 +400,7 @@ class LSTMEncoder(nn.Layer):
         LSTMEncoder takes the a sequence of vectors and and returns a
         single vector, which is a combination of multiple LSTM layers.
         The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-        The output is of shape `(batch_size, hidden_size*2)` if LSTM is bidirectional;
+        The output is of shape `(batch_size, hidden_size*2)` if LSTM is bidirection;
         If not, output is of shape `(batch_size, hidden_size)`.
 
         Args:
@@ -417,11 +417,11 @@ class LSTMEncoder(nn.Layer):
         if not self._pooling_type:
             # We exploit the `last_hidden` (the hidden state at the last time step for every layer)
             # to create a single vector.
-            # If lstm is not bidirectional, then output is the hidden state of the last time step 
+            # If lstm is not bidirection, then output is the hidden state of the last time step 
             # at last layer. Output is shape of `(batch_size, hidden_size)`.
-            # If lstm is bidirectional, then output is concatenation of the forward and backward hidden state 
+            # If lstm is bidirection, then output is concatenation of the forward and backward hidden state 
             # of the last time step at last layer. Output is shape of `(batch_size, hidden_size*2)`.
-            if self._direction != 'bidirectional':
+            if self._direction != 'bidirect':
                 output = last_hidden[-1, :, :]
             else:
                 output = paddle.concat(
@@ -429,8 +429,8 @@ class LSTMEncoder(nn.Layer):
         else:
             # We exploit the `encoded_text` (the hidden state at the every time step for last layer)
             # to create a single vector. We perform pooling on the encoded text.
-            # If lstm is not bidirectional, output is shape of `(batch_size, hidden_size)`.
-            # If lstm is bidirectional, then output is shape of `(batch_size, hidden_size*2)`.
+            # If lstm is not bidirection, output is shape of `(batch_size, hidden_size)`.
+            # If lstm is bidirection, then output is shape of `(batch_size, hidden_size*2)`.
             if self._pooling_type == 'sum':
                 output = paddle.sum(encoded_text, axis=1)
             elif self._pooling_type == 'max':
@@ -450,7 +450,7 @@ class RNNEncoder(nn.Layer):
     A RNNEncoder takes as input a sequence of vectors and returns a
     single vector, which is a combination of multiple RNN layers.
     The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-    The output is of shape `(batch_size, hidden_size*2)` if RNN is bidirectional;
+    The output is of shape `(batch_size, hidden_size*2)` if RNN is bidirection;
     If not, output is of shape `(batch_size, hidden_size)`.
 
     Paddle's RNN have two outputs: the hidden state for every time step at last layer, 
@@ -458,7 +458,7 @@ class RNNEncoder(nn.Layer):
     If `pooling_type` is None, we perform the pooling on the hidden state of every time 
     step at last layer to create a single vector. If not None, we use the hidden state 
     of the last time step at last layer as a single output (shape of `(batch_size, hidden_size)`); 
-    And if direction is bidirectional, the we concat the hidden state of the last forward 
+    And if direction is bidirection, the we concat the hidden state of the last forward 
     rnn and backward rnn layer to create a single vector (shape of `(batch_size, hidden_size*2)`).
 
     Args:
@@ -468,8 +468,8 @@ class RNNEncoder(nn.Layer):
             E.g., setting num_layers=2 would mean stacking two RNNs together to form a stacked RNN, 
             with the second RNN taking in outputs of the first RNN and computing the final results.
         direction (obj:`str`, optional, defaults to obj:`forwrd`): The direction of the network. 
-            It can be "forward" and "bidirectional".
-            When "bidirectional", the way to merge outputs of forward and backward is concatenating.
+            It can be "forward" and "bidirect" (it means bidirection network).
+            When "bidirection", the way to merge outputs of forward and backward is concatenating.
         dropout (obj:`float`, optional, defaults to 0.0): If non-zero, introduces a Dropout layer 
             on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout.
         pooling_type (obj: `str`, optional, defaults to obj:`None`): If `pooling_type` is None, 
@@ -514,7 +514,7 @@ class RNNEncoder(nn.Layer):
         Returns the dimension of the final vector output by this `RNNEncoder`.  This is not
         the shape of the returned tensor, but the last element of that shape.
         """
-        if self._direction == "bidirectional":
+        if self._direction == "bidirect":
             return self._hidden_size * 2
         else:
             return self._hidden_size
@@ -524,7 +524,7 @@ class RNNEncoder(nn.Layer):
         RNNEncoder takes the a sequence of vectors and and returns a
         single vector, which is a combination of multiple RNN layers.
         The input to this module is of shape `(batch_size, num_tokens, input_size)`, 
-        The output is of shape `(batch_size, hidden_size*2)` if RNN is bidirectional;
+        The output is of shape `(batch_size, hidden_size*2)` if RNN is bidirection;
         If not, output is of shape `(batch_size, hidden_size)`.
 
         Args:
@@ -541,11 +541,11 @@ class RNNEncoder(nn.Layer):
         if not self._pooling_type:
             # We exploit the `last_hidden` (the hidden state at the last time step for every layer)
             # to create a single vector.
-            # If rnn is not bidirectional, then output is the hidden state of the last time step 
+            # If rnn is not bidirection, then output is the hidden state of the last time step 
             # at last layer. Output is shape of `(batch_size, hidden_size)`.
-            # If rnn is bidirectional, then output is concatenation of the forward and backward hidden state 
+            # If rnn is bidirection, then output is concatenation of the forward and backward hidden state 
             # of the last time step at last layer. Output is shape of `(batch_size, hidden_size*2)`.
-            if self._direction != 'bidirectional':
+            if self._direction != 'bidirect':
                 output = last_hidden[-1, :, :]
             else:
                 output = paddle.concat(
@@ -553,8 +553,8 @@ class RNNEncoder(nn.Layer):
         else:
             # We exploit the `encoded_text` (the hidden state at the every time step for last layer)
             # to create a single vector. We perform pooling on the encoded text.
-            # If rnn is not bidirectional, output is shape of `(batch_size, hidden_size)`.
-            # If rnn is bidirectional, then output is shape of `(batch_size, hidden_size*2)`.
+            # If rnn is not bidirection, output is shape of `(batch_size, hidden_size)`.
+            # If rnn is bidirection, then output is shape of `(batch_size, hidden_size*2)`.
             if self._pooling_type == 'sum':
                 output = paddle.sum(encoded_text, axis=1)
             elif self._pooling_type == 'max':

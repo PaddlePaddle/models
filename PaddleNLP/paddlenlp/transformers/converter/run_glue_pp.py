@@ -369,7 +369,7 @@ def do_train(args):
             loss.backward()
             optimizer.step()
             lr_scheduler.step()
-            optimizer.clear_gradients()
+            optimizer.clear_grad()
             if global_step % args.save_steps == 0:
                 evaluate(model, loss_fct, metric, dev_data_loader)
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:

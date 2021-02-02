@@ -25,11 +25,13 @@ use_gpu: True
 # Args for reader, see reader.py for details
 token_delimiter: None
 batch_size: 32
-eval_batch_size: 5
+eval_batch_size: 10
 
 # Hyparams for training:
 # The number of epoches for training
-epoch: 30
+epoch: 200
+# Max step for training.
+max_step: 200000
 
 # The hyper parameters for optimizer.
 # Type of ptimizer. 
@@ -104,8 +106,6 @@ same_length: False
 clamp_len: -1
 # The number of samples in sample softmax. -1 means do not use sampled softmax. 
 sample_softmax: -1
-# Max step for training.
-max_step: 200000
 # What kind of mode for evaluation. valid, test or both("all"). 
 mode: "all"
 # Maximum evaluation step. 

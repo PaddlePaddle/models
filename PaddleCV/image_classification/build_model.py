@@ -37,20 +37,18 @@ def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
 def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
+
     if args.model in AMP_MODEL_LIST:
-        image_data = (fluid.layers.cast(image, 'float16')
-                      if args.use_pure_fp16 and not args.use_dali else image)
-        image_transpose = fluid.layers.transpose(
-            image_data,
-            [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
-        image_transpose.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_transpose,
-                            class_dim=args.class_dim,
-                            data_format=args.data_format)
+        with paddle.static.amp.fp16_guard():
+            image_transpose = fluid.layers.transpose(
+                image,
+                [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+            image_transpose.stop_gradient = image.stop_gradient
+            net_out = model.net(input=image_transpose,
+                                class_dim=args.class_dim,
+                                data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
-    if args.use_pure_fp16:
-        net_out = fluid.layers.cast(x=net_out, dtype="float32")
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
@@ -59,12 +57,11 @@ def _basic_model(data, model, args, is_train):
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
-    target_cost = (fluid.layers.reduce_sum(cost)
-                   if args.use_pure_fp16 else fluid.layers.mean(cost))
+    avg_cost = fluid.layers.mean(cost) 
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(
         input=softmax_out, label=label, k=min(5, args.class_dim))
-    return [target_cost, acc_top1, acc_top5]
+    return [avg_cost, acc_top1, acc_top5]
 
 
 def _googlenet_model(data, model, args, is_train):
@@ -103,22 +100,18 @@ def _mixup_model(data, model, args, is_train):
     lam = data[3]
 
     if args.model in AMP_MODEL_LIST:
-        image_data = (fluid.layers.cast(image, 'float16')
-                      if args.use_pure_fp16 and not args.use_dali else image)
-        image_transpose = fluid.layers.transpose(
-            image_data,
-            [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
-        image_transpose.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_transpose,
-                            class_dim=args.class_dim,
-                            data_format=args.data_format)
+        with paddle.static.amp.fp16_guard():
+            image_transpose = fluid.layers.transpose(
+                image,
+                [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+            image_transpose.stop_gradient = image.stop_gradient
+            net_out = model.net(input=image_transpose,
+                                class_dim=args.class_dim,
+                                data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
-    if args.use_pure_fp16:
-        net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
-        softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
-    else:
-        softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+    softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+
     if not args.use_label_smoothing:
         loss_a = fluid.layers.cross_entropy(input=softmax_out, label=y_a)
         loss_b = fluid.layers.cross_entropy(input=softmax_out, label=y_b)
@@ -128,17 +121,11 @@ def _mixup_model(data, model, args, is_train):
         loss_b = _calc_label_smoothing_loss(softmax_out, y_b, args.class_dim,
                                             args.label_smoothing_epsilon)
 
-    if args.use_pure_fp16:
-        target_loss_a = fluid.layers.reduce_sum(x=loss_a)
-        target_loss_b = fluid.layers.reduce_sum(x=loss_b)
-        cost = lam * target_loss_a + (1 - lam) * target_loss_b
-        target_cost = fluid.layers.reduce_sum(x=cost)
-    else:
-        target_loss_a = fluid.layers.mean(x=loss_a)
-        target_loss_b = fluid.layers.mean(x=loss_b)
-        cost = lam * target_loss_a + (1 - lam) * target_loss_b
-        target_cost = fluid.layers.mean(x=cost)
-    return [target_cost]
+    loss_a_mean = fluid.layers.mean(x=loss_a)
+    loss_b_mean = fluid.layers.mean(x=loss_b)
+    cost = lam * loss_a_mean + (1 - lam) * loss_b_mean
+    avg_cost = fluid.layers.mean(x=cost)
+    return [avg_cost]
 
 
 def create_model(model, args, is_train):

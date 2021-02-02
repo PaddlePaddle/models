@@ -37,6 +37,7 @@ def do_train(args):
     else:
         rank = 0
         trainer_count = 1
+        paddle.set_device("cpu")
 
     if trainer_count > 1:
         dist.init_parallel_env()
@@ -242,8 +243,9 @@ def do_train(args):
                 logger.info(logger_info)
 
                 if args.save_model and rank == 0:
-                    model_dir = os.path.join(args.save_model,
-                                             "step_" + str(step_idx))
+                    model_dir = os.path.join(
+                        args.save_model,
+                        "step_" + str(step_idx) + "_" + str(eval_loss))
                     if not os.path.exists(model_dir):
                         os.makedirs(model_dir)
                     paddle.save(

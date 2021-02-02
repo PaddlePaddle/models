@@ -29,10 +29,10 @@ parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
 parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate used to train.")
-parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
+parser.add_argument("--save_dir", type=str, default='checkpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
 parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The directory to dataset.")
-parser.add_argument('--network', type=str, default="bilstm_attn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
+parser.add_argument('--network', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
 parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 args = parser.parse_args()
 # yapf: enable
@@ -160,10 +160,12 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
+    callback = paddle.callbacks.ProgBarLogger(log_freq=10, verbose=3)
     model.fit(train_loader,
               dev_loader,
               epochs=args.epochs,
-              save_dir=args.save_dir)
+              save_dir=args.save_dir,
+              callbacks=callback)
 
     # Finally tests model.
     results = model.evaluate(test_loader)

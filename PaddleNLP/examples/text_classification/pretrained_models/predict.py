@@ -32,8 +32,6 @@ MODEL_CLASSES = {
               ppnlp.transformers.ErnieTokenizer),
     'roberta': (ppnlp.transformers.RobertaForSequenceClassification,
                 ppnlp.transformers.RobertaTokenizer),
-    'electra': (ppnlp.transformers.ElectraForSequenceClassification,
-                ppnlp.transformers.ElectraTokenizer)
 }
 
 
@@ -129,7 +127,7 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
     examples = []
     for text in data:
         input_ids, segment_ids = convert_example(
-            [text],
+            text,
             tokenizer,
             label_list=label_map.values(),
             max_seq_length=args.max_seq_length,

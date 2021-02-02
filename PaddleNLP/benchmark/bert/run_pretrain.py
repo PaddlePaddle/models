@@ -137,6 +137,11 @@ def parse_args():
         default=1.0,
         help="The value of scale_loss for fp16.")
     parser.add_argument(
+        "--use_pure_fp16",
+        type=distutils.util.strtobool,
+        default=False,
+        help="Whether to use pure fp16 training.")
+    parser.add_argument(
         "--select_device",
         type=str,
         default="gpu",
@@ -146,8 +151,7 @@ def parse_args():
         type=int,
         default=1,
         help="Number of merge steps before gradient update."
-             "global_batch_size = gradient_merge_steps * batch_size."
-    )
+        "global_batch_size = gradient_merge_steps * batch_size.")
     args = parser.parse_args()
     return args
 

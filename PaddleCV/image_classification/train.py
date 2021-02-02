@@ -75,6 +75,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                                             use_se=use_se)
     else:
         model = models.__dict__[args.model]()
+    optimizer = None
     with fluid.program_guard(main_prog, startup_prog):
         if args.random_seed or args.enable_ce:
             main_prog.random_seed = args.random_seed
@@ -91,10 +92,12 @@ def build_program(is_train, main_prog, startup_prog, args):
                 loss_out.append(global_lr)
 
                 if args.use_amp:
-                    optimizer = fluid.contrib.mixed_precision.decorate(
+                    optimizer = paddle.static.amp.decorate(
                         optimizer,
                         init_loss_scaling=args.scale_loss,
-                        use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
+                        use_dynamic_loss_scaling=args.use_dynamic_loss_scaling,
+                        use_pure_fp16=args.use_pure_fp16,
+                        use_fp16_guard=True)
 
                 optimizer.minimize(avg_cost)
                 if args.use_ema:
@@ -105,7 +108,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                     ema.update()
                     loss_out.append(ema)
             loss_out.append(data_loader)
-    return loss_out
+    return loss_out, optimizer
 
 
 def validate(args,
@@ -178,7 +181,7 @@ def train(args):
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
-    train_out = build_program(
+    train_out, optimizer = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
@@ -194,7 +197,7 @@ def train(args):
 
     if args.validate:
         test_prog = fluid.Program()
-        test_out = build_program(
+        test_out, _ = build_program(
             is_train=False,
             main_prog=test_prog,
             startup_prog=startup_prog,
@@ -216,6 +219,12 @@ def train(args):
 
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
+
+    if args.use_amp:
+        optimizer.amp_init(place,
+                scope=paddle.static.global_scope(),
+                test_program=test_prog if args.validate else None)
+
     num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
     if args.use_dali:
         import dali

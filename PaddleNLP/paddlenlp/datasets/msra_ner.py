@@ -27,7 +27,7 @@ __all__ = ['MSRA_NER']
 
 
 class MSRA_NER(TSVDataset):
-    URL = "https://bj.bcebos.com/paddlehub-dataset/msra_ner.tar.gz"
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple(
         'META_INFO', ('file', 'md5', 'field_indices', 'num_discard_samples'))
@@ -35,11 +35,6 @@ class MSRA_NER(TSVDataset):
         'train': META_INFO(
             os.path.join('msra_ner', 'train.tsv'),
             '67d3c93a37daba60ef43c03271f119d7',
-            (0, 1),
-            1, ),
-        'dev': META_INFO(
-            os.path.join('msra_ner', 'dev.tsv'),
-            'ec772f3ba914bca5269f6e785bb3375d',
             (0, 1),
             1, ),
         'test': META_INFO(

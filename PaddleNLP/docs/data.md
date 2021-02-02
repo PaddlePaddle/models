@@ -1,6 +1,6 @@
-# paddlenlp.data
+# PaddleNLP Data API
 
-该模块提供了在NLP任务中构建有效的数据pipeline的一些常用API。
+该模块提供了在NLP任务中构建有效的数据Pipeline的常用API。
 
 ## API汇总
 

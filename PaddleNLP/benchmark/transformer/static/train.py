@@ -10,13 +10,14 @@ from attrdict import AttrDict
 from pprint import pprint
 
 import paddle
+import paddle.distributed.fleet as fleet
 import paddle.distributed as dist
 
 from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 
 sys.path.append("../")
 import reader
-from utils.record import AverageStatistical
+from util.record import AverageStatistical
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -36,8 +37,19 @@ def parse_args():
 
 def do_train(args):
     paddle.enable_static()
-    places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
-    trainer_count = len(places)
+    if args.is_distributed:
+        fleet.init(is_collective=True)
+        gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
+        places = paddle.CUDAPlace(
+            gpu_id) if args.use_gpu else paddle.static.cpu_places()
+        trainer_count = 1 if args.use_gpu else len(places)
+    else:
+        if args.use_gpu:
+            places = paddle.static.cuda_places()
+        else:
+            places = paddle.static.cpu_places()
+            paddle.set_device("cpu")
+        trainer_count = len(places)
 
     # Set seed for CE
     random_seed = eval(str(args.random_seed))
@@ -88,19 +100,52 @@ def do_train(args):
             epsilon=float(args.eps),
             parameters=transformer.parameters())
 
+        if args.is_distributed:
+            build_strategy = paddle.static.BuildStrategy()
+            exec_strategy = paddle.static.ExecutionStrategy()
+            dist_strategy = fleet.DistributedStrategy()
+            dist_strategy.build_strategy = build_strategy
+            dist_strategy.execution_strategy = exec_strategy
+            dist_strategy.fuse_grad_size_in_MB = 16
+
+            if args.use_amp:
+                dist_strategy.amp = True
+                dist_strategy.amp_configs = {
+                    'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
+                    'init_loss_scaling': args.scale_loss,
+                }
+
+            optimizer = fleet.distributed_optimizer(
+                optimizer, strategy=dist_strategy)
+        else:
+            if args.use_amp:
+                amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+                    custom_white_list=['softmax', 'layer_norm'],
+                    custom_black_list=['lookup_table_v2'])
+                optimizer = paddle.static.amp.decorate(
+                    optimizer,
+                    amp_list,
+                    init_loss_scaling=args.scale_loss,
+                    use_dynamic_loss_scaling=True,
+                    use_pure_fp16=args.use_pure_fp16)
         optimizer.minimize(avg_cost)
 
-    exe = paddle.static.Executor()
+    if args.is_distributed:
+        exe = paddle.static.Executor(places)
+    else:
+        exe = paddle.static.Executor()
+        build_strategy = paddle.static.BuildStrategy()
+        exec_strategy = paddle.static.ExecutionStrategy()
+
+        compiled_train_program = paddle.static.CompiledProgram(
+            train_program).with_data_parallel(
+                loss_name=avg_cost.name,
+                build_strategy=build_strategy,
+                exec_strategy=exec_strategy)
     exe.run(startup_program)
 
-    build_strategy = paddle.static.BuildStrategy()
-    exec_strategy = paddle.static.ExecutionStrategy()
-
-    compiled_train_program = paddle.static.CompiledProgram(
-        train_program).with_data_parallel(
-            loss_name=avg_cost.name,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
+    if not args.is_distributed and args.use_amp:
+        optimizer.amp_init(places[0])
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
@@ -127,13 +172,22 @@ def do_train(args):
                 data = [data]
             train_reader_cost = time.time() - batch_start
 
-            outs = exe.run(compiled_train_program,
-                           feed=[{
-                               'src_word': data[i][0],
-                               'trg_word': data[i][1],
-                               'lbl_word': data[i][2],
-                           } for i in range(trainer_count)],
-                           fetch_list=[sum_cost.name, token_num.name])
+            if args.is_distributed:
+                outs = exe.run(train_program,
+                               feed=[{
+                                   'src_word': data[i][0],
+                                   'trg_word': data[i][1],
+                                   'lbl_word': data[i][2],
+                               } for i in range(trainer_count)],
+                               fetch_list=[sum_cost.name, token_num.name])
+            else:
+                outs = exe.run(compiled_train_program,
+                               feed=[{
+                                   'src_word': data[i][0],
+                                   'trg_word': data[i][1],
+                                   'lbl_word': data[i][2],
+                               } for i in range(trainer_count)],
+                               fetch_list=[sum_cost.name, token_num.name])
             scheduler.step()
 
             train_batch_cost = time.time() - batch_start
@@ -176,7 +230,7 @@ def do_train(args):
                 batch_ips_avg.reset()
 
             if step_idx % args.save_step == 0 and step_idx != 0:
-                if args.save_model:
+                if args.save_model and dist.get_rank() == 0:
                     model_path = os.path.join(
                         args.save_model, "step_" + str(step_idx), "transformer")
                     paddle.static.save(train_program, model_path)
@@ -184,6 +238,10 @@ def do_train(args):
             batch_id += 1
             step_idx += 1
             batch_start = time.time()
+
+    if args.save_model and dist.get_rank() == 0:
+        model_path = os.path.join(args.save_model, "step_final", "transformer")
+        paddle.static.save(train_program, model_path)
 
     paddle.disable_static()
 
