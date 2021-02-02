@@ -93,7 +93,6 @@ class TranslationDataset(paddle.io.Dataset):
     @classmethod
     def _download_data(cls, mode="train", root=None):
         """Download dataset"""
-        print("download data!")
         default_root = os.path.join(DATA_HOME, 'machine_translation',
                                     cls.__name__)
         src_filename, tgt_filename, src_data_hash, tgt_data_hash = cls.SPLITS[
@@ -107,7 +106,6 @@ class TranslationDataset(paddle.io.Dataset):
             fullname = os.path.join(default_root,
                                     filename) if root is None else os.path.join(
                                         os.path.expanduser(root), filename)
-            # print(fullname)
             fullname_list.append(fullname)
 
         data_hash_list = [
@@ -117,12 +115,10 @@ class TranslationDataset(paddle.io.Dataset):
             if not os.path.exists(fullname) or (
                     data_hash_list[i] and
                     not md5file(fullname) == data_hash_list[i]):
-                # print(os.path.exists(fullname))
                 if root is not None:  # not specified, and no need to warn
                     warnings.warn(
                         'md5 check failed for {}, download {} data to {}'.
                         format(filename, cls.__name__, default_root))
-                    print(root)
                 path = get_path_from_url(cls.URL, default_root, cls.MD5)
                 return default_root
         return root if root is not None else default_root
