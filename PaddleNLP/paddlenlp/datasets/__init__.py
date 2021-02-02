@@ -15,6 +15,7 @@
 from .chnsenticorp import *
 from .dataset import *
 from .glue import *
+from .imdb import *
 from .lcqmc import *
 from .msra_ner import *
 from .peoples_daily_ner import *
@@ -24,3 +25,4 @@ from .translation import *
 from .dureader import *
 from .cnndm import *
 from .poetry import *
+from .couplet import *

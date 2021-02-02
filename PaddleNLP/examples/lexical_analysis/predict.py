@@ -55,7 +55,7 @@ def infer(args):
         dataset=infer_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        drop_last=True)
+        drop_last=False)
     infer_loader = paddle.io.DataLoader(
         dataset=infer_dataset,
         batch_sampler=infer_sampler,
@@ -75,7 +75,7 @@ def infer(args):
         test_data=infer_loader, batch_size=args.batch_size)
 
     # Post-processing the lexical analysis results
-    lengths = np.array(lengths).reshape([-1])
+    lengths = np.array([l for lens in lengths for l in lens]).reshape([-1])
     preds = np.array(
         [pred for batch_pred in crf_decodes for pred in batch_pred])
 

@@ -97,7 +97,8 @@ class GlueCoLA(_GlueDataset):
             Default: False.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueCoLA
+
+            from paddlenlp.datasets import GlueCoLA
             cola_dev = GlueCoLA('dev', root='./datasets/cola')
             len(cola_dev) # 1043
             len(cola_dev[0]) # 2
@@ -141,7 +142,8 @@ class GlueSST2(_GlueDataset):
             Default: False.
     Examples:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueSST2
+
+            from paddlenlp.datasets import GlueSST2
             sst_dev = GlueSST2('dev', root='./datasets/sst')
             len(sst_dev) # 872
             len(sst_dev[0]) # 2
@@ -184,7 +186,8 @@ class GlueMRPC(_GlueDataset):
         mode ('train'|'dev'|'test'): Dataset segment. Default: 'train'.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import  GlueMRPC
+
+            from paddlenlp.datasets import GlueMRPC
             mrpc_dev = GlueMRPC('dev', root='./datasets/mrpc')
             len(mrpc_dev) # 408
             len(mrpc_dev[0]) # 3
@@ -302,7 +305,8 @@ class GlueSTSB(_GlueDataset):
         return_all_fields (bool): Return all fields available in the dataset. Default: False.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueSTSB
+
+            from paddlenlp.datasets import GlueSTSB
             stsb_dev = GlueSTSB('dev', root='./datasets/stsb')
             len(stsb_dev) # 1500
             len(stsb_dev[0]) # 3
@@ -346,7 +350,8 @@ class GlueQQP(_GlueDataset):
             Default: False.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueQQP
+
+            from paddlenlp.datasets import GlueQQP
             import warnings
             with warnings.catch_warnings():
                 # Ignore warnings triggered by invalid entries in GlueQQP dev set
@@ -404,7 +409,8 @@ class GlueMNLI(_GlueDataset):
             Default: False.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueMNLI
+
+            from paddlenlp.datasets import GlueMNLI
             mnli_dev = GlueMNLI('dev_matched', root='./datasets/mnli')
             len(mnli_dev) # 9815
             len(mnli_dev[0]) # 3
@@ -460,7 +466,8 @@ class GlueQNLI(_GlueDataset):
        
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueQNLI
+
+            from paddlenlp.datasets import GlueQNLI
             qnli_dev = GlueQNLI('dev', root='./datasets/qnli')
             len(qnli_dev) # 5732
             len(qnli_dev[0]) # 3
@@ -512,7 +519,8 @@ class GlueRTE(_GlueDataset):
             Default: False.
     Examples:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueRTE
+
+            from paddlenlp.datasets import GlueRTE
             rte_dev = GlueRTE('dev', root='./datasets/rte')
             len(rte_dev) # 277
             len(rte_dev[0]) # 3
@@ -562,7 +570,8 @@ class GlueWNLI(_GlueDataset):
             Default: False.
     Example:
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import GlueWNLI
+
+            from paddlenlp.datasets import GlueWNLI
             wnli_dev = GlueWNLI('dev', root='./datasets/wnli')
             len(wnli_dev) # 71
             len(wnli_dev[0]) # 3
