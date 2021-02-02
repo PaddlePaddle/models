@@ -10,7 +10,7 @@ from paddle.optimizer.lr import NoamDecay
 from paddle.optimizer import AdamW
 
 from args import parse_args, print_args
-from model import BaselineModel
+from model import UnifiedTransformer
 from data import DialogueDataset, Vocabulary
 
 
@@ -39,7 +39,7 @@ def main(args):
 
     vocab = Vocabulary(args.vocab_file)
 
-    model = BaselineModel(
+    model = UnifiedTransformer(
         args.num_layers,
         args.d_model,
         args.nhead,

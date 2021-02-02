@@ -5,7 +5,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 
 
-class BaselineModel(nn.Layer):
+class UnifiedTransformer(nn.Layer):
     def __init__(self,
                  num_layers,
                  d_model,
@@ -25,7 +25,7 @@ class BaselineModel(nn.Layer):
                  mask_id,
                  pad_id,
                  is_infer=False):
-        super(BaselineModel, self).__init__()
+        super(UnifiedTransformer, self).__init__()
 
         self.nhead = nhead
         self.min_dec_len = min_dec_len
