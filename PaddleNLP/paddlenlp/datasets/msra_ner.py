@@ -24,10 +24,10 @@ from paddlenlp.datasets import DatasetReader
 
 from .dataset import TSVDataset
 
-__all__ = ['MSRA_NER', 'MSRA_NER_old']
+__all__ = ['MSRA_NER', 'MSRA_NER_new']
 
 
-class MSRA_NER(DatasetReader):
+class MSRA_NER_new(DatasetReader):
     URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
@@ -50,22 +50,18 @@ class MSRA_NER(DatasetReader):
 
     def _read(self, filename):
         examples = []
-
         with open(filename, 'r', encoding='utf-8') as f:
             for line in f:
                 line_stripped = line.strip().split('\t')
-
                 if not line_stripped:
                     break
-
                 if len(line_stripped) == 2:
                     tokens = line_stripped[0].split("\002")
                     tags = line_stripped[1].split("\002")
                 else:
                     tokens = line_stripped.split("\002")
                     tags = []
-
-                examples.append({"tokens": tokens, "label": tags})
+                examples.append({"tokens": tokens, "labels": tags})
 
         return examples
 
@@ -74,7 +70,7 @@ class MSRA_NER(DatasetReader):
         return ["B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "O"]
 
 
-class MSRA_NER_old(TSVDataset):
+class MSRA_NER(TSVDataset):
     URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
     MD5 = None
     META_INFO = collections.namedtuple(

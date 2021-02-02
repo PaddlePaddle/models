@@ -1,4 +1,4 @@
-from paddlenlp.datasets import MSRA_NER
+from paddlenlp.datasets import MSRA_NER_new
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial
@@ -35,7 +35,7 @@ ignore_label = -100
 batchify_fn = lambda samples, fn=Dict({
     'input_ids': Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
     'segment_ids': Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
-    'label': Pad(axis=0, pad_val=ignore_label)  # label
+    'labels': Pad(axis=0, pad_val=ignore_label)  # label
 }): fn(samples)
 
 train_data_loader = DataLoader(

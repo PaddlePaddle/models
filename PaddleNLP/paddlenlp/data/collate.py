@@ -70,7 +70,7 @@ class Pad(object):
             assume the input arrays have shape (10, 8, 5), (6, 8, 5), (3, 8, 5)
             and the axis is 0. Each input will be padded into 
             (10, 8, 5) and then stacked to form the final output, which has
-            shape（3, 10, 8, 5). Default: 0.
+            shape(3, 10, 8, 5). Default: 0.
         ret_length (bool|numpy.dtype, optional): If it is bool, indicate whether
             to return the valid length in the output, and the data type of
             returned length is int32 if True. If it is numpy.dtype, indicate the
@@ -108,7 +108,7 @@ class Pad(object):
             data (list(numpy.ndarray)|list(list)): List of samples to pad and stack.
         Returns:
             numpy.ndarray|tuple: If `ret_length` is False, it is a numpy.ndarray \
-                representing the padded batch data and the shape is (N, …). \
+                representing the padded batch data and the shape is (N, ...). \
                 Otherwise, it is a tuple, except for the padded batch data, the \
                 tuple also includes a numpy.ndarray representing all samples' \
                 original length shaped `(N,)`. 

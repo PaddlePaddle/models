@@ -94,6 +94,8 @@ print(train_ds[1])
 print(len(train_ds))
 print('-----------------------------------------------------')
 
+#TODO: Where to pad?
+
 train_batchify_fn = lambda samples, fn=Dict({
     "input_ids": Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
     "segment_ids": Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
