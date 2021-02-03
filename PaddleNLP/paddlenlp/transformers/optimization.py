@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import math
+
 from paddle.optimizer.lr import LambdaDecay
 
 __all__ = [
-    'LinearSchedulerWithWarmup', 'ConstantSchedulerWithWarmup',
+    'LinearSchedulerWithWarmup', 'ConstSchedulerWithWarmup',
     'CosineSchedulerWithWarmup', 'CosineSchedulerWithWarmup',
     'CosineWithHardRestartsScheduleWithWarmup',
     'PolynomialDecaySchedulerWithWarmup'
 ]
+
+
+def is_integer(number):
+    if sys.version > '3':
+        return isinstance(number, int)
+    return isinstance(number, (int, long))
 
 
 class LinearSchedulerWithWarmup(LambdaDecay):
@@ -31,8 +40,9 @@ class LinearSchedulerWithWarmup(LambdaDecay):
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        num_training_steps (int): The number of training steps.
-        num_warmup_steps (int): The number of steps for warmup.
+        total_steps (int): The number of training steps.
+        warmup (int|float): If int, it means the number of steps for warmup.
+            If float, it means the proportion of warmup in total training steps. 
         last_epoch (int, optional): The index of last epoch. It can be set to
             resart training. If None, it means initial learning rate. 
             Default: -1.
@@ -51,22 +61,25 @@ class LinearSchedulerWithWarmup(LambdaDecay):
 
     def __init__(self,
                  learning_rate,
-                 num_training_steps,
-                 num_warmup_steps,
+                 total_steps,
+                 warmup,
                  last_epoch=-1,
                  verbose=False):
+        warmup_steps = warmup if is_integer(warmup) else int(
+            math.floor(warmup * total_steps))
+
         def lr_lambda(current_step):
-            if current_step < num_warmup_steps:
-                return float(current_step) / float(max(1, num_warmup_steps))
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
             return max(0.0,
-                       float(num_training_steps - current_step) /
-                       float(max(1, num_training_steps - num_warmup_steps)))
+                       float(total_steps - current_step) /
+                       float(max(1, total_steps - warmup_steps)))
 
         super(LinearSchedulerWithWarmup, self).__init__(
             learning_rate, lr_lambda, last_epoch, verbose)
 
 
-class ConstantSchedulerWithWarmup(LambdaDecay):
+class ConstSchedulerWithWarmup(LambdaDecay):
     """
     Create a learning rate scheduler, which increases learning rate linearly
     from 0 to given `learning_rate` during warmup periods and keeps learning
@@ -75,7 +88,7 @@ class ConstantSchedulerWithWarmup(LambdaDecay):
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        num_warmup_steps (int): The number of steps for warmup.
+        warmup (int): The number of steps for warmup.
         last_epoch (int, optional): The index of last epoch. It can be set to
             resart training. If None, it means initial learning rate. 
             Default: -1.
@@ -84,24 +97,22 @@ class ConstantSchedulerWithWarmup(LambdaDecay):
         
         .. code-block:: python
 
-            from paddlenlp.transformers import ConstantSchedulerWithWarmup
+            from paddlenlp.transformers import ConstSchedulerWithWarmup
             lr, warmup_steps = 0.1, 100
-            lr_scheduler = ConstantSchedulerWithWarmup(lr, warmup_steps)
+            lr_scheduler = ConstSchedulerWithWarmup(lr, warmup_steps)
 
     """
 
-    def __init__(self,
-                 learning_rate,
-                 num_warmup_steps,
-                 last_epoch=-1,
-                 verbose=False):
+    def __init__(self, learning_rate, warmup, last_epoch=-1, verbose=False):
+        warmup_steps = warmup
+
         def lr_lambda(current_step):
-            if current_step < num_warmup_steps:
-                return float(current_step) / float(max(1.0, num_warmup_steps))
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1.0, warmup_steps))
             return 1.0
 
-        super(ConstantSchedulerWithWarmup, self).__init__(
-            learning_rate, lr_lambda, last_epoch, verbose)
+        super(ConstSchedulerWithWarmup, self).__init__(learning_rate, lr_lambda,
+                                                       last_epoch, verbose)
 
 
 class CosineSchedulerWithWarmup(LambdaDecay):
@@ -113,8 +124,9 @@ class CosineSchedulerWithWarmup(LambdaDecay):
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        num_training_steps (int): The number of training steps.
-        num_warmup_steps (int): The number of steps for warmup.
+        total_steps (int): The number of training steps.
+        warmup (int|float): If int, it means the number of steps for warmup.
+            If float, it means the proportion of warmup in total training steps.
         num_cycles (int, optional): The number of waves in cosine scheduler. If
             None, cosine function returns from the max value to 0. Default: 0.5.
         last_epoch (int, optional): The index of last epoch. It can be set to
@@ -133,16 +145,19 @@ class CosineSchedulerWithWarmup(LambdaDecay):
 
     def __init__(self,
                  learning_rate,
-                 num_training_steps,
-                 num_warmup_steps,
+                 total_steps,
+                 warmup,
                  num_cycles=0.5,
                  last_epoch=-1,
                  verbose=False):
+        warmup_steps = warmup if is_integer(warmup) else int(
+            math.floor(warmup * total_steps))
+
         def lr_lambda(current_step):
-            if current_step < num_warmup_steps:
-                return float(current_step) / float(max(1, num_warmup_steps))
-            progress = float(current_step - num_warmup_steps) / float(
-                max(1, num_training_steps - num_warmup_steps))
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+            progress = float(current_step - warmup_steps) / float(
+                max(1, total_steps - warmup_steps))
             return max(0.0, 0.5 * (
                 1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
 
@@ -160,8 +175,9 @@ class CosineWithHardRestartsScheduleWithWarmup(LambdaDecay):
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        num_training_steps (int): The number of training steps.
-        num_warmup_steps (int): The number of steps for warmup.
+        total_steps (int): The number of training steps.
+        warmup (int|float): If int, it means the number of steps for warmup.
+            If float, it means the proportion of warmup in total training steps.
         num_cycles (int, optional): The number of hard restarts to use.
             Default: 1.
         last_epoch (int, optional): The index of last epoch. It can be set to
@@ -181,16 +197,19 @@ class CosineWithHardRestartsScheduleWithWarmup(LambdaDecay):
 
     def __init__(self,
                  learning_rate,
-                 num_warmup_steps,
-                 num_training_steps,
+                 total_steps,
+                 warmup,
                  num_cycles=1,
                  last_epoch=-1,
                  verbose=False):
+        warmup_steps = warmup if is_integer(warmup) else int(
+            math.floor(warmup * total_steps))
+
         def lr_lambda(current_step):
-            if current_step < num_warmup_steps:
-                return float(current_step) / float(max(1, num_warmup_steps))
-            progress = float(current_step - num_warmup_steps) / float(
-                max(1, num_training_steps - num_warmup_steps))
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+            progress = float(current_step - warmup_steps) / float(
+                max(1, total_steps - warmup_steps))
             if progress >= 1.0:
                 return 0.0
             return max(0.0, 0.5 * (1.0 + math.cos(math.pi * (
@@ -210,8 +229,9 @@ class PolynomialDecaySchedulerWithWarmup(LambdaDecay):
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        num_training_steps (int): The number of training steps.
-        num_warmup_steps (int): The number of steps for warmup.
+        total_steps (int): The number of training steps.
+        warmup (int|float): If int, it means the number of steps for warmup.
+            If float, it means the proportion of warmup in total training steps.
         lr_end (float, optional): The end learning rate. Default: 1e-7.
         power (float, optional): Power factor. Default: 1.0.
         last_epoch (int, optional): The index of last epoch. It can be set to
@@ -230,25 +250,26 @@ class PolynomialDecaySchedulerWithWarmup(LambdaDecay):
 
     def __init__(self,
                  learning_rate,
-                 num_training_steps,
-                 num_warmup_steps,
+                 total_steps,
+                 warmup,
                  lr_end=1e-7,
                  power=1.0,
                  last_epoch=-1,
                  verbose=False):
         lr_init = learning_rate
         assert lr_init > lr_end, f"`lr_end` must be be smaller than `learning_rate`. But `lr_end` is {lr_end} while `learning_rate` is {lr_init}."
+        warmup_steps = warmup if is_integer(warmup) else int(
+            math.floor(warmup * total_steps))
 
         def lr_lambda(current_step):
-            if current_step < num_warmup_steps:
-                return float(current_step) / float(max(1, num_warmup_steps))
-            elif current_step > num_training_steps:
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+            elif current_step > total_steps:
                 return lr_end / lr_init  # which multiplies by lr_init equals to lr_end
             else:
                 lr_range = lr_init - lr_end
-                decay_steps = num_training_steps - num_warmup_steps
-                pct_remaining = 1 - (current_step - num_warmup_steps
-                                     ) / decay_steps
+                decay_steps = total_steps - warmup_steps
+                pct_remaining = 1 - (current_step - warmup_steps) / decay_steps
                 decay = lr_range * pct_remaining**power + lr_end
                 return decay / lr_init  # which multiplies by lr_init equals to decay
 
