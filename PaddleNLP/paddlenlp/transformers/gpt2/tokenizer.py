@@ -112,7 +112,8 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
                  bod_id="<bod>",
                  eod_id="<eod>",
                  max_length=None):
-
+        self._vocab_file = vocab_file
+        self._model_file = model_file
         if not os.path.isfile(vocab_file):
             raise ValueError(
                 "Can't find a vocabulary file at path '{}'. To load the "
@@ -149,6 +150,16 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
         text = text.replace(' ', '').replace('\u2582', ' ').replace('\u2583',
                                                                     '\n')
         return text
+
+    def save_resources(self, save_directory):
+        """
+        Save tokenizer related resources to files under `save_directory`.
+        Args:
+            save_directory (str): Directory to save files into.
+        """
+        for name, file_name in self.resource_files_names.items():
+            save_path = os.path.join(save_directory, file_name)
+            shutil.copyfile(getattr(self, "_%s" % name), save_path)
 
 
 class GPT2Tokenizer(PretrainedTokenizer):
