@@ -81,7 +81,7 @@ gpt2 = GPT2ForPretraining.from_pretrained('gpt2-base-cn')
 ## 模型库及其应用
 
 PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_zoo.md).
-模型应用场景介绍请参考[examples](./examples/README.md):
+模型应用场景介绍请参考[PaddleNLP Examples](./examples/README.md):
 
 - [词向量](./examples/word_embedding/README.md)
 - [词法分析](./examples/lexical_analysis/README.md)
