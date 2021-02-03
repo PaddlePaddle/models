@@ -1,13 +1,33 @@
 # PaddleNLP Model Zoo
 
-[**PaddleNLP**](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP) 是基于 PaddlePaddle 深度学习框架开发的自然语言处理 (NLP) 工具，算法，模型和数据的开源项目。百度在 NLP 领域十几年的深厚积淀为 PaddleNLP 提供了强大的核心动力。PaddleNLP 提供较为丰富的模型库，基本涵盖了主流的NLP任务，因为模型库中使用了PaddleNLP提供的基础NLP工具，例如数据集处理，高层API，使得模型库的算法简洁易懂。下面是 PaddleNLP 支持任务的具体信息，涵盖了 **NLP基础技术**, **NLP核心技术**, **NLP系统应用**三大领域。同时随着NLP序列建模技术的成熟，我们还提供了更多的基于NLP序列建模技术的应用场景。
 
 ## 经典序列模型结构
 
-## NLP基础技术
+| 模型    |  简介   |
+| ------ |------ |
+| [BiGRU-CRF](../examples/lexical_analysis) ｜ BiGRU-CRF是一个经典的词法分析模型，可用于中文分词、词性标注和命名实体识别等任务。     ｜
+| [BoW](../examples/text_classification/rnn) ｜ 最基础的序列特征提取模型，对序列内所有词向量进行线性求和或取平均的操作。     ｜
+| [LSTM/Bi-LSTM](../examples/text_classification/rnn) ｜ 单/双向LSTM序列特征提取器。     ｜
+| [GRU/Bi-GRU](../examples/text_classification/rnn) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [LSTM/Bi-LSTM with Attention](../examples/text_classification/rnn) ｜ 带注意力机制的单/双向LSTM特征提取器   ｜
+| [RNN/Bi-RNN](../examples/text_classification/rnn) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [RNNLM](../examples/language_model/rnnlm/) ｜ Recurrent Neural Network Language Model, 基于RNN/LSTM结构的经典语言模型。   ｜
+| [ELMo](../examples/language_model/elmo/) ｜ Embedding from Language Model(ELMo)，动态词向量开山之作，发表与NAACL2018 ｜
 
-| 模型    | 位置                                             | 简介                                                         |
-| ----------------------------------| ------------------------------------------------------------ | -------------------- ｜
+## 基于Transformer的模型结构
+
+| 模型    |  简介   |
+| ------ |------ |
+| [Transformer](../examples/lexical_analysis) ｜ BiGRU-CRF是一个经典的词法分析模型，可用于中文分词、词性标注和命名实体识别等任务。     ｜
+| [Transformer-XL](../examples/language_model/transformer-xl/) ｜ 最基础的序列特征提取模型，对序列内所有词向量进行线性求和或取平均的操作。     ｜
+| [BERT](../examples/language_model/bert/) ｜ 单/双向LSTM序列特征提取器。     ｜
+| [ERNIE](../examples/text_classification/rnn) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [ERNIE-Tiny](../examples/language_model/gpt2) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [ERNIE-GEN](../examples/language_model/gpt2) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [GPT-2](../examples/language_model/gpt2) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [ELECTRA](../examples/language_model/electra/) ｜ 带注意力机制的单/双向LSTM特征提取器   ｜
+| [RoBERTa](../examples/text_classification/rnn) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
+| [GPT-2](../examples/language_model/gpt2) ｜ 单/双向GRU序列特征提取器，是变种的LSTM结构，计算量相比LSTM较少。    ｜
 
 ### 词法分析
 | 模型    | 目录                                                      | 简介                                                         |

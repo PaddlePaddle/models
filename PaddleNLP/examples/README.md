@@ -7,22 +7,22 @@
 ### 词法分析 (Lexical Analysis)
 | 模型    | 目录                                                      | 简介                                                         |
 | ----------------------------------| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| BiGRU-CRF | [Lexical Analysis](../examples/lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
+| BiGRU-CRF | [Lexical Analysis](./examples/lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
 
 ### 词向量 (Word Embedding)
 | 模型    | 目录                                                      | 简介                                                         |
 | ----------------------------------| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 预训练词向量 | [Word Embedding](../examples/word_embedding) | 提供了丰富的中文预训练词向量，通过简单配置即可使用词向量来进行热启训练，能支持较多的中文场景下的训练任务的热启训练，加快训练收敛速度。|
+| 预训练词向量 | [Word Embedding](./examples/word_embedding) | 提供了丰富的中文预训练词向量，通过简单配置即可使用词向量来进行热启训练，能支持较多的中文场景下的训练任务的热启训练，加快训练收敛速度。|
 
 ### 命名实体识别 (Named Entity Recognition)
 
 命名实体识别（Named Entity Recognition，NER）是NLP中一项非常基础的任务。NER是信息提取、问答系统、句法分析、机器翻译等众多NLP任务的重要基础工具。命名实体识别的准确度，决定了下游任务的效果，是NLP中非常重要的一个基础问题。
 在NER任务提供了两种解决方案，一类LSTM/GRU + CRF(Conditional Random Field)，RNN类的模型来抽取底层文本的信息，而CRF(条件随机场)模型来学习底层Token之间的联系；另外一类是通过预训练模型，例如ERNIE，BERT模型，直接来预测Token的标签信息。
-因为该类模型较为抽象，提供了一份快递单信息抽取的训练脚本给大家使用，具体的任务是通过两类的模型来抽取快递单的核心信息，例如地址，姓名，手机号码，具体的[快递单任务链接](../examples/named_entity_recognition/express_ner)。
+因为该类模型较为抽象，提供了一份快递单信息抽取的训练脚本给大家使用，具体的任务是通过两类的模型来抽取快递单的核心信息，例如地址，姓名，手机号码，具体的[快递单任务链接](./examples/named_entity_recognition/express_ner)。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [BiGRU-CRF](../examples/named_entity_recognition/express_ner) |传统的序列标注模型，通过双向GRU模型能抽取文本序列的信息和联系，通过CRF模型来学习文本Token之间的联系，本模型集成PaddleNLP自己开发的CRF模型，模型结构清晰易懂。 |
+| [BiGRU-CRF](./examples/named_entity_recognition/express_ner) |传统的序列标注模型，通过双向GRU模型能抽取文本序列的信息和联系，通过CRF模型来学习文本Token之间的联系，本模型集成PaddleNLP自己开发的CRF模型，模型结构清晰易懂。 |
 | [ERNIE/BERT Token Classification](./named_entity_recognition) |通过预训练模型提供的强大的语义信息和ERNIE/BERT类模型的Self-Attention机制来覆盖Token之间的联系，直接通过BERT/ERNIE的序列分类模型来预测文本每个token的标签信息，模型结构简单，效果优异。|
 
 ### 语言模型 (Language Model)
@@ -30,14 +30,14 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [RNNLM](../examples/language_model/rnnlm) | 序列任务常用的RNN网络，实现了一个两层的LSTM网络，然后LSTM的结果去预测下一个词出现的概率。是基于RNN的常规的语言模型。|
-| [ELMo](././exampleslanguage_model/elmo) | ELMo是一个双向的LSTM语言模型，由一个前向和一个后向语言模型构成，目标函数就是取这两个方向语言模型的最大似然。ELMo主要是解决了传统的Word Embedding的向量表示单一的问题，ELMo通过结合上下文来增强语义表示。|
+| [RNNLM](./examples/language_model/rnnlm) | 序列任务常用的RNN网络，实现了一个两层的LSTM网络，然后LSTM的结果去预测下一个词出现的概率。是基于RNN的常规的语言模型。|
+| [ELMo](./exampleslanguage_model/elmo) | ELMo是一个双向的LSTM语言模型，由一个前向和一个后向语言模型构成，目标函数就是取这两个方向语言模型的最大似然。ELMo主要是解决了传统的Word Embedding的向量表示单一的问题，ELMo通过结合上下文来增强语义表示。|
 
 ### 预训练语言模型 (Pretrained Language Model)
 | 任务类型     | 目录                                                         | 简介                                                         |
 | -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-| BERT  | [BERT(Bidirectional Encoder Representation from Transformers)](../examples/language_model/bert) | BERT模型作为目前最为火热语义表示预训练模型，PaddleNLP提供了简洁功效的实现方式，
+| BERT  | [BERT(Bidirectional Encoder Representation from Transformers)](./examples/language_model/bert) | BERT模型作为目前最为火热语义表示预训练模型，PaddleNLP提供了简洁功效的实现方式，
 同时易用性方面通过简单参数切换即可实现不同的BERT模型。 |
 | ERNIE-GEN | [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](../examples/text_generation/ernie-gen) |ERNIE-GEN是百度发布的生成式预训练模型，是一种Multi-Flow结构的预训练和微调框架。ERNIE-GEN利用更少的参数量和数据，在摘要生成、问题生成、对话和生成式问答4个任务共5个数据集上取得了SOTA效果 |
 | ELECTRA  | [Electra(Efficiently Learning an Encoder that Classifies Token Replacements Accurately)](../examples/language_model/electra) |ELECTRA 创新性地引入GAN的思想对BERT预训练过程进行了改进，在和BERT具有相同的模型参数、预训练计算量一样的情况下，ELECTRA GLUE得分明显好。同时相比GPT、ELMo，在GLUE得分略好时，ELECTRA预训练模型只需要很少的参数和计算量。|
@@ -51,7 +51,7 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [RNN/GRU/LSTM](../examples/text_classification/rnn) | 面向通用场景的文本分类模型，网络结构接入常见的RNN类模型，例如LSTM，GRU，RNN。整体模型结构集成在百度的自研的Senta文本情感分类模型上，效果突出，用法简易。|
+| [RNN/GRU/LSTM](./examples/text_classification/rnn) | 面向通用场景的文本分类模型，网络结构接入常见的RNN类模型，例如LSTM，GRU，RNN。整体模型结构集成在百度的自研的Senta文本情感分类模型上，效果突出，用法简易。|
 | [ERNIE/BERT Fine-tuning](../examples/text_classification/pretrained_models) |基于预训练后模型的文本分类的模型，多达11种的预训练模型可供使用，其中有较多中文预训练模型，预训练模型切换简单，情感分析任务上效果突出。|
 
 ### 文本生成 (Text Generation)
@@ -60,7 +60,7 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](../examples/text_generation/ernie-gen) | ERNIE-GEN是百度发布的生成式预训练模型，通过Global-Attention的方式解决训练和预测曝光偏差的问题，同时使用Multi-Flow Attention机制来分别进行Global和Context信息的交互，同时通过片段生成的方式来增加语义相关性。|
+| [ERNIE-GEN(An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation)](./examples/text_generation/ernie-gen) | ERNIE-GEN是百度发布的生成式预训练模型，通过Global-Attention的方式解决训练和预测曝光偏差的问题，同时使用Multi-Flow Attention机制来分别进行Global和Context信息的交互，同时通过片段生成的方式来增加语义相关性。|
 
 
 ### 文本匹配 (Text Matching)
@@ -86,8 +86,8 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [Seq2Seq](../examples/machine_translation/seq2seq) | 使用编码器-解码器（Encoder-Decoder）结构, 同时使用了Attention机制来加强Decoder和Encoder之间的信息交互，Seq2Seq 广泛应用于机器翻译，自动对话机器人，文档摘要自动生成，图片描述自动生成等任务中。|
-| [Transformer](../examples/machine_translation/transformer) |基于PaddlePaddle框架的Transformer结构搭建的机器翻译模型，Transformer 计算并行度高，能解决学习长程依赖问题。并且模型框架集成了训练，验证，预测任务，功能完备，效果突出。|
+| [Seq2Seq](./examples/machine_translation/seq2seq) | 使用编码器-解码器（Encoder-Decoder）结构, 同时使用了Attention机制来加强Decoder和Encoder之间的信息交互，Seq2Seq 广泛应用于机器翻译，自动对话机器人，文档摘要自动生成，图片描述自动生成等任务中。|
+| [Transformer](./examples/machine_translation/transformer) |基于PaddlePaddle框架的Transformer结构搭建的机器翻译模型，Transformer 计算并行度高，能解决学习长程依赖问题。并且模型框架集成了训练，验证，预测任务，功能完备，效果突出。|
 
 
 ### 阅读理解(Machine Reading Comprehension)
@@ -103,8 +103,8 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [Dialogue General Understanding](../examples/dialogue/dgu) | 提供基于BERT通用对话理解模型，通过对文本分类、序列标注等操作就可以完成对话中的意图识别，行文识别，状态跟踪等理解任务。|
-| [PLATO-2](../examples/dialogue/plato-2) | 百度自研领先的开放域对话预训练模型。[PLATO-2: Towards Building an Open-Domain Chatbot via Curriculum Learning](https://arxiv.org/abs/2006.16779) |
+| [Dialogue General Understanding](./examples/dialogue/dgu) | 提供基于BERT通用对话理解模型，通过对文本分类、序列标注等操作就可以完成对话中的意图识别，行文识别，状态跟踪等理解任务。|
+| [PLATO-2](./examples/dialogue/plato-2) | 百度自研领先的开放域对话预训练模型。[PLATO-2: Towards Building an Open-Domain Chatbot via Curriculum Learning](https://arxiv.org/abs/2006.16779) |
 
 ## 更多序列建模应用
 
@@ -115,7 +115,7 @@
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [TCN(Temporal Convolutional Network)](../examples/time_series)|TCN模型基于卷积的时间序列模型，通过因果卷积(Causal Convolution)和空洞卷积(Dilated Convolution) 特定的组合方式解决卷积不适合时间序列任务的问题，TCN具备并行度高，内存低等诸多优点，在某些时间序列任务上效果已经超过传统的RNN模型。|
+| [TCN(Temporal Convolutional Network)](./examples/time_series)|TCN模型基于卷积的时间序列模型，通过因果卷积(Causal Convolution)和空洞卷积(Dilated Convolution) 特定的组合方式解决卷积不适合时间序列任务的问题，TCN具备并行度高，内存低等诸多优点，在某些时间序列任务上效果已经超过传统的RNN模型。|
 
 ### 蛋白质二级结构预测 (Protein Secondary Structure Prediction)
 
