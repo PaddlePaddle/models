@@ -17,16 +17,16 @@ PaddleNLP集成的数据集MSRA-NER数据集对文件格式做了调整：每一
 
 - Python >= 3.6
 
-- paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- paddlepaddle >= 2.0.0，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp>=2.0.0b2`
+- paddlenlp >= 2.0.0, 安装方式：`pip install paddlenlp>=2.0.0`
 
 ### 2.2 启动MSRA-NER任务
 
 ```shell
 export CUDA_VISIBLE_DEVICES=0
 
-python -u ./run_msra_ner.py \
+python -u ./train.py \
     --model_name_or_path bert-base-multilingual-uncased \
     --max_seq_length 128 \
     --batch_size 32 \
@@ -39,7 +39,7 @@ python -u ./run_msra_ner.py \
 ```
 
 其中参数释义如下：
-- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
+- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer，支持[PaadleNLP transformer类预训练模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/transformers.md)中除ernie-gen以外的所有模型。若使用非BERT系列模型，需修改脚本导入相应的Task和Tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
 - `max_seq_length`: 表示最大句子长度，超过该长度将被截断。
 - `batch_size`: 表示每次迭代**每张卡**上的样本数目。
 - `learning_rate`: 表示基础学习率大小，将于learning rate scheduler产生的值相乘作为当前学习率。
@@ -66,6 +66,41 @@ eval loss: 0.006829, precision: 0.908957, recall: 0.926683, f1: 0.917734
 Precision                     | 0.908957    |
 Recall                        | 0.926683    |
 F1                            | 0.917734    |
+
+## 启动评估
+
+```shell
+export CUDA_VISIBLE_DEVICES=0
+
+python -u ./eval.py \
+    --model_name_or_path bert-base-multilingual-uncased \
+    --max_seq_length 128 \
+    --batch_size 32 \
+    --use_gpu True \
+    --init_checkpoint_path tmp/msra_ner/model_500.pdparams
+```
+
+其中参数释义如下：
+- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer，支持[PaadleNLP transformer类预训练模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/transformers.md)中除ernie-gen以外的所有模型。若使用非BERT系列模型，需修改脚本导入相应的Task和Tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
+- `max_seq_length`: 表示最大句子长度，超过该长度将被截断。
+- `batch_size`: 表示每次迭代**每张卡**上的样本数目。
+- `use_gpu`: 是否使用GPU。
+- `init_checkpoint_path`: 模型加载路径。
+
+## 启动预测
+
+```shell
+export CUDA_VISIBLE_DEVICES=0
+
+python -u ./predict.py \
+    --model_name_or_path bert-base-multilingual-uncased \
+    --max_seq_length 128 \
+    --batch_size 32 \
+    --use_gpu True \
+    --init_checkpoint_path tmp/msra_ner/model_500.pdparams
+```
+
+
 
 ## 参考
 

@@ -34,21 +34,16 @@ parser.add_argument("--model_save_dir", type=str, default=None, help="The model 
 parser.add_argument("--epochs", type=int, default=10, help="Corpus iteration num.")
 parser.add_argument("--batch_size", type=int, default=300, help="The number of sequences contained in a mini-batch.")
 parser.add_argument("--max_seq_len", type=int, default=64, help="Number of words of the longest seqence.")
-parser.add_argument("--use_gpu", type=ast.literal_eval, default=True, help="If set, use GPU for training.")
+parser.add_argument("--n_gpu", type=int, default=1, help="Number of GPUs to use, 0 for CPU.")
 parser.add_argument("--base_lr", type=float, default=0.001, help="The basic learning rate that affects the entire network.")
 parser.add_argument("--emb_dim", type=int, default=128, help="The dimension in which a word is embedded.")
 parser.add_argument("--hidden_size", type=int, default=128, help="The number of hidden nodes in the GRU layer.")
-args = parser.parse_args()
+parser.add_argument("--verbose", type=ast.literal_eval, default=128, help="Print reader and training time in details.")
 # yapf: enable
 
 
 def train(args):
-    if args.use_gpu:
-        place = paddle.CUDAPlace(paddle.distributed.ParallelEnv().dev_id)
-        paddle.set_device("gpu")
-    else:
-        place = paddle.CPUPlace()
-        paddle.set_device("cpu")
+    paddle.set_device("gpu" if args.n_gpu else "cpu")
 
     # create dataset.
     train_dataset = LacDataset(args.data_dir, mode='train')
@@ -69,7 +64,6 @@ def train(args):
     train_loader = paddle.io.DataLoader(
         dataset=train_dataset,
         batch_sampler=train_sampler,
-        places=place,
         return_list=True,
         collate_fn=batchify_fn)
 
@@ -81,7 +75,6 @@ def train(args):
     test_loader = paddle.io.DataLoader(
         dataset=test_dataset,
         batch_sampler=test_sampler,
-        places=place,
         return_list=True,
         collate_fn=batchify_fn)
 
@@ -101,6 +94,8 @@ def train(args):
         model.load(args.init_checkpoint)
 
     # Start training
+    callbacks = paddle.callbacks.ProgBarLogger(
+        log_freq=10, verbose=3) if args.verbose else None
     model.fit(train_data=train_loader,
               eval_data=test_loader,
               batch_size=args.batch_size,
@@ -109,9 +104,13 @@ def train(args):
               log_freq=10,
               save_dir=args.model_save_dir,
               save_freq=1,
-              shuffle=True)
+              shuffle=True,
+              callbacks=callbacks)
 
 
 if __name__ == "__main__":
-    print(args)
-    train(args)
+    args = parser.parse_args()
+    if args.n_gpu > 1:
+        paddle.distributed.spawn(train, args=(args, ), nprocs=args.n_gpu)
+    else:
+        train(args)

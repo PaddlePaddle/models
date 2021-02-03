@@ -60,12 +60,12 @@ export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
 训练启动方式如下：
 
 ```bash
-python -m paddle.distributed.launch train.py \
+python train.py \
         --data_dir ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
-        --use_gpu True \
+        --n_gpu 1 \
         # --init_checkpoint ./save_dir/final
 ```
 
