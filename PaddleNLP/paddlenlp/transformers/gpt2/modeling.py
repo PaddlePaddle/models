@@ -13,16 +13,17 @@
 # limitations under the License.
 
 import collections
+import math
+
 import numpy as np
 import paddle
 import paddle.nn as nn
-import paddle.tensor as tensor
 import paddle.nn.functional as F
-import math
+import paddle.tensor as tensor
 from paddle.fluid import layers
+from paddle.nn.layer.transformer import _convert_param_attr_to_list
 
 from .. import PretrainedModel, register_base_model
-from paddle.nn.layer.transformer import _convert_param_attr_to_list
 
 __all__ = [
     'GPT2Model',
