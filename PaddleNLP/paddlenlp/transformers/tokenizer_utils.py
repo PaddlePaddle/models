@@ -437,3 +437,23 @@ class PretrainedTokenizer(object):
                 "Truncation_strategy should be selected in ['longest_first', 'only_first', 'only_second', 'do_not_truncate']"
             )
         return (ids, pair_ids, overflowing_tokens)
+
+    def get_special_tokens_mask(self,
+                                token_ids_0,
+                                token_ids_1=None,
+                                already_has_special_tokens=False):
+        """
+        Retrieves sequence ids from a token list that has no special tokens added. This method is called when adding
+        special tokens using the tokenizer ``encode`` methods.
+
+        Args:
+            token_ids_0 (List[int]): List of ids of the first sequence.
+            token_ids_1 (List[int], optinal): List of ids of the second sequence.
+            already_has_special_tokens (bool, optional): Whether or not the token list is already 
+                formatted with special tokens for the model. Defaults to None.
+
+        Returns:
+            results (List[int]): The list of integers in the range [0, 1]: 1 for a special token, 0 for a sequence token.
+        """
+        return [0] * ((len(token_ids_1)
+                       if token_ids_1 else 0) + len(token_ids_0))
