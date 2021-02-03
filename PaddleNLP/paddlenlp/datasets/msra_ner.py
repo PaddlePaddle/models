@@ -24,7 +24,7 @@ from paddlenlp.datasets import DatasetReader
 
 from .dataset import TSVDataset
 
-__all__ = ['MSRA_NER', 'MSRA_NER_new']
+__all__ = ['MSRA_NER', 'MSRA_NER_new', 'MSRA_NER_new_iter']
 
 
 class MSRA_NER_new(DatasetReader):
@@ -64,6 +64,46 @@ class MSRA_NER_new(DatasetReader):
                 examples.append({"tokens": tokens, "labels": tags})
 
         return examples
+
+    def get_labels(self):
+
+        return ["B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "O"]
+
+
+class MSRA_NER_new_iter(DatasetReader):
+    URL = "https://paddlenlp.bj.bcebos.com/datasets/msra_ner.tar.gz"
+    MD5 = None
+    META_INFO = collections.namedtuple('META_INFO', ('file', 'md5'))
+    SPLITS = {
+        'train': META_INFO(os.path.join('msra_ner', 'train.tsv'), None),
+        'test': META_INFO(os.path.join('msra_ner', 'test.tsv'), None)
+    }
+
+    def _get_data(self, mode, **kwargs):
+        default_root = os.path.join(DATA_HOME, self.__class__.__name__)
+        filename, data_hash = self.SPLITS[mode]
+        fullname = os.path.join(default_root, filename)
+        if not os.path.exists(fullname) or (data_hash and
+                                            not md5file(fullname) == data_hash):
+
+            get_path_from_url(self.URL, default_root, self.MD5)
+            fullname = os.path.join(default_root, filename)
+
+        return fullname
+
+    def _read(self, filename):
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                line_stripped = line.strip().split('\t')
+                if not line_stripped:
+                    break
+                if len(line_stripped) == 2:
+                    tokens = line_stripped[0].split("\002")
+                    tags = line_stripped[1].split("\002")
+                else:
+                    tokens = line_stripped.split("\002")
+                    tags = []
+                yield {"tokens": tokens, "labels": tags}
 
     def get_labels(self):
 
