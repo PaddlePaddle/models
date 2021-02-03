@@ -14,6 +14,7 @@
 ├── process_data.py         # 数据预处理脚本
 ├── README.md               # 文档
 ├── run_pretrain.py         # 预训练入口
+├── run_eval.py             # 评估入口
 └── scripts                 # 训练脚本
 ```
 
@@ -124,6 +125,30 @@ python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" run_pretrain.py --m
 ```
 
 用户也可以使用提供的shell脚本直接训练`sh scripts/run_multi.sh`.
+
+### 模型评估
+
+我们提供了对[WikiText](https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-v1.zip)、[LAMBADA](https://raw.githubusercontent.com/cybertronai/bflm/master/lambada_test.jsonl)两种数据集的评估脚本, 使用如下命令启动评估：
+
+1. WikiText数据集评估
+```bash
+python run_eval.py --model_name_or_path gpt2-small-en \
+    --eval_path ./wikitext-103/wiki.valid.tokens \
+    --overlapping_eval 32 \
+    --init_checkpoint_path ./checkpoint_dir/model_state.pdparams \
+    --batch_size 8 \
+    --device gpu
+```
+
+2. LAMBADA数据集评估
+```bash
+python run_eval.py --model_name_or_path gpt2-small-en \
+    --eval_path ./lambada_test.jsonl \
+    --cloze_eval \
+    --init_checkpoint_path ./checkpoint_dir/model_state.pdparams \
+    --batch_size 8 \
+    --device gpu
+```
 
 #### 文本生成
 

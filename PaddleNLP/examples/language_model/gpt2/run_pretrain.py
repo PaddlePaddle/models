@@ -269,6 +269,7 @@ def do_train(args):
                         # need better way to get inner model of DataParallel
                         model_to_save = model._layers if isinstance(
                             model, paddle.DataParallel) else model
+                        logger.info("Save model to %s" % output_dir)
                         model_to_save.save_pretrained(output_dir)
                 if global_step >= args.max_steps:
                     del train_data_loader
