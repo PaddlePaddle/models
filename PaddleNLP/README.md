@@ -17,7 +17,7 @@ PaddleNLP 2.0拥有丰富的模型库、简洁易用的API与高性能的分布�
 ## 特性
 
 - **丰富的模型库**
-  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等，更多详细介绍请查看[PaddleNLP模型库](./exmaples/README.md)。
+  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等，更多详细介绍请查看[PaddleNLP模型库](./docs/model_zoo.md)。
 
 - **简洁易用的API**
   - 深度兼容飞桨2.0的高层API体系，提供可复用的文本建模模块，可大幅度减少数据处理、组网、训练环节的代码开发量，提升文本建模开发效率。
@@ -79,6 +79,9 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 
 ## 模型库及其应用
 
+PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_zoo.md).
+以下为基于PaddleNLP相关的应用场景应用示例：
+
 - [词向量](./examples/word_embedding/README.md)
 - [词法分析](./examples/lexical_analysis/README.md)
 - [语言模型](./examples/language_model)
@@ -91,13 +94,16 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 - [机器翻译](./exmaples/machine_translation)
 - [阅读理解](./exmaples/machine_reading_comprehension)
 
+## 进阶应用
+
+- [模型压缩](./examples/model_compression/)
 
 ## API 使用文档
 
 - [Transformer API](./docs/transformers.md)
   * 基于Transformer结构相关的预训练模型API，包含ERNIE, BERT, RoBERTa, Electra等主流经典结构和下游任务。
 - [Data API](./docs/data.md)
-  * 文本数据Pipeline相关的API说明。
+  * 文本数据处理Pipeline的相关API说明。
 - [Dataset API](./docs/datasets.md)
   * 数据集相关API，包含自定义数据集，数据集贡献与数据集快速加载等功能说明。
 - [Embedding API](./docs/embeddings.md)

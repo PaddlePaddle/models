@@ -39,7 +39,7 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
     Args:
         model (obj:`paddle.nn.Layer`): A model to classify texts.
         data (obj:`List(Example)`): The processed data whose each element is a Example (numedtuple) object.
-            A Example object contains `text`(word_ids) and `se_len`(sequence length).
+            A Example object contains `text`(word_ids) and `seq_len`(sequence length).
         label_map(obj:`dict`): The label id (key) to label str (value) map.
         collate_fn(obj: `callable`): function to generate mini-batch data by merging
             the sample list.
