@@ -32,7 +32,7 @@ from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
-from paddlenlp.transformers import LinearSchedulerWithWarmup
+from paddlenlp.transformers import LinearDecayWithWarmUp
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -358,8 +358,8 @@ def do_train(args):
         len(train_data_loader) * args.num_train_epochs)
     warmup_steps = args.warmup_steps if args.warmup_steps > 0 else args.warmup_proportion
 
-    lr_scheduler = LinearSchedulerWithWarmup(args.learning_rate,
-                                             num_training_steps, warmup_steps)
+    lr_scheduler = LinearDecayWithWarmUp(args.learning_rate, num_training_steps,
+                                         warmup_steps)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
