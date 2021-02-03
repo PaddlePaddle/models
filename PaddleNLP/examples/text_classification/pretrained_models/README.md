@@ -52,7 +52,7 @@
 - paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp==2.0.0b
+pip install paddlenlp>=2.0.0rc
 ```
 
 ### 代码结构说明
@@ -126,7 +126,7 @@ tokenizer = ppnlp.transformers.BertTokenizer.from_pretrained('bert-base-chinese'
 # tokenizer = ppnlp.transformers.RobertaTokenizer.from_pretrained('roberta-wwm-ext-large')
 
 ```
-更多预训练模型，参考[transformers](../../../docs/embeddings.md)
+更多预训练模型，参考[transformers](../../../docs/transformers.md)
 
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。

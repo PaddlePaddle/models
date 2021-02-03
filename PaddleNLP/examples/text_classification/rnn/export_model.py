@@ -16,6 +16,7 @@ import argparse
 
 import paddle
 import paddlenlp as ppnlp
+from paddlenlp.data import Vocab
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -29,14 +30,12 @@ args = parser.parse_args()
 
 def main():
     # Load vocab.
-    vocab = ppnlp.data.Vocab.load_vocabulary(args.vocab_path)
+    vocab = Vocab.load_vocabulary(args.vocab_path)
     label_map = {0: 'negative', 1: 'positive'}
 
     # Construct the newtork.
     model = ppnlp.models.Senta(
-        network=args.network,
-        vocab_size=len(vocab.token_to_idx),
-        num_classes=len(label_map))
+        network=args.network, vocab_size=len(vocab), num_classes=len(label_map))
 
     # Load model parameters.
     state_dict = paddle.load(args.params_path)

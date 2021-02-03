@@ -18,7 +18,7 @@ import argparse
 import paddle
 import paddle.nn.functional as F
 import paddlenlp as ppnlp
-from paddlenlp.data import JiebaTokenizer, Stack, Tuple, Pad
+from paddlenlp.data import JiebaTokenizer, Pad, Stack, Tuple, Vocab
 
 from utils import preprocess_prediction_data
 
@@ -82,7 +82,7 @@ def predict(model, data, label_map, batch_size=1, pad_token_id=0):
 if __name__ == "__main__":
     paddle.set_device("gpu") if args.use_gpu else paddle.set_device("cpu")
     # Loads vocab.
-    vocab = ppnlp.data.Vocab.load_vocabulary(
+    vocab = Vocab.load_vocabulary(
         args.vocab_path, unk_token='[UNK]', pad_token='[PAD]')
     tokenizer = JiebaTokenizer(vocab)
     label_map = {0: 'dissimilar', 1: 'similar'}

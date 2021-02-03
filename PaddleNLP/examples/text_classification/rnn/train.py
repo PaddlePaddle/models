@@ -19,7 +19,7 @@ import random
 import numpy as np
 import paddle
 import paddlenlp as ppnlp
-from paddlenlp.data import JiebaTokenizer, Stack, Tuple, Pad
+from paddlenlp.data import JiebaTokenizer, Pad, Stack, Tuple, Vocab
 from paddlenlp.datasets import ChnSentiCorp
 
 from utils import convert_example
@@ -27,7 +27,7 @@ from utils import convert_example
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
-parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
+parser.add_argument('--use_gpu', type=eval, default=True, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate used to train.")
 parser.add_argument("--save_dir", type=str, default='checkpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         raise RuntimeError('The vocab_path  can not be found in the path %s' %
                            args.vocab_path)
 
-    vocab = ppnlp.data.Vocab.load_vocabulary(
+    vocab = Vocab.load_vocabulary(
         args.vocab_path, unk_token='[UNK]', pad_token='[PAD]')
     # Loads dataset.
     train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     label_list = train_ds.get_labels()
     model = ppnlp.models.Senta(
         network=args.network,
-        vocab_size=len(vocab.token_to_idx),
+        vocab_size=len(vocab),
         num_classes=len(label_list))
     model = paddle.Model(model)
 

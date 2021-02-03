@@ -142,7 +142,7 @@ tokenizer = ppnlp.transformers.ErnieTokenizer.from_pretrained('ernie')
 # tokenizer = ppnlp.transformers.RobertaTokenizer.from_pretrained('roberta-wwm-ext-large')
 
 ```
-更多预训练模型，参考[transformers](../../../docs/embeddings.md)
+更多预训练模型，参考[transformers](../../../docs/transformers.md)
 
 程序运行时将会自动进行训练，评估，测试。同时训练过程中会自动保存模型在指定的`save_dir`中。
 如：

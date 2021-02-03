@@ -80,9 +80,7 @@ if __name__ == "__main__":
 
     # Constructs the newtork.
     model = ppnlp.models.Senta(
-        network=args.network,
-        vocab_size=len(vocab.token_to_idx),
-        num_classes=len(label_map))
+        network=args.network, vocab_size=len(vocab), num_classes=len(label_map))
 
     # Loads model parameters.
     state_dict = paddle.load(args.params_path)
@@ -95,7 +93,7 @@ if __name__ == "__main__":
         '怀着十分激动的心情放映，可是看着看着发现，在放映完毕后，出现一集米老鼠的动画片',
         '作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。',
     ]
-    tokenizer = ppnlp.data.JiebaTokenizer(vocab)
+    tokenizer = JiebaTokenizer(vocab)
     examples = preprocess_prediction_data(data, tokenizer)
 
     results = predict(
