@@ -67,12 +67,13 @@ wordemb.cosine_sim("艺术", "火车")
 ### 一键加载高质量中文预训练模型
 
 ```python
-from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
+from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel, GPT2ForPretraining
 
 ernie = ErnieModel.from_pretrained('ernie-1.0')
 bert = BertModel.from_pretrained('bert-wwm-chinese')
 roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
+gpt2 = GPT2ForPretraining.from_pretrained('gpt2-base-cn')
 ```
 
 请参考 [Pretrained-Models](./docs/transformers.md)查看目前支持的预训练模型。
@@ -80,7 +81,7 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 ## 模型库及其应用
 
 PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_zoo.md).
-以下为基于PaddleNLP相关的应用场景应用示例：
+模型应用场景介绍请参考[examples](./examples/README.md):
 
 - [词向量](./examples/word_embedding/README.md)
 - [词法分析](./examples/lexical_analysis/README.md)
@@ -89,7 +90,7 @@ PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_
 - [文本生成](./examples/text_generation/README.md)
 - [语义匹配](./examples/text_matching/README.md)
 - [命名实体识别](./examples/named_entity_recognition/README.md)
-- [文本图学习](./examples/text_graph/README.md)
+- [文本图学习](./examples/text_graph/erniesage/README.md)
 - [通用对话](./examples/dialogue)
 - [机器翻译](./examples/machine_translation)
 - [阅读理解](./examples/machine_reading_comprehension)

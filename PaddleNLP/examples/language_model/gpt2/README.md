@@ -1,9 +1,9 @@
-# GPT2
+# GPT-2
 
 ## 模型介绍
-[GPT2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)(Language Models are Unsupervised Multitask Learners) 以[Transformer](https://arxiv.org/abs/1706.03762) 解码器为网络基本组件，使用自回归的方式在大规模无标注文本语料上进行预训练（pre-train），得到的语言生成模型。
+[GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)(Language Models are Unsupervised Multitask Learners) 以[Transformer](https://arxiv.org/abs/1706.03762) 解码器为网络基本组件，使用自回归的方式在大规模无标注文本语料上进行预训练得到的语言生成模型。
 
-本项目是语言模型 GPT2 的 PaddlePaddle 实现， 包含模型训练，预测等内容。下是本例的简要目录结构及说明：
+本项目是语言模型 GPT-2 的 PaddlePaddle 实现， 包含模型训练，预测等内容。下是本例的简要目录结构及说明：
 
 ```text
 .
@@ -136,9 +136,6 @@ python generate_sample.py
 生成效果展示:
 ```text
 问题：中国的首都是哪里？答案：北京。
-问题：百度的厂长是谁? 答案：
-
-李彦宏。
 
 默写古诗: 大漠孤烟直，长河落日圆。
 举杯邀明月，
