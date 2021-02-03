@@ -90,9 +90,9 @@ PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_
 - [语义匹配](./examples/text_matching/README.md)
 - [命名实体识别](./examples/named_entity_recognition/README.md)
 - [文本图学习](./examples/text_graph/README.md)
-- [通用对话](./examples/dialogue/)
-- [机器翻译](./exmaples/machine_translation/)
-- [阅读理解](./exmaples/machine_reading_comprehension/)
+- [通用对话](./examples/dialogue)
+- [机器翻译](./examples/machine_translation)
+- [阅读理解](./examples/machine_reading_comprehension)
 
 ## 进阶应用
 
