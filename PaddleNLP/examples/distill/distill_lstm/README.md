@@ -5,7 +5,7 @@
 ```
 .
 ├── small.py              # 小模型结构以及对小模型单独训练的脚本
-├── bert_distill.py       # 用教师模型bert蒸馏学生模型的蒸馏脚本
+├── bert_distill.py       # 用教师模型BERT蒸馏学生模型的蒸馏脚本
 ├── data.py               # 定义了dataloader等数据读取接口
 ├── utils.py              # 定义了将样本转成id的转换接口
 ├── args.py               # 参数配置脚本
@@ -13,13 +13,13 @@
 ```
 
 ## 简介
-本目录下的实验是将特定任务下bert模型的知识蒸馏到基于Bi-LSTM的小模型中，主要参考论文[《Distilling Task-Specific Knowledge from BERT into Simple Neural Networks》](https://arxiv.org/abs/1903.12136)实现。
+本目录下的实验是将特定任务下BERT模型的知识蒸馏到基于Bi-LSTM的小模型中，主要参考论文[《Distilling Task-Specific Knowledge from BERT into Simple Neural Networks》](https://arxiv.org/abs/1903.12136)实现。
 
-在模型蒸馏中，较大的模型（在本例中是bert）通常被称为教师模型，较小的模型（在本例中是Bi-LSTM）通常被成为学生模型。知识的蒸馏通常是通过模型学习蒸馏相关的损失函数实现，在本实验中，损失函数是均方误差损失函数，传入函数的两个参数分别是学生模型的输出和教师模型的输出。
+在模型蒸馏中，较大的模型（在本例中是BERT）通常被称为教师模型，较小的模型（在本例中是Bi-LSTM）通常被成为学生模型。知识的蒸馏通常是通过模型学习蒸馏相关的损失函数实现，在本实验中，损失函数是均方误差损失函数，传入函数的两个参数分别是学生模型的输出和教师模型的输出。
 
 在[论文](https://arxiv.org/abs/1903.12136)的模型蒸馏阶段，作者为了能让教师模型表达出更多的知识供学生模型学习，对训练数据进行了数据增强。作者使用了三种数据增强方式，分别是：1.Masking，即以一定的概率将原数据中的word token替换成`[MASK]`；2. POS—guided word replacement，即以一定的概率将原数据中的词用与其有相同POS tag的词替换；3. n-gram sampling，即以一定的概率，从每条数据中采样n-gram，其中n的范围可通过人工设置。通过数据增强，可以产生更多无标签的训练数据，在训练过程中，学生模型可借助教师模型的“暗知识”，在更大的数据集上进行训练，产生更好的蒸馏效果。需要指出的是，实验只使用了第1和第3种数据增强方式。
 
-本实验分为三个训练过程：在特定任务上对bert的fine-tuning、在特定任务上对基于Bi-LSTM的小模型的训练（用于评价蒸馏效果）、将bert模型的知识蒸馏到基于Bi-LSTM的小模型上。
+本实验分为三个训练过程：在特定任务上对BERT的fine-tuning、在特定任务上对基于Bi-LSTM的小模型的训练（用于评价蒸馏效果）、将BERT模型的知识蒸馏到基于Bi-LSTM的小模型上。
 
 ## 环境要求
 运行本目录下的范例模型需要安装PaddlePaddle 2.0及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
@@ -31,22 +31,22 @@
 
 本实验使用GLUE中的SST-2、QQP以及中文情感分类数据集ChnSentiCorp中的训练集作为训练语料，用数据集中的验证集评估模型的效果。运行本目录下的实验，数据集会被自动下载到`paddlenlp.utils.env.DATA_HOME` 路径下，例如在linux系统下，例如对于GLUE中的QQP数据集，默认存储路径是`~/.paddlenlp/datasets/glue/QQP`，对于ChnSentiCorp数据集，则会下载到 `~/.paddlenlp/datasets/chnsenticorp`。
 
-对于bert的fine-tuning任务，本实验中使用了预训练模型`bert-bas-uncased`、`bert-wwm-ext-chinese`、`bert-base-chinese`。同样，这几个模型在训练时会被自动下载到`paddlenlp.utils.env.DATA_HOME`路径下。例如，对于`bert-base-uncased`模型，在linux系统下，会被下载到`~/.paddlenlp/models/bert-base-uncased`下。
+对于BERT的fine-tuning任务，本实验中使用了预训练模型`bert-bas-uncased`、`bert-wwm-ext-chinese`、`bert-base-chinese`。同样，这几个模型在训练时会被自动下载到`paddlenlp.utils.env.DATA_HOME`路径下。例如，对于`bert-base-uncased`模型，在linux系统下，会被下载到`~/.paddlenlp/models/bert-base-uncased`下。
 
-在中文数据集上的小模型训练的输入利用jieba分词，其中词表同本repo下[`example/text_classification/rnn`](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_classification/rnn)，可通过运行以下命令进行下载：
+在中文数据集上的小模型训练的输入利用jieba分词，其中词表同本repo下[`example/text_classification/rnn`](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_classification/rnn)的词表，可通过运行以下命令进行下载：
 
 ```shell
 wget https://paddlenlp.bj.bcebos.com/data/senta_word_dict.txt
 ```
 
-为了节省显存和运行时间，可以对ChnSentiCorp中出现的词先进行过滤，并将最后的词表文件名和词表大小配置在下面的参数中。
+为了节省显存和运行时间，可以对ChnSentiCorp中未出现的词先进行过滤，并将最后的词表文件名和词表大小配置在下面的参数中。
 
 
 ## 蒸馏实验过程
-### 训练bert fine-tuning模型
-训练bert的fine-tuning模型，可以去本repo下example中的[glue目录](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/glue)下。关于glue的更多详细说明，可见glue目录下的README文档。
+### 训练BERT fine-tuning模型
+训练BERT的fine-tuning模型，可以去本repo下example中的[glue目录](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/glue)下。关于glue的更多详细说明，可见glue目录下的README文档。
 
-以GLUE的SST-2任务为例，调用bert finetune的训练脚本，配置如下的参数，训练SST-2任务：
+以GLUE的SST-2任务为例，调用BERT fine-tune的训练脚本，配置如下的参数，训练SST-2任务：
 
 ```shell
 cd ../../glue
@@ -111,7 +111,7 @@ CUDA_VISIBLE_DEVICES=0 python small.py \
 ```
 
 ### 蒸馏模型
-这一步是将教师模型bert的知识蒸馏到基于BiLSTM的学生模型中，可以运行下面的命令分别基于ChnSentiCorp、SST-2、QQP数据集对基于BiLSTM的学生模型进行蒸馏。
+这一步是将教师模型BERT的知识蒸馏到基于BiLSTM的学生模型中，可以运行下面的命令分别基于ChnSentiCorp、SST-2、QQP数据集对基于BiLSTM的学生模型进行蒸馏。
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python bert_distill.py \
@@ -159,7 +159,7 @@ CUDA_VISIBLE_DEVICES=0 python bert_distill.py \
 
 
 ## 蒸馏实验结果
-本蒸馏实验基于GLUE的SST-2、QQP、中文情感分类ChnSentiCorp数据集。实验效果均使用每个数据集的验证集（dev）进行评价，评价指标是准确率（acc），其中QQP中包含f1值。利用基于bert的教师模型去蒸馏基于Bi-LSTM的学生模型，对比Bi-LSTM小模型单独训练，在SST-2、QQP、senta(中文情感分类)任务上分别有3.2%、1.8%、1.4%的提升。
+本蒸馏实验基于GLUE的SST-2、QQP、中文情感分类ChnSentiCorp数据集。实验效果均使用每个数据集的验证集（dev）进行评价，评价指标是准确率（acc），其中QQP中包含f1值。利用基于BERT的教师模型去蒸馏基于Bi-LSTM的学生模型，对比Bi-LSTM小模型单独训练，在SST-2、QQP、senta(中文情感分类)任务上分别有3.2%、1.8%、1.4%的提升。
 
 | Model          | SST-2(dev acc)    | QQP(dev acc/f1)            | ChnSentiCorp(dev acc) | ChnSentiCorp(dev acc) |
 | -------------- | ----------------- | -------------------------- | --------------------- | --------------------- |
