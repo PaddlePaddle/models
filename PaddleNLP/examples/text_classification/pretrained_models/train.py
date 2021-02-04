@@ -215,7 +215,6 @@ def do_train():
     model = paddle.DataParallel(model)
 
     num_training_steps = len(train_data_loader) * args.epochs
-    num_warmup_steps = int(args.warmup_proportion * num_training_steps)
 
     lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
                                          args.warmup_proportion)
