@@ -23,6 +23,7 @@ root: None
 use_gpu: True
 
 # Args for reader, see reader.py for details
+dataset: "en-zh"
 pool_size: 200000
 sort_type: "global"
 batch_size: 4096
@@ -103,6 +104,6 @@ scale_loss: 128.0
 
 # Whether to use multi-card/multi-node distributed training.
 # Only works for static graph for now.
-is_distributed: True
+is_distributed: False
 
 max_iter: None

@@ -13,7 +13,7 @@ from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.utils.env import DATA_HOME
 from paddle.dataset.common import md5file
 
-__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14ende']
+__all__ = ['TranslationDataset', 'IWSLT15', 'WMT14ende', 'NewsComenzh']
 
 
 def sequential_transforms(*transforms):
@@ -374,6 +374,87 @@ class WMT14ende(TranslationDataset):
             self.data = [(transform_func[0](data[0]),
                           transform_func[1](data[1])) for data in self.data]
         super(WMT14ende, self).__init__(self.data)
+
+
+class NewsComenzh(TranslationDataset):
+    """
+    WMT14 English to Chinese translation dataset.
+
+    Args:
+        mode(str, optional): It could be 'train', 'dev' or 'test'. Default: 'train'.
+        root(str, optional): If None, dataset will be downloaded in
+            `~/.paddlenlp/datasets/machine_translation/NewsComenzh/`. If provided,
+            md5 check would be performed, and dataset would be downloaded in
+            default directory if failed. Default: None.
+        transform_func(callable, optional): If not None, it transforms raw data
+            to index data. Default: None.
+    Examples:
+        .. code-block:: python
+
+            from paddlenlp.datasets import NewsComenzh
+            transform_func = NewsComenzh.get_default_transform_func(root=root)
+            train_dataset = NewsComenzh.get_datasets(mode="train", transform_func=transform_func)
+    """
+    # URL = "https://paddlenlp.bj.bcebos.com/datasets/newscom14.en-zh.tar.gz"
+    URL = "http://10.9.189.5:8088/newscom14.en-zh.tar.gz"
+    SPLITS = {
+        'train': TranslationDataset.META_INFO(
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "train.tok.clean.bpe.en"),
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "train.tok.clean.bpe.zh"),
+            "dac57bf0cf711f6f3fbe6df53d395f77",
+            "390bf91a955515386717a6bd3c464019"),
+        'dev': TranslationDataset.META_INFO(
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "valid.tok.clean.bpe.en"),
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "valid.tok.clean.bpe.zh"),
+            "61cdc41b3b347636422d30955fbc1f5a",
+            "10b497218ccee6b09f3b3b1a959c8b74"),
+        'test': TranslationDataset.META_INFO(
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "test.tok.clean.bpe.en"),
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "test.tok.clean.bpe.zh"),
+            "f2743a513a597252100d912a515782a4",
+            "a01bc932d02f05879bd510a275a2a1cb"),
+        'test-eval': TranslationDataset.META_INFO(
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "test.tok.clean.en"),
+            os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                         "test.tok.clean.zh"),
+            "5d8c24a912a7b3f7bb14641f0a72eabc",
+            "f9400dd8a5fa57ecd7a5ec1d15a1c0b8")
+    }
+    VOCAB_INFO = (os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                               "vocab_all.bpe.32000"),
+                  os.path.join("newscom14.en-zh", "newscom14_enzh_data_bpe",
+                               "vocab_all.bpe.32000"),
+                  "8e03782a348e71ce88256babbc7af535",
+                  "8e03782a348e71ce88256babbc7af535")
+    UNK_TOKEN = "<unk>"
+    BOS_TOKEN = "<s>"
+    EOS_TOKEN = "<e>"
+
+    MD5 = "354d4e4b22c3b67e2df369c1a6fe4f57"
+
+    def __init__(self, mode="train", root=None, transform_func=None):
+        if mode not in ("train", "dev", "test", "test-eval"):
+            raise TypeError(
+                '`train`, `dev`, `test` is supported but `{}` is passed in'.
+                format(mode))
+        if transform_func is not None and len(transform_func) != 2:
+            if len(transform_func) != 2:
+                raise ValueError("`transform_func` must have length of two for"
+                                 "source and target.")
+
+        self.data = NewsComenzh.get_data(mode=mode, root=root)
+        self.mode = mode
+        if transform_func is not None:
+            self.data = [(transform_func[0](data[0]),
+                          transform_func[1](data[1])) for data in self.data]
+        super(NewsComenzh, self).__init__(self.data)
 
 
 # For test, not API

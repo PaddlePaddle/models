@@ -22,7 +22,7 @@ import numpy as np
 from paddle.io import BatchSampler, DataLoader, Dataset
 import paddle.distributed as dist
 from paddlenlp.data import Pad
-from paddlenlp.datasets import WMT14ende
+from paddlenlp.datasets import WMT14ende, NewsComenzh
 from paddlenlp.data.sampler import SamplerHelper
 
 
@@ -35,25 +35,35 @@ def min_max_filer(data, max_len, min_len=0):
 
 def create_data_loader(args, places=None, use_all_vocab=False):
     root = None if args.root == "None" else args.root
-    if not use_all_vocab:
-        WMT14ende.VOCAB_INFO = (os.path.join(
-            "WMT14.en-de", "wmt14_ende_data_bpe",
-            "vocab_all.bpe.33712"), os.path.join(
-                "WMT14.en-de", "wmt14_ende_data_bpe", "vocab_all.bpe.33712"),
-                                "de485e3c2e17e23acf4b4b70b54682dd",
-                                "de485e3c2e17e23acf4b4b70b54682dd")
-    (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+    if args.dataset == "en-zh":
+        (src_vocab, trg_vocab) = NewsComenzh.get_vocab(root=root)
+        transform_func = NewsComenzh.get_default_transform_func(root=root)
+        datasets = [
+            NewsComenzh.get_datasets(
+                mode=m, root=root, transform_func=transform_func)
+            for m in ["train", "dev"]
+        ]
+    else:
+        if not use_all_vocab:
+            WMT14ende.VOCAB_INFO = (os.path.join(
+                "WMT14.en-de", "wmt14_ende_data_bpe",
+                "vocab_all.bpe.33712"), os.path.join(
+                    "WMT14.en-de", "wmt14_ende_data_bpe",
+                    "vocab_all.bpe.33712"), "de485e3c2e17e23acf4b4b70b54682dd",
+                                    "de485e3c2e17e23acf4b4b70b54682dd")
+        (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+        transform_func = WMT14ende.get_default_transform_func(root=root)
+        datasets = [
+            WMT14ende.get_datasets(
+                mode=m, root=root, transform_func=transform_func)
+            for m in ["train", "dev"]
+        ]
+
     padding_vocab = (
         lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
     )
     args.src_vocab_size = padding_vocab(len(src_vocab))
     args.trg_vocab_size = padding_vocab(len(trg_vocab))
-    transform_func = WMT14ende.get_default_transform_func(root=root)
-    datasets = [
-        WMT14ende.get_datasets(
-            mode=m, root=root, transform_func=transform_func)
-        for m in ["train", "dev"]
-    ]
 
     data_loaders = [(None)] * 2
     for i, dataset in enumerate(datasets):
@@ -92,24 +102,33 @@ def create_data_loader(args, places=None, use_all_vocab=False):
 
 def create_infer_loader(args, use_all_vocab=False):
     root = None if args.root == "None" else args.root
-    if not use_all_vocab:
-        WMT14ende.VOCAB_INFO = (os.path.join(
-            "WMT14.en-de", "wmt14_ende_data_bpe",
-            "vocab_all.bpe.33712"), os.path.join(
-                "WMT14.en-de", "wmt14_ende_data_bpe", "vocab_all.bpe.33712"),
-                                "de485e3c2e17e23acf4b4b70b54682dd",
-                                "de485e3c2e17e23acf4b4b70b54682dd")
-    (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+    if args.dataset == "en-zh":
+        (src_vocab, trg_vocab) = NewsComenzh.get_vocab(root=root)
+        transform_func = NewsComenzh.get_default_transform_func(root=root)
+        dataset = NewsComenzh.get_datasets(
+            mode="test", root=root, transform_func=transform_func).filter(
+                partial(
+                    min_max_filer, max_len=args.max_length))
+    else:
+        if not use_all_vocab:
+            WMT14ende.VOCAB_INFO = (os.path.join(
+                "WMT14.en-de", "wmt14_ende_data_bpe",
+                "vocab_all.bpe.33712"), os.path.join(
+                    "WMT14.en-de", "wmt14_ende_data_bpe",
+                    "vocab_all.bpe.33712"), "de485e3c2e17e23acf4b4b70b54682dd",
+                                    "de485e3c2e17e23acf4b4b70b54682dd")
+        (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+        transform_func = WMT14ende.get_default_transform_func(root=root)
+        dataset = WMT14ende.get_datasets(
+            mode="test", root=root, transform_func=transform_func).filter(
+                partial(
+                    min_max_filer, max_len=args.max_length))
+
     padding_vocab = (
         lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
     )
     args.src_vocab_size = padding_vocab(len(src_vocab))
     args.trg_vocab_size = padding_vocab(len(trg_vocab))
-    transform_func = WMT14ende.get_default_transform_func(root=root)
-    dataset = WMT14ende.get_datasets(
-        mode="test", root=root, transform_func=transform_func).filter(
-            partial(
-                min_max_filer, max_len=args.max_length))
 
     batch_sampler = SamplerHelper(dataset).batch(
         batch_size=args.infer_batch_size, drop_last=False)

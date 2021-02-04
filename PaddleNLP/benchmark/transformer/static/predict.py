@@ -8,10 +8,13 @@ import numpy as np
 import yaml
 from attrdict import AttrDict
 from pprint import pprint
+import re
+import sacrebleu
 
 import paddle
 
 from paddlenlp.transformers import InferTransformerModel
+from paddlenlp.datasets import WMT14ende, NewsComenzh
 
 sys.path.append("../")
 import reader
@@ -19,6 +22,7 @@ import reader
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+
 
 def cast_parameters_to_fp32(place, program, scope=None):
     all_parameters = []
@@ -32,6 +36,7 @@ def cast_parameters_to_fp32(place, program, scope=None):
             'fp32' in str(param.dtype).lower():
             data = np.array(tensor)
             tensor.set(np.float32(data), place)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -69,6 +74,19 @@ def do_predict(args):
 
     # Define data loader
     test_loader, to_tokens = reader.create_infer_loader(args)
+
+    if args.dataset == "en-zh":
+        root = None if args.root == "None" else args.root
+        test_eval_data = NewsComenzh.get_datasets(
+            mode="test-eval", root=root, transform_func=None)
+    elif args.dataset == "en-de":
+        root = None if args.root == "None" else args.root
+        test_eval_data = WMT14ende.get_datasets(
+            mode="test-eval", root=root, transform_func=None)
+    else:
+        raise NotImplementedError(
+            "Not Inplementation dataset process.\n If you add a new comstum dataset, you can rewirte this part of code. "
+        )
 
     test_program = paddle.static.Program()
     startup_program = paddle.static.Program()
@@ -109,6 +127,9 @@ def do_predict(args):
     if args.use_pure_fp16:
         cast_parameters_to_fp32(place, test_program)
 
+    index = 0
+    src_list = []
+    ref_list = []
     f = open(args.output_file, "w")
     for data in test_loader:
         finished_sequence, = exe.run(test_program,
@@ -121,8 +142,23 @@ def do_predict(args):
                     break
                 id_list = post_process_seq(beam, args.bos_idx, args.eos_idx)
                 word_list = to_tokens(id_list)
-                sequence = " ".join(word_list) + "\n"
-                f.write(sequence)
+                sequence = " ".join(word_list)
+                sequence = re.sub(pattern="(@@ )|(@@ ?$)",
+                                  repl="",
+                                  string=sequence)
+                if args.dataset == "en-zh":
+                    src_list.append(" ".join(list("".join(sequence.split()))))
+                    ref_list.append(" ".join(
+                        list("".join(test_eval_data[index][1].split()))))
+                elif args.dataset == "en-de":
+                    src_list.append(sequence)
+                    ref_list.append(test_eval_data[index][1])
+
+                f.write(sequence + "\n")
+            index += 1
+    bleu = sacrebleu.corpus_bleu(src_list, [ref_list])
+    logging.info("==========")
+    logging.info("BLEU scores: %f" % (bleu.score))
 
     paddle.disable_static()
 
