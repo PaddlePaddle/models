@@ -1,10 +1,11 @@
-from paddlenlp.datasets import MSRA_NER_new
+from datasets import MSRA_NER
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial
 from paddle.io import DataLoader
 
-train_ds, test_ds = MSRA_NER_new().get_datasets('train', 'test')
+train_ds, test_ds = MSRA_NER().read_datasets('train', 'test')
+
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-uncased')
 
 ignore_label = -100
@@ -28,7 +29,7 @@ def tokenize_and_align_labels(examples, no_entity_id):
     return tokenized_inputs
 
 
-label_list = MSRA_NER_new().get_labels()
+label_list = MSRA_NER().get_labels()
 no_entity_id = len(label_list) - 1
 
 trans_func = partial(tokenize_and_align_labels, no_entity_id=no_entity_id)

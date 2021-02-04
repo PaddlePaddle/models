@@ -1,10 +1,10 @@
-from paddlenlp.datasets import SQuAD_new
+from datasets import SQuAD
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial
 from paddle.io import DataLoader
 
-train_ds, dev_ds = SQuAD_new().get_datasets('train_v2', 'dev_v2')
+train_ds, dev_ds = SQuAD().read_datasets('train_v2', 'dev_v2')
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 print(len(train_ds))
@@ -93,8 +93,6 @@ print(train_ds[0])
 print(train_ds[1])
 print(len(train_ds))
 print('-----------------------------------------------------')
-
-#TODO: Where to pad?
 
 train_batchify_fn = lambda samples, fn=Dict({
     "input_ids": Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input

@@ -1,11 +1,11 @@
-from paddlenlp.datasets import PTB_new
+from datasets import PTB
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict, Vocab
 import numpy as np
 from functools import partial
 from paddle.io import DataLoader
 
-train_ds, valid_ds, test_ds = PTB_new().get_datasets('train', 'valid', 'test')
+train_ds, valid_ds, test_ds = PTB().read_datasets('train', 'valid', 'test')
 
 train_examples = [train_ds[i]['sentence'].split() for i in range(len(train_ds))]
 vocab = Vocab.build_vocab(train_examples, eos_token='</eos>')

@@ -215,6 +215,7 @@ class PretrainedTokenizer(object):
                 return_segment_ids=return_segment_ids,
                 return_input_mask=return_input_mask,
                 return_length=return_length,
+                return_overflowing_tokens=return_overflowing_tokens,
                 return_special_tokens_mask=return_special_tokens_mask)
         else:
             return self.encode(
@@ -546,27 +547,45 @@ class PretrainedTokenizer(object):
 
         return token_ids_0 + token_ids_1
 
-    def build_inputs_with_special_tokens_offset_mapping(
-            self, offset_mapping_ids_0, offset_mapping_ids_1=None):
+    def build_offset_mapping_with_special_tokens(self,
+                                                 offset_mapping_0,
+                                                 offset_mapping_1=None):
         """
-        Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
-        adding special tokens. 
+        Build offset map from a pair of offset map by concatenating and adding offsets of special tokens. 
         
         Should be overridden in a subclass if the model has a special way of building those.
 
         Args:
-            token_ids_0 (:obj:`List[int]`):
-                List of IDs to which the special tokens will be added.
-            token_ids_1 (:obj:`List[int]`, `optional`):
-                Optional second list of IDs for sequence pairs.
+            offset_mapping_ids_0 (:obj:`List[tuple]`):
+                List of char offsets to which the special tokens will be added.
+            offset_mapping_ids_1 (:obj:`List[tuple]`, `optional`):
+                Optional second list of char offsets for offset mapping pairs.
 
         Returns:
-            :obj:`List[int]`: List of input_id with the appropriate special tokens.
+            :obj:`List[tuple]`: List of char offsets with the appropriate offsets of special tokens.
         """
-        if offset_mapping_ids_1 is None:
-            return offset_mapping_ids_0
+        if offset_mapping_1 is None:
+            return offset_mapping_0
 
-        return offset_mapping_ids_0 + offset_mapping_ids_1
+        return offset_mapping_0 + offset_mapping_1
+
+    def get_special_tokens_mask(self,
+                                token_ids_0,
+                                token_ids_1=None,
+                                already_has_special_tokens=False):
+        """
+        Retrieves sequence ids from a token list that has no special tokens added. This method is called when adding
+        special tokens using the tokenizer ``encode`` methods.
+        Args:
+            token_ids_0 (List[int]): List of ids of the first sequence.
+            token_ids_1 (List[int], optinal): List of ids of the second sequence.
+            already_has_special_tokens (bool, optional): Whether or not the token list is already 
+                formatted with special tokens for the model. Defaults to None.
+        Returns:
+            results (List[int]): The list of integers in the range [0, 1]: 1 for a special token, 0 for a sequence token.
+        """
+        return [0] * ((len(token_ids_1)
+                       if token_ids_1 else 0) + len(token_ids_0))
 
     def create_token_type_ids_from_sequences(self,
                                              token_ids_0,
@@ -788,6 +807,7 @@ class PretrainedTokenizer(object):
                      return_segment_ids=True,
                      return_input_mask=False,
                      return_length=False,
+                     return_overflowing_tokens=False,
                      return_special_tokens_mask=False):
         """
         Returns a dictionary containing the encoded sequence or sequence pair and additional information:
@@ -946,7 +966,7 @@ class PretrainedTokenizer(object):
                     pair_mapping = token_pair_ids_offset_mapping[offset:offset +
                                                                  length]
 
-                    offset_mapping = self.build_inputs_with_special_tokens_offset_mapping(
+                    offset_mapping = self.build_offset_mapping_with_special_tokens(
                         mapping, pair_mapping)
                     sequence = self.build_inputs_with_special_tokens(ids,
                                                                      pair_ids)

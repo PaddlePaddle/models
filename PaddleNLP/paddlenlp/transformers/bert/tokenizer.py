@@ -1,4 +1,5 @@
 # Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -402,32 +403,31 @@ class BertTokenizer(PretrainedTokenizer):
         _sep = [self.sep_token_id]
         return _cls + token_ids_0 + _sep + token_ids_1 + _sep
 
-    def build_inputs_with_special_tokens_offset_mapping(
-            self, offset_mapping_ids_0, offset_mapping_ids_1=None):
+    def build_offset_mapping_with_special_tokens(self,
+                                                 offset_mapping_0,
+                                                 offset_mapping_1=None):
         """
-        Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
-        adding special tokens. 
+        Build offset map from a pair of offset map by concatenating and adding offsets of special tokens. 
         
-        A BERT sequence has the following format:
+        A BERT offset_mapping has the following format:
         ::
-            - single sequence: ``[CLS] X [SEP]``
-            - pair of sequences: ``[CLS] A [SEP] B [SEP]``
-
+            - single sequence: ``(0,0) X (0,0)``
+            - pair of sequences: `(0,0) A (0,0) B (0,0)``
+        
         Args:
-            token_ids_0 (:obj:`List[int]`):
-                List of IDs to which the special tokens will be added.
-            token_ids_1 (:obj:`List[int]`, `optional`):
-                Optional second list of IDs for sequence pairs.
+            offset_mapping_ids_0 (:obj:`List[tuple]`):
+                List of char offsets to which the special tokens will be added.
+            offset_mapping_ids_1 (:obj:`List[tuple]`, `optional`):
+                Optional second list of char offsets for offset mapping pairs.
 
         Returns:
-            :obj:`List[int]`: List of input_id with the appropriate special tokens.
+            :obj:`List[tuple]`: List of char offsets with the appropriate offsets of special tokens.
         """
-        if offset_mapping_ids_1 is None:
-            return [(0, 0)] + offset_mapping_ids_0 + [(0, 0)]
+        if offset_mapping_1 is None:
+            return [(0, 0)] + offset_mapping_0 + [(0, 0)]
 
-        return [(0, 0)] + offset_mapping_ids_0 + [
-            (0, 0)
-        ] + offset_mapping_ids_1 + [(0, 0)]
+        return [(0, 0)] + offset_mapping_0 + [(0, 0)
+                                              ] + offset_mapping_1 + [(0, 0)]
 
     def create_token_type_ids_from_sequences(self,
                                              token_ids_0,
@@ -458,3 +458,34 @@ class BertTokenizer(PretrainedTokenizer):
             return len(_cls + token_ids_0 + _sep) * [0]
         return len(_cls + token_ids_0 + _sep) * [0] + len(token_ids_1 +
                                                           _sep) * [1]
+
+    def get_special_tokens_mask(self,
+                                token_ids_0,
+                                token_ids_1=None,
+                                already_has_special_tokens=False):
+        """
+        Retrieves sequence ids from a token list that has no special tokens added. This method is called when adding
+        special tokens using the tokenizer ``encode`` methods.
+        Args:
+            token_ids_0 (List[int]): List of ids of the first sequence.
+            token_ids_1 (List[int], optinal): List of ids of the second sequence.
+            already_has_special_tokens (bool, optional): Whether or not the token list is already 
+                formatted with special tokens for the model. Defaults to None.
+        Returns:
+            results (List[int]): The list of integers in the range [0, 1]: 1 for a special token, 0 for a sequence token.
+        """
+
+        if already_has_special_tokens:
+            if token_ids_1 is not None:
+                raise ValueError(
+                    "You should not supply a second sequence if the provided sequence of "
+                    "ids is already formatted with special tokens for the model."
+                )
+            return list(
+                map(lambda x: 1 if x in [self.sep_token_id, self.cls_token_id] else 0,
+                    token_ids_0))
+
+        if token_ids_1 is not None:
+            return [1] + ([0] * len(token_ids_0)) + [1] + (
+                [0] * len(token_ids_1)) + [1]
+        return [1] + ([0] * len(token_ids_0)) + [1]
