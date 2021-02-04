@@ -99,6 +99,7 @@ class BLEU(paddle.metric.Metric):
     Examples:
         1. Using as a general evaluation object.
         .. code-block:: python
+
             from paddlenlp.metrics import BLEU
             bleu = BLEU()
             cand = ["The","cat","The","cat","on","the","mat"]
@@ -109,6 +110,7 @@ class BLEU(paddle.metric.Metric):
         2. Using as an instance of `paddle.metric.Metric`.
                 
         .. code-block:: python
+
         # TODO(liujiaqi)
 
     '''

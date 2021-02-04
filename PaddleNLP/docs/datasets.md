@@ -1,10 +1,12 @@
-# PaddleNLP Datasets
+# PaddleNLP Datasets API
+
+PaddleNLP提供了
 
 ## 阅读理解
 
 |  数据集名称   | 简介 | 调用方法 |
 |  ----  | ----- | ------ |
-|  [SQaAD](https://rajpurkar.github.io/SQuAD-explorer/) | 斯坦福问答数据集，包括SQaAD1.1和SQaAD2.0|`paddlenlp.datasets.SQuAD` |
+|  [SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) | 斯坦福问答数据集，包括SQaAD1.1和SQaAD2.0|`paddlenlp.datasets.SQuAD` |
 |  [DuReader-yesno](https://aistudio.baidu.com/aistudio/competition/detail/49) | 千言数据集：阅读理解，判断答案极性|`paddlenlp.datasets.DuReaderYesNo` |
 |  [DuReader-robust](https://aistudio.baidu.com/aistudio/competition/detail/49) | 千言数据集：阅读理解，答案原文抽取|`paddlenlp.datasets.DuReaderRobust` |
 
@@ -52,6 +54,6 @@
 
 | 数据集名称  | 简介 | 调用方法 |
 | ----  | --------- | ------ |
-|  [yahoo](https://webscope.sandbox.yahoo.com/catalog.php?datatype=l&guccounter=1) | 雅虎英文语料库| [VAE](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_generation/vae-seq2seq)|
+|  [yahoo](https://webscope.sandbox.yahoo.com/catalog.php?datatype=l&guccounter=1) | 雅虎英文语料库 | [VAE](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/text_generation/vae-seq2seq)|
 |  [PTB](http://www.fit.vutbr.cz/~imikolov/rnnlm/) | Penn Treebank Dataset | `paddlenlp.datasets.PTB`|
 |  [1 Billon words](https://opensource.google/projects/lm-benchmark) | 1 Billion Word Language Model Benchmark R13 Output 基准语料库| [ELMo](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/examples/language_model/elmo)|

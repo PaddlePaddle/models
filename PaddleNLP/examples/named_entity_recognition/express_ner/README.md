@@ -10,9 +10,9 @@
 
 - Python >= 3.6
 
-- paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
+- paddlepaddle >= 2.0.0，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp\>=2.0.0b2`
+- paddlenlp >= 2.0.0rc, 安装方式：`pip install paddlenlp>=2.0.0rc`
 
 
 ### 2.2 数据准备
@@ -39,7 +39,7 @@
 
 ### 2.3 启动训练
 
-本项目提供了两种模型结构，一种是BiGRU + CRF结构，另一种是ERNIE + FC结构，前者显存占用小，后者能够在较小的迭代次数中收敛。
+本项目提供了两种模型结构，一种是BiGRU+CRF结构，另一种是ERNIE+FC结构，前者显存占用小，推理速度快；后者能够在更快收敛并取得更高的精度，但推理速度较慢。
 
 #### 2.3.1 启动BiGRU + CRF训练
 

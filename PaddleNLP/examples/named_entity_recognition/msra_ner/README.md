@@ -1,4 +1,4 @@
-# 使用PaddleNLP运行MSRA-NER
+# 使用PaddleNLP完成中文命名实体识别
 
 ## 1. 简介
 
@@ -19,7 +19,7 @@ PaddleNLP集成的数据集MSRA-NER数据集对文件格式做了调整：每一
 
 - paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp\>=2.0.0b2`
+- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp>=2.0.0b2`
 
 ### 2.2 启动MSRA-NER任务
 
@@ -39,15 +39,15 @@ python -u ./run_msra_ner.py \
 ```
 
 其中参数释义如下：
-- `model_name_or_path` 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
-- `max_seq_length` 表示最大句子长度，超过该长度将被截断。
-- `batch_size` 表示每次迭代**每张卡**上的样本数目。
-- `learning_rate` 表示基础学习率大小，将于learning rate scheduler产生的值相乘作为当前学习率。
-- `num_train_epochs` 表示训练轮数。
-- `logging_steps` 表示日志打印间隔。
-- `save_steps` 表示模型保存及评估间隔。
-- `output_dir` 表示模型保存路径。
-- `n_gpu` 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
+- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
+- `max_seq_length`: 表示最大句子长度，超过该长度将被截断。
+- `batch_size`: 表示每次迭代**每张卡**上的样本数目。
+- `learning_rate`: 表示基础学习率大小，将于learning rate scheduler产生的值相乘作为当前学习率。
+- `num_train_epochs`: 表示训练轮数。
+- `logging_steps`: 表示日志打印间隔。
+- `save_steps`: 表示模型保存及评估间隔。
+- `output_dir`: 表示模型保存路径。
+- `n_gpu`: 表示使用的 GPU 卡数。若希望使用多卡训练，将其设置为指定数目即可；若为0，则使用CPU。
 
 训练过程将按照 `logging_steps` 和 `save_steps` 的设置打印如下日志：
 
@@ -63,9 +63,9 @@ eval loss: 0.006829, precision: 0.908957, recall: 0.926683, f1: 0.917734
 使用以上命令进行单卡 Fine-tuning ，在验证集上有如下结果：
  Metric                       | Result      |
 ------------------------------|-------------|
-precision                     | 0.908957    |
-recall                        | 0.926683    |
-f1                            | 0.917734    |
+Precision                     | 0.908957    |
+Recall                        | 0.926683    |
+F1                            | 0.917734    |
 
 ## 参考
 

@@ -27,95 +27,28 @@ import paddlenlp as ppnlp
 
 from model import SentenceTransformer
 
-MODEL_CLASSES = {
-    "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
-    'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
-    'roberta':
-    (ppnlp.transformers.RobertaModel, ppnlp.transformers.RobertaTokenizer),
-}
+# yapf: disable
+parser = argparse.ArgumentParser()
+parser.add_argument("--save_dir", default='./checkpoint', type=str, help="The output directory where the model checkpoints will be written.")
+parser.add_argument("--max_seq_length", default=128, type=int, help="The maximum total input sequence length after tokenization. "
+    "Sequences longer than this will be truncated, sequences shorter will be padded.")
+parser.add_argument("--batch_size", default=32, type=int, help="Batch size per GPU/CPU for training.")
+parser.add_argument("--learning_rate", default=5e-5, type=float, help="The initial learning rate for Adam.")
+parser.add_argument("--weight_decay", default=0.0, type=float, help="Weight decay if we apply some.")
+parser.add_argument("--epochs", default=3, type=int, help="Total number of training epochs to perform.")
+parser.add_argument("--warmup_proption", default=0.0, type=float, help="Linear warmup proption over the training process.")
+parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
+parser.add_argument("--seed", type=int, default=1000, help="random seed for initialization")
+parser.add_argument("--n_gpu", type=int, default=1, help="Number of GPUs to use, 0 for CPU.")
+args = parser.parse_args()
+# yapf: enable
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    # Required parameters
-    parser.add_argument(
-        "--model_type",
-        default='ernie',
-        required=True,
-        type=str,
-        help="Model type selected in the list: " +
-        ", ".join(MODEL_CLASSES.keys()))
-    parser.add_argument(
-        "--model_name",
-        default='ernie-1.0',
-        required=True,
-        type=str,
-        help="Path to pre-trained model or shortcut name selected in the list: "
-        + ", ".join(
-            sum([
-                list(classes[-1].pretrained_init_configuration.keys())
-                for classes in MODEL_CLASSES.values()
-            ], [])))
-    parser.add_argument(
-        "--save_dir",
-        default='./checkpoint',
-        required=True,
-        type=str,
-        help="The output directory where the model checkpoints will be written.")
-
-    parser.add_argument(
-        "--max_seq_length",
-        default=128,
-        type=int,
-        help="The maximum total input sequence length after tokenization. "
-        "Sequences longer than this will be truncated, sequences shorter will be padded."
-    )
-    parser.add_argument(
-        "--batch_size",
-        default=32,
-        type=int,
-        help="Batch size per GPU/CPU for training.")
-    parser.add_argument(
-        "--learning_rate",
-        default=5e-5,
-        type=float,
-        help="The initial learning rate for Adam.")
-    parser.add_argument(
-        "--weight_decay",
-        default=0.0,
-        type=float,
-        help="Weight decay if we apply some.")
-    parser.add_argument(
-        "--epochs",
-        default=3,
-        type=int,
-        help="Total number of training epochs to perform.")
-    parser.add_argument(
-        "--warmup_proption",
-        default=0.0,
-        type=float,
-        help="Linear warmup proption over the training process.")
-    parser.add_argument(
-        "--init_from_ckpt",
-        type=str,
-        default=None,
-        help="The path of checkpoint to be loaded.")
-    parser.add_argument(
-        "--seed", type=int, default=1000, help="random seed for initialization")
-    parser.add_argument(
-        "--n_gpu",
-        type=int,
-        default=1,
-        help="Number of GPUs to use, 0 for CPU.")
-    args = parser.parse_args()
-    return args
-
-
-def set_seed(args):
+def set_seed(seed):
     """sets random seed"""
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    paddle.seed(args.seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    paddle.seed(seed)
 
 
 @paddle.no_grad()
@@ -135,8 +68,8 @@ def evaluate(model, criterion, metric, data_loader):
     for batch in data_loader:
         query_input_ids, query_segment_ids, title_input_ids, title_segment_ids, labels = batch
         probs = model(
-            query_input_ids,
-            title_input_ids,
+            query_input_ids=query_input_ids,
+            title_input_ids=title_input_ids,
             query_token_type_ids=query_segment_ids,
             title_token_type_ids=title_segment_ids)
         loss = criterion(probs, labels)
@@ -236,24 +169,28 @@ def create_dataloader(dataset,
         return_list=True)
 
 
-def do_train(args):
-    set_seed(args)
+def do_train():
+    set_seed(args.seed)
     paddle.set_device("gpu" if args.n_gpu else "cpu")
     world_size = paddle.distributed.get_world_size()
     if world_size > 1:
         paddle.distributed.init_parallel_env()
 
-    args.model_type = args.model_type.lower()
-    model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-
     train_dataset, dev_dataset, test_dataset = ppnlp.datasets.LCQMC.get_datasets(
         ['train', 'dev', 'test'])
-    if args.model_name == 'ernie-tiny':
-        # ErnieTinyTokenizer is special for ernie-tiny pretained model.
-        tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
-            args.model_name)
-    else:
-        tokenizer = tokenizer_class.from_pretrained(args.model_name)
+
+    # If you wanna use bert/roberta pretrained model,
+    # pretrained_model = ppnlp.transformers.BertModel.from_pretrained('bert-base-chinese') 
+    # pretrained_model = ppnlp.transformers.RobertaModel.from_pretrained('roberta-wwm-ext')
+    pretrained_model = ppnlp.transformers.ErnieModel.from_pretrained(
+        'ernie-tiny')
+
+    # If you wanna use bert/roberta pretrained model,
+    # tokenizer = ppnlp.transformers.BertTokenizer.from_pretrained('bert-base-chinese')
+    # tokenizer = ppnlp.transformers.RobertaTokenizer.from_pretrained('roberta-wwm-ext')
+    # ErnieTinyTokenizer is special for ernie-tiny pretained model.
+    tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
+        'ernie-tiny')
 
     trans_func = partial(
         convert_example,
@@ -286,7 +223,6 @@ def do_train(args):
         batchify_fn=batchify_fn,
         trans_fn=trans_func)
 
-    pretrained_model = model_class.from_pretrained(args.model_name)
     model = SentenceTransformer(pretrained_model)
 
     if args.init_from_ckpt and os.path.isfile(args.init_from_ckpt):
@@ -326,8 +262,8 @@ def do_train(args):
         for step, batch in enumerate(train_data_loader, start=1):
             query_input_ids, query_segment_ids, title_input_ids, title_segment_ids, labels = batch
             probs = model(
-                query_input_ids,
-                title_input_ids,
+                query_input_ids=query_input_ids,
+                title_input_ids=title_input_ids,
                 query_token_type_ids=query_segment_ids,
                 title_token_type_ids=title_segment_ids)
             loss = criterion(probs, labels)
@@ -361,8 +297,7 @@ def do_train(args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
     if args.n_gpu > 1:
-        paddle.distributed.spawn(do_train, args=(args, ), nprocs=args.n_gpu)
+        paddle.distributed.spawn(do_train, nprocs=args.n_gpu)
     else:
-        do_train(args)
+        do_train()

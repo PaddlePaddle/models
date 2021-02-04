@@ -38,6 +38,7 @@ def get_datasets(cls, *args, **kwargs):
 
     Example:
         .. code-block:: python
+
             from paddlenlp.datasets import GlueQNLI
             train_dataset, dev_dataset, test_dataset = GlueQNLI.get_datasets(['train', 'dev', 'test'])
             train_dataset, dev_dataset, test_dataset = GlueQNLI.get_datasets(mode=['train', 'dev', 'test'])
@@ -213,7 +214,8 @@ class TSVDataset(Dataset):
         b\tFemal\tCat
         discard the first line and select the 0th and 2nd fields
         .. code-block:: python
-            from paddle.incubate.hapi.text.glue import TSVDataset
+
+            from paddlenlp.datasets import TSVDataset
             dataset = TSVDataset('test.tsv', num_discard_samples=1,
                                 field_indices=[0, 2])
             dataset[0] # ['a', 'Tom']

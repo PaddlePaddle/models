@@ -17,7 +17,7 @@ from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion
 
 sys.path.append("../")
 import reader
-from utils.record import AverageStatistical
+from util.record import AverageStatistical
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -39,11 +39,15 @@ def do_train(args):
     paddle.enable_static()
     if args.is_distributed:
         fleet.init(is_collective=True)
-        gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
-        places = paddle.CUDAPlace(gpu_id) if args.use_gpu else paddle.static.cpu_places()
-        trainer_count = 1 if args.use_gpu else len(places)
+        places = [paddle.set_device("gpu")] if \
+                 args.use_gpu else paddle.static.cpu_places()
+        trainer_count = len(places)
     else:
-        places = paddle.static.cuda_places() if args.use_gpu else paddle.static.cpu_places()
+        if args.use_gpu:
+            places = paddle.static.cuda_places()
+        else:
+            places = paddle.static.cpu_places()
+            paddle.set_device("cpu")
         trainer_count = len(places)
 
     # Set seed for CE
@@ -106,28 +110,44 @@ def do_train(args):
             if args.use_amp:
                 dist_strategy.amp = True
                 dist_strategy.amp_configs = {
-                    'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
+                    'custom_white_list': ['softmax', 'layer_norm'],
                     'init_loss_scaling': args.scale_loss,
+                    'custom_black_list': ['lookup_table_v2'],
+                    'use_pure_fp16': args.use_pure_fp16
                 }
 
-            optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
+            optimizer = fleet.distributed_optimizer(
+                optimizer, strategy=dist_strategy)
+        else:
+            if args.use_amp:
+                amp_list = paddle.static.amp.AutoMixedPrecisionLists(
+                    custom_white_list=['softmax', 'layer_norm'],
+                    custom_black_list=['lookup_table_v2'])
+                optimizer = paddle.static.amp.decorate(
+                    optimizer,
+                    amp_list,
+                    init_loss_scaling=args.scale_loss,
+                    use_dynamic_loss_scaling=True,
+                    use_pure_fp16=args.use_pure_fp16)
         optimizer.minimize(avg_cost)
 
     if args.is_distributed:
-        exe = paddle.static.Executor(places)
+        exe = paddle.static.Executor(places[0])
     else:
         exe = paddle.static.Executor()
-        build_strategy = paddle.static.BuildStrategy()	
-        exec_strategy = paddle.static.ExecutionStrategy()	
+        build_strategy = paddle.static.BuildStrategy()
+        exec_strategy = paddle.static.ExecutionStrategy()
 
-        compiled_train_program = paddle.static.CompiledProgram(	
-            train_program).with_data_parallel(	
-                loss_name=avg_cost.name,	
-                build_strategy=build_strategy,	
+        compiled_train_program = paddle.static.CompiledProgram(
+            train_program).with_data_parallel(
+                loss_name=avg_cost.name,
+                build_strategy=build_strategy,
                 exec_strategy=exec_strategy)
     exe.run(startup_program)
 
-
+    if args.use_amp:
+        optimizer.amp_init(places[0])
+    
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
         (1. - args.label_smooth_eps) * np.log(
@@ -219,6 +239,10 @@ def do_train(args):
             batch_id += 1
             step_idx += 1
             batch_start = time.time()
+
+    if args.save_model and dist.get_rank() == 0:
+        model_path = os.path.join(args.save_model, "step_final", "transformer")
+        paddle.static.save(train_program, model_path)
 
     paddle.disable_static()
 
