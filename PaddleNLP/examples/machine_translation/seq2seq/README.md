@@ -4,13 +4,15 @@
 
 ```
 .
+├── deploy                 # 预测部署目录
+│ └── python
+│   └── infer.py           # 用预测模型进行推理的程序
 ├── README.md              # 文档，本文件
 ├── args.py                # 训练、预测、导出模型以及模型参数配置程序
 ├── data.py                # 数据读入程序
 ├── train.py               # 训练主程序
 ├── predict.py             # 预测主程序
 ├── export_model.py        # 导出预测模型的程序
-├── infer.py               # 用预测模型进行推理的程序
 └── seq2seq_attn.py        # 带注意力机制的翻译模型程序
 ```
 
