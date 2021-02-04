@@ -1,4 +1,4 @@
-from datasets import SQuAD
+from paddlenlp.datasets.experimental import SQuAD
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial

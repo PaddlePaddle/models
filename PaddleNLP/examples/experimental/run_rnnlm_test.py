@@ -1,4 +1,4 @@
-from datasets import PTB
+from paddlenlp.datasets.experimental import PTB
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict, Vocab
 import numpy as np

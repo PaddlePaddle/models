@@ -1,4 +1,4 @@
-from datasets import MSRA_NER
+from paddlenlp.datasets.experimental import MSRA_NER, import_main_class
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.data import Stack, Tuple, Pad, Dict
 from functools import partial
