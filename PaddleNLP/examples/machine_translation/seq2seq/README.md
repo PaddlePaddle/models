@@ -98,8 +98,9 @@ python export_model.py \
 然后按照如下的方式对IWSLT15数据集中的测试集（有标注的）进行预测（基于Paddle的[Python预测API](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/guides/05_inference_deployment/inference/python_infer_cn.html)）：
 
 ```shell
+cd deploy/python
 python infer.py \
-    --export_path ./infer_model/model \
+    --export_path ../../infer_model/model \
     --select_device gpu \
     --batch_size 128 \
     --infer_output_file infer_output.txt
