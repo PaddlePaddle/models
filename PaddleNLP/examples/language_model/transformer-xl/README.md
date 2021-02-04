@@ -1,6 +1,4 @@
-# Language Model
-
-## Transformer-XL
+# Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context
 
 以下是本例的简要目录结构及说明：
 

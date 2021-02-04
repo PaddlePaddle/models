@@ -97,7 +97,7 @@ python -u ./run_glue_ofa.py --model_type bert \
 3. Fine-tuning之后的模型作为教师网络，超网络作为学生网络，进行知识蒸馏。
 
 <p align="center">
-<img src="ofa_bert.jpg" width="950"/><br />
+<img src="./imgs/ofa_bert.jpg" width="950"/><br />
 整体流程图
 </p>
 

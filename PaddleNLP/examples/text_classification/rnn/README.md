@@ -115,7 +115,7 @@ PaddleNLP提供了一系列的文本表示技术，如`seq2vec`模块。
 - paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp==2.0.0b
+pip install paddlenlp>=2.0.0rc
 ```
 
 ### 代码结构说明

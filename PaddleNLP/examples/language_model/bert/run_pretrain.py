@@ -20,6 +20,7 @@ import os
 import random
 import time
 import h5py
+import distutils.util
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 
@@ -146,6 +147,14 @@ def parse_args():
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
+    parser.add_argument("--use_amp",
+                        type=distutils.util.strtobool,
+                        default=False,
+                        help="Enable mixed precision training.")
+    parser.add_argument("--scale_loss",
+                        type=float,
+                        default=2**15,
+                        help="The value of scale_loss for fp16.")
     args = parser.parse_args()
     return args
 
@@ -313,6 +322,8 @@ def do_train(args):
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
         ])
+    if args.use_amp:
+        scaler = paddle.amp.GradScaler(init_loss_scaling=args.scale_loss)
 
     pool = ThreadPoolExecutor(1)
     global_step = 0
@@ -370,14 +381,25 @@ def do_train(args):
                 (input_ids, segment_ids, input_mask, masked_lm_positions,
                  masked_lm_labels, next_sentence_labels,
                  masked_lm_scale) = batch
-                prediction_scores, seq_relationship_score = model(
-                    input_ids=input_ids,
-                    token_type_ids=segment_ids,
-                    attention_mask=input_mask,
-                    masked_positions=masked_lm_positions)
-                loss = criterion(prediction_scores, seq_relationship_score,
-                                 masked_lm_labels, next_sentence_labels,
-                                 masked_lm_scale)
+                with paddle.amp.auto_cast(
+                        args.use_amp,
+                        custom_white_list=["layer_norm", "softmax", "gelu"]):
+                    prediction_scores, seq_relationship_score = model(
+                        input_ids=input_ids,
+                        token_type_ids=segment_ids,
+                        attention_mask=input_mask,
+                        masked_positions=masked_lm_positions)
+                    loss = criterion(prediction_scores, seq_relationship_score,
+                                    masked_lm_labels, next_sentence_labels,
+                                    masked_lm_scale)
+                if args.use_amp:
+                    scaler.scale(loss).backward()
+                    scaler.minimize(optimizer, loss)
+                else:
+                    loss.backward()
+                    optimizer.step()
+                lr_scheduler.step()
+                optimizer.clear_gradients()
                 if global_step % args.logging_steps == 0:
                     if (not args.n_cards > 1
                         ) or paddle.distributed.get_rank() == 0:
@@ -386,10 +408,6 @@ def do_train(args):
                             % (global_step, epoch, step, loss,
                                args.logging_steps / (time.time() - tic_train)))
                     tic_train = time.time()
-                loss.backward()
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.clear_gradients()
                 if global_step % args.save_steps == 0:
                     if (not args.n_cards > 1
                         ) or paddle.distributed.get_rank() == 0:
