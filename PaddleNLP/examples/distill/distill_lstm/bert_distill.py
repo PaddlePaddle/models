@@ -34,7 +34,7 @@ TASK_CLASSES = {
 }
 
 
-class Teacher(object):
+class TeacherModel(object):
     def __init__(self, model_name, param_path):
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.model = BertForSequenceClassification.from_pretrained(model_name)
@@ -47,12 +47,12 @@ def evaluate(task_name, model, metric, data_loader):
     metric.reset()
     for i, batch in enumerate(data_loader):
         if task_name == 'qqp':
-            _, _, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
-            logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
+            _, _, student_input_ids_1, seq_len_1, student_input_ids_2, seq_len_2, labels = batch
+            logits = model(student_input_ids_1, seq_len_1, student_input_ids_2,
                            seq_len_2)
         else:
-            _, _, small_input_ids, seq_len, labels = batch
-            logits = model(small_input_ids, seq_len)
+            _, _, student_input_ids, seq_len, labels = batch
+            logits = model(student_input_ids, seq_len)
 
         correct = metric.compute(logits, labels)
         metric.update(correct)
@@ -101,9 +101,10 @@ def do_train(agrs):
     metric_class = TASK_CLASSES[args.task_name][1]
     metric = metric_class()
 
-    teacher = Teacher(model_name=args.model_name, param_path=args.teacher_path)
+    teacher = TeacherModel(
+        model_name=args.model_name, param_path=args.teacher_path)
 
-    print("Start to distill small model.")
+    print("Start to distill student model.")
 
     global_step = 0
     tic_train = time.time()
@@ -111,9 +112,9 @@ def do_train(agrs):
         model.train()
         for i, batch in enumerate(train_data_loader):
             if args.task_name == 'qqp':
-                bert_input_ids, bert_segment_ids, small_input_ids_1, seq_len_1, small_input_ids_2, seq_len_2, labels = batch
+                bert_input_ids, bert_segment_ids, student_input_ids_1, seq_len_1, student_input_ids_2, seq_len_2, labels = batch
             else:
-                bert_input_ids, bert_segment_ids, small_input_ids, seq_len, labels = batch
+                bert_input_ids, bert_segment_ids, student_input_ids, seq_len, labels = batch
 
             # Calculate teacher model's forward.
             with paddle.no_grad():
@@ -121,10 +122,10 @@ def do_train(agrs):
 
             # Calculate student model's forward.
             if args.task_name == 'qqp':
-                logits = model(small_input_ids_1, seq_len_1, small_input_ids_2,
-                               seq_len_2)
+                logits = model(student_input_ids_1, seq_len_1,
+                               student_input_ids_2, seq_len_2)
             else:
-                logits = model(small_input_ids, seq_len)
+                logits = model(student_input_ids, seq_len)
 
             loss = args.alpha * ce_loss(logits, labels) + (
                 1 - args.alpha) * mse_loss(logits, teacher_logits)
