@@ -91,12 +91,6 @@ def parse_args():
         "--beam_size", type=int, default=10, help="file name for inference")
 
     parser.add_argument(
-        '--use_gpu',
-        type=eval,
-        default=False,
-        help='Whether using gpu [True|False]')
-
-    parser.add_argument(
         "--select_device",
         default="gpu",
         choices=["gpu", "cpu", "xpu"],

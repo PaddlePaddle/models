@@ -15,6 +15,8 @@
 import argparse
 import io
 import os
+import sys
+sys.path.append("../../")
 
 from functools import partial
 import numpy as np
@@ -24,8 +26,6 @@ from paddle import inference
 from paddlenlp.datasets import IWSLT15
 from paddlenlp.metrics import BLEU
 
-import sys
-sys.path.append("../../")
 from args import parse_args
 from data import create_infer_loader
 from predict import post_process_seq
