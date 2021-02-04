@@ -18,7 +18,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
-        default="../configs/transformer.big.yaml",
+        default="./configs/transformer.big.yaml",
         type=str,
         help="Path of the config file. ")
     args = parser.parse_args()

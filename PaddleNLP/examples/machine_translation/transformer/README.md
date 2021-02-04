@@ -112,7 +112,7 @@ python export_model.py --config ./configs/transformer.base.yaml
 其次，对于完成动转静的静态图的模型，可以使用 `inference.py` 实现使用预测引擎进行高性能预测的功能。此时，因为保存静态图模型本身已经包括了模型结构，所以，指定的配置文件将只用于 `reader` 以及指定预测使用的设备（gpu/cpu/xpu），模型结构相关的配置将不再起作用。
 
 ``` sh
-python inference.py  --config ./configs/transformer.base.yaml
+python deploy/python/inference.py  --config ./configs/transformer.base.yaml
 ```
 
 翻译结果同样将会保存在 `predict.txt` 文件中，可以在配置文件中自定义更改 `output_file` 来指定预测结果写入到的文件的名称。
