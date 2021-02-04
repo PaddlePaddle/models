@@ -1,4 +1,5 @@
 import os
+import sys
 
 import argparse
 import numpy as np
@@ -11,6 +12,7 @@ from paddle import inference
 
 from paddlenlp.transformers import InferTransformerModel
 
+sys.path.append("../../")
 import reader
 
 
