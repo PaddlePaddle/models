@@ -175,7 +175,7 @@ class CosineDecayWithWarmUp(LambdaDecay):
         # Input check
         if num_cycles is not None:
             assert not with_hard_restarts and isinstance(num_cycles, int) or with_hard_restarts and isinstance(num_cycles, float), \
-            "`num_circles` should be and integer while `with_hard_restarts` is False, an float while `with_hard_restarts` is True."
+            "`num_circles` should be an integer while `with_hard_restarts` is False, an float while `with_hard_restarts` is True."
 
         def lr_lambda(current_step):
             if current_step < warmup_steps:
