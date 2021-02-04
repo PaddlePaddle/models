@@ -115,7 +115,7 @@ PaddleNLP提供了一系列的文本表示技术，如`seq2vec`模块。
 - paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp==2.0.0b
+pip install paddlenlp>=2.0.0rc
 ```
 
 ### 代码结构说明
@@ -124,6 +124,7 @@ pip install paddlenlp==2.0.0b
 
 ```text
 rnn/
+├── export_model.py # 动态图参数导出静态图参数脚本
 ├── predict.py # 模型预测
 ├── utils.py # 数据处理工具
 ├── train.py # 训练模型主程序入口，包括训练、评估
@@ -186,7 +187,17 @@ checkpoints/
 └── final.pdparams
 ```
 
-**NOTE:** 如需恢复模型训练，则init_from_ckpt只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=checkpoints/0`即可，程序会自动加载模型参数`checkpoints/0.pdparams`，也会自动加载优化器状态`checkpoints/0.pdopt`。
+**NOTE:**
+
+* 如需恢复模型训练，则init_from_ckpt只需指定到文件名即可，不需要添加文件尾缀。如`--init_from_ckpt=checkpoints/0`即可，程序会自动加载模型参数`checkpoints/0.pdparams`，也会自动加载优化器状态`checkpoints/0.pdopt`。
+* 使用动态图训练结束之后，还可以将动态图参数导出成静态图参数，具体代码见export_model.py。静态图参数保存在`output_path`指定路径中。
+  运行方式：
+
+```shell
+python export_model.py --vocab_path=./senta_word_dict.txt --network=bilstm --params_path=./checkpoints/final.pdparam --output_path=./static_graph_params
+```
+
+其中`params_path`是指动态图训练保存的参数路径，`output_path`是指静态图参数导出路径。
 
 ### 模型预测
 

@@ -56,7 +56,7 @@ def evaluate(args):
         dataset=test_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        drop_last=True)
+        drop_last=False)
     test_loader = paddle.io.DataLoader(
         dataset=test_dataset,
         batch_sampler=test_sampler,

@@ -55,6 +55,9 @@ def do_eval(args):
                           (loss, np.exp(loss))
         return logger_info
 
+    if not args.use_gpu:
+        paddle.set_device("cpu")
+
     vocab = get_lm_vocab(args)
     eval_loader = get_lm_data_loader(args, vocab, "valid")
     test_loader = get_lm_data_loader(args, vocab, "test")
@@ -101,7 +104,7 @@ def do_eval(args):
 
     logger.info(
         "Evaluating with bsz {} tgt_len {} ext_len {} mem_len {} clamp_len {}".
-        format(args.batch_size, args.tgt_len, args.ext_len, args.mem_len,
+        format(args.eval_batch_size, args.tgt_len, args.ext_len, args.mem_len,
                args.clamp_len))
 
     mem_transformer.reset_length(args.tgt_len, args.ext_len, args.mem_len)
@@ -118,9 +121,10 @@ def do_eval(args):
 
     logger_info = ''
     if valid_loss is not None:
-        logger_info = logger_info + _logger(valid_loss) + " | "
+        logger_info = logger_info + "validation loss: " + _logger(
+            valid_loss) + " | "
     if test_loss is not None:
-        logger_info = logger_info + _logger(test_loss) + " | "
+        logger_info = logger_info + "test loss: " + _logger(test_loss) + " | "
     logger.info(logger_info)
 
 

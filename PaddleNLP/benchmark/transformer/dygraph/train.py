@@ -16,7 +16,7 @@ from paddlenlp.transformers import TransformerModel, CrossEntropyCriterion, posi
 
 sys.path.append("../")
 import reader
-from utils.record import AverageStatistical
+from util.record import AverageStatistical
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -41,6 +41,7 @@ def do_train(args):
     else:
         rank = 0
         trainer_count = 1
+        paddle.set_device("cpu")
 
     if trainer_count > 1:
         dist.init_parallel_env()

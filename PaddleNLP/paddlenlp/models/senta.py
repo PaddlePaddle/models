@@ -39,14 +39,14 @@ class Senta(nn.Layer):
                 vocab_size,
                 num_classes,
                 emb_dim,
-                direction='bidirectional',
+                direction='bidirect',
                 padding_idx=pad_token_id)
         elif network == 'bilstm':
             self.model = LSTMModel(
                 vocab_size,
                 num_classes,
                 emb_dim,
-                direction='bidirectional',
+                direction='bidirect',
                 padding_idx=pad_token_id)
         elif network == 'bilstm_attn':
             lstm_hidden_size = 196
@@ -63,7 +63,7 @@ class Senta(nn.Layer):
                 vocab_size,
                 num_classes,
                 emb_dim,
-                direction='bidirectional',
+                direction='bidirect',
                 padding_idx=pad_token_id)
         elif network == 'cnn':
             self.model = CNNModel(
@@ -102,8 +102,7 @@ class Senta(nn.Layer):
 
     def forward(self, text, seq_len=None):
         logits = self.model(text, seq_len)
-        probs = F.softmax(logits, axis=-1)
-        return probs
+        return logits
 
 
 class BoWModel(nn.Layer):
@@ -113,13 +112,7 @@ class BoWModel(nn.Layer):
     a word embedding. Then, we encode these epresentations with a `BoWEncoder`.
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        hidden_size (obj:`int`, optional, defaults to 128): The first full-connected layer hidden size.
-        fc_hidden_size (obj:`int`, optional, defaults to 96): The second full-connected layer hidden size.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,
@@ -185,7 +178,7 @@ class LSTMModel(nn.Layer):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, num_tokens, num_directions*lstm_hidden_size)
-        # num_directions = 2 if direction is 'bidirectional'
+        # num_directions = 2 if direction is 'bidirect'
         # if not, num_directions = 1
         text_repr = self.lstm_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
@@ -226,7 +219,7 @@ class GRUModel(nn.Layer):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, num_tokens, num_directions*gru_hidden_size)
-        # num_directions = 2 if direction is 'bidirectional'
+        # num_directions = 2 if direction is 'bidirect'
         # if not, num_directions = 1
         text_repr = self.gru_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
@@ -267,7 +260,7 @@ class RNNModel(nn.Layer):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, num_tokens, num_directions*rnn_hidden_size)
-        # num_directions = 2 if direction is 'bidirectional'
+        # num_directions = 2 if direction is 'bidirect'
         # if not, num_directions = 1
         text_repr = self.rnn_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
@@ -300,7 +293,7 @@ class BiLSTMAttentionModel(nn.Layer):
             hidden_size=lstm_hidden_size,
             num_layers=lstm_layers,
             dropout=dropout_rate,
-            direction='bidirectional')
+            direction='bidirect')
         self.attention = attention_layer
         if isinstance(attention_layer, SelfAttention):
             self.fc = nn.Linear(lstm_hidden_size, fc_hidden_size)
@@ -332,7 +325,7 @@ class SelfAttention(nn.Layer):
     Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification (Zhou et al., 2016).
     ref: https://www.aclweb.org/anthology/P16-2034/
     Args:
-        hidden_size (obj:`int`): The number of expected features in the input x.
+        hidden_size (int): The number of expected features in the input x.
     """
 
     def __init__(self, hidden_size):
@@ -344,17 +337,18 @@ class SelfAttention(nn.Layer):
     def forward(self, input, mask=None):
         """
         Args:
-            input (obj: `paddle.Tensor`) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
-            mask (obj: `paddle.Tensor`, optional, defaults to `None`) of shape (batch, seq_len) :
-                Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not.
+            input (paddle.Tensor) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
+            mask (paddle.Tensor) of shape (batch, seq_len) :
+                Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not. 
+                Defaults to `None`.
         """
         forward_input, backward_input = paddle.chunk(input, chunks=2, axis=2)
         # elementwise-sum forward_x and backward_x
         # Shape: (batch_size, max_seq_len, hidden_size)
         h = paddle.add_n([forward_input, backward_input])
         # Shape: (batch_size, hidden_size, 1)
-        att_weight = self.att_weight.expand(shape=(h.shape[0], self.hidden_size,
-                                                   1))
+        att_weight = self.att_weight.tile(
+            repeat_times=(paddle.shape(h)[0], 1, 1))
         # Shape: (batch_size, max_seq_len, 1)
         att_score = paddle.bmm(paddle.tanh(h), att_weight)
         if mask is not None:
@@ -379,7 +373,7 @@ class SelfInteractiveAttention(nn.Layer):
     A close implementation of attention network of NAACL 2016 paper, Hierarchical Attention Networks for Document Classiﬁcation (Yang et al., 2016).
     ref: https://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf
     Args:
-        hidden_size (obj:`int`): The number of expected features in the input x.
+        hidden_size (int): The number of expected features in the input x.
     """
 
     def __init__(self, hidden_size):
@@ -394,20 +388,19 @@ class SelfInteractiveAttention(nn.Layer):
     def forward(self, input, mask=None):
         """
         Args:
-            input (obj: `paddle.Tensor`) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
-            mask (obj: `paddle.Tensor`, optional, defaults to `None`) of shape (batch, seq_len) :
+            input (paddle.Tensor) of shape (batch, seq_len, input_size): Tensor containing the features of the input sequence.
+            mask (paddle.Tensor) of shape (batch, seq_len) :
                 Tensor is a bool tensor, whose each element identifies whether the input word id is pad token or not.
+                Defaults to `None
         """
-        batch_size = input.shape[0]
-        hidden_size = input.shape[2]
-        weight = self.input_weight.expand(shape=(batch_size, hidden_size,
-                                                 hidden_size))
-        bias = self.bias.expand(shape=(batch_size, 1, hidden_size))
+        weight = self.input_weight.tile(
+            repeat_times=(paddle.shape(input)[0], 1, 1))
+        bias = self.bias.tile(repeat_times=(paddle.shape(input)[0], 1, 1))
         # Shape: (batch_size, max_seq_len, hidden_size)
         word_squish = paddle.bmm(input, weight) + bias
 
-        att_context_vector = self.att_context_vector.expand(shape=(
-            batch_size, hidden_size, 1))
+        att_context_vector = self.att_context_vector.tile(
+            repeat_times=(paddle.shape(input)[0], 1, 1))
         # Shape: (batch_size, max_seq_len, 1)
         att_score = paddle.bmm(word_squish, att_context_vector)
         if mask is not None:
@@ -415,7 +408,7 @@ class SelfInteractiveAttention(nn.Layer):
             mask = paddle.cast(mask, dtype='float32')
             mask = mask.unsqueeze(axis=-1)
             inf_tensor = paddle.full(
-                shape=mask.shape, dtype='float32', fill_value=-INF)
+                shape=paddle.shape(mask), dtype='float32', fill_value=-INF)
             att_score = paddle.multiply(att_score, mask) + paddle.multiply(
                 inf_tensor, (1 - mask))
         att_weight = F.softmax(att_score, axis=1)
@@ -437,11 +430,7 @@ class CNNModel(nn.Layer):
     outputs from the convolution layer and outputs the max. 
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,
@@ -486,11 +475,7 @@ class TextCNNModel(nn.Layer):
     outputs from the convolution layer and outputs the max. 
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-    Args:
-        vocab_size (obj:`int`): The vocabulary size.
-        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
-        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        num_classes (obj:`int`): All the labels that the data has.
+
     """
 
     def __init__(self,

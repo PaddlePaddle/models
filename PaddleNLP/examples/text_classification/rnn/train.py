@@ -19,20 +19,20 @@ import random
 import numpy as np
 import paddle
 import paddlenlp as ppnlp
-from paddlenlp.data import Stack, Tuple, Pad
+from paddlenlp.data import JiebaTokenizer, Pad, Stack, Tuple, Vocab
 from paddlenlp.datasets import ChnSentiCorp
 
-from utils import load_vocab, convert_example
+from utils import convert_example
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=10, help="Number of epoches for training.")
 parser.add_argument('--use_gpu', type=eval, default=False, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate used to train.")
-parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
+parser.add_argument("--save_dir", type=str, default='checkpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
 parser.add_argument("--vocab_path", type=str, default="./senta_word_dict.txt", help="The directory to dataset.")
-parser.add_argument('--network', type=str, default="bilstm_attn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
+parser.add_argument('--network', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
 parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 args = parser.parse_args()
 # yapf: enable
@@ -50,7 +50,6 @@ def create_dataloader(dataset,
                       mode='train',
                       batch_size=1,
                       use_gpu=False,
-                      pad_token_id=0,
                       batchify_fn=None):
     """
     Creats dataloader.
@@ -61,7 +60,6 @@ def create_dataloader(dataset,
         mode(obj:`str`, optional, defaults to obj:`train`): If mode is 'train', it will shuffle the dataset randomly.
         batch_size(obj:`int`, optional, defaults to 1): The sample number of a mini-batch.
         use_gpu(obj:`bool`, optional, defaults to obj:`False`): Whether to use gpu to run.
-        pad_token_id(obj:`int`, optional, defaults to 0): The pad token index.
         batchify_fn(obj:`callable`, optional, defaults to `None`): function to generate mini-batch data by merging
             the sample list, None for only stack each fields of sample in axis
             0(same as :attr::`np.stack(..., axis=0)`).
@@ -95,8 +93,9 @@ if __name__ == "__main__":
     if not os.path.exists(args.vocab_path):
         raise RuntimeError('The vocab_path  can not be found in the path %s' %
                            args.vocab_path)
-    vocab = load_vocab(args.vocab_path)
 
+    vocab = Vocab.load_vocabulary(
+        args.vocab_path, unk_token='[UNK]', pad_token='[PAD]')
     # Loads dataset.
     train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(
         ['train', 'dev', 'test'])
@@ -110,13 +109,10 @@ if __name__ == "__main__":
     model = paddle.Model(model)
 
     # Reads data and generates mini-batches.
-    trans_fn = partial(
-        convert_example,
-        vocab=vocab,
-        unk_token_id=vocab.get('[UNK]', 1),
-        is_test=False)
+    tokenizer = JiebaTokenizer(vocab)
+    trans_fn = partial(convert_example, tokenizer=tokenizer, is_test=False)
     batchify_fn = lambda samples, fn=Tuple(
-        Pad(axis=0, pad_val=vocab['[PAD]']),  # input_ids
+        Pad(axis=0, pad_val=vocab.token_to_idx.get('[PAD]', 0)),  # input_ids
         Stack(dtype="int64"),  # seq len
         Stack(dtype="int64")  # label
     ): [data for data in fn(samples)]
@@ -126,7 +122,6 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='train',
         use_gpu=args.use_gpu,
-        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
     dev_loader = create_dataloader(
         dev_ds,
@@ -134,7 +129,6 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='validation',
         use_gpu=args.use_gpu,
-        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
     test_loader = create_dataloader(
         test_ds,
@@ -142,7 +136,6 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         mode='test',
         use_gpu=args.use_gpu,
-        pad_token_id=vocab.get('[PAD]', 0),
         batchify_fn=batchify_fn)
 
     optimizer = paddle.optimizer.Adam(

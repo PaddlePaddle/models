@@ -16,10 +16,11 @@ PaddleNLP已预置多个公开的预训练Embedding，用户可以通过使用`p
 * 环境依赖
 
    - python >= 3.6
-   - paddlepaddle-gpu >= 2.0.0-rc1
+   - paddlepaddle >= 2.0.0
+   - paddlenlp >= 2.0.0rc
 
    ```
-   pip install paddlenlp==2.0.0b
+   pip install paddlenlp==2.0.0rc
    ```
 
 ### 下载词表
@@ -83,7 +84,9 @@ visualdl --logdir ./vdl_dir --port 8888 --host 0.0.0.0
 
 在Chrome浏览器输入 `ip:8888` (ip为启动VisualDL机器的IP)。
 
-以下为示例实验效果对比图，蓝色是使用`paddlenlp.embeddings.TokenEmbedding`进行的实验，绿色是使用没有加载预训练模型的Embedding进行的实验。可以看到，使用`paddlenlp.embeddings.TokenEmbedding`的训练，其验证acc变化趋势上升，并收敛于0.90左右，收敛后相对平稳，不容易过拟合。而没有使用`paddlenlp.embeddings.TokenEmbedding`的训练，其验证acc变化趋势向下，并收敛于0.86左右。从示例实验可以观察到，使用`paddlenlp.embedding.TokenEmbedding`能提升训练效果。
+以下为示例实验效果对比图，蓝色是使用`paddlenlp.embeddings.TokenEmbedding`进行的实验，绿色是使用没有加载预训练模型的Embedding进行的实验。
+可以看到，使用`paddlenlp.embeddings.TokenEmbedding`的训练，其验证acc变化趋势上升，并收敛于0.90左右，收敛后相对平稳，不容易过拟合。
+而没有使用`paddlenlp.embeddings.TokenEmbedding`的训练，其验证acc变化趋势向下，并收敛于0.86左右。从示例实验可以观察到，使用`paddlenlp.embedding.TokenEmbedding`能提升训练效果。
 
 Eval Acc：
 

@@ -1,30 +1,26 @@
-- [Embedding 模型汇总](#embedding-模型汇总)  
-  - [中文词向量](#中文词向量)
-  - [英文词向量](#英文词向量)  
-    - [GloVe](#glove)  
-    - [FastText](#fasttext)
-  - [使用方式](#使用方式)
-  - [模型信息](#模型信息)
-  - [致谢](#致谢)  
-  - [参考论文](#参考论文)
+# PaddleNLP Embedding API
 
-# Embedding 模型汇总
+## 介绍
 
-PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`paddlenlp.embeddings.TokenEmbedding`时，指定预训练模型的名称，即可加载相对应的预训练模型。以下为PaddleNLP所支持的预训练Embedding模型，其名称用作`paddlenlp.embeddings.TokenEmbedding`的参数。命名方式为：\${训练模型}.\${语料}.\${词向量类型}.\${co-occurrence type}.dim\${维度}。训练模型有三种，分别是Word2Vec(w2v, 使用skip-gram模型训练), GloVe(glove)和FastText(fasttext)。在[使用方式](#使用方式)这一节中，将介绍如何通过模型名称使用`paddlenlp.embeddings.TokenEmbedding`加载预训练模型。
+PaddleNLP提供多个开源的预训练词向量模型，用户仅需在使用`paddlenlp.embeddings.TokenEmbedding`时，指定预训练模型的名称，即可加载相对应的预训练模型。以下为PaddleNLP所支持的预训练Embedding模型，其名称用作`paddlenlp.embeddings.TokenEmbedding`的参数。
+- 命名方式为：\${训练模型}.\${语料}.\${词向量类型}.\${co-occurrence type}.dim\${维度}。
+- 模型有三种，分别是Word2Vec(w2v, skip-gram), GloVe(glove)和FastText(fasttext)。
+
+在[使用方式](#使用方式)这一节中，将介绍如何通过模型名称使用`paddlenlp.embeddings.TokenEmbedding`加载预训练模型。
 
 
 ## 中文词向量
 
-以下预训练模型由[Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供。
+以下预训练词向量由[Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供。
 
 根据不同类型的上下文为每个语料训练多个目标词向量，第二列开始表示不同类型的上下文。以下为上下文类别：
 
 * Word表示训练时目标词预测的上下文是一个Word。
-* Word + Ngram表示训练时目标词预测的上下文是一个Word或者Ngram，其中bigram表示2-grams，ngram.1-2表示1-gram或者2-grams。
+* Word + N-gram表示训练时目标词预测的上下文是一个Word或者Ngram，其中bigram表示2-grams，ngram.1-2表示1-gram或者2-grams。
 * Word + Character表示训练时目标词预测的上下文是一个Word或者Character，其中word-character.char1-2表示上下文是1个或2个Character。
 * Word + Character + Ngram表示训练时目标词预测的上下文是一个Word、Character或者Ngram。bigram-char表示上下文是2-grams或者1个Character。
 
-| 语料 | Word | Word + Ngram | Word + Character | Word + Character + Ngram |
+| 语料 | Word | Word + N-gram | Word + Character | Word + Character + N-gram |
 | ------------------------------------------- | ----   | ---- | ----   | ---- |
 | Baidu Encyclopedia 百度百科                 | w2v.baidu_encyclopedia.target.word-word.dim300 | w2v.baidu_encyclopedia.target.word-ngram.1-2.dim300 | w2v.baidu_encyclopedia.target.word-character.char1-2.dim300 | w2v.baidu_encyclopedia.target.bigram-char.dim300 |
 | Wikipedia_zh 中文维基百科                   | w2v.wiki.target.word-word.dim300 | w2v.wiki.target.word-bigram.dim300 | w2v.wiki.target.word-char.dim300 | w2v.wiki.target.bigram-char.dim300 |
@@ -69,7 +65,7 @@ PaddleNLP提供多个开源的预训练Embedding模型，用户仅需在使用`p
 
 ## 使用方式
 
-以上所述的模型名称可直接以参数形式传入padddlenlp.embeddings.TokenEmbedding，加载相对应的模型。比如要加载语料为Wiki2017，通过FastText训练的预训练模型（`fasttext.wiki-news.target.word-word.dim300.en`），只需执行以下代码：
+以上所述的模型名称可直接以参数形式传入`padddlenlp.embeddings.TokenEmbedding`，加载相对应的模型。比如要加载语料为Wiki2017，通过FastText训练的预训练模型（`fasttext.wiki-news.target.word-word.dim300.en`），只需执行以下代码：
 
 ```python
 import paddle
@@ -145,10 +141,12 @@ token_embedding = TokenEmbedding(embedding_name="fasttext.wiki-news.target.word-
 | fasttext.crawl.target.word-word.dim300.en                              | 1.19 GB    | 2000002 |
 
 ## 致谢
-- 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文Embedding预训练模型，[GloVe Project](https://nlp.stanford.edu/projects/glove)提供的GloVe英文Embedding预训练模型，[FastText Project](https://fasttext.cc/docs/en/english-vectors.html)提供的fasttext英文预训练模型。
+- 感谢 [Chinese-Word-Vectors](https://github.com/Embedding/Chinese-Word-Vectors)提供Word2Vec中文预训练词向量。
+- 感谢 [GloVe Project](https://nlp.stanford.edu/projects/glove)提供的GloVe英文预训练词向量。
+- 感谢 [FastText Project](https://fasttext.cc/docs/en/english-vectors.html)提供的英文预训练词向量。
 
 ## 参考论文
 - Li, Shen, et al. "Analogical reasoning on chinese morphological and semantic relations." arXiv preprint arXiv:1805.06504 (2018).
 - Qiu, Yuanyuan, et al. "Revisiting correlations between intrinsic and extrinsic evaluations of word embeddings." Chinese Computational Linguistics and Natural Language Processing Based on Naturally Annotated Big Data. Springer, Cham, 2018. 209-221.
 - Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
-- T. Mikolov, E. Grave, P. Bojanowski, C. Puhrsch, A. Joulin. Advances in Pre-Training Distributed Word Representations
+- T. Mikolov, E. Grave, P. Bojanowski, C. Puhrsch, A. Joulin. Advances in Pre-Training Distributed Word Representations.

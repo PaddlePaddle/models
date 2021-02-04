@@ -165,7 +165,7 @@ def build(settings, mode='train'):
     min_area = settings.lower_scale
     lower = settings.lower_ratio
     upper = settings.upper_ratio
-    output_dtype = types.FLOAT16 if settings.use_pure_fp16 else types.FLOAT
+    output_dtype = types.FLOAT16 if (settings.use_amp and settings.use_pure_fp16) else types.FLOAT
 
     interp = settings.interpolation or 1  # default to linear
     interp_map = {
