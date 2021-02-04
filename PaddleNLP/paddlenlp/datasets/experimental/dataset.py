@@ -10,8 +10,29 @@ from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME
 from typing import Iterable, Iterator, Optional, List, Any, Callable, Union
+import importlib
 
-__all__ = ['MapDataset', 'DatasetReader', 'IterDataset']
+__all__ = ['MapDataset', 'DatasetReader', 'IterDataset', 'import_main_class']
+
+
+def import_main_class(module_path):
+    """Import a module at module_path and return its main class:
+    - a DatasetBuilder if dataset is True
+    - a Metric if dataset is False
+    """
+
+    module = importlib.import_module(module_path)
+    main_cls_type = DatasetReader
+
+    # Find the main class in our imported module
+    module_main_cls = None
+    for name, obj in module.__dict__.items():
+        if isinstance(obj, type) and issubclass(obj, main_cls_type):
+            if inspect.isabstract(obj):
+                continue
+            module_main_cls = obj
+            break
+    return module_main_cls
 
 
 @classmethod
