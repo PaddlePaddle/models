@@ -146,7 +146,6 @@ def do_train(args):
                 exec_strategy=exec_strategy)
     exe.run(startup_program)
 
-    
     if args.use_amp:
         optimizer.amp_init(places)
     
