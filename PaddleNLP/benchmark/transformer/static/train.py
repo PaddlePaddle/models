@@ -39,10 +39,9 @@ def do_train(args):
     paddle.enable_static()
     if args.is_distributed:
         fleet.init(is_collective=True)
-        gpu_id = int(os.getenv("FLAGS_selected_gpus", "0"))
-        places = paddle.CUDAPlace(
-            gpu_id) if args.use_gpu else paddle.static.cpu_places()
-        trainer_count = 1 if args.use_gpu else len(places)
+        places = [paddle.set_device("gpu")] if \
+                 args.use_gpu else paddle.static.cpu_places()
+        trainer_count = len(places)
     else:
         if args.use_gpu:
             places = paddle.static.cuda_places()
@@ -133,7 +132,7 @@ def do_train(args):
         optimizer.minimize(avg_cost)
 
     if args.is_distributed:
-        exe = paddle.static.Executor(places)
+        exe = paddle.static.Executor(places[0])
     else:
         exe = paddle.static.Executor()
         build_strategy = paddle.static.BuildStrategy()
@@ -147,7 +146,7 @@ def do_train(args):
     exe.run(startup_program)
 
     if args.use_amp:
-        optimizer.amp_init(places)
+        optimizer.amp_init(places[0])
     
     # the best cross-entropy value with label smoothing
     loss_normalizer = -(
