@@ -19,6 +19,7 @@ import sys
 import random
 import time
 import math
+import distutils.util
 from functools import partial
 
 import numpy as np
@@ -161,6 +162,14 @@ def parse_args():
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
+    parser.add_argument("--use_amp",
+                        type=distutils.util.strtobool,
+                        default=False,
+                        help="Enable mixed precision training.")
+    parser.add_argument("--scale_loss",
+                        type=float,
+                        default=2**15,
+                        help="The value of scale_loss for fp16.")
     args = parser.parse_args()
     return args
 
@@ -380,16 +389,26 @@ def do_train(args):
 
     metric = metric_class()
 
+    if args.use_amp:
+        scaler = paddle.amp.GradScaler(init_loss_scaling=args.scale_loss)
+
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
             global_step += 1
             input_ids, segment_ids, labels = batch
-            logits = model(input_ids, segment_ids)
-            loss = loss_fct(logits, labels)
-            loss.backward()
-            optimizer.step()
+            with paddle.amp.auto_cast(
+                    args.use_amp,
+                    custom_white_list=["layer_norm", "softmax", "gelu"]):
+                logits = model(input_ids, segment_ids)
+                loss = loss_fct(logits, labels)
+            if args.use_amp:
+                scaler.scale(loss).backward()
+                scaler.minimize(optimizer, loss)
+            else:
+                loss.backward()
+                optimizer.step()
             lr_scheduler.step()
             optimizer.clear_gradients()
             if global_step % args.logging_steps == 0:

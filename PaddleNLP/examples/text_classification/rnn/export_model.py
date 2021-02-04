@@ -16,8 +16,7 @@ import argparse
 
 import paddle
 import paddlenlp as ppnlp
-
-from utils import load_vocab
+from paddlenlp.data import Vocab
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -31,7 +30,7 @@ args = parser.parse_args()
 
 def main():
     # Load vocab.
-    vocab = load_vocab(args.vocab_path)
+    vocab = Vocab.load_vocabulary(args.vocab_path)
     label_map = {0: 'negative', 1: 'positive'}
 
     # Construct the newtork.

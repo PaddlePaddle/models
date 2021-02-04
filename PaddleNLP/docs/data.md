@@ -1,8 +1,8 @@
 # PaddleNLP Data API
 
-该模块提供了在NLP任务中构建有效的数据Pipeline的常用API。
+该模块提供了在NLP任务中构建有效的数据处理Pipeline的常用API。
 
-## API汇总
+## APIl列表
 
 | API                             | 简介                                       |
 | ------------------------------- | :----------------------------------------- |
@@ -47,7 +47,7 @@ vocab4 = Vocab.from_json(json_file_path)
 
 #### `paddlenlp.data.JiebaTokenizer`
 
-`paddlenlp.data.JiebaTokenizer`初始化需传入`paddlenlp.data.Vocab`类，包含`cut`分词方法和将句子转换为ids的`encode`方法。
+`paddlenlp.data.JiebaTokenizer`初始化需传入`paddlenlp.data.Vocab`类，包含`cut`分词方法和将句子明文转换为ids的`encode`方法。
 
 ```python
 from paddlenlp.data import Vocab, JiebaTokenizer
@@ -64,7 +64,7 @@ tokens = tokenizer.cut('我爱你中国') # ['我爱你', '中国']
 ids = tokenizer.encode('我爱你中国') # [1170578, 575565]
 ```
 
-### 构建`batch_sampler`
+### 构建`Sampler`
 
 #### `paddlenlp.data.SamplerHelper`
 
@@ -94,7 +94,7 @@ class MyDataset(Dataset):
 dataset = MyDataset()
 # SamplerHelper返回的是数据索引的可迭代对象，产生的迭代的索引为：[0, 1, 2]
 sampler = SamplerHelper(dataset)
-# shuffle()的作用是随机打乱索引顺序，产生的迭代的索引为：[0, 2, 1]
+# `shuffle()`的作用是随机打乱索引顺序，产生的迭代的索引为：[0, 2, 1]
 sampler = sampler.shuffle()
 # sort()的作用是按照指定key为排序方式并在buffer_size大小个样本中排序
 # 示例中以样本第一个字段的长度进行升序排序，产生的迭代的索引为：[2, 0, 1]
@@ -110,7 +110,7 @@ sampler = sampler.shard(num_replicas=2)
 
 #### `paddlenlp.data.Stack`
 
-`paddlenlp.data.Stack`用来组建batch，它的输入必须具有相同的shape，输出便是这些输入的堆叠组成的batch数据。
+`paddlenlp.data.Stack`用来组建batch，其输入必须具有相同的shape，输出便是这些输入的堆叠组成的batch数据。
 
 ```python
 from paddlenlp.data import Stack

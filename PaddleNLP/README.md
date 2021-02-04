@@ -17,7 +17,7 @@ PaddleNLP 2.0拥有丰富的模型库、简洁易用的API与高性能的分布�
 ## 特性
 
 - **丰富的模型库**
-  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等，更多详细介绍请查看[PaddleNLP模型库](./exmaples/README.md)。
+  - 涵盖了NLP主流应用相关的前沿模型，包括中文词向量、预训练模型、词法分析、文本分类、文本匹配、文本生成、机器翻译、通用对话、问答系统等，更多详细介绍请查看[PaddleNLP模型库](./docs/model_zoo.md)。
 
 - **简洁易用的API**
   - 深度兼容飞桨2.0的高层API体系，提供可复用的文本建模模块，可大幅度减少数据处理、组网、训练环节的代码开发量，提升文本建模开发效率。
@@ -67,17 +67,21 @@ wordemb.cosine_sim("艺术", "火车")
 ### 一键加载高质量中文预训练模型
 
 ```python
-from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
+from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel, GPT2ForPretraining
 
 ernie = ErnieModel.from_pretrained('ernie-1.0')
 bert = BertModel.from_pretrained('bert-wwm-chinese')
 roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
 electra = ElectraModel.from_pretrained('chinese-electra-small')
+gpt2 = GPT2ForPretraining.from_pretrained('gpt2-base-cn')
 ```
 
 请参考 [Pretrained-Models](./docs/transformers.md)查看目前支持的预训练模型。
 
 ## 模型库及其应用
+
+PaddleNLP模型库整体介绍请参考文档[PaddleNLP Model Zoo](./docs/model_zoo.md).
+模型应用场景介绍请参考[PaddleNLP Examples](./examples/README.md):
 
 - [词向量](./examples/word_embedding/README.md)
 - [词法分析](./examples/lexical_analysis/README.md)
@@ -86,18 +90,21 @@ electra = ElectraModel.from_pretrained('chinese-electra-small')
 - [文本生成](./examples/text_generation/README.md)
 - [语义匹配](./examples/text_matching/README.md)
 - [命名实体识别](./examples/named_entity_recognition/README.md)
-- [文本图学习](./examples/text_graph/README.md)
+- [文本图学习](./examples/text_graph/erniesage/README.md)
 - [通用对话](./examples/dialogue)
-- [机器翻译](./exmaples/machine_translation)
-- [阅读理解](./exmaples/machine_reading_comprehension)
+- [机器翻译](./examples/machine_translation)
+- [阅读理解](./examples/machine_reading_comprehension)
 
+## 进阶应用
+
+- [模型压缩](./examples/model_compression/)
 
 ## API 使用文档
 
 - [Transformer API](./docs/transformers.md)
   * 基于Transformer结构相关的预训练模型API，包含ERNIE, BERT, RoBERTa, Electra等主流经典结构和下游任务。
 - [Data API](./docs/data.md)
-  * 文本数据Pipeline相关的API说明。
+  * 文本数据处理Pipeline的相关API说明。
 - [Dataset API](./docs/datasets.md)
   * 数据集相关API，包含自定义数据集，数据集贡献与数据集快速加载等功能说明。
 - [Embedding API](./docs/embeddings.md)

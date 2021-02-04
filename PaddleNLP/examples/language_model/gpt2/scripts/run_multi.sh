@@ -1,5 +1,8 @@
 unset CUDA_VISIBLE_DEVICES
-python -m paddle.distributed.launch --gpus "0,1" run_pretrain.py --model_name_or_path gpt2-small-en --input_dir "./data"\
+python -m paddle.distributed.launch --gpus "0,1" run_pretrain.py \
+    --model_type gpt2\
+    --model_name_or_path gpt2-small-en\
+    --input_dir "./data"\
     --output_dir "output"\
     --max_lr 0.00015\
     --min_lr 0.00001\
