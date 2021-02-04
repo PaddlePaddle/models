@@ -18,8 +18,8 @@ import math
 from paddle.optimizer.lr import LambdaDecay
 
 __all__ = [
-    'LinearDecayWithWarmUp', 'ConstSchedulerWithWarmup',
-    'CosineDecayWithWarmUp', 'PolyDecayWithWarmUp'
+    'LinearDecayWithWarmup', 'ConstScheduleWithWarmup', 'CosineDecayWithWarmup',
+    'PolyDecayWithWarmup'
 ]
 
 
@@ -29,7 +29,7 @@ def is_integer(number):
     return isinstance(number, (int, long))
 
 
-class LinearDecayWithWarmUp(LambdaDecay):
+class LinearDecayWithWarmup(LambdaDecay):
     """
     Create a learning rate scheduler, which increases learning rate linearly
     from 0 to given `learning_rate`, after this warmup period learning rate
@@ -51,9 +51,9 @@ class LinearDecayWithWarmUp(LambdaDecay):
         
         .. code-block:: python
 
-            from paddlenlp.transformers import LinearDecayWithWarmUp
+            from paddlenlp.transformers import LinearDecayWithWarmup
             lr, warmup_steps, max_steps = 0.1, 100, 1000
-            lr_scheduler = LinearDecayWithWarmUp(lr, max_steps, warmup_steps)
+            lr_scheduler = LinearDecayWithWarmup(lr, max_steps, warmup_steps)
 
     """
 
@@ -73,20 +73,23 @@ class LinearDecayWithWarmUp(LambdaDecay):
                        float(total_steps - current_step) /
                        float(max(1, total_steps - warmup_steps)))
 
-        super(LinearDecayWithWarmUp, self).__init__(learning_rate, lr_lambda,
+        super(LinearDecayWithWarmup, self).__init__(learning_rate, lr_lambda,
                                                     last_epoch, verbose)
 
 
-class ConstSchedulerWithWarmup(LambdaDecay):
+class ConstScheduleWithWarmup(LambdaDecay):
     """
     Create a learning rate scheduler, which increases learning rate linearly
     from 0 to given `learning_rate` during warmup periods and keeps learning
-    rate a constant.
+    rate a constant after that.
 
     Args:
         learning_rate (float): The base learning rate. It is a python float
             number.
-        warmup (int): The number of steps for warmup.
+        warmup (int|float): If int, it means the number of steps for warmup.
+            If float, it means the proportion of warmup in total training steps.
+        total_steps (int, optional): The number of training steps. If `warmup`
+            is a float number, `total_steps` must be provided.
         last_epoch (int, optional): The index of last epoch. It can be set to
             restart training. If None, it means initial learning rate. 
             Default: -1.
@@ -95,9 +98,9 @@ class ConstSchedulerWithWarmup(LambdaDecay):
         
         .. code-block:: python
 
-            from paddlenlp.transformers import ConstSchedulerWithWarmup
+            from paddlenlp.transformers import ConstScheduleWithWarmup
             lr, warmup_steps = 0.1, 100
-            lr_scheduler = ConstSchedulerWithWarmup(lr, warmup_steps)
+            lr_scheduler = ConstScheduleWithWarmup(lr, warmup_steps)
 
     """
 
@@ -123,11 +126,11 @@ class ConstSchedulerWithWarmup(LambdaDecay):
                 return float(current_step) / float(max(1.0, warmup_steps))
             return 1.0
 
-        super(ConstSchedulerWithWarmup, self).__init__(learning_rate, lr_lambda,
-                                                       last_epoch, verbose)
+        super(ConstScheduleWithWarmup, self).__init__(learning_rate, lr_lambda,
+                                                      last_epoch, verbose)
 
 
-class CosineDecayWithWarmUp(LambdaDecay):
+class CosineDecayWithWarmup(LambdaDecay):
     """
     Create a learning rate scheduler, which increases learning rate linearly
     from 0 to given `learning_rate`, after this warmup period learning rate
@@ -156,9 +159,9 @@ class CosineDecayWithWarmUp(LambdaDecay):
         
         .. code-block:: python
 
-            from paddlenlp.transformers import CosineDecayWithWarmUp
+            from paddlenlp.transformers import CosineDecayWithWarmup
             lr, warmup_steps, max_steps = 0.1, 100, 1000
-            lr_scheduler = CosineDecayWithWarmUp(lr, max_steps, warmup_steps)
+            lr_scheduler = CosineDecayWithWarmup(lr, max_steps, warmup_steps)
 
     """
 
@@ -176,12 +179,12 @@ class CosineDecayWithWarmUp(LambdaDecay):
         if num_cycles is not None:
             assert not with_hard_restarts and isinstance(num_cycles, int) or with_hard_restarts and isinstance(num_cycles, float), \
             "`num_circles` should be an integer while `with_hard_restarts` is False, an float while `with_hard_restarts` is True."
+        else:
+            num_cycles = 1 if not with_hard_restarts else 0.5
 
         def lr_lambda(current_step):
             if current_step < warmup_steps:
                 return float(current_step) / float(max(1, warmup_steps))
-            if num_cycles is None:
-                num_cycles = 1 if not with_hard_restarts else 0.5
 
             progress = float(current_step - warmup_steps) / float(
                 max(1, total_steps - warmup_steps))
@@ -195,11 +198,11 @@ class CosineDecayWithWarmUp(LambdaDecay):
             return max(0.0, 0.5 * (
                 1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
 
-        super(CosineDecayWithWarmUp, self).__init__(learning_rate, lr_lambda,
+        super(CosineDecayWithWarmup, self).__init__(learning_rate, lr_lambda,
                                                     last_epoch, verbose)
 
 
-class PolyDecayWithWarmUp(LambdaDecay):
+class PolyDecayWithWarmup(LambdaDecay):
     """
     Create a learning rate scheduler, which increases learning rate linearly
     from 0 to given `lr_init`, after this warmup period learning rate would
@@ -222,9 +225,9 @@ class PolyDecayWithWarmUp(LambdaDecay):
         
         .. code-block:: python
 
-            from paddlenlp.transformers import PolyDecayWithWarmUp
+            from paddlenlp.transformers import PolyDecayWithWarmup
             lr, lr_end, warmup_steps, max_steps = 0.1, 1e-6, 100, 1000
-            lr_scheduler = PolyDecayWithWarmUp(lr, max_steps, warmup_steps, lr_end)
+            lr_scheduler = PolyDecayWithWarmup(lr, max_steps, warmup_steps, lr_end)
 
     """
 
@@ -253,5 +256,5 @@ class PolyDecayWithWarmUp(LambdaDecay):
                 decay = lr_range * pct_remaining**power + lr_end
                 return decay / lr_init  # it multiplies by lr_init equals to decay
 
-        super(PolyDecayWithWarmUp, self).__init__(lr_init, lr_lambda,
+        super(PolyDecayWithWarmup, self).__init__(lr_init, lr_lambda,
                                                   last_epoch, verbose)
