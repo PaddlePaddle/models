@@ -4,6 +4,7 @@ import math
 import os
 import warnings
 
+import abc
 import paddle.distributed as dist
 from paddle.io import Dataset, IterableDataset
 from paddle.dataset.common import md5file
@@ -11,8 +12,11 @@ from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME
 from typing import Iterable, Iterator, Optional, List, Any, Callable, Union
 import importlib
+import inspect
 
-__all__ = ['MapDataset', 'DatasetReader', 'IterDataset', 'import_main_class']
+__all__ = ['MapDataset', 'DatasetReader', 'IterDataset', 'load_dataset']
+
+DATASETS_PATH = "paddlenlp.datasets.experimental."
 
 
 def import_main_class(module_path):
@@ -28,11 +32,38 @@ def import_main_class(module_path):
     module_main_cls = None
     for name, obj in module.__dict__.items():
         if isinstance(obj, type) and issubclass(obj, main_cls_type):
-            if inspect.isabstract(obj):
+            if name == 'DatasetReader':
                 continue
             module_main_cls = obj
             break
     return module_main_cls
+
+
+def load_dataset(name, data_files=None, splits=None, lazy=False):
+
+    module_path = DATASETS_PATH + name
+
+    reader_cls = import_main_class(module_path)
+    reader_instance = reader_cls(lazy)
+    datasets = []
+
+    if data_files:
+        assert isinstance(data_files, str) or (
+            isinstance(data_files, list) and isinstance(data_files[0], str)
+        ) or (
+            isinstance(data_files, tuple) and isinstance(data_files[0], str)
+        ), "`data_files` should be a string or list of string or a tuple of string."
+        datasets += reader_instance.read_datasets(data_files)
+
+    if splits:
+        assert isinstance(splits, str) or (
+            isinstance(splits, list) and isinstance(splits[0], str)
+        ) or (
+            isinstance(splits, tuple) and isinstance(splits[0], str)
+        ), "`splits` should be a string or list of string or a tuple of string."
+        datasets += reader_instance.read_datasets(splits)
+
+    return datasets
 
 
 @classmethod
@@ -239,9 +270,9 @@ class DatasetReader:  #builder
         self.lazy = lazy
         self.max_examples = max_examples
 
-    def read_datasets(self, *args):
+    def read_datasets(self, path_or_split):
         datasets = []
-        for arg in args:
+        for arg in path_or_split:
             if os.path.exists(arg):
                 datasets.append(self.read(arg))
             else:
