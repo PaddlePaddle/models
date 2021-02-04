@@ -34,6 +34,7 @@ from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
 from paddlenlp.transformers import ErnieForPretraining, ErnieModel, ErniePretrainingCriterion
 from paddlenlp.transformers import BertTokenizer, ErnieTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -147,14 +148,16 @@ def parse_args():
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
-    parser.add_argument("--use_amp",
-                        type=distutils.util.strtobool,
-                        default=False,
-                        help="Enable mixed precision training.")
-    parser.add_argument("--scale_loss",
-                        type=float,
-                        default=2**15,
-                        help="The value of scale_loss for fp16.")
+    parser.add_argument(
+        "--use_amp",
+        type=distutils.util.strtobool,
+        default=False,
+        help="Enable mixed precision training.")
+    parser.add_argument(
+        "--scale_loss",
+        type=float,
+        default=2**15,
+        help="The value of scale_loss for fp16.")
     args = parser.parse_args()
     return args
 
@@ -301,17 +304,11 @@ def do_train(args):
 
     # If use defalut last_epoch, lr of the first iteration is 0.
     # Use `last_epoch = 0` to be consistent with nv bert.
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))),
-        last_epoch=0)
+    num_training_steps = args.max_steps if args.max_steps > 0 else len(
+        train_data_loader) * args.num_train_epochs
+
+    lr_scheduler = LinearDecayWithWarmup(
+        args.learning_rate, num_training_steps, args.warmup_steps, last_epoch=0)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
@@ -390,8 +387,8 @@ def do_train(args):
                         attention_mask=input_mask,
                         masked_positions=masked_lm_positions)
                     loss = criterion(prediction_scores, seq_relationship_score,
-                                    masked_lm_labels, next_sentence_labels,
-                                    masked_lm_scale)
+                                     masked_lm_labels, next_sentence_labels,
+                                     masked_lm_scale)
                 if args.use_amp:
                     scaler.scale(loss).backward()
                     scaler.minimize(optimizer, loss)

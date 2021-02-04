@@ -356,9 +356,10 @@ def do_train(args):
 
     num_training_steps = args.max_steps if args.max_steps > 0 else (
         len(train_data_loader) * args.num_train_epochs)
+    warmup = args.warmup_steps if args.warmup_steps > 0 else args.warmup_proportion
 
     lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
-                                         args.warmup_proportion)
+                                         warmup)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,

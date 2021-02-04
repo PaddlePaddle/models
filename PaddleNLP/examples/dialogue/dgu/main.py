@@ -9,13 +9,13 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.distributed as dist
 from paddle.io import DataLoader, DistributedBatchSampler, BatchSampler
-from paddle.optimizer.lr import LambdaDecay
 from paddle.optimizer import AdamW
 from paddle.metric import Accuracy
 
 from paddlenlp.datasets import MapDatasetWrapper
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertTokenizer, BertForSequenceClassification, BertForTokenClassification
+from paddlenlp.transformers import LinearDecayWithWarmup
 
 from args import parse_args, set_default_args
 import data
@@ -52,14 +52,6 @@ def save_ckpt(model, optimizer, output_dir, name):
     opt_path = os.path.join(output_dir, '{}.pdopt'.format(name))
     paddle.save(model.state_dict(), params_path)
     paddle.save(optimizer.state_dict(), opt_path)
-
-
-def compute_lr_factor(current_step, warmup_steps, max_train_steps):
-    if current_step < warmup_steps:
-        factor = float(current_step) / warmup_steps
-    else:
-        factor = 1 - float(current_step) / max_train_steps
-    return factor
 
 
 class DGULossFunction(nn.Layer):
@@ -117,16 +109,14 @@ def print_logs(args, step, logits, labels, loss, total_time, metric):
 def train(args, model, train_data_loader, dev_data_loader, metric, rank):
     num_examples = len(train_data_loader) * args.batch_size * args.n_gpu
     max_train_steps = args.epochs * len(train_data_loader)
-    warmup_steps = int(max_train_steps * args.warmup_proportion)
     if rank == 0:
         print("Num train examples: %d" % num_examples)
         print("Max train steps: %d" % max_train_steps)
-        print("Num warmup steps: %d" % warmup_steps)
-    factor_fn = partial(
-        compute_lr_factor,
-        warmup_steps=warmup_steps,
-        max_train_steps=max_train_steps)
-    lr_scheduler = LambdaDecay(args.learning_rate, factor_fn)
+        print("Warmup proportion: %d" % args.warmup_proportion)
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, max_train_steps,
+                                         args.warmup_proportion)
+
     optimizer = AdamW(
         learning_rate=lr_scheduler,
         parameters=model.parameters(),

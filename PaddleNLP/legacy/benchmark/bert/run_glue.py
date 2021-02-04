@@ -27,6 +27,7 @@ from paddlenlp.datasets import GlueQNLI, GlueSST2
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -332,16 +333,12 @@ def do_train(args):
     # Create the training-backward program, this pass will not be
     # executed in the validation
     with paddle.static.program_guard(main_program, startup_program):
-        lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-            args.learning_rate,
-            lambda current_step, num_warmup_steps=args.warmup_steps,
-            num_training_steps=args.max_steps if args.max_steps > 0 else
-            (len(train_data_loader) * args.num_train_epochs): float(
-                current_step) / float(max(1, num_warmup_steps))
-            if current_step < num_warmup_steps else max(
-               0.0,
-               float(num_training_steps - current_step) / float(
-                  max(1, num_training_steps - num_warmup_steps))))
+        num_training_steps = args.max_steps if args.max_steps > 0 else len(
+            train_data_loader) * args.num_train_epochs
+
+        lr_scheduler = LinearDecayWithWarmup(
+            args.learning_rate, num_training_steps, args.warmup_steps)
+
         optimizer = paddle.optimizer.AdamW(
             learning_rate=lr_scheduler,
             epsilon=args.adam_epsilon,

@@ -10,6 +10,7 @@ import paddle.nn as nn
 from paddle.io import DataLoader
 from paddlenlp.transformers import ErnieForGeneration
 from paddlenlp.transformers import ErnieTokenizer, ErnieTinyTokenizer, BertTokenizer, ElectraTokenizer, RobertaTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 from paddlenlp.datasets import Poetry
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.metrics import Rouge1, Rouge2
@@ -175,16 +176,10 @@ def train():
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
-    max_steps = (len(train_data_loader) * args.num_epochs)
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=max_steps*args.warmup_proportion,
-        num_training_steps=max_steps: float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+    max_steps = len(train_data_loader) * args.num_epochs
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, max_steps,
+                                         args.warmup_proportion)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
