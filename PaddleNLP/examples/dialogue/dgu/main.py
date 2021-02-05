@@ -132,18 +132,9 @@ def train(args, model, train_data_loader, dev_data_loader, metric, rank):
         parameters=model.parameters(),
         weight_decay=args.weight_decay,
         apply_decay_param_fun=lambda x: x in [
-            params.name for params in model.parameters()
-            if not any(nd in params.name for nd in ['bias', 'norm'])],
-        grad_clip=nn.ClipGradByGlobalNorm(args.max_grad_norm)
-    )
-    optimizer = paddle.optimizer.AdamW(
-        learning_rate=lr_scheduler,
-        parameters=model.parameters(),
-        weight_decay=args.weight_decay,
-        apply_decay_param_fun=lambda x: x in [
             p.name for n, p in model.named_parameters()
-            if not any(nd in n for nd in ["bias", "norm"])
-        ])
+            if not any(nd in n for nd in ["bias", "norm"])],
+        grad_clip=nn.ClipGradByGlobalNorm(args.max_grad_norm))
     loss_fn = DGULossFunction(args.task_name)
 
     load_ckpt(args, model, optimizer)
