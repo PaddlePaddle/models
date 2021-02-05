@@ -27,7 +27,7 @@
 我们提供了少数样本用以示例输入数据格式。执行以下命令，下载并解压示例数据集：
 
 ```bash
-wget --no-check-certificate https://paddlenlp.bj.bcebos.com/data/lexical_analysis_dataset_tiny.tar.gz
+wget --no-check-certificate https://paddlenlp.bj.bcebos.com/data/lexical_analysis_dataset_tiny_path0.tar.gz
 tar xvf lexical_analysis_dataset_tiny.tar.gz
 ```
 
