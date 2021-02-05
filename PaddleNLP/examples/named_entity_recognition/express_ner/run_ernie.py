@@ -69,7 +69,7 @@ def predict(model, data_loader, ds):
         pred_list.append(pred.numpy())
         len_list.append(lens.numpy())
     preds = parse_decodes(ds, pred_list, len_list)
-    print('\n'.join(preds[:10]))
+    return preds
 
 
 def convert_example(example, tokenizer, label_vocab):
@@ -177,4 +177,5 @@ if __name__ == '__main__':
         paddle.save(model.state_dict(),
                     './ernie_result/model_%d.pdparams' % step)
 
-    pred = predict(model, test_loader, test_ds)
+    preds = predict(model, test_loader, test_ds)
+    print('\n'.join(preds[:10]))

@@ -20,14 +20,14 @@
 
 - paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp\>=2.0.0b2`
+- paddlenlp >= 2.0.0rc, 安装方式：`pip install paddlenlp\>=2.0.0rc`
 
 ### 2.2 数据准备
 
 我们提供了少数样本用以示例输入数据格式。执行以下命令，下载并解压示例数据集：
 
 ```bash
-wget --no-check-certificate https://paddlenlp.bj.bcebos.com/data/lexical_analysis_dataset_tiny.tar.gz
+wget --no-check-certificate https://paddlenlp.bj.bcebos.com/datasets/lexical_analysis_dataset_tiny.tar.gz
 tar xvf lexical_analysis_dataset_tiny.tar.gz
 ```
 
@@ -54,18 +54,18 @@ tar xvf lexical_analysis_dataset_tiny.tar.gz
 模型训练支持 CPU 和 GPU，使用 GPU 之前应指定使用的显卡卡号：
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
+export CUDA_VISIBLE_DEVICES=0 # 支持多卡训练，如使用双卡，可以设置为0,1
 ```
 
 训练启动方式如下：
 
 ```bash
-python -m paddle.distributed.launch train.py \
+python train.py \
         --data_dir ./lexical_analysis_dataset_tiny \
         --model_save_dir ./save_dir \
         --epochs 10 \
         --batch_size 32 \
-        --use_gpu True \
+        --n_gpu 1 \
         # --init_checkpoint ./save_dir/final
 ```
 

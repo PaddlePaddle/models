@@ -43,15 +43,13 @@ class LacDataset(paddle.io.Dataset):
         word_dict_path = os.path.join(self.base_path, 'word.dic')
         label_dict_path = os.path.join(self.base_path, 'tag.dic')
         word_rep_dict_path = os.path.join(self.base_path, 'q2b.dic')
-        self.word_vocab = self._load_kv_dict(
-            word_dict_path, value_func=np.int64, reverse=True)
-        self.label_vocab = self._load_kv_dict(
-            label_dict_path, value_func=np.int64, reverse=True)
-        self.word_replace_dict = self._load_kv_dict(word_rep_dict_path)
+        self.word_vocab = self._load_vocab(word_dict_path)
+        self.label_vocab = self._load_vocab(label_dict_path)
+        self.word_replace_dict = self._load_vocab(word_rep_dict_path)
 
         # Calculate vocab size and labels number, note: vocab value strats from 0.
-        self.vocab_size = max(self.word_vocab.values()) + 1
-        self.num_labels = max(self.label_vocab.values()) + 1
+        self.vocab_size = len(self.word_vocab)
+        self.num_labels = len(self.label_vocab)
 
         if self.mode in {"train", "test", "infer"}:
             self.dataset_path = os.path.join(self.base_path,
@@ -109,31 +107,28 @@ class LacDataset(paddle.io.Dataset):
 
                 self.total += 1
 
-    def _load_kv_dict(self,
-                      dict_path,
-                      delimiter="\t",
-                      key_func=None,
-                      value_func=None,
-                      reverse=False):
+    def _load_vocab(self, dict_path):
         """
-        Load key-value dict from file
+        Load vocab from file
         """
         vocab = {}
-        for line in open(dict_path, "r", encoding='utf8'):
-            terms = line.strip("\n").split(delimiter)
-            if len(terms) != 2:
-                continue
-            if reverse:
-                value, key = terms
-            else:
-                key, value = terms
-            if key in vocab:
-                raise KeyError("key duplicated with [%s]" % (key))
-            if key_func:
-                key = key_func(key)
-            if value_func:
-                value = value_func(value)
-            vocab[key] = value
+        reverse = None
+        with open(dict_path, "r", encoding='utf8') as fin:
+            for i, line in enumerate(fin):
+                terms = line.strip("\n").split("\t")
+                if len(terms) == 2:
+                    if reverse == None:
+                        reverse = True if terms[0].isdigit() else False
+                    if reverse:
+                        value, key = terms
+                    else:
+                        key, value = terms
+                elif len(terms) == 1:
+                    key, value = terms[0], i
+                else:
+                    raise ValueError("Error line: %s in file: %s" %
+                                     (line, dict_path))
+                vocab[key] = value
         return vocab
 
     def _convert_tokens_to_ids(self,
