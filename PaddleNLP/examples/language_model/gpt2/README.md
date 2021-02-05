@@ -1,4 +1,4 @@
-# GPT2
+# GPT-2
 
 ## 模型介绍
 [GPT2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)(Language Models are Unsupervised Multitask Learners) 以[Transformer](https://arxiv.org/abs/1706.03762) 解码器为网络基本组件，使用自回归的方式在大规模无标注文本语料上进行预训练（pre-train），得到的语言生成模型。

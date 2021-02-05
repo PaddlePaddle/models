@@ -1,5 +1,4 @@
-# coding=utf-8
-# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,65 +33,19 @@ MODEL_CLASSES = {
     "gpt2-large-en": (GPT2ForPretraining, GPT2Tokenizer),
 }
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model_name_or_path",
-        default=None,
-        type=str,
-        required=True,
-        help="Path to pre-trained model or shortcut name selected in the list: "
-        + ", ".join(
-            sum([
-                list(classes[-1].pretrained_init_configuration.keys())
-                for classes in MODEL_CLASSES.values()
-            ], [])), )
-    parser.add_argument(
-        "--eval_path",
-        default=None,
-        type=str,
-        required=True,
-        help="The eval file path.", )
-    parser.add_argument(
-        '--cloze_eval',
-        action='store_true',
-        help='Evaluation dataset from `--eval_path` is a cloze task')
-    parser.add_argument(
-        '--overlapping_eval',
-        type=int,
-        default=32,
-        help='sliding window for overlapping eval ')
-
-    parser.add_argument(
-        "--init_checkpoint_path",
-        default=None,
-        type=str,
-        required=True,
-        help="The model checkpoint path.", )
-    parser.add_argument(
-        "--batch_size",
-        default=8,
-        type=int,
-        help="Batch size per GPU/CPU for training.", )
-    parser.add_argument(
-        '--seq_length',
-        type=int,
-        default=1024,
-        help='Maximum sequence length to process for '
-        'evaluation.')
-    parser.add_argument(
-        "--device",
-        type=str,
-        default="gpu",
-        help="select cpu, gpu, xpu devices.")
-    parser.add_argument(
-        "--logging_steps",
-        type=int,
-        default=100,
-        help="Log every X updates steps.")
-    args = parser.parse_args()
-    return args
+# yapf: disable
+parser = argparse.ArgumentParser()
+parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list: "
+        + ", ".join(sum([list(classes[-1].pretrained_init_configuration.keys()) for classes in MODEL_CLASSES.values()], [])), )
+parser.add_argument("--eval_path", default=None, type=str, required=True, help="The eval file path.", )
+parser.add_argument('--cloze_eval', action='store_true', help='Evaluation dataset from `--eval_path` is a cloze task')
+parser.add_argument('--overlapping_eval', type=int, default=32, help='sliding window for overlapping eval ')
+parser.add_argument("--init_checkpoint_path", default=None, type=str, required=True, help="The model checkpoint path.", )
+parser.add_argument( "--batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.", )
+parser.add_argument('--seq_length', type=int, default=1024, help='Maximum sequence length to process for evaluation.')
+parser.add_argument("--device", type=str, default="gpu", help="select cpu, gpu, xpu devices.")
+parser.add_argument("--logging_steps", type=int, default=100, help="Log every X updates steps.")
+# yapf: enable
 
 
 class LM_Eval_Dataset(paddle.io.Dataset):
@@ -131,7 +84,7 @@ class LM_Eval_Dataset(paddle.io.Dataset):
         # -INF mask value as default
         attention_mask = (attention_mask - 1.0) * 1e9
         # Bool mask of attention
-        # attention_mask = attention_mask.astype("float32")
+        attention_mask = attention_mask.astype("float32")
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def __getitem__(self, idx):
@@ -174,7 +127,7 @@ class Lambada_Eval_Dataset(paddle.io.Dataset):
         # -INF mask value as default
         attention_mask = (attention_mask - 1.0) * 1e9
         # Bool mask of attention
-        # attention_mask = attention_mask.astype("float32")
+        attention_mask = attention_mask.astype("float32")
         return [tokens, attention_mask, position_ids, labels]
 
     def __getitem__(self, idx):
@@ -326,5 +279,5 @@ def do_eval(args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = parser.parse_args()
     do_eval(args)
