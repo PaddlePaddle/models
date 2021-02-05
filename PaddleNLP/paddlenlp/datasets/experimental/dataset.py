@@ -1,3 +1,18 @@
+# coding=utf-8
+# Copyright 2020 The HuggingFace Datasets Authors and the TensorFlow Datasets Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import collections
 import io
 import math
@@ -123,10 +138,12 @@ class MapDataset(Dataset):
             subclass of Dataset.
     """
 
-    def __init__(self, data):
+    def __init__(self, data, **kargs):
         self.data = data
         self._transform_pipline = []
         self.new_data = self.data
+        if 'label_list' in kargs.keys():
+            self.label_list = kargs['label_list']
 
     def _transform(self, data, pipline):
         for fn in reversed(pipline):
@@ -221,10 +238,12 @@ class IterDataset(IterableDataset):
             subclass of Dataset.
     """
 
-    def __init__(self, data):
+    def __init__(self, data, **kargs):
         self.data = data
         self._transform_pipline = []
         self.new_data = self.data
+        if 'label_list' in kargs.keys():
+            self.label_list = kargs['label_list']
 
     def _transform(self, data, pipline):
         for fn in reversed(pipline):
@@ -318,7 +337,8 @@ class DatasetReader:  #builder
 
                             yield example
 
-                return IterDataset(generate_examples(example_iter))
+                return IterDataset(
+                    generate_examples(example_iter), label_list=label_list)
             else:
                 return IterDataset(example_iter)
 
@@ -335,7 +355,6 @@ class DatasetReader:  #builder
                     "Is the path correct?".format(root))
 
             label_list = self.get_labels()
-
             # Convert class label to label ids.
             if label_list is not None:
                 if 'labels' not in examples[0].keys():
@@ -352,7 +371,9 @@ class DatasetReader:  #builder
                         examples[idx]['labels'][label_idx] = label_dict[
                             examples[idx]['labels'][label_idx]]
 
-            return MapDataset(examples)
+            return MapDataset(
+                examples,
+                label_list=label_list) if label_list else MapDataset(examples)
 
     def _read(self, file_path: str):
         """

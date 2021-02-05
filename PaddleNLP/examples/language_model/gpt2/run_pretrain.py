@@ -30,15 +30,18 @@ from paddlenlp.utils.log import logger
 from data import GPT2Dataset
 import lr
 
-MODEL_CLASSES = {
-    "gpt2-small-en": (GPT2ForPretraining, GPT2Tokenizer),
-    "gpt2-medium-en": (GPT2ForPretraining, GPT2Tokenizer),
-    "gpt2-large-en": (GPT2ForPretraining, GPT2Tokenizer),
-}
+MODEL_CLASSES = {"gpt2": (GPT2ForPretraining, GPT2Tokenizer)}
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model_type",
+        default=None,
+        type=str,
+        required=True,
+        help="Model type selected in the list: " +
+        ", ".join(MODEL_CLASSES.keys()), )
     parser.add_argument(
         "--model_name_or_path",
         default=None,
@@ -190,15 +193,18 @@ def do_train(args):
     worker_num = paddle.distributed.get_world_size()
     set_seed(args)
     worker_init = WorkerInitObj(args.seed + paddle.distributed.get_rank())
-    model_class, tokenizer_class = MODEL_CLASSES[args.model_name_or_path]
+    model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     eod_id = tokenizer.command_name_map["eod"].Id
 
-    model = GPT2ForPretraining(
-        GPT2Model(**model_class.pretrained_init_configuration[
-            args.model_name_or_path]))
-    # creat the critrion for the gpt model
-    criterion = GPT2PretrainingCriterion()
+    pretrained_models_list = list(
+        model_class.pretrained_init_configuration.keys())
+    if args.model_name_or_path in pretrained_models_list:
+        model = GPT2ForPretraining(
+            GPT2Model(**model_class.pretrained_init_configuration[
+                args.model_name_or_path]))
+    else:
+        model = GPT2ForPretraining.from_pretrained(args.model_name_or_path)
 
     if args.decay_steps is None:
         args.decay_steps = args.max_steps
@@ -223,6 +229,13 @@ def do_train(args):
             p.name for n, p in model.named_parameters()
             if not any(nd in n for nd in ["bias", "norm"])
         ])
+    if args.model_name_or_path not in pretrained_models_list:
+        opt_dict = paddle.load(
+            os.path.join(args.model_name_or_path, "model_state.pdopt"))
+        optimizer.set_state_dict(opt_dict)
+
+    # creat the critrion for the gpt model
+    criterion = GPT2PretrainingCriterion()
 
     global_step = 0
     tic_train = time.time()
@@ -259,7 +272,7 @@ def do_train(args):
                 loss.backward()
                 optimizer.step()
                 lr_scheduler.step()
-                optimizer.clear_gradients()
+                optimizer.clear_grad()
                 if global_step % args.save_steps == 0:
                     if worker_index == 0:
                         output_dir = os.path.join(args.output_dir,
@@ -270,9 +283,14 @@ def do_train(args):
                         model_to_save = model._layers if isinstance(
                             model, paddle.DataParallel) else model
                         model_to_save.save_pretrained(output_dir)
+                        tokenizer.save_pretrained(output_dir)
+                        paddle.save(
+                            optimizer.state_dict(),
+                            os.path.join(output_dir, "model_state.pdopt"))
                 if global_step >= args.max_steps:
                     del train_data_loader
                     return
+
             del train_data_loader
 
 

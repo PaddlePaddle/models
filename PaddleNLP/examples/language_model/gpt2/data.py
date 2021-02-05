@@ -208,7 +208,7 @@ class GPT2Dataset(paddle.io.Dataset):
         # -INF mask value as default
         attention_mask = (attention_mask - 1.0) * 1e9
         # Bool mask of attention
-        # attention_mask = attention_mask.astype("float32")
+        attention_mask = attention_mask.astype("float32")
         return [tokens, loss_mask, attention_mask, position_ids, labels]
 
     def _get_single_sample_from_idx(self, doc_index_f, doc_index_l, offset_f,

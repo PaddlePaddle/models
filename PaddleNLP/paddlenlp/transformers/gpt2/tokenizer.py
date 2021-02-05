@@ -13,14 +13,14 @@
 # limitations under the License.
 
 import os
-import regex as re
-import unicodedata
-import json
-import sentencepiece
-import jieba
-
 from functools import lru_cache
 from collections import namedtuple
+
+import json
+import jieba
+import shutil
+from paddle.utils import try_import
+
 from .. import PretrainedTokenizer
 from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize,\
     _is_whitespace, _is_control, _is_punctuation
@@ -112,7 +112,8 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
                  bod_id="<bod>",
                  eod_id="<eod>",
                  max_length=None):
-
+        self._vocab_file = vocab_file
+        self._model_file = model_file
         if not os.path.isfile(vocab_file):
             raise ValueError(
                 "Can't find a vocabulary file at path '{}'. To load the "
@@ -122,7 +123,8 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
         self.max_len = max_len if max_len is not None else int(1e12)
         self.encoder = json.load(open(vocab_file))
         self.decoder = {v: k for k, v in self.encoder.items()}
-        self.sp = sentencepiece.SentencePieceProcessor(model_file=model_file)
+        mod = try_import("sentencepiece")
+        self.sp = mod.SentencePieceProcessor(model_file=model_file)
         self.translator = str.maketrans(" \n", "\u2582\u2583")
 
     def tokenize(self, text):
@@ -148,6 +150,16 @@ class GPT2ChineseTokenizer(PretrainedTokenizer):
         text = text.replace(' ', '').replace('\u2582', ' ').replace('\u2583',
                                                                     '\n')
         return text
+
+    def save_resources(self, save_directory):
+        """
+        Save tokenizer related resources to files under `save_directory`.
+        Args:
+            save_directory (str): Directory to save files into.
+        """
+        for name, file_name in self.resource_files_names.items():
+            save_path = os.path.join(save_directory, file_name)
+            shutil.copyfile(getattr(self, "_%s" % name), save_path)
 
 
 class GPT2Tokenizer(PretrainedTokenizer):
@@ -192,6 +204,8 @@ class GPT2Tokenizer(PretrainedTokenizer):
                  special_tokens=None,
                  max_len=None,
                  do_lower_case=True):
+        self._vocab_file = vocab_file
+        self._merges_file = merges_file
         self.max_len = int(1e12)
         self.num_command_tokens = 2
         self.num_type_tokens = 2
@@ -220,7 +234,7 @@ class GPT2Tokenizer(PretrainedTokenizer):
         bpe_merges = [tuple(merge.split()) for merge in bpe_data]
         self.bpe_ranks = dict(zip(bpe_merges, range(len(bpe_merges))))
         self.cache = {}
-
+        re = try_import("regex")
         self.pat = re.compile(
             r"""'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
         )
@@ -295,6 +309,7 @@ class GPT2Tokenizer(PretrainedTokenizer):
     def tokenize(self, text):
         """ Tokenize a string. """
         bpe_tokens = []
+        re = try_import("regex")
         for token in re.findall(self.pat, text):
             token = ''.join(self.byte_encoder[b] for b in token.encode('utf-8'))
             bpe_tokens.extend(
@@ -345,3 +360,13 @@ class GPT2Tokenizer(PretrainedTokenizer):
         text = bytearray([self.byte_decoder[c] for c in text]).decode(
             'utf-8', errors=self.errors)
         return text
+
+    def save_resources(self, save_directory):
+        """
+        Save tokenizer related resources to files under `save_directory`.
+        Args:
+            save_directory (str): Directory to save files into.
+        """
+        for name, file_name in self.resource_files_names.items():
+            save_path = os.path.join(save_directory, file_name)
+            shutil.copyfile(getattr(self, "_%s" % name), save_path)

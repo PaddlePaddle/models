@@ -26,29 +26,14 @@ from paddlenlp.data import Stack, Tuple, Pad
 
 from model import SentenceTransformer
 
-MODEL_CLASSES = {
-    "bert": (ppnlp.transformers.BertModel, ppnlp.transformers.BertTokenizer),
-    'ernie': (ppnlp.transformers.ErnieModel, ppnlp.transformers.ErnieTokenizer),
-    'roberta':
-    (ppnlp.transformers.RobertaModel, ppnlp.transformers.RobertaTokenizer)
-}
-
-
 # yapf: disable
-def parse_args():
-    parser = argparse.ArgumentParser()
-    # Required parameters
-    parser.add_argument("--model_type", default='ernie', type=str, help="Model type selected in the list: " +", ".join(MODEL_CLASSES.keys()))
-    parser.add_argument("--model_name", default='ernie-1.0', type=str, help="Path to pre-trained model or shortcut name selected in the list: " +
-        ", ".join(sum([list(classes[-1].pretrained_init_configuration.keys()) for classes in MODEL_CLASSES.values()], [])))
-    parser.add_argument("--params_path", type=str, default='./checkpoint/model_4900/model_state.pdparams', help="The path to model parameters to be loaded.")
-
-    parser.add_argument("--max_seq_length", default=50, type=int, help="The maximum total input sequence length after tokenization. "
-        "Sequences longer than this will be truncated, sequences shorter will be padded.")
-    parser.add_argument("--batch_size", default=32, type=int, help="Batch size per GPU/CPU for training.")
-    parser.add_argument("--n_gpu", type=int, default=0, help="Number of GPUs to use, 0 for CPU.")
-    args = parser.parse_args()
-    return args
+parser = argparse.ArgumentParser()
+parser.add_argument("--params_path", type=str, default='./checkpoint/model_2700/model_state.pdparams', help="The path to model parameters to be loaded.")
+parser.add_argument("--max_seq_length", default=50, type=int, help="The maximum total input sequence length after tokenization. "
+    "Sequences longer than this will be truncated, sequences shorter will be padded.")
+parser.add_argument("--batch_size", default=32, type=int, help="Batch size per GPU/CPU for training.")
+parser.add_argument("--n_gpu", type=int, default=0, help="Number of GPUs to use, 0 for CPU.")
+args = parser.parse_args()
 # yapf: enable
 
 
@@ -143,24 +128,17 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
         examples.append((query_input_ids, query_segment_ids, title_input_ids,
                          title_segment_ids))
 
+    # Seperates data into some batches.
+    batches = [
+        examples[idx:idx + batch_size]
+        for idx in range(0, len(examples), batch_size)
+    ]
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # query_segment
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # title_input
         Pad(axis=0, pad_val=tokenizer.pad_token_id),  # tilte_segment
     ): [data for data in fn(samples)]
-
-    # Seperates data into some batches.
-    batches = []
-    one_batch = []
-    for example in examples:
-        one_batch.append(example)
-        if len(one_batch) == batch_size:
-            batches.append(one_batch)
-            one_batch = []
-    if one_batch:
-        # The last batch whose size is less than the config batch_size setting.
-        batches.append(one_batch)
 
     results = []
     model.eval()
@@ -186,18 +164,11 @@ def predict(model, data, tokenizer, label_map, batch_size=1):
 
 
 if __name__ == "__main__":
-    args = parse_args()
     paddle.set_device("gpu" if args.n_gpu else "cpu")
 
-    args.model_type = args.model_type.lower()
-    model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-
-    if args.model_name == 'ernie-tiny':
-        # ErnieTinyTokenizer is special for ernie_tiny pretained model.
-        tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
-            args.model_name)
-    else:
-        tokenizer = tokenizer_class.from_pretrained(args.model_name)
+    # ErnieTinyTokenizer is special for ernie-tiny pretained model.
+    tokenizer = ppnlp.transformers.ErnieTinyTokenizer.from_pretrained(
+        'ernie-tiny')
 
     data = [
         ['世界上什么东西最小', '世界上什么东西最小？'],
@@ -206,7 +177,8 @@ if __name__ == "__main__":
     ]
     label_map = {0: 'dissimilar', 1: 'similar'}
 
-    pretrained_model = model_class.from_pretrained(args.model_name)
+    pretrained_model = ppnlp.transformers.ErnieModel.from_pretrained(
+        "ernie-tiny")
     model = SentenceTransformer(pretrained_model)
 
     if args.params_path and os.path.isfile(args.params_path):

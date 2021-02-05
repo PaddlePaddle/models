@@ -98,6 +98,8 @@ python -m paddle.distributed.launch --gpus "0,1,2,3,4,5,6,7" train.py --config .
 
 ## 模型推断
 
+### 使用动态图预测
+
 以英德翻译数据为例，模型训练完成后可以执行以下命令对指定文件中的文本进行翻译：
 
 ``` sh
@@ -106,10 +108,29 @@ export CUDA_VISIBLE_DEVICES=0
 python predict.py --config ./configs/transformer.base.yaml
 ```
 
- 由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
+翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `configs/transformer.big.yaml` 和 `configs/transformer.base.yaml` 文件中查阅注释说明并进行更改设置。如果执行不提供 `--config` 选项，程序将默认使用 big model 的配置。
 
  需要注意的是，目前预测仅实现了单卡的预测，原因在于，翻译后面需要的模型评估依赖于预测结果写入文件顺序，多卡情况下，目前暂未支持将结果按照指定顺序写入文件。
 
+### 导出静态图预测模型与预测引擎预测
+
+Transformer 同时提供了将训练的动态图的 checkpoint 转成静态图模型功能，并提供了对应的使用预测引擎进行预测推理的方法。具体的使用方式如下：
+
+首先是进行动转静，使用 `export_model.py` 脚本完成将动态图的 checkpoint 转成静态图的模型，并保存成 inference 的模型。
+
+``` sh
+python export_model.py --config ./configs/transformer.base.yaml
+```
+
+模型默认保存在 `infer_model/` 路径下面。可以在 `configs/` 路径下的配置文件中更改 `inference_model_dir` 配置，从而保存至自定义的路径。
+
+其次，对于完成动转静的静态图的模型，可以使用 `inference.py` 实现使用预测引擎进行高性能预测的功能。此时，因为保存静态图模型本身已经包括了模型结构，所以，指定的配置文件将只用于 `reader` 以及指定预测使用的设备（gpu/cpu/xpu），模型结构相关的配置将不再起作用。
+
+``` sh
+python deploy/python/inference.py  --config ./configs/transformer.base.yaml
+```
+
+翻译结果同样将会保存在 `predict.txt` 文件中，可以在配置文件中自定义更改 `output_file` 来指定预测结果写入到的文件的名称。
 
 ## 模型评估
 

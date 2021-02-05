@@ -20,7 +20,6 @@ import argparse
 import numpy as np
 
 import paddle
-from paddlenlp.utils.tools import loadz
 from paddlenlp.transformers import GPT2Model, GPT2ForPretraining
 from paddlenlp.transformers import GPT2ChineseTokenizer, GPT2Tokenizer
 from paddlenlp.utils.log import logger

@@ -110,6 +110,17 @@ def create_infer_loader(args):
     return data_loader, trg_vocab.to_tokens
 
 
+def adapt_vocab_size(args):
+    root = None if args.root == "None" else args.root
+    (src_vocab, trg_vocab) = WMT14ende.get_vocab(root=root)
+    padding_vocab = (
+        lambda x: (x + args.pad_factor - 1) // args.pad_factor * args.pad_factor
+    )
+
+    args.src_vocab_size = padding_vocab(len(src_vocab))
+    args.trg_vocab_size = padding_vocab(len(trg_vocab))
+
+
 def prepare_train_input(insts, bos_idx, eos_idx, pad_idx):
     """
     Put all padded data needed by training into a list.
