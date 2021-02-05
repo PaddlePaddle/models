@@ -10,8 +10,6 @@ from pprint import pprint
 import paddle
 from paddle import inference
 
-from paddlenlp.transformers import InferTransformerModel
-
 sys.path.append("../../")
 import reader
 
