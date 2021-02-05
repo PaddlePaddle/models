@@ -32,6 +32,7 @@ from paddle.io import DataLoader, Dataset
 from paddlenlp.transformers import ElectraForTotalPretraining, ElectraModel, ElectraPretrainingCriterion
 from paddlenlp.transformers import ElectraDiscriminator, ElectraGenerator
 from paddlenlp.transformers import ElectraTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -470,15 +471,9 @@ def do_train(args):
 
     num_training_steps = args.max_steps if args.max_steps > 0 else (
         len(train_data_loader) * args.num_train_epochs)
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=num_training_steps: float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         args.warmup_steps)
 
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=1.0)
     optimizer = paddle.optimizer.AdamW(

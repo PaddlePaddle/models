@@ -19,6 +19,7 @@ import sys
 import random
 import time
 import math
+import distutils.util
 from functools import partial
 
 import numpy as np
@@ -31,6 +32,7 @@ from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 from paddlenlp.metrics import AccuracyAndF1, Mcc, PearsonAndSpearman
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -161,6 +163,16 @@ def parse_args():
         type=str,
         default="gpu",
         help="Device for selecting for the training.")
+    parser.add_argument(
+        "--use_amp",
+        type=distutils.util.strtobool,
+        default=False,
+        help="Enable mixed precision training.")
+    parser.add_argument(
+        "--scale_loss",
+        type=float,
+        default=2**15,
+        help="The value of scale_loss for fp16.")
     args = parser.parse_args()
     return args
 
@@ -351,17 +363,10 @@ def do_train(args):
 
     num_training_steps = args.max_steps if args.max_steps > 0 else (
         len(train_data_loader) * args.num_train_epochs)
-    warmup_steps = args.warmup_steps if args.warmup_steps > 0 else (
-        int(math.floor(num_training_steps * args.warmup_proportion)))
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=warmup_steps,
-        num_training_steps=num_training_steps : float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+    warmup = args.warmup_steps if args.warmup_steps > 0 else args.warmup_proportion
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         warmup)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
@@ -380,16 +385,26 @@ def do_train(args):
 
     metric = metric_class()
 
+    if args.use_amp:
+        scaler = paddle.amp.GradScaler(init_loss_scaling=args.scale_loss)
+
     global_step = 0
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
             global_step += 1
             input_ids, segment_ids, labels = batch
-            logits = model(input_ids, segment_ids)
-            loss = loss_fct(logits, labels)
-            loss.backward()
-            optimizer.step()
+            with paddle.amp.auto_cast(
+                    args.use_amp,
+                    custom_white_list=["layer_norm", "softmax", "gelu"]):
+                logits = model(input_ids, segment_ids)
+                loss = loss_fct(logits, labels)
+            if args.use_amp:
+                scaler.scale(loss).backward()
+                scaler.minimize(optimizer, loss)
+            else:
+                loss.backward()
+                optimizer.step()
             lr_scheduler.step()
             optimizer.clear_gradients()
             if global_step % args.logging_steps == 0:

@@ -91,16 +91,22 @@ def parse_args():
         "--beam_size", type=int, default=10, help="file name for inference")
 
     parser.add_argument(
-        '--use_gpu',
-        type=eval,
-        default=False,
-        help='Whether using gpu [True|False]')
+        "--select_device",
+        default="gpu",
+        choices=["gpu", "cpu", "xpu"],
+        help="Device selected for inference.")
 
     parser.add_argument(
         "--init_from_ckpt",
         type=str,
         default=None,
         help="The path of checkpoint to be loaded.")
+
+    parser.add_argument(
+        "--export_path",
+        type=str,
+        default=None,
+        help="The output file prefix used to save the exported inference model.")
 
     args = parser.parse_args()
     return args

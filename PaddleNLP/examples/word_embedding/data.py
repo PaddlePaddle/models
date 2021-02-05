@@ -125,7 +125,7 @@ def preprocess_prediction_data(data, vocab):
         data (obj:`List[str]`): The prediction data whose each element is  a tokenized text.
     Returns:
         examples (obj:`List(Example)`): The processed data whose each element is a Example (numedtuple) object.
-            A Example object contains `text`(word_ids) and `se_len`(sequence length).
+            A Example object contains `text`(word_ids) and `seq_len`(sequence length).
     """
     examples = []
     for text in data:

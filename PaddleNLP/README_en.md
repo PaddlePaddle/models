@@ -14,8 +14,6 @@ English | [简体中文](./README.md)
 
 PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials. It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
-**This project is still UNDER ACTIVE DEVELOPMENT.**
-
 ## Features
 
 * **Rich and Powerful Model Zoo**
