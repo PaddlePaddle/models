@@ -327,7 +327,7 @@ class ErnieForTokenClassification(ErniePretrainedModel):
 class ErnieForPretraining(ErniePretrainedModel):
     def __init__(self, ernie):
         super(ErnieForPretraining, self).__init__()
-        self.ernie = bert
+        self.ernie = ernie
         self.cls = ErniePretrainingHeads(
             self.ernie.config["hidden_size"],
             self.ernie.config["vocab_size"],
