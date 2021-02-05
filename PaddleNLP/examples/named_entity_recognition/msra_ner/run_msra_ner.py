@@ -27,6 +27,7 @@ import paddlenlp as ppnlp
 from paddlenlp.datasets import MSRA_NER
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForTokenClassification, BertTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 from paddlenlp.metrics import ChunkEvaluator
 
 
@@ -291,16 +292,11 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+    num_training_steps = args.max_steps if args.max_steps > 0 else len(
+        train_data_loader) * args.num_train_epochs
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         args.warmup_steps)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,

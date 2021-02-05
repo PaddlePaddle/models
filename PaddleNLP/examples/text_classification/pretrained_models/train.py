@@ -22,8 +22,9 @@ import numpy as np
 import paddle
 import paddle.nn.functional as F
 
-from paddlenlp.data import Stack, Tuple, Pad
 import paddlenlp as ppnlp
+from paddlenlp.data import Stack, Tuple, Pad
+from paddlenlp.transformers import LinearDecayWithWarmup
 
 # yapf: disable
 parser = argparse.ArgumentParser()
@@ -214,19 +215,10 @@ def do_train():
     model = paddle.DataParallel(model)
 
     num_training_steps = len(train_data_loader) * args.epochs
-    num_warmup_steps = int(args.warmup_proportion * num_training_steps)
 
-    def get_lr_factor(current_step):
-        if current_step < num_warmup_steps:
-            return float(current_step) / float(max(1, num_warmup_steps))
-        else:
-            return max(0.0,
-                       float(num_training_steps - current_step) /
-                       float(max(1, num_training_steps - num_warmup_steps)))
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         args.warmup_proportion)
 
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lr_lambda=lambda current_step: get_lr_factor(current_step))
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
         parameters=model.parameters(),

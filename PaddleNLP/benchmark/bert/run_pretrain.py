@@ -31,6 +31,7 @@ from paddle.io import DataLoader, Dataset
 
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
 from paddlenlp.transformers import BertTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 from data import create_data_holder, create_pretraining_dataset
 
 MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer)}
@@ -232,7 +233,8 @@ def dist_optimizer(args, optimizer):
     if args.use_amp:
         dist_strategy.amp = True
 
-        custom_black_list = ['lookup_table', 'lookup_table_v2'] if args.use_pure_fp16 else None
+        custom_black_list = ['lookup_table',
+                             'lookup_table_v2'] if args.use_pure_fp16 else None
         dist_strategy.amp_configs = {
             'custom_white_list': ['softmax', 'layer_norm', 'gelu'],
             'init_loss_scaling': args.scale_loss,
@@ -305,16 +307,11 @@ def do_train(args):
                      masked_lm_labels, next_sentence_labels, masked_lm_scale)
 
     # Define the dynamic learing_reate scheduler and optimizer
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, num_warmup_steps=args.warmup_steps,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader) * args.num_train_epochs): float(
-            current_step) / float(max(1, num_warmup_steps))
-        if current_step < num_warmup_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - num_warmup_steps))))
+    num_training_steps = args.max_steps if args.max_steps > 0 else len(
+        train_data_loader) * args.num_train_epochs
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         args.warmup_steps)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
@@ -327,8 +324,8 @@ def do_train(args):
         ],
         multi_precision=args.use_pure_fp16)
     if worker_num == 1 and args.use_amp:
-        custom_black_list=(['lookup_table', 'lookup_table_v2']
-            if args.use_pure_fp16 else None)
+        custom_black_list = (['lookup_table', 'lookup_table_v2']
+                             if args.use_pure_fp16 else None)
         amp_list = paddle.static.amp.AutoMixedPrecisionLists(
             custom_white_list=['softmax', 'layer_norm', 'gelu'],
             custom_black_list=custom_black_list)

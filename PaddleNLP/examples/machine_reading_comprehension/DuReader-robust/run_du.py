@@ -29,6 +29,7 @@ import paddlenlp as ppnlp
 from paddlenlp.datasets import SQuAD, DuReaderRobust, CMRC, DRCD
 from paddlenlp.data import Pad, Stack, Tuple
 from paddlenlp.transformers import BertForQuestionAnswering, BertTokenizer, ErnieForQuestionAnswering, ErnieTokenizer
+from paddlenlp.transformers import LinearDecayWithWarmup
 from paddlenlp.metrics.squad import squad_evaluate, compute_predictions
 
 TASK_CLASSES = {"dureader-robust": DuReaderRobust, "cmrc": CMRC, "drcd": DRCD}
@@ -177,16 +178,11 @@ def do_train(args):
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
-    lr_scheduler = paddle.optimizer.lr.LambdaDecay(
-        args.learning_rate,
-        lambda current_step, warmup_proportion=args.warmup_proportion,
-        num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_data_loader)*args.num_train_epochs): float(
-            current_step) / float(max(1, warmup_proportion*num_training_steps))
-        if current_step < warmup_proportion*num_training_steps else max(
-            0.0,
-            float(num_training_steps - current_step) / float(
-                max(1, num_training_steps - warmup_proportion*num_training_steps))))
+    num_training_steps = args.max_steps if args.max_steps > 0 else len(
+        train_data_loader) * args.num_train_epochs
+
+    lr_scheduler = LinearDecayWithWarmup(args.learning_rate, num_training_steps,
+                                         args.warmup_proportion)
 
     optimizer = paddle.optimizer.AdamW(
         learning_rate=lr_scheduler,
