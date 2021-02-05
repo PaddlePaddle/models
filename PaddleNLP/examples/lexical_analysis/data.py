@@ -112,11 +112,17 @@ class LacDataset(paddle.io.Dataset):
         Load vocab from file
         """
         vocab = {}
+        reverse = None
         with open(dict_path, "r", encoding='utf8') as fin:
             for i, line in enumerate(fin):
                 terms = line.strip("\n").split("\t")
                 if len(terms) == 2:
-                    key, value = terms
+                    if reverse == None:
+                        reverse = True if terms[0].isdigit() else False
+                    if reverse:
+                        value, key = terms
+                    else:
+                        key, value = terms
                 elif len(terms) == 1:
                     key, value = terms[0], i
                 else:

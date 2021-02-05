@@ -19,7 +19,7 @@ PaddleNLP集成的数据集MSRA-NER数据集对文件格式做了调整：每一
 
 - paddlepaddle >= 2.0.0，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0, 安装方式：`pip install paddlenlp>=2.0.0`
+- paddlenlp >= 2.0.0rc, 安装方式：`pip install paddlenlp\>=2.0.0rc`
 
 ### 2.2 启动MSRA-NER任务
 
@@ -81,7 +81,7 @@ python -u ./eval.py \
 ```
 
 其中参数释义如下：
-- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer，支持[PaadleNLP transformer类预训练模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/docs/transformers.md)中除ernie-gen以外的所有模型。若使用非BERT系列模型，需修改脚本导入相应的Task和Tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
+- `model_name_or_path`: 指示了某种特定配置的模型，对应有其预训练模型和预训练时使用的 tokenizer。若模型相关内容保存在本地，这里也可以提供相应目录地址。
 - `max_seq_length`: 表示最大句子长度，超过该长度将被截断。
 - `batch_size`: 表示每次迭代**每张卡**上的样本数目。
 - `use_gpu`: 是否使用GPU。
@@ -100,7 +100,12 @@ python -u ./predict.py \
     --init_checkpoint_path tmp/msra_ner/model_500.pdparams
 ```
 
+## 使用其它预训练模型
 
+本项目支持[PaadleNLP transformer类预训练模型](../../docs/transformers.md)中除ernie-gen以外的所有模型。若使用非BERT系列模型，需修改脚本导入相应的Task和Tokenizer。例如使用ERNIE系列模型，经查[PaadleNLP transformer类预训练模型](../../docs/transformers.md)，需要加入以下代码：
+```python
+from paddlenlp.transformers import ErnieForTokenClassification, ErnieTokenizer
+```
 
 ## 参考
 

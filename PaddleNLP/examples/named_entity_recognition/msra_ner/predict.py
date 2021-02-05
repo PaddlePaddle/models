@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,43 +28,38 @@ import paddlenlp as ppnlp
 from paddlenlp.datasets import MSRA_NER
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForTokenClassification, BertTokenizer
-from paddlenlp.metrics import ChunkEvaluator
 
+parser = argparse.ArgumentParser()
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--model_name_or_path",
-        default=None,
-        type=str,
-        required=True,
-        help="Path to pre-trained model or shortcut name selected in the list: "
-        + ", ".join(list(BertTokenizer.pretrained_init_configuration.keys())))
-    parser.add_argument(
-        "--init_checkpoint_path",
-        default=None,
-        type=str,
-        required=True,
-        help="The model checkpoint path.", )
-    parser.add_argument(
-        "--max_seq_length",
-        default=128,
-        type=int,
-        help="The maximum total input sequence length after tokenization. Sequences longer "
-        "than this will be truncated, sequences shorter will be padded.", )
-    parser.add_argument(
-        "--batch_size",
-        default=8,
-        type=int,
-        help="Batch size per GPU/CPU for training.", )
-    parser.add_argument(
-        "--use_gpu",
-        type=ast.literal_eval,
-        default=True,
-        help="If set, use GPU for training.")
-    args = parser.parse_args()
-    return args
+parser.add_argument(
+    "--model_name_or_path",
+    default=None,
+    type=str,
+    required=True,
+    help="Path to pre-trained model or shortcut name selected in the list: " +
+    ", ".join(list(BertTokenizer.pretrained_init_configuration.keys())))
+parser.add_argument(
+    "--init_checkpoint_path",
+    default=None,
+    type=str,
+    required=True,
+    help="The model checkpoint path.", )
+parser.add_argument(
+    "--max_seq_length",
+    default=128,
+    type=int,
+    help="The maximum total input sequence length after tokenization. Sequences longer "
+    "than this will be truncated, sequences shorter will be padded.", )
+parser.add_argument(
+    "--batch_size",
+    default=8,
+    type=int,
+    help="Batch size per GPU/CPU for training.", )
+parser.add_argument(
+    "--use_gpu",
+    type=ast.literal_eval,
+    default=True,
+    help="If set, use GPU for training.")
 
 
 def convert_example(example,
@@ -273,5 +268,5 @@ def do_predict(args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = parser.parse_args()
     do_predict(args)

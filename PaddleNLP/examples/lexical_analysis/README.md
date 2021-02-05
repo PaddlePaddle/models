@@ -20,7 +20,7 @@
 
 - paddlepaddle >= 2.0.0rc1，安装方式请参考 [快速安装](https://www.paddlepaddle.org.cn/install/quick)。
 
-- paddlenlp >= 2.0.0b2, 安装方式：`pip install paddlenlp\>=2.0.0b2`
+- paddlenlp >= 2.0.0rc, 安装方式：`pip install paddlenlp\>=2.0.0rc`
 
 ### 2.2 数据准备
 
@@ -54,7 +54,7 @@ tar xvf lexical_analysis_dataset_tiny.tar.gz
 模型训练支持 CPU 和 GPU，使用 GPU 之前应指定使用的显卡卡号：
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0,1 # 支持多卡训练
+export CUDA_VISIBLE_DEVICES=0 # 支持多卡训练，如使用双卡，可以设置为0,1
 ```
 
 训练启动方式如下：
