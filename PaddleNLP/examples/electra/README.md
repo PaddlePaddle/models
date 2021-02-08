@@ -1,3 +1,0 @@
-# ELECTRA
-
-TBD

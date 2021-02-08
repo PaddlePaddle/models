@@ -1,3 +1,0 @@
-# PaddleNLP Model Zoo
-
-Examples are still work in progress...
