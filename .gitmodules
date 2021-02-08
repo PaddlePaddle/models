@@ -19,3 +19,6 @@
 [submodule "PaddleCV/PaddleDetection"]
 	path = PaddleCV/PaddleDetection
 	url = https://github.com/PaddlePaddle/PaddleDetection.git
+[submodule "PaddleNLP"]
+	path = PaddleNLP
+	url = https://github.com/PaddlePaddle/PaddleNLP.git
