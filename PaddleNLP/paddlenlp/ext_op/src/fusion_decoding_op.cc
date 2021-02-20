@@ -18,12 +18,11 @@ public:
 
   void InferShape(framework::InferShapeContext* ctx) const override {
     auto input_dims = ctx->GetInputDim("Input");
-    int batch_size = input_dims[0];
     auto beam_size = ctx->Attrs().Get<int>("beam_size");
     auto max_len = ctx->Attrs().Get<int64_t>("max_len");
+    int batch_size = input_dims[0] / beam_size;
 
-    auto output_dims =
-        framework::make_ddim({max_len + 1, batch_size, beam_size});
+    auto output_dims = framework::make_ddim({max_len, batch_size, beam_size});
     ctx->SetOutputDim("OutputIds", output_dims);
     ctx->SetOutputDim("ParentIds", output_dims);
     ctx->SetOutputDim("SequenceLength",
@@ -43,13 +42,21 @@ public:
   void Make() override {
     // do op maker.
     // Add Parameters.
-    AddInput("Input", "");
-    AddInput("MemSeqLen", "");
-    AddInput("WordEmbedding", "");
+    AddInput("Input", "The input of fusion_decoding op. ");
+    AddInput("MemSeqLen", "The sequence lengths of memory sequence. ");
+    AddInput("WordEmbedding",
+             "The input represents embedding tensors for target Ids. ");
 
-    AddInput("SelfLayernormWeight", "").AsDuplicable();
-    AddInput("SelfLayernormBias", "").AsDuplicable().AsDispensable();
-    AddInput("SelfQueryWeight", "").AsDuplicable();
+    AddInput("SelfLayernormWeight",
+             "The tensors of layer norm's scale before different self "
+             "attention layers. ")
+        .AsDuplicable();
+    AddInput("SelfLayernormBias",
+             "The tensors of layer norm's bias before different self attention "
+             "layers. ")
+        .AsDuplicable()
+        .AsDispensable();
+    AddInput("SelfQueryWeight", "The tensors ").AsDuplicable();
     AddInput("SelfQueryBias", "").AsDuplicable().AsDispensable();
     AddInput("SelfKeyWeight", "").AsDuplicable();
     AddInput("SelfKeyBias", "").AsDuplicable().AsDispensable();
@@ -94,7 +101,7 @@ public:
     AddAttr<int>("bos_id", "").SetDefault(0);
     AddAttr<int>("eos_id", "").SetDefault(1);
     AddAttr<int64_t>("max_len", "").SetDefault(256);
-    AddAttr<float>("beam_search_diversity_rate", "").SetDefault(0.1);
+    AddAttr<float>("beam_search_diversity_rate", "").SetDefault(0.0);
 
     AddComment(R"DOC(
     Decoding Operator.

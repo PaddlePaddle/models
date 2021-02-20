@@ -18,7 +18,7 @@ public:
 template <>
 class PDTraits<platform::float16> {
 public:
-  typedef platform::float16 DataType;
+  typedef half DataType;
   static const OperationType OpType = OperationType::FP16;
 };
 

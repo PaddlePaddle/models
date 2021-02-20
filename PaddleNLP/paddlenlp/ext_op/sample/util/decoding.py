@@ -85,14 +85,10 @@ def infer_transformer_decoder(
 
 
 def finalize(beam_size, output_ids, parent_ids, out_seq_lens, max_seq_len=None):
-    out_seq_lens = paddle.reshape(out_seq_lens, (-1, beam_size))
-    max_lens = paddle.max(out_seq_lens + 1, 1)[0]
-    if max_seq_len:
-        shape = (max_seq_len, -1, beam_size)
-    else:
-        shape = (paddle.max(max_lens), -1, beam_size)
-    output_ids = paddle.reshape(output_ids, shape)
-    parent_ids = paddle.reshape(parent_ids, shape)
+    if max_seq_len is None:
+        max_seq_len = paddle.max(out_seq_lens)
+    output_ids = paddle.slice(output_ids, [0], [0], [max_seq_len])
+    parent_ids = paddle.slice(parent_ids, [0], [0], [max_seq_len]) % beam_size
     ids = paddle.nn.functional.gather_tree(output_ids, parent_ids)
     return ids
 
@@ -111,11 +107,14 @@ class InferTransformerDecoder(nn.Layer):
                  eos_id=1,
                  beam_size=4,
                  max_out_len=256,
-                 beam_search_diversity_rate=1.0):
+                 beam_search_diversity_rate=0.0):
         super(InferTransformerDecoder, self).__init__()
         paddle.utils.load_op_library("../build/lib/libdecoding_op.so")
         for arg, value in locals().items():
-            if arg != "self":
+            if arg not in [
+                    "self", "decoder", "word_embedding", "positional_embedding",
+                    "linear"
+            ]:
                 setattr(self, "_" + arg, value)
         # process weights
         self.slf_ln_weight = []
@@ -147,7 +146,7 @@ class InferTransformerDecoder(nn.Layer):
         self.ffn_out_weight = []
         self.ffn_out_bias = []
 
-        for mod in self._decoder.layers:
+        for mod in decoder.layers:
             self.slf_ln_weight.append(mod.norm1.weight)
             self.slf_ln_bias.append(mod.norm1.bias)
             self.slf_q_weight.append(mod.self_attn.q_proj.weight)
@@ -177,14 +176,14 @@ class InferTransformerDecoder(nn.Layer):
             self.ffn_out_weight.append(mod.linear2.weight)
             self.ffn_out_bias.append(mod.linear2.bias)
 
-        self.decoder_ln_weight = self._decoder.norm.weight
-        self.decoder_ln_bias = self._decoder.norm.bias
+        self.decoder_ln_weight = [decoder.norm.weight]
+        self.decoder_ln_bias = [decoder.norm.bias]
 
-        self.pos_emb = positional_embedding.weight
-        self.word_emb = word_embedding.weight
+        self.pos_emb = [positional_embedding.weight]
+        self.word_emb = [word_embedding.weight]
 
-        self.linear_weight = linear.weight
-        self.linear_bias = linear.bias
+        self.linear_weight = [linear.weight]
+        self.linear_bias = [linear.bias]
 
     def forward(self, enc_output, memory_seq_lens):
         enc_output = nn.decode.BeamSearchDecoder.tile_beam_merge_with_batch(
@@ -192,8 +191,12 @@ class InferTransformerDecoder(nn.Layer):
         memory_seq_lens = nn.decode.BeamSearchDecoder.tile_beam_merge_with_batch(
             memory_seq_lens, self._beam_size)
 
+        np_word_emb = self.word_emb[0].numpy()
+        np_word_emb[self._bos_id] = [0] * np_word_emb.shape[1]
+        self.word_emb[0].set_value(np_word_emb)
+
         output_ids, parent_ids, sequence_length = infer_transformer_decoder(
-            enc_output, memory_seq_lens, self.word_emb, self.slf_ln_weight,
+            [enc_output], [memory_seq_lens], self.word_emb, self.slf_ln_weight,
             self.slf_ln_bias, self.slf_q_weight, self.slf_q_bias,
             self.slf_k_weight, self.slf_k_bias, self.slf_v_weight,
             self.slf_v_bias, self.slf_out_weight, self.slf_out_bias,

@@ -3,7 +3,6 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <algorithm>
-// #include <cub/cub.cuh>  // NOLINT
 #include <iterator>
 #include <random>
 #include <sstream>
@@ -34,6 +33,7 @@ public:
         ctx.template device_context<paddle::platform::CUDADeviceContext>();
 
     auto* input = ctx.Input<Tensor>("Input");
+
     auto* memory_sequence_length = ctx.Input<Tensor>("MemSeqLen");
     auto* word_emb = ctx.Input<Tensor>("WordEmbedding");
 
@@ -107,26 +107,12 @@ public:
     decoding_params.sequence_length =
         sequence_length->mutable_data<int>(ctx.GetPlace());
 
-    check_cuda_error(
-        cudaMemset(decoding_params.output_ids,
-                   0,
-                   sizeof(int) * max_seq_len_ * batch_size_ * beam_width_));
-    check_cuda_error(
-        cudaMemset(decoding_params.parent_ids,
-                   0,
-                   sizeof(int) * max_seq_len_ * batch_size_ * beam_width_));
-    check_cuda_error(cudaMemset(decoding_params.sequence_length,
-                                0,
-                                sizeof(int) * batch_size_ * beam_width_));
-
     typedef DecoderTransformerTraits<traits_::OpType> DecodingTraits_;
     DecodingBeamsearch<DecodingTraits_::OpType>* decoding_beamsearch_;
     decoding_params.stream = stream;
-    // int device_id = dev_ctx.GetPlace().GetDeviceId();
     int device_id;
     cudaGetDevice(&device_id);
-    fastertransformer::Allocator<AllocatorType::CUDA> allocator_(
-        device_id);  // , stream
+    fastertransformer::Allocator<AllocatorType::CUDA> allocator_(device_id);
 
     decoding_beamsearch_ = new DecodingBeamsearch<DecodingTraits_::OpType>(
         allocator_,
@@ -148,15 +134,14 @@ public:
         memory_sequence_length->data<int>();
 
     DecoderInitParam<T>* params = new DecoderInitParam<T>[num_layer_];
-    const int hidden_unit = size_per_head_ * head_num_;
 
     for (int i = 0; i < num_layer_; i++) {
       params[i].stream = stream;
       params[i].cublas_handle = dev_ctx.get_cublas_handle();
 
       // self attn
-      params[i].self_layernorm.beta = self_layernorm_weight[i]->data<T>();
-      params[i].self_layernorm.gamma = self_layernorm_bias[i]->data<T>();
+      params[i].self_layernorm.gamma = self_layernorm_weight[i]->data<T>();
+      params[i].self_layernorm.beta = self_layernorm_bias[i]->data<T>();
       // query
       params[i].self_attention.query_weight.kernel =
           self_attn_query_weight[i]->data<T>();
@@ -179,8 +164,8 @@ public:
           self_attn_output_bias[i]->data<T>();
 
       // cross
-      params[i].cross_layernorm.beta = cross_layernorm_weight[i]->data<T>();
-      params[i].cross_layernorm.gamma = cross_layernorm_bias[i]->data<T>();
+      params[i].cross_layernorm.gamma = cross_layernorm_weight[i]->data<T>();
+      params[i].cross_layernorm.beta = cross_layernorm_bias[i]->data<T>();
       // query
       params[i].cross_attention.query_weight.kernel =
           cross_attn_query_weight[i]->data<T>();
@@ -203,8 +188,8 @@ public:
           cross_attn_output_bias[i]->data<T>();
 
       // ffn
-      params[i].ffn_layernorm.beta = ffn_layernorm_weight[i]->data<T>();
-      params[i].ffn_layernorm.gamma = ffn_layernorm_bias[i]->data<T>();
+      params[i].ffn_layernorm.gamma = ffn_layernorm_weight[i]->data<T>();
+      params[i].ffn_layernorm.beta = ffn_layernorm_bias[i]->data<T>();
       // intermediate proj
       params[i].ffn.intermediate_weight.kernel =
           ffn_intermediate_weight[i]->data<T>();
@@ -215,10 +200,11 @@ public:
       params[i].ffn.output_weight.bias = ffn_output_bias[i]->data<T>();
     }
 
-    decoding_params.layernorm.beta = decoder_layernorm_weight->data<T>();
-    decoding_params.layernorm.gamma = decoder_layernorm_bias->data<T>();
+    decoding_params.layernorm.gamma = decoder_layernorm_weight->data<T>();
+    decoding_params.layernorm.beta = decoder_layernorm_bias->data<T>();
     // for embedding
     decoding_params.embedding_table = word_emb->data<T>();
+
     // for weight sharing matmul
     decoding_params.embedding_kernel = embedding_weight->data<T>();
     // for matmul bias
@@ -234,15 +220,6 @@ public:
     delete decoding_beamsearch_;
     delete[] params;
   }
-
-  // private:
-  // int batch_size_, beam_width_;
-  // int64_t max_seq_len_;
-  // int head_num_, size_per_head_, num_layer_;
-  // int start_id_, end_id_;
-  // float beam_search_diversity_rate_;
-  // typedef PDTraits<T> traits_;
-  // typedef typename traits_::DataType DataType_;
 };
 
 }  // namespace operators

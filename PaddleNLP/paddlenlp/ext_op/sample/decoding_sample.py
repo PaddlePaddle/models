@@ -13,6 +13,7 @@ from pprint import pprint
 
 from paddlenlp.transformers import TransformerModel
 from util.decoding import InferTransformerDecoder
+from paddlenlp.transformers import position_encoding_init
 
 import reader
 
@@ -65,21 +66,18 @@ class FastTransformer(TransformerModel):
         self.beam_size = args.pop("beam_size")
         self.max_out_len = args.pop("max_out_len")
         self.dropout = dropout
+        self.weight_sharing = weight_sharing
+        self.trg_vocab_size = trg_vocab_size
         super(FastTransformer, self).__init__(**args)
 
-        decoder_linear = nn.Linear(
+        self.decoder_linear = nn.Linear(
             in_features=d_model, out_features=trg_vocab_size)
-        # if weight_sharing:
-        #     decoder_linear.weight.set_value(self.trg_word_embedding.word_embedding.weight.t())
-        #     decoder_linear.bias = None
-        # else:
-        #     decoder_linear = self.linear
 
         self.decoder = InferTransformerDecoder(
             decoder=self.transformer.decoder,
             word_embedding=self.trg_word_embedding.word_embedding,
             positional_embedding=self.trg_pos_embedding.pos_encoder,
-            linear=decoder_linear,
+            linear=self.decoder_linear,
             max_length=max_length,
             n_layer=n_layer,
             n_head=n_head,
@@ -90,6 +88,17 @@ class FastTransformer(TransformerModel):
             max_out_len=max_out_len)
 
     def forward(self, src_word):
+        if self.weight_sharing:
+            self.decoder_linear.weight.set_value(
+                self.trg_word_embedding.word_embedding.weight.t())
+            self.decoder_linear.bias = paddle.create_parameter(
+                shape=[self.trg_vocab_size],
+                dtype=paddle.get_default_dtype(),
+                is_bias=True,
+                default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        else:
+            self.decoder_linear = self.linear
+
         src_max_len = paddle.shape(src_word)[-1]
         src_slf_attn_bias = paddle.cast(
             src_word == self.bos_id,
@@ -108,9 +117,8 @@ class FastTransformer(TransformerModel):
         enc_output = self.transformer.encoder(enc_input, src_slf_attn_bias)
 
         mem_seq_lens = paddle.sum(paddle.cast(
-            src_word == self.bos_id, dtype="int32"),
+            src_word != self.bos_id, dtype="int32"),
                                   axis=1)
-
         ids = self.decoder(enc_output, mem_seq_lens)
 
         return ids
@@ -146,11 +154,26 @@ def do_predict(args):
     # Set evaluate mode
     transformer.eval()
 
+    # Load the trained model
+    assert args.init_from_params, (
+        "Please set init_from_params to load the infer model.")
+
+    model_dict = paddle.load(
+        os.path.join(args.init_from_params, "transformer.pdparams"))
+
+    # To avoid a longer length than training, reset the size of position
+    # encoding to max_length
+    model_dict["encoder.pos_encoder.weight"] = position_encoding_init(
+        args.max_length + 1, args.d_model)
+    model_dict["decoder.pos_encoder.weight"] = position_encoding_init(
+        args.max_length + 1, args.d_model)
+    transformer.load_dict(model_dict)
+
     f = open(args.output_file, "w")
     with paddle.no_grad():
         for (src_word, ) in test_loader:
             finished_seq = transformer(src_word=src_word)
-            finished_seq = finished_seq.numpy().transpose([0, 2, 1])
+            finished_seq = finished_seq.numpy().transpose([1, 2, 0])
             for ins in finished_seq:
                 for beam_idx, beam in enumerate(ins):
                     if beam_idx >= args.n_best:
