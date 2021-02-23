@@ -27,6 +27,8 @@ import sys
 import paddle.fluid as fluid
 from paddle.fluid import core
 import multiprocessing as mp
+import tempfile
+import shutil
 
 
 def print_arguments(args):
