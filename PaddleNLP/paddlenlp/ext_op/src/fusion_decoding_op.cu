@@ -10,13 +10,13 @@
 #include "fastertransformer/cuda/cub/cub.cuh"
 
 
-#include "fastertransformer/ext_op/fusion_decoding_op.h"
-#include "fastertransformer/ext_op/pd_traits.h"
+#include "fusion_decoding_op.h"
 #include "paddle/fluid/framework/tensor.h"
 #include "paddle/fluid/memory/memcpy.h"
 #include "paddle/fluid/platform/cuda_device_function.h"
 #include "paddle/fluid/platform/cuda_primitives.h"
 #include "paddle/fluid/platform/enforce.h"
+#include "pd_traits.h"
 
 namespace paddle {
 namespace operators {
@@ -100,7 +100,7 @@ public:
     const int vocab_size = word_emb->dims()[0];
 
     DecodingInitParam<T> decoding_params;
-    decoding_params.cublas_handle = dev_ctx.get_cublas_handle();
+    decoding_params.cublas_handle = dev_ctx.cublas_handle();
 
     decoding_params.output_ids = output_ids->mutable_data<int>(ctx.GetPlace());
     decoding_params.parent_ids = parent_ids->mutable_data<int>(ctx.GetPlace());
@@ -137,7 +137,7 @@ public:
 
     for (int i = 0; i < num_layer_; i++) {
       params[i].stream = stream;
-      params[i].cublas_handle = dev_ctx.get_cublas_handle();
+      params[i].cublas_handle = dev_ctx.cublas_handle();
 
       // self attn
       params[i].self_layernorm.gamma = self_layernorm_weight[i]->data<T>();

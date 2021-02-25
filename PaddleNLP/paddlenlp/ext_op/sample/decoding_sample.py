@@ -3,6 +3,7 @@ import os
 import numpy as np
 from attrdict import AttrDict
 import argparse
+import time
 
 import paddle
 import paddle.nn as nn
@@ -22,7 +23,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
-        default="./transformer.base.yaml",
+        default="./config/transformer.base.yaml",
         type=str,
         help="Path of the config file. ")
     args = parser.parse_args()
@@ -171,6 +172,7 @@ def do_predict(args):
 
     f = open(args.output_file, "w")
     with paddle.no_grad():
+        # start = time.time()
         for (src_word, ) in test_loader:
             finished_seq = transformer(src_word=src_word)
             finished_seq = finished_seq.numpy().transpose([1, 2, 0])
@@ -182,6 +184,8 @@ def do_predict(args):
                     word_list = to_tokens(id_list)
                     sequence = " ".join(word_list) + "\n"
                     f.write(sequence)
+        # end = time.time()
+        # print(end - start)
 
 
 if __name__ == "__main__":

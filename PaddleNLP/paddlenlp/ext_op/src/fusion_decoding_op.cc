@@ -5,7 +5,7 @@
 #include "fastertransformer/decoding_beamsearch.h"
 #include "fastertransformer/open_decoder.h"
 
-#include "fastertransformer/ext_op/fusion_decoding_op.h"
+#include "fusion_decoding_op.h"
 #include "paddle/fluid/framework/op_registry.h"
 #include "paddle/fluid/platform/errors.h"
 
@@ -56,7 +56,9 @@ public:
              "layers. ")
         .AsDuplicable()
         .AsDispensable();
-    AddInput("SelfQueryWeight", "The tensors ").AsDuplicable();
+    AddInput("SelfQueryWeight",
+             "The tensors of self attention's query projection weights. ")
+        .AsDuplicable();
     AddInput("SelfQueryBias", "").AsDuplicable().AsDispensable();
     AddInput("SelfKeyWeight", "").AsDuplicable();
     AddInput("SelfKeyBias", "").AsDuplicable().AsDispensable();

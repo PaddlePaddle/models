@@ -7,7 +7,7 @@ init_from_checkpoint: ""
 # Path of the pretrain model, to better solve the current task
 init_from_pretrain_model: ""
 # Path of trained parameter, to make prediction
-init_from_params: "./trained_models/step_final/"
+init_from_params: "./step_final/"  # "./trained_models/step_final/"
 # The directory for saving model
 save_model: "trained_models"
 # Set seed for CE or debug
@@ -26,7 +26,7 @@ use_gpu: True
 pool_size: 200000
 sort_type: "global"
 batch_size: 4096
-infer_batch_size: 8
+infer_batch_size: 32
 shuffle_batch: True
 # Data shuffle only works when sort_type is pool or none
 shuffle: True

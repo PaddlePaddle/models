@@ -3,6 +3,8 @@ project(FasterTransformer LANGUAGES CXX CUDA)
 
 find_package(CUDA 10.1 REQUIRED)
 
+INCLUDE(ExternalProject)
+
 set(CXX_STD "11" CACHE STRING "C++ standard")
 
 set(CUDA_PATH ${CUDA_TOOLKIT_ROOT_DIR})
@@ -71,6 +73,31 @@ set(COMMON_LIB_DIRS
   ${CUDA_PATH}/lib64
 )
 
+set(THIRD_PARTY_PATH "third-party")
+set(THIRD_PARTY_NAME "fastertransformer")
+
+ExternalProject_Add(
+  extern_${THIRD_PARTY_NAME}
+  GIT_REPOSITORY    https://github.com/NVIDIA/DeepLearningExamples.git
+  GIT_TAG           master
+  PREFIX            ${THIRD_PARTY_PATH}
+  SOURCE_DIR        ${THIRD_PARTY_PATH}/${THIRD_PARTY_NAME}
+  SOURCE_SUBDIR     "FasterTransformer/v3.1"
+  BINARY_DIR        ${THIRD_PARTY_PATH}/build
+  INSTALL_COMMAND   ""
+  CMAKE_ARGS        -DCMAKE_BUILD_TYPE=Release -DSM=${SM}
+)
+ExternalProject_Get_property(extern_${THIRD_PARTY_NAME} BINARY_DIR)
+ExternalProject_Get_property(extern_${THIRD_PARTY_NAME} SOURCE_DIR)
+ExternalProject_Get_property(extern_${THIRD_PARTY_NAME} SOURCE_SUBDIR)
+
+set(FT_INCLUDE_PATH ${SOURCE_DIR}/${SOURCE_SUBDIR})
+set(FT_LIB_PATH ${BINARY_DIR}/lib)
+
+include_directories(
+  ${FT_INCLUDE_PATH}
+)
+
 set(PYTHON_PATH "python" CACHE STRING "Python path")
 
 execute_process(COMMAND ${PYTHON_PATH} "-c" "from __future__ import print_function; import paddle; print(paddle.sysconfig.get_include())"
@@ -107,4 +134,8 @@ link_directories(
   ${COMMON_LIB_DIRS}
 )
 
-add_subdirectory(ext_op)
+link_directories(
+  ${FT_LIB_PATH}
+)
+
+add_subdirectory(src)
