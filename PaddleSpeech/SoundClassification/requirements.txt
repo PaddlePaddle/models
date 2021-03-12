@@ -1,0 +1,5 @@
+librosa==0.8.0
+matplotlib==3.3.4
+paddlepaddle-gpu=2.0.1
+tqdm
+visualdl
