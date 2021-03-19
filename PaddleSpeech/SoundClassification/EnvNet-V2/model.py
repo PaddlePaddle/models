@@ -7,43 +7,46 @@ import paddle.nn.functional as F
 
 import numpy as np
 
+
 class EnvNet2(nn.Layer):
     """
     EnvNet-V2
     https://openreview.net/forum?id=B1Gi6LeRZ
     """
-    def __init__(self, n_class, load_checkpoint=None):
+
+    def __init__(self, n_class, checkpoint=None):
         super(EnvNet2, self).__init__()
-        self.conv1 = ConvBNReLU(1, 32, (1,64), (1,2))
-        self.conv2 = ConvBNReLU(32, 64, (1,16), (1,2))
+        self.conv1 = ConvBNReLU(1, 32, (1, 64), (1, 2))
+        self.conv2 = ConvBNReLU(32, 64, (1, 16), (1, 2))
         self.pool2 = nn.MaxPool2D(kernel_size=(1, 64), stride=(1, 64))
 
-        self.conv3 = ConvBNReLU(1, 32, (8,8))  # input after swap axes
-        self.conv4 = ConvBNReLU(32, 32, (8,8))
+        self.conv3 = ConvBNReLU(1, 32, (8, 8))  # input after swap axes
+        self.conv4 = ConvBNReLU(32, 32, (8, 8))
         self.pool4 = nn.MaxPool2D(kernel_size=(5, 3), stride=(5, 3))
 
-        self.conv5 = ConvBNReLU(32, 64, (1,4))
-        self.conv6 = ConvBNReLU(64, 64, (1,4))
+        self.conv5 = ConvBNReLU(32, 64, (1, 4))
+        self.conv6 = ConvBNReLU(64, 64, (1, 4))
         self.pool6 = nn.MaxPool2D(kernel_size=(1, 2), stride=(1, 2))
 
-        self.conv7 = ConvBNReLU(64, 128, (1,2))
-        self.conv8 = ConvBNReLU(128, 128, (1,2))
+        self.conv7 = ConvBNReLU(64, 128, (1, 2))
+        self.conv8 = ConvBNReLU(128, 128, (1, 2))
         self.pool8 = nn.MaxPool2D(kernel_size=(1, 2), stride=(1, 2))
 
-        self.conv9 = ConvBNReLU(128, 256, (1,2))
-        self.conv10 = ConvBNReLU(256, 256, (1,2))
+        self.conv9 = ConvBNReLU(128, 256, (1, 2))
+        self.conv10 = ConvBNReLU(256, 256, (1, 2))
         self.pool10 = nn.MaxPool2D(kernel_size=(1, 2), stride=(1, 2))
         self.flatten = nn.Flatten()
 
-        self.fc1 = FCDN(256*10*8, 4096)  # input after flatten
+        self.fc1 = FCDN(256 * 10 * 8, 4096)  # input after flatten
         self.fc2 = FCDN(4096, 4096)
         self.output = FCDN(4096, n_class, None, 0)
 
-        if load_checkpoint is not None and os.path.isfile(load_checkpoint):
-            state_dict = paddle.load(load_checkpoint)
+        if checkpoint is not None and os.path.isfile(checkpoint):
+            state_dict = paddle.load(checkpoint)
             self.set_state_dict(state_dict)
-            print('Loaded parameters from %s' % os.path.abspath(load_checkpoint))
-    
+            print('Loaded model parameters from %s' %
+                  os.path.abspath(checkpoint))
+
     def forward(self, x):
         y = self.conv1(x)
         y = self.conv2(y)
@@ -78,12 +81,13 @@ class ConvBNReLU(nn.Layer):
     """
     Convolution network block.
     """
-    def __init__(self, 
-                 in_channels, 
-                 out_channels, 
-                 kernel_size, 
-                 strides=(1,1), 
-                 padding='valid', 
+
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size,
+                 strides=(1, 1),
+                 padding='valid',
                  use_bias=False):
         super(ConvBNReLU, self).__init__()
         self.conv = nn.Conv2D(
@@ -92,7 +96,8 @@ class ConvBNReLU(nn.Layer):
             kernel_size=kernel_size,
             stride=strides,
             padding=padding,
-            bias_attr=False)
+            weight_attr=nn.initializer.KaimingUniform(),
+            bias_attr=False, )
         self.batch_norm = nn.BatchNorm(num_channels=out_channels)
         self.activation = nn.ReLU()
 
@@ -107,9 +112,17 @@ class FCDN(nn.Layer):
     """
     Full-connected network block.
     """
-    def __init__(self, in_features, out_features, activation='relu', dropout=0.5):
+
+    def __init__(self,
+                 in_features,
+                 out_features,
+                 activation='relu',
+                 dropout=0.5):
         super(FCDN, self).__init__()
-        self.fcn = nn.Linear(in_features=in_features, out_features=out_features)
+        self.fcn = nn.Linear(
+            in_features=in_features,
+            out_features=out_features,
+            weight_attr=nn.initializer.KaimingUniform(), )
         if activation == 'relu':
             self.activation = nn.ReLU()
         elif activation == 'softmax':
@@ -117,7 +130,6 @@ class FCDN(nn.Layer):
         else:
             self.activation = None
         self.dropout = nn.Dropout(p=dropout) if dropout > 0 else None
-
 
     def forward(self, x):
         fc = self.fcn(x)

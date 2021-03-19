@@ -5,13 +5,14 @@ class StepDecay(LRScheduler):
     """
     Set lr schedule in trainning process.
     """
+
     def __init__(self,
-                learning_rate,
-                step_size,
-                warmup=0,
-                gamma=0.1,
-                last_epoch=-1,
-                verbose=False):
+                 learning_rate,
+                 step_size,
+                 warmup=0,
+                 gamma=0.1,
+                 last_epoch=-1,
+                 verbose=False):
         if not isinstance(step_size, int):
             raise TypeError(
                 "The type of 'step_size' must be 'int', but received %s." %
@@ -29,4 +30,5 @@ class StepDecay(LRScheduler):
             i = 1
         else:
             i = self.last_epoch // self.step_size
+
         return self.base_lr * (self.gamma**i)

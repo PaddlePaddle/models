@@ -9,8 +9,10 @@ def padding(pad):
     """
     Padding function.
     """
+
     def f(sound):
         return np.pad(sound, pad, 'constant')
+
     return f
 
 
@@ -18,10 +20,12 @@ def random_crop(size):
     """
     Randomly cropping function. 
     """
+
     def f(sound):
         org_size = len(sound)
         start = random.randint(0, org_size - size)
-        return sound[start: start + size]
+        return sound[start:start + size]
+
     return f
 
 
@@ -29,8 +33,10 @@ def normalize(factor):
     """
     Normilzing function.
     """
+
     def f(sound):
         return sound / factor
+
     return f
 
 
@@ -39,6 +45,7 @@ def random_scale(max_scale, interpolate='Linear'):
     """
     Randomly scaling function.
     """
+
     def f(sound):
         scale = np.power(max_scale, random.uniform(-1, 1))
         output_size = int(len(sound) * scale)
@@ -53,6 +60,7 @@ def random_scale(max_scale, interpolate='Linear'):
         else:
             raise Exception('Invalid interpolation mode {}'.format(interpolate))
         return scaled_sound
+
     return f
 
 
@@ -60,8 +68,10 @@ def random_gain(db):
     """
     Random gain function.
     """
+
     def f(sound):
         return sound * np.power(10, random.uniform(-db, db) / 20.0)
+
     return f
 
 
@@ -70,10 +80,14 @@ def multi_crop(input_length, n_crops):
     """
     A function to crop a audio sample into n_crops segments.
     """
+
     def f(sound):
         stride = (len(sound) - input_length) // (n_crops - 1)
-        sounds = [sound[stride * i: stride * i + input_length] for i in range(n_crops)]
+        sounds = [
+            sound[stride * i:stride * i + input_length] for i in range(n_crops)
+        ]
         return np.array(sounds)
+
     return f
 
 
@@ -82,11 +96,10 @@ def a_weight(fs, n_fft, min_db=-80.0):
     freq = np.linspace(0, fs // 2, n_fft // 2 + 1)
     freq_sq = np.power(freq, 2)
     freq_sq[0] = 1.0
-    weight = 2.0 + 20.0 * (2 * np.log10(12194) + 2 * np.log10(freq_sq)
-                           - np.log10(freq_sq + 12194 ** 2)
-                           - np.log10(freq_sq + 20.6 ** 2)
-                           - 0.5 * np.log10(freq_sq + 107.7 ** 2)
-                           - 0.5 * np.log10(freq_sq + 737.9 ** 2))
+    weight = 2.0 + 20.0 * (
+        2 * np.log10(12194) + 2 * np.log10(freq_sq) -
+        np.log10(freq_sq + 12194**2) - np.log10(freq_sq + 20.6**2) - 0.5 *
+        np.log10(freq_sq + 107.7**2) - 0.5 * np.log10(freq_sq + 737.9**2))
     weight = np.maximum(weight, min_db)
     return weight
 
@@ -107,11 +120,12 @@ def compute_gain(sound, fs, min_db=-80.0, mode='A_weighting'):
     #MOHAIMEN: no xrange anymore
     for i in range(0, len(sound) - n_fft + 1, stride):
         if mode == 'RMSE':
-            g = np.mean(sound[i: i + n_fft] ** 2)
+            g = np.mean(sound[i:i + n_fft]**2)
         elif mode == 'A_weighting':
-            spec = np.fft.rfft(np.hanning(n_fft + 1)[:-1] * sound[i: i + n_fft])
-            power_spec = np.abs(spec) ** 2
-            a_weighted_spec = power_spec * np.power(10, a_weight(fs, n_fft) / 10)
+            spec = np.fft.rfft(np.hanning(n_fft + 1)[:-1] * sound[i:i + n_fft])
+            power_spec = np.abs(spec)**2
+            a_weighted_spec = power_spec * np.power(10,
+                                                    a_weight(fs, n_fft) / 10)
             g = np.sum(a_weighted_spec)
         else:
             raise Exception('Invalid mode {}'.format(mode))
@@ -131,7 +145,7 @@ def mix(sound1, sound2, r, fs):
     gain1 = np.max(compute_gain(sound1, fs))  # Decibel
     gain2 = np.max(compute_gain(sound2, fs))
     t = 1.0 / (1 + np.power(10, (gain1 - gain2) / 20.) * (1 - r) / r)
-    sound = ((sound1 * t + sound2 * (1 - t)) / np.sqrt(t ** 2 + (1 - t) ** 2))
+    sound = ((sound1 * t + sound2 * (1 - t)) / np.sqrt(t**2 + (1 - t)**2))
     return sound
 
 
@@ -139,6 +153,7 @@ class Timer(object):
     """
     Calculate runing speed and estimated time of arrival(ETA)
     """
+
     def __init__(self, total_step: int):
         self.total_step = total_step
         self.last_start_step = 0
@@ -188,3 +203,23 @@ def seconds_to_hms(seconds: int) -> str:
     s = int(seconds - h * 3600 - m * 60)
     hms_str = '{:0>2}:{:0>2}:{:0>2}'.format(h, m, s)
     return hms_str
+
+
+def compute_eval_acc(y_pred, y_target, n_crops=10):
+    # Reshape y_pred to shape it like each sample comtains 10 samples.
+    y_pred = y_pred.reshape(y_pred.shape[0] // n_crops, n_crops,
+                            y_pred.shape[1])
+
+    # Calculate the average of class predictions for 10 crops of a sample
+    y_pred = np.mean(y_pred, axis=1)
+
+    # Get the indices that has highest average value for each sample
+    y_pred = y_pred.argmax(axis=1)
+
+    # Doing the samething for y_target
+    y_target = (y_target.reshape(y_target.shape[0] // n_crops, n_crops,
+                                 y_target.shape[1])).mean(axis=1).argmax(axis=1)
+
+    accuracy = (y_pred == y_target).mean()
+    loss = np.mean((y_target - y_pred)**2)
+    return accuracy, loss
