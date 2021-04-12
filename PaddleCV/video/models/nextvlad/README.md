@@ -12,7 +12,7 @@
 
 
 ## 算法介绍
-NeXtVLAD模型是第二届Youtube-8M视频理解竞赛中效果最好的单模型，在参数量小于80M的情况下，能得到高于0.87的GAP指标。该模型提供了一种将桢级别的视频特征转化并压缩成特征向量，以适用于大尺寸视频文件的分类的方法。其基本出发点是在NetVLAD模型的基础上，将高维度的特征先进行分组，通过引入attention机制聚合提取时间维度的信息，这样既可以获得较高的准确率，又可以使用更少的参数量。详细内容请参考[NeXtVLAD: An Efficient Neural Network to Aggregate Frame-level Features for Large-scale Video Classification](https://arxiv.org/abs/1811.05014)。
+NeXtVLAD模型是第二届Youtube-8M视频理解竞赛中效果最好的单模型，在参数量小于80M的情况下，能得到高于0.87的GAP指标。该模型提供了一种将帧级别的视频特征转化并压缩成特征向量，以适用于大尺寸视频文件的分类的方法。其基本出发点是在NetVLAD模型的基础上，将高维度的特征先进行分组，通过引入attention机制聚合提取时间维度的信息，这样既可以获得较高的准确率，又可以使用更少的参数量。详细内容请参考[NeXtVLAD: An Efficient Neural Network to Aggregate Frame-level Features for Large-scale Video Classification](https://arxiv.org/abs/1811.05014)。
 
 这里实现了论文中的单模型结构，使用2nd-Youtube-8M的train数据集作为训练集，在val数据集上做测试。
 
