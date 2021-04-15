@@ -277,8 +277,8 @@ def train(args):
 
         video_model = SlowFast(cfg=train_config, num_classes=400)
         if args.use_data_parallel:
-            video_model = fluid.dygraph.parallel.DataParallel(video_model,
-                                                              strategy)
+            video_model = fluid.dygraph.parallel.DataParallel(
+                video_model, strategy, find_unused_parameters=False)
 
         bs_denominator = 1
         if args.use_gpu:

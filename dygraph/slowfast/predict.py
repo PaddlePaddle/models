@@ -110,7 +110,8 @@ def infer_slowfast(args):
 
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
-            slowfast = fluid.dygraph.parallel.DataParallel(slowfast, strategy)
+            slowfast = fluid.dygraph.parallel.DataParallel(
+                slowfast, strategy, find_unused_parameters=False)
 
         #create reader
         infer_data = KineticsDataset(mode="infer", cfg=infer_config)
