@@ -1,0 +1,13 @@
+colorama
+colorlog
+easydict
+filelock
+gitpython
+numpy
+packaging
+Pillow
+pyyaml
+pyzmq
+rarfile
+tqdm
+librosa
