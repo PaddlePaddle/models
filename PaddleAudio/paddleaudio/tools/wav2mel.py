@@ -32,7 +32,7 @@ if args.wav_h5_file!='':
 if args.wav_h5_list!='':
     h5_files = open(args.wav_h5_list).read().split('\n')
     h5_files = [h for h in h5_files if len(h.strip())!=0]
-
+    
 dst_folder = args.output_folder
 print(f'{len(h5_files)} h5 files listed')
 for f in h5_files:
@@ -47,7 +47,7 @@ for f in h5_files:
     dst_h5 = h5py.File(dst_file,"w")
     for key in tqdm.tqdm(src_h5.keys()):
         s = src_h5[key][:]
-        s = pa.depth_convert(s,'float32')
+        s = pa.depth_convert(s,'float32')  
        # s = pa.resample(s,32000,args.sample_rate)
         x = pa.features.mel_spect(s,
          sample_rate=args.sample_rate,

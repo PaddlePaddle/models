@@ -23,6 +23,18 @@ parser.add_argument('--skip_existed', type=int, required=False,default=1) #25ms
 
 args = parser.parse_args()
 
+print('=='*10)
+print(f'sample_rate:{args.sample_rate}')
+print(f'window_size:{args.window_size}')
+print(f'mel_bins:{args.mel_bins}')
+print(f'hop_length:{args.hop_length}')
+print(f'fmin:{args.fmin}')
+print(f'fmax:{args.fmax}')
+print('=='*10)
+
+
+
+
 assert not (args.wav_h5_file == '' and args.wav_h5_list == ''\
 and args.wav_list == '' and args.wav_file == ''), 'one of wav_file,wav_list,\
 wav_h5_file,wav_h5_list needs to specify'
@@ -39,7 +51,7 @@ elif args.wav_list !='':
 
 elif args.wav_file !='':
     wav_files = [args.wav_file]
-
+    
 
 dst_folder = args.output_folder
 
@@ -58,7 +70,7 @@ if  len(h5_files)>0:
         dst_h5 = h5py.File(dst_file,"w")
         for key in tqdm.tqdm(src_h5.keys()):
             s = src_h5[key][:]
-            s = pa.depth_convert(s,'float32')
+            s = pa.depth_convert(s,'float32')  
            # s = pa.resample(s,32000,args.sample_rate)
             x = pa.features.mel_spect(s,
              sample_rate=args.sample_rate,
@@ -79,9 +91,9 @@ if  len(h5_files)>0:
         dst_h5.close()
 
 if len(wav_files) > 0:
-
+    
     assert args.dst_h5_file!='', 'for using wav file or wav list, dst_h5_file must be specified'
-
+    
     dst_file = args.dst_h5_file
     assert not os.path.exists(dst_file), f'target file {dst_file} existed'
     dst_h5 = h5py.File(dst_file,"w")
@@ -110,3 +122,5 @@ if len(wav_files) > 0:
         key = f.split('/')[-1][:11]
         dst_h5.create_dataset(key,data=x)
     dst_h5.close()
+
+    
