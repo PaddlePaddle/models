@@ -35,7 +35,13 @@ class AudioClassificationDataset(paddle.io.Dataset):
         'log_spect': log_spect,
     }
 
-    def __init__(self, files: List[str], labels: List[int], sample_rate: int, feat_type: str = 'raw', **kwargs):
+    def __init__(self,
+                 files: List[str],
+                 labels: List[int],
+                 sample_rate: int,
+                 duration: float,
+                 feat_type: str = 'raw',
+                 **kwargs):
         """
         Ags:
             files (:obj:`List[str]`): A list of absolute path of audio files.
@@ -53,19 +59,26 @@ class AudioClassificationDataset(paddle.io.Dataset):
 
         self.files = files
         self.labels = labels
-        self.records = self._convert_to_records(sample_rate, **kwargs)
+        self.records = self._convert_to_records(sample_rate, duration, **kwargs)
 
     def _get_data(self, input_file: str):
         raise NotImplementedError
 
-    def _convert_to_records(self, sample_rate: int, **kwargs) -> List[dict]:
+    def _convert_to_records(self, sample_rate: int, duration: float, **kwargs) -> List[dict]:
         records = []
         feat_func = self._feat_func[self.feat_type]
 
         logger.info('Start extracting features from audio files.')
         for file, label in tqdm(zip(self.files, self.labels), total=len(self.files)):
             record = {}
+
             waveform, _ = librosa.load(file, sr=sample_rate)
+            normal_length = sample_rate * duration
+            if len(waveform) > normal_length:
+                waveform = waveform[:normal_length]
+            else:
+                waveform = np.pad(waveform, (0, normal_length - len(waveform)))
+
             record['feat'] = feat_func(waveform, **kwargs) if feat_func else waveform
             record['label'] = label
             records.append(record)
@@ -74,7 +87,7 @@ class AudioClassificationDataset(paddle.io.Dataset):
 
     def __getitem__(self, idx):
         record = self.records[idx]
-        return np.array(record['feat']), np.array(record['label'], dtype=np.int64)
+        return np.array(record['feat']).transpose(), np.array(record['label'], dtype=np.int64)
 
     def __len__(self):
         return len(self.records)

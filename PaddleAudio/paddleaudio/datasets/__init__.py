@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .dcase import TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet
+from .dcase import UrbanAcousticScenes
 from .esc50 import ESC50
 from .gtzan import GTZAN
+from .ravdess import RAVDESS
 from .urban_sound import UrbanSound8K
 
 __all__ = [
     'ESC50',
     'UrbanSound8K',
     'GTZAN',
-    'TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet',
+    'UrbanAcousticScenes',
+    'RAVDESS',
 ]
