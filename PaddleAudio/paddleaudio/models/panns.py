@@ -22,7 +22,7 @@ from ..utils.download import load_state_dict_from_url
 from ..utils.env import MODEL_HOME
 from ..utils.log import logger
 
-__all__ = ['ConvBlock', 'ConvBlock5x5', 'CNN14', 'CNN10', 'CNN6', 'cnn14', 'cnn10', 'cnn6']
+__all__ = ['CNN14', 'CNN10', 'CNN6', 'cnn14', 'cnn10', 'cnn6']
 
 pretrained_model_urls = {
     # TODO: replace test urls
