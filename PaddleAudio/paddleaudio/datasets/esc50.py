@@ -18,7 +18,6 @@ from typing import List, Tuple
 
 from ..utils.download import download_and_decompress
 from ..utils.env import DATA_HOME
-from ..utils.log import logger
 from .dataset import AudioClassificationDataset
 
 __all__ = ['ESC50']
@@ -26,13 +25,20 @@ __all__ = ['ESC50']
 
 class ESC50(AudioClassificationDataset):
     """
-    Environment Sound Classification Dataset
+    The ESC-50 dataset is a labeled collection of 2000 environmental audio recordings
+    suitable for benchmarking methods of environmental sound classification. The dataset
+    consists of 5-second-long recordings organized into 50 semantical classes (with
+    40 examples per class)
+
+    Reference:
+        ESC: Dataset for Environmental Sound Classification
+        http://dx.doi.org/10.1145/2733373.2806390
     """
 
     archieves = [
         {
             'url': 'https://github.com/karoldvl/ESC-50/archive/master.zip',
-            'md5': '70aba3bada37d2674b8f6cd5afd5f065',
+            'md5': '1fdc5dd87626d5eb91be20ed53c9aed9',
         },
     ]
     meta = os.path.join('ESC-50-master', 'meta', 'esc50.csv')
@@ -56,6 +62,7 @@ class ESC50(AudioClassificationDataset):
         super(ESC50, self).__init__(files=files,
                                     labels=labels,
                                     sample_rate=self.sample_rate,
+                                    duration=self.duration,
                                     feat_type=feat_type,
                                     **kwargs)
 

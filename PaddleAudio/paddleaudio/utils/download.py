@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import Dict, List
 
+from paddle.framework import load as load_state_dict
 from paddle.utils import download
 
 from .log import logger
@@ -25,9 +27,22 @@ def download_and_decompress(archives: List[Dict[str, str]], path: str):
     """
     Download archieves and decompress to specific path.
     """
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
     for archive in archives:
         assert 'url' in archive and 'md5' in archive, \
             'Dictionary keys of "url" and "md5" are required in the archive, but got: {list(archieve.keys())}'
 
-        logger.info(f'Downloading from: {archive["url"]}')
         download.get_path_from_url(archive['url'], path, archive['md5'])
+
+
+def load_state_dict_from_url(url: str, path: str, md5: str = None):
+    """
+    Download and load a state dict from url
+    """
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    download.get_path_from_url(url, path, md5)
+    return load_state_dict(os.path.join(path, os.path.basename(url)))
