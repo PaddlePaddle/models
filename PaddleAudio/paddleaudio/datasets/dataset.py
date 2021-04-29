@@ -15,11 +15,11 @@
 import os
 from typing import List, Tuple
 
-import librosa
 import numpy as np
 import paddle
 from tqdm import tqdm
 
+from ..backends import load as load_audio
 from ..features import linear_spect, log_spect, mel_spect
 from ..utils.log import logger
 
@@ -71,7 +71,7 @@ class AudioClassificationDataset(paddle.io.Dataset):
     def _convert_to_record(self, idx):
         file, label = self.files[idx], self.labels[idx]
 
-        waveform, _ = librosa.load(file, sr=self.sample_rate)
+        waveform, _ = load_audio(file, sr=self.sample_rate)
         normal_length = self.sample_rate * self.duration
         if len(waveform) > normal_length:
             waveform = waveform[:normal_length]

@@ -41,6 +41,8 @@ class UrbanSound8K(AudioClassificationDataset):
             'md5': '9aa69802bbf37fb986f71ec1483a196e',
         },
     ]
+    label_list = ["air_conditioner", "car_horn", "children_playing", "dog_bark", "drilling", \
+        "engine_idling", "gun_shot", "jackhammer", "siren", "street_music"]
     meta = os.path.join('UrbanSound8K', 'metadata', 'UrbanSound8K.csv')
     meta_info = collections.namedtuple('META_INFO',
                                        ('filename', 'fsid', 'start', 'end', 'salience', 'fold', 'class_id', 'label'))
