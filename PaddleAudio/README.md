@@ -7,7 +7,7 @@ PaddleAudio is a lightweight audio toolkit to speed up your audio research and d
 
 ## Features
 - Fast and smart audio loading, designed specially for deep networks
-- Spectrogram features are compactable with kaildi and librosa
+- Spectrogram and fbank features are compactable with kaildi and librosa
 - Use hdf5 as dataest backend for large scale audio data storage and fast retrival, hence enabling faster training
 - State-of-the-art(sota) or on-par-with sota audio models in sound tagging on audioset/sound classications on esc50, and more to come
 - Ready to use audio embedding with a line of code, includs sound embedding and more. 
