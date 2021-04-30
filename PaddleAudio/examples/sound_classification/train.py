@@ -23,26 +23,26 @@ from paddleaudio.datasets import ESC50
 from paddleaudio.models.panns import cnn14
 from paddleaudio.utils import Timer, logger
 
+# yapf: disable
 parser = argparse.ArgumentParser(__doc__)
+parser.add_argument('--device', choices=['cpu', 'gpu'], default="gpu", help="Select which device to train model, defaults to gpu.")
 parser.add_argument("--epochs", type=int, default=50, help="Number of epoches for fine-tuning.")
-parser.add_argument("--use_gpu",
-                    type=ast.literal_eval,
-                    default=True,
-                    help="Whether use GPU for fine-tuning. Input should be True or False")
 parser.add_argument("--learning_rate", type=float, default=5e-5, help="Learning rate used to train with warmup.")
 parser.add_argument("--batch_size", type=int, default=16, help="Total examples' number in batch for training.")
 parser.add_argument("--num_workers", type=int, default=0, help="Number of workers in dataloader.")
-parser.add_argument("--checkpoint_dir", type=str, default='./checkpoint', help="Directory to model checkpoint")
-parser.add_argument("--save_interval", type=int, default=10, help="Save checkpoint every n epoch.")
+parser.add_argument("--checkpoint_dir", type=str, default='./checkpoint', help="Directory to save model checkpoints.")
+parser.add_argument("--save_freq", type=int, default=10, help="Save checkpoint every n epoch.")
+parser.add_argument("--log_freq", type=int, default=10, help="Log the training infomation every n steps.")
 args = parser.parse_args()
+# yapf: enable
 
 if __name__ == "__main__":
-    paddle.set_device('gpu') if args.use_gpu else paddle.set_device('cpu')
+    paddle.set_device(args.device)
     nranks = paddle.distributed.get_world_size()
     local_rank = paddle.distributed.get_rank()
 
-    pretrained_model = cnn14(pretrained=True, extract_embedding=True)
-    model = SoundClassifier(pretrained_model, num_class=len(ESC50.label_list))
+    backbone = cnn14(pretrained=True, extract_embedding=True)
+    model = SoundClassifier(backbone, num_class=len(ESC50.label_list))
     optimizer = paddle.optimizer.Adam(learning_rate=args.learning_rate, parameters=model.parameters())
     criterion = paddle.nn.loss.CrossEntropyLoss()
 
@@ -65,12 +65,9 @@ if __name__ == "__main__":
     timer = Timer(steps_per_epoch * args.epochs)
     timer.start()
 
-    log_interval = 10
-    current_epoch = 0
-    for i in range(args.epochs):
+    for epoch in range(1, args.epochs + 1):
         model.train()
 
-        current_epoch += 1
         avg_loss = 0
         num_corrects = 0
         num_samples = 0
@@ -83,24 +80,24 @@ if __name__ == "__main__":
             optimizer.step()
             if isinstance(optimizer._learning_rate, paddle.optimizer.lr.LRScheduler):
                 optimizer._learning_rate.step()
-            model.clear_gradients()
+            optimizer.clear_grad()
 
-            # calc loss
+            # Calculate loss
             avg_loss += loss.numpy()[0]
 
-            # calc metrics
+            # Calculate metrics
             preds = paddle.argmax(logits, axis=1)
             num_corrects += (preds == labels).numpy().sum()
             num_samples += feats.shape[0]
 
             timer.count()
 
-            if (batch_idx + 1) % log_interval == 0 and local_rank == 0:
+            if (batch_idx + 1) % args.log_freq == 0 and local_rank == 0:
                 lr = optimizer.get_lr()
-                avg_loss /= log_interval
+                avg_loss /= args.log_freq
                 avg_acc = num_corrects / num_samples
 
-                print_msg = 'Epoch={}/{}, Step={}/{}'.format(current_epoch, args.epochs, batch_idx + 1, steps_per_epoch)
+                print_msg = 'Epoch={}/{}, Step={}/{}'.format(epoch, args.epochs, batch_idx + 1, steps_per_epoch)
                 print_msg += ' loss={:.4f}'.format(avg_loss)
                 print_msg += ' acc={:.4f}'.format(avg_acc)
                 print_msg += ' lr={:.6f} step/sec={:.2f} | ETA {}'.format(lr, timer.timing, timer.eta)
@@ -110,7 +107,7 @@ if __name__ == "__main__":
                 num_corrects = 0
                 num_samples = 0
 
-        if current_epoch % args.save_interval == 0 and batch_idx + 1 == steps_per_epoch and local_rank == 0:
+        if epoch % args.save_freq == 0 and batch_idx + 1 == steps_per_epoch and local_rank == 0:
             dev_sampler = paddle.io.BatchSampler(dev_ds, batch_size=args.batch_size, shuffle=False, drop_last=False)
             dev_loader = paddle.io.DataLoader(
                 dev_ds,
@@ -136,8 +133,8 @@ if __name__ == "__main__":
 
             logger.eval(print_msg)
 
-            # save model
-            save_dir = os.path.join(args.checkpoint_dir, 'epoch_{}'.format(current_epoch))
+            # Save model
+            save_dir = os.path.join(args.checkpoint_dir, 'epoch_{}'.format(epoch))
             logger.info('Saving model checkpoint to {}'.format(save_dir))
             paddle.save(model.state_dict(), os.path.join(save_dir, 'model.pdparams'))
             paddle.save(optimizer.state_dict(), os.path.join(save_dir, 'model.pdopt'))

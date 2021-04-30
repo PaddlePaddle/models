@@ -22,16 +22,16 @@ class SoundClassifier(nn.Layer):
     Model for sound classification which uses panns pretrained models to extract
     embeddings from audio files.
     """
-    def __init__(self, model, num_class, dropout=0.1):
+    def __init__(self, backbone, num_class, dropout=0.1):
         super(SoundClassifier, self).__init__()
-        self.cnn_model = model
+        self.backbone = backbone
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(self.cnn_model.emb_size, num_class)
+        self.fc = nn.Linear(self.backbone.emb_size, num_class)
 
     def forward(self, x):
         # x: (batch_size, num_frames, num_melbins) -> (batch_size, 1, num_frames, num_melbins)
         x = x.unsqueeze(1)
-        x = self.cnn_model(x)
+        x = self.backbone(x)
         x = self.dropout(x)
         logits = self.fc(x)
 

@@ -25,28 +25,26 @@ from paddleaudio.datasets import ESC50
 from paddleaudio.features import mel_spect
 from paddleaudio.models.panns import cnn14
 
+# yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-parser.add_argument("--use_gpu",
-                    type=ast.literal_eval,
-                    default=True,
-                    help="Whether use GPU for predicting. Input should be True or False")
+parser.add_argument('--device', choices=['cpu', 'gpu'], default="gpu", help="Select which device to predict, defaults to gpu.")
 parser.add_argument("--wav", type=str, required=True, help="Audio file to infer.")
-parser.add_argument("--sr", type=int, default=44100, help="Sample rate of inference audio.")
-parser.add_argument("--topk", type=int, default=1, help="Show top k results of prediction labels.")
+parser.add_argument("--top_k", type=int, default=1, help="Show top k predicted results")
 parser.add_argument("--checkpoint", type=str, required=True, help="Checkpoint of model.")
 args = parser.parse_args()
+# yapf: enable
 
 
 def extract_features(file: str, **kwargs):
-    waveform = load_audio(args.wav, sr=args.sr)[0]
-    feats = mel_spect(waveform, sample_rate=args.sr, **kwargs).transpose()
+    waveform, sr = load_audio(args.wav, sr=None)
+    feats = mel_spect(waveform, sample_rate=sr, **kwargs).transpose()
     return feats
 
 
 if __name__ == '__main__':
-    paddle.set_device('gpu') if args.use_gpu else paddle.set_device('cpu')
+    paddle.set_device(args.device)
 
-    model = SoundClassifier(model=cnn14(pretrained=False, extract_embedding=True), num_class=len(ESC50.label_list))
+    model = SoundClassifier(backbone=cnn14(pretrained=False, extract_embedding=True), num_class=len(ESC50.label_list))
     model.set_state_dict(paddle.load(args.checkpoint))
     model.eval()
 
@@ -58,6 +56,6 @@ if __name__ == '__main__':
     sorted_indices = (-probs[0]).argsort()
 
     msg = f'[{args.wav}]\n'
-    for idx in sorted_indices[:args.topk]:
+    for idx in sorted_indices[:args.top_k]:
         msg += f'{ESC50.label_list[idx]}: {probs[0][idx]}\n'
     print(msg)
