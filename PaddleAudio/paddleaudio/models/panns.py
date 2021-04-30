@@ -25,7 +25,6 @@ from ..utils.log import logger
 __all__ = ['CNN14', 'CNN10', 'CNN6', 'cnn14', 'cnn10', 'cnn6']
 
 pretrained_model_urls = {
-    # TODO: replace test urls
     'cnn14': 'https://bj.bcebos.com/paddleaudio/models/panns_cnn14.pdparams',
     'cnn10': 'https://bj.bcebos.com/paddleaudio/models/panns_cnn10.pdparams',
     'cnn6': 'https://bj.bcebos.com/paddleaudio/models/panns_cnn6.pdparams',
