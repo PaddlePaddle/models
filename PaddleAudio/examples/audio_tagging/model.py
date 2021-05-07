@@ -18,21 +18,14 @@ import paddle
 import paddle.nn as nn
 from paddle.utils.download import get_weights_path_from_url
 from ipdb import set_trace
-__all__ = [
-    'ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152'
-]
+__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']
 
 model_urls = {
-    'resnet18': ('https://paddle-hapi.bj.bcebos.com/models/resnet18.pdparams',
-                 'cf548f46534aa3560945be4b95cd11c4'),
-    'resnet34': ('https://paddle-hapi.bj.bcebos.com/models/resnet34.pdparams',
-                 '8d2275cf8706028345f78ac0e1d31969'),
-    'resnet50': ('https://paddle-hapi.bj.bcebos.com/models/resnet50.pdparams',
-                 'ca6f485ee1ab0492d38f323885b0ad80'),
-    'resnet101': ('https://paddle-hapi.bj.bcebos.com/models/resnet101.pdparams',
-                  '02f35f034ca3858e1e54d4036443c92d'),
-    'resnet152': ('https://paddle-hapi.bj.bcebos.com/models/resnet152.pdparams',
-                  '7ad16a2f1e7333859ff986138630fd7a'),
+    'resnet18': ('https://paddle-hapi.bj.bcebos.com/models/resnet18.pdparams', 'cf548f46534aa3560945be4b95cd11c4'),
+    'resnet34': ('https://paddle-hapi.bj.bcebos.com/models/resnet34.pdparams', '8d2275cf8706028345f78ac0e1d31969'),
+    'resnet50': ('https://paddle-hapi.bj.bcebos.com/models/resnet50.pdparams', 'ca6f485ee1ab0492d38f323885b0ad80'),
+    'resnet101': ('https://paddle-hapi.bj.bcebos.com/models/resnet101.pdparams', '02f35f034ca3858e1e54d4036443c92d'),
+    'resnet152': ('https://paddle-hapi.bj.bcebos.com/models/resnet152.pdparams', '7ad16a2f1e7333859ff986138630fd7a'),
 }
 
 
@@ -53,11 +46,9 @@ class BasicBlock(nn.Layer):
             norm_layer = nn.BatchNorm2D
 
         if dilation > 1:
-            raise NotImplementedError(
-                "Dilation > 1 not supported in BasicBlock")
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
 
-        self.conv1 = nn.Conv2D(
-            inplanes, planes, 3, padding=1, stride=stride, bias_attr=False)
+        self.conv1 = nn.Conv2D(inplanes, planes, 3, padding=1, stride=stride, bias_attr=False)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU()
         self.conv2 = nn.Conv2D(planes, planes, 3, padding=1, bias_attr=False)
@@ -106,18 +97,10 @@ class BottleneckBlock(nn.Layer):
         self.bn1 = norm_layer(width)
 
         self.conv2 = nn.Conv2D(
-            width,
-            width,
-            3,
-            padding=dilation,
-            stride=stride,
-            groups=groups,
-            dilation=dilation,
-            bias_attr=False)
+            width, width, 3, padding=dilation, stride=stride, groups=groups, dilation=dilation, bias_attr=False)
         self.bn2 = norm_layer(width)
 
-        self.conv3 = nn.Conv2D(
-            width, planes * self.expansion, 1, bias_attr=False)
+        self.conv3 = nn.Conv2D(width, planes * self.expansion, 1, bias_attr=False)
         self.bn3 = norm_layer(planes * self.expansion)
         self.relu = nn.ReLU()
         self.downsample = downsample
@@ -169,15 +152,9 @@ class ResNet(nn.Layer):
 
     """
 
-    def __init__(self, block, depth, num_classes=1000, with_pool=True,dropout=0.5):
+    def __init__(self, block, depth, num_classes=1000, with_pool=True, dropout=0.5):
         super(ResNet, self).__init__()
-        layer_cfg = {
-            18: [2, 2, 2, 2],
-            34: [3, 4, 6, 3],
-            50: [3, 4, 6, 3],
-            101: [3, 4, 23, 3],
-            152: [3, 8, 36, 3]
-        }
+        layer_cfg = {18: [2, 2, 2, 2], 34: [3, 4, 6, 3], 50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}
         layers = layer_cfg[depth]
         self.num_classes = num_classes
         self.with_pool = with_pool
@@ -186,13 +163,7 @@ class ResNet(nn.Layer):
         self.inplanes = 64
         self.dilation = 1
 
-        self.conv1 = nn.Conv2D(
-            1,
-            self.inplanes,
-            kernel_size=7,
-            stride=2,
-            padding=3,
-            bias_attr=False)
+        self.conv1 = nn.Conv2D(1, self.inplanes, kernel_size=7, stride=2, padding=3, bias_attr=False)
         self.bn1 = self._norm_layer(self.inplanes)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2D(kernel_size=3, stride=2, padding=1)
@@ -216,17 +187,11 @@ class ResNet(nn.Layer):
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 nn.Conv2D(
-                    self.inplanes,
-                    planes * block.expansion,
-                    1,
-                    stride=stride,
-                    bias_attr=False),
+                    self.inplanes, planes * block.expansion, 1, stride=stride, bias_attr=False),
                 norm_layer(planes * block.expansion), )
 
         layers = []
-        layers.append(
-            block(self.inplanes, planes, stride, downsample, 1, 64,
-                  previous_dilation, norm_layer))
+        layers.append(block(self.inplanes, planes, stride, downsample, 1, 64, previous_dilation, norm_layer))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(self.inplanes, planes, norm_layer=norm_layer))
@@ -259,8 +224,7 @@ def _resnet(arch, Block, depth, pretrained, **kwargs):
     if pretrained:
         assert arch in model_urls, "{} model do not have a pretrained model now, you should set pretrained=False".format(
             arch)
-        weight_path = get_weights_path_from_url(model_urls[arch][0],
-                                                model_urls[arch][1])
+        weight_path = get_weights_path_from_url(model_urls[arch][0], model_urls[arch][1])
 
         param = paddle.load(weight_path)
         set_trace()
@@ -367,4 +331,3 @@ def resnet152(pretrained=False, **kwargs):
             # model = resnet152(pretrained=True)
     """
     return _resnet('resnet152', BottleneckBlock, 152, pretrained, **kwargs)
-

@@ -40,18 +40,14 @@ __all__ = ['resample', 'to_mono', 'depth_convert', 'normalize', 'save', 'load']
 __resample_mode__ = ['kaiser_best', 'kaiser_fast']
 
 
-def resample(y, src_sr, 
-             target_sr,
-             mode = 'kaiser_fast'):
+def resample(y, src_sr, target_sr, mode='kaiser_fast'):
     if mode == 'kaiser_best':
         warnings.warn(f'Using resampy in kaiser_best to {src_sr}=>{target_sr}. This function is pretty slow, \
         we recommend the mode kaiser_fast in large scale audio trainning')
-        
+
     assert type(y) == np.ndarray, 'currently only numpy data are supported'
-    assert mode in __resample_mode__ , f'resample mode must in {__resample_mode__}'
-    
-   
-    
+    assert mode in __resample_mode__, f'resample mode must in {__resample_mode__}'
+
     assert type(
         src_sr) == int and src_sr > 0 and src_sr <= 48000, 'make sure type(sr) == int and sr > 0 and sr <= 48000,'
     assert type(
@@ -59,10 +55,10 @@ def resample(y, src_sr,
     ) == int and target_sr > 0 and target_sr <= 48000, 'make sure type(sr) == int and sr > 0 and sr <= 48000,'
 
     if has_resampy:
-        return resampy.resample(y, src_sr, target_sr,filter=mode)
+        return resampy.resample(y, src_sr, target_sr, filter=mode)
 
     if has_librosa:
-        return librosa.resample(y, src_sr, target_sr,res_type=mode)
+        return librosa.resample(y, src_sr, target_sr, res_type=mode)
 
     assert False, 'requires librosa or resampy to do resampling, pip install resampy'
 
@@ -105,7 +101,7 @@ def __safe_cast__(y, dtype):
     return np.clip(y, np.iinfo(dtype).min, np.iinfo(dtype).max).astype(dtype)
 
 
-def depth_convert(y, dtype,dithering=True):  # convert audio array to target dtype
+def depth_convert(y, dtype, dithering=True):  # convert audio array to target dtype
 
     if dithering:
         warnings.warn('dithering is not implemented')
@@ -114,11 +110,11 @@ def depth_convert(y, dtype,dithering=True):  # convert audio array to target dty
     __eps__ = 1e-5
     __supported_dtype__ = ['int16', 'int8', 'float32', 'float64']
     if y.dtype not in __supported_dtype__:
-        assert False, 'Unsupported audio dtype,  y.dtype is {}, supported dtypes are {}'.format(
-            y.dtype, __supported_dtype__)
+        assert False, 'Unsupported audio dtype,  y.dtype is {}, supported dtypes are {}'.format(y.dtype,
+                                                                                                __supported_dtype__)
     if dtype not in __supported_dtype__:
-        assert False, 'Unsupported dtype,  target dtype is {}, supported dtypes are {}'.format(
-            dtype, __supported_dtype__)
+        assert False, 'Unsupported dtype,  target dtype is {}, supported dtypes are {}'.format(dtype,
+                                                                                               __supported_dtype__)
 
     if dtype == y.dtype:
         return y
@@ -189,7 +185,7 @@ def normalize(y, norm_type='linear', mul_factor=1.0):
 
 
 def save(y, sr, file):
-    assert file[-4:]=='.wav', f'only .wav file supported, but dst file name is: {file}'
+    assert file[-4:] == '.wav', f'only .wav file supported, but dst file name is: {file}'
     assert type(y) == np.ndarray, 'currently only numpy data are supported'
     assert type(sr) == int and sr > 0 and sr <= 48000, 'make sure type(sr) == int and sr > 0 and sr <= 48000,'
 
@@ -216,8 +212,9 @@ def load(
         resample_mode='kaiser_fast'):
 
     if has_librosa:
-        y, r = librosa.load(file, sr=None, mono=False, offset=offset, duration=duration,
-                            dtype='float32')  #alwasy load in float32, then convert to target dtype
+        y, r = librosa.load(
+            file, sr=None, mono=False, offset=offset, duration=duration,
+            dtype='float32')  #alwasy load in float32, then convert to target dtype
     elif has_snf:
         y, r = sound_file_load(file, offset=offset, dypte=dtype, duration=duration)
 
@@ -230,7 +227,7 @@ def load(
         y = to_mono(y, merge_type)
 
     if sr is not None and sr != r:
-        y = resample(y, r, sr,mode=resample_mode)
+        y = resample(y, r, sr, mode=resample_mode)
         r = sr
 
     if normal:

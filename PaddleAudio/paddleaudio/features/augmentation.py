@@ -20,6 +20,7 @@ from .utils import randint, weighted_sampling
 
 __all__ = ['depth_augment', 'spect_augment', 'random_crop1d', 'random_crop2d']
 
+
 def depth_augment(y, choices=['int8', 'int16'], probs=[0.5, 0.5]):
     assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
@@ -67,13 +68,12 @@ def adaptive_spect_augment(spect, tempo_axis=0, level=0.1):
 
 
 def spect_augment(
-    spect,
-    tempo_axis=0,
-    max_time_mask=3,
-    max_freq_mask=3,
-    max_time_mask_width=30,
-    max_freq_mask_width=20,
-):
+        spect,
+        tempo_axis=0,
+        max_time_mask=3,
+        max_freq_mask=3,
+        max_time_mask_width=30,
+        max_freq_mask_width=20, ):
 
     assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:

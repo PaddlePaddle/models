@@ -40,13 +40,14 @@ def mel_spect(y,
 
     """
 
-    s = librosa.stft(y,
-                     n_fft=window_size,
-                     hop_length=hop_length,
-                     win_length=window_size,
-                     window=window,
-                     center=center,
-                     pad_mode=pad_mode)
+    s = librosa.stft(
+        y,
+        n_fft=window_size,
+        hop_length=hop_length,
+        win_length=window_size,
+        window=window,
+        center=center,
+        pad_mode=pad_mode)
 
     power = np.abs(s)**2
     melW = librosa.filters.mel(sr=sample_rate, n_fft=window_size, n_mels=mel_bins, fmin=fmin, fmax=fmax)
@@ -55,42 +56,45 @@ def mel_spect(y,
     return db
 
 
-def linear_spect(y, sample_rate=16000,
+def linear_spect(y,
+                 sample_rate=16000,
                  window_size=512,
                  hop_length=320,
                  window='hann',
                  center=True,
                  pad_mode='reflect',
-                 power = 2):
+                 power=2):
 
-    s = librosa.stft(y,
-                     n_fft=window_size,
-                     hop_length=hop_length,
-                     win_length=window_size,
-                     window=window,
-                     center=center,
-                     pad_mode=pad_mode)
+    s = librosa.stft(
+        y,
+        n_fft=window_size,
+        hop_length=hop_length,
+        win_length=window_size,
+        window=window,
+        center=center,
+        pad_mode=pad_mode)
 
     return np.abs(s)**power
 
 
-def log_spect(y, sample_rate=16000,
+def log_spect(y,
+              sample_rate=16000,
               window_size=512,
               hop_length=320,
               window='hann',
               center=True,
               pad_mode='reflect',
-              power = 2.0,
-              offset = 1.0):
+              power=2.0,
+              offset=1.0):
 
-    s = librosa.stft(y,
-                     n_fft=window_size,
-                     hop_length=hop_length,
-                     win_length=window_size,
-                     window=window,
-                     center=center,
-                     pad_mode=pad_mode,
-                   )
+    s = librosa.stft(
+        y,
+        n_fft=window_size,
+        hop_length=hop_length,
+        win_length=window_size,
+        window=window,
+        center=center,
+        pad_mode=pad_mode, )
 
     s = np.abs(s)**power
 

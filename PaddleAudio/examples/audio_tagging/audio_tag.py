@@ -39,10 +39,11 @@ parser.add_argument('--sample_duration', type=float, default=1.0)  # 1s
 parser.add_argument('--hop_duration', type=float, default=0.3)  # 0.3s
 
 parser.add_argument("--output_dir", type=str, default='./output_dir')
-parser.add_argument("--use_gpu",
-                    type=ast.literal_eval,
-                    default=True,
-                    help="Whether use GPU for fine-tuning, input should be True or False")
+parser.add_argument(
+    "--use_gpu",
+    type=ast.literal_eval,
+    default=True,
+    help="Whether use GPU for fine-tuning, input should be True or False")
 parser.add_argument("--checkpoint", type=str, default='./assets/cnn14.pdparams', help="Checkpoint of model.")
 args = parser.parse_args()
 
@@ -75,8 +76,7 @@ def batchify(data: List[List[float]], batch_size: int):
             hop_length=args.hop_size,
             mel_bins=args.mel_bins,
             fmin=args.fmin,
-            fmax=args.fmax,
-        )
+            fmax=args.fmax, )
         examples.append(np.expand_dims(feat.transpose(), 0))  # (mel_bins, time) -> (1, time, mel_bins)
 
     # Seperates data into some batches.
@@ -90,7 +90,7 @@ def batchify(data: List[List[float]], batch_size: int):
         yield one_batch
 
 
-def predict(model, data: List[List[float]], batch_size: int = 1, use_gpu: bool = False):
+def predict(model, data: List[List[float]], batch_size: int=1, use_gpu: bool=False):
 
     paddle.set_device('gpu') if use_gpu else paddle.set_device('cpu')
 
