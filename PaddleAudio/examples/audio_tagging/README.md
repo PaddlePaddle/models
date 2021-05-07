@@ -122,3 +122,7 @@ Vehicle: 0.006929398979991674
 ...
 ...
 ```
+
+以下[Demo](https://bj.bcebos.com/paddleaudio/media/audio_tagging_demo.mp4)展示了一个将tagging标签输出到视频的例子，可以实时地对音频进行多标签预测。
+
+![](https://bj.bcebos.com/paddleaudio/media/audio_tagging_demo.gif)

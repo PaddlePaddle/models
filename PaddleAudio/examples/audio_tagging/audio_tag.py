@@ -72,11 +72,10 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int, **kwarg
         yield one_batch
 
 
-def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 1, device: str = 'gpu'):
+def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 1):
     """
     Use pretrained model to make predictions.
     """
-    paddle.set_device(device)
     batches = batchify(data, sample_rate, batch_size)
     results = None
     model.eval()
@@ -94,10 +93,11 @@ def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 
 
 
 if __name__ == '__main__':
+    paddle.set_device(args.device)
     model = cnn14(pretrained=True, extract_embedding=False)
     waveform, sr = load_audio(args.wav, sr=None)
     time, data = split(waveform, int(args.sample_duration * sr), int(args.hop_duration * sr))
-    results = predict(model, data, sr, batch_size=8, device=args.device)
+    results = predict(model, data, sr, batch_size=8)
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
