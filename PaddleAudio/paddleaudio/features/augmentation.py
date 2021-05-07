@@ -20,8 +20,6 @@ from .utils import randint, weighted_sampling
 
 __all__ = ['depth_augment', 'spect_augment', 'random_crop1d', 'random_crop2d']
 
-
-# example y = depth_augment(y,['int8','int16'],[0.8,0.1])
 def depth_augment(y, choices=['int8', 'int16'], probs=[0.5, 0.5]):
     assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
@@ -88,9 +86,6 @@ def spect_augment(
 
     time_mask_width = randint(max_time_mask_width)
     freq_mask_width = randint(max_freq_mask_width)
-
-    #print(num_time_mask)
-    #print(num_freq_mask)
 
     if tempo_axis == 0:
         for i in range(num_time_mask):
