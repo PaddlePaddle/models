@@ -18,17 +18,23 @@ from typing import List, Tuple
 
 from ..utils.download import download_and_decompress
 from ..utils.env import DATA_HOME
-from ..utils.log import logger
 from .dataset import AudioClassificationDataset
 
-__all__ = ['TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet']
+__all__ = ['UrbanAcousticScenes']
 
 
-class TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet(AudioClassificationDataset):
+class UrbanAcousticScenes(AudioClassificationDataset):
     """
-    TAU Urban Acoustic Scenes 2020 Mobile Development dataset
-    This dataset is used in DCASE2020 - Task 1, Acoustic scene classification / Subtask A / Development
+    TAU Urban Acoustic Scenes 2020 Mobile Development dataset contains recordings from
+    12 European cities in 10 different acoustic scenes using 4 different devices.
+    Additionally, synthetic data for 11 mobile devices was created based on the original
+    recordings. Of the 12 cities, two are present only in the evaluation set.
+
+    Reference:
+        A multi-device dataset for urban acoustic scene classification
+        https://arxiv.org/abs/1807.09840
     """
+
     source_url = 'https://zenodo.org/record/3819968/files/'
     base_name = 'TAU-urban-acoustic-scenes-2020-mobile-development'
     archieves = [
@@ -125,12 +131,12 @@ class TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet(AudioClassificationDatas
                 It identifies the feature type that user wants to extrace of an audio file.
         """
         files, labels = self._get_data(mode)
-        super(TAUUrbanAcousticScenes_2020_Mobile_DevelopmentSet, \
-            self).__init__(files=files,
-                           labels=labels,
-                           sample_rate=self.sample_rate,
-                           feat_type=feat_type,
-                           **kwargs)
+        super(UrbanAcousticScenes, self).__init__(files=files,
+                                                  labels=labels,
+                                                  sample_rate=self.sample_rate,
+                                                  duration=self.duration,
+                                                  feat_type=feat_type,
+                                                  **kwargs)
 
     def _get_meta_info(self, subset: str = None, skip_header: bool = True) -> List[collections.namedtuple]:
         if subset is None:

@@ -18,7 +18,6 @@ from typing import List, Tuple
 
 from ..utils.download import download_and_decompress
 from ..utils.env import DATA_HOME
-from ..utils.log import logger
 from .dataset import AudioClassificationDataset
 
 __all__ = ['UrbanSound8K']
@@ -26,7 +25,14 @@ __all__ = ['UrbanSound8K']
 
 class UrbanSound8K(AudioClassificationDataset):
     """
-    UrbanSound8K Dataset
+    UrbanSound8K dataset contains 8732 labeled sound excerpts (<=4s) of urban
+    sounds from 10 classes: air_conditioner, car_horn, children_playing, dog_bark,
+    drilling, enginge_idling, gun_shot, jackhammer, siren, and street_music. The
+    classes are drawn from the urban sound taxonomy.
+
+    Reference:
+        A Dataset and Taxonomy for Urban Sound Research
+        https://dl.acm.org/doi/10.1145/2647868.2655045
     """
 
     archieves = [
@@ -35,6 +41,8 @@ class UrbanSound8K(AudioClassificationDataset):
             'md5': '9aa69802bbf37fb986f71ec1483a196e',
         },
     ]
+    label_list = ["air_conditioner", "car_horn", "children_playing", "dog_bark", "drilling", \
+        "engine_idling", "gun_shot", "jackhammer", "siren", "street_music"]
     meta = os.path.join('UrbanSound8K', 'metadata', 'UrbanSound8K.csv')
     meta_info = collections.namedtuple('META_INFO',
                                        ('filename', 'fsid', 'start', 'end', 'salience', 'fold', 'class_id', 'label'))
@@ -47,6 +55,7 @@ class UrbanSound8K(AudioClassificationDataset):
         super(UrbanSound8K, self).__init__(files=files,
                                            labels=labels,
                                            sample_rate=self.sample_rate,
+                                           duration=self.duration,
                                            feat_type=feat_type,
                                            **kwargs)
         """

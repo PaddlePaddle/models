@@ -19,34 +19,31 @@ from typing import List, Tuple
 
 from ..utils.download import download_and_decompress
 from ..utils.env import DATA_HOME
+from ..utils.log import logger
 from .dataset import AudioClassificationDataset
 
-__all__ = ['GTZAN']
+__all__ = ['TESS']
 
 
-class GTZAN(AudioClassificationDataset):
+class TESS(AudioClassificationDataset):
     """
-    The GTZAN dataset consists of 1000 audio tracks each 30 seconds long. It contains 10 genres,
-    each represented by 100 tracks. The dataset is the most-used public dataset for evaluation
-    in machine listening research for music genre recognition (MGR).
-
-    Reference:
-        Musical genre classification of audio signals
-        https://ieeexplore.ieee.org/document/1021072/
+    TESS Dataset
     """
 
-    archieves = [
-        {
-            'url': 'http://opihi.cs.uvic.ca/sound/genres.tar.gz',
-            'md5': '5b3d6dddb579ab49814ab86dba69e7c7',
-        },
+    archieves = []
+    label_list = [
+        'angry',
+        'disgust',
+        'fear',
+        'happy',
+        'neutral',
+        'ps',  # pleasant surprise
+        'sad',
     ]
-    label_list = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-    meta = os.path.join('genres', 'input.mf')
-    meta_info = collections.namedtuple('META_INFO', ('file_path', 'label'))
-    audio_path = 'genres'
-    sample_rate = 22050
-    duration = 30
+    meta_info = collections.namedtuple('META_INFO', ('speaker', 'word', 'emotion'))
+    audio_path = os.path.join(DATA_HOME, 'TESS Toronto emotional speech set data')
+    sample_rate = 24414
+    duration = 2
 
     def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
         """
@@ -64,44 +61,48 @@ class GTZAN(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(GTZAN, self).__init__(files=files,
-                                    labels=labels,
-                                    sample_rate=self.sample_rate,
-                                    duration=self.duration,
-                                    feat_type=feat_type,
-                                    **kwargs)
+        super(TESS, self).__init__(files=files,
+                                   labels=labels,
+                                   sample_rate=self.sample_rate,
+                                   duration=self.duration,
+                                   feat_type=feat_type,
+                                   **kwargs)
 
-    def _get_meta_info(self) -> List[collections.namedtuple]:
+    def _get_meta_info(self, files) -> List[collections.namedtuple]:
         ret = []
-        with open(os.path.join(DATA_HOME, self.meta), 'r') as rf:
-            for line in rf.readlines():
-                ret.append(self.meta_info(*line.strip().split('\t')))
+        for file in files:
+            basename_without_extend = os.path.basename(file)[:-4]
+            ret.append(self.meta_info(*basename_without_extend.split('_')))
         return ret
 
     def _get_data(self, mode, seed, n_folds, split) -> Tuple[List[str], List[int]]:
-        if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)) or \
-            not os.path.isfile(os.path.join(DATA_HOME, self.meta)):
+        if not os.path.isdir(self.audio_path):
             download_and_decompress(self.archieves, DATA_HOME)
 
-        meta_info = self._get_meta_info()
+        wav_files = []
+        for root, _, files in os.walk(self.audio_path):
+            for file in files:
+                if file.endswith('.wav'):
+                    wav_files.append(os.path.join(root, file))
+
         random.seed(seed)  # shuffle samples to split data
-        random.shuffle(meta_info)  # make sure using the same seed to create train and dev dataset
+        random.shuffle(wav_files)  # make sure using the same seed to create train and dev dataset
+        meta_info = self._get_meta_info(wav_files)
 
         files = []
         labels = []
         n_samples_per_fold = len(meta_info) // n_folds
         for idx, sample in enumerate(meta_info):
-            file_path, label = sample
-            filename = os.path.basename(file_path)
-            target = self.label_list.index(label)
+            _, _, emotion = sample
+            target = self.label_list.index(emotion)
             fold = idx // n_samples_per_fold + 1
 
             if mode == 'train' and int(fold) != split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, label, filename))
+                files.append(wav_files[idx])
                 labels.append(target)
 
             if mode != 'train' and int(fold) == split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, label, filename))
+                files.append(wav_files[idx])
                 labels.append(target)
 
         return files, labels

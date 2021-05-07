@@ -240,5 +240,4 @@ def load(
         y = normalize(y, 'linear', 1.0)  # do normalization before converting to target dtype
 
     y = depth_convert(y, dtype)
-
     return y, r

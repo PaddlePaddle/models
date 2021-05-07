@@ -31,7 +31,7 @@ python audio_tag.py \
 执行结果：
 ```
 [2021-04-06 21:10:36,438] [    INFO] - Loaded CNN14 pretrained parameters from: ./assets/cnn14.pdparams
-[2021-04-06 21:10:38,193] [    INFO] - Saved tagging results to ./output_dir/audioset_tagging_sr_32000.npz
+[2021-04-06 21:10:38,193] [    INFO] - Saved tagging results to ./output_dir/audioset_tagging_sr_32000.npz  
 ```
 
 执行后得分结果保存在`output_dir`的`.npz`文件中。
@@ -67,7 +67,7 @@ python parse_result.py \
 
 ## Labels
 
-最终输出的文本结果如下所示。
+最终输出的文本结果如下所示。  
 不同tagging的topk结果用空行分隔。每一个结果中，第一行是时间信息，数字表示tagging结果的起始样本点；接下来的k行是对应的标签和得分。
 
 ```

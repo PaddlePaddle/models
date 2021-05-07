@@ -1,0 +1,5 @@
+colorama
+colorlog
+scipy
+librosa
+tqdm

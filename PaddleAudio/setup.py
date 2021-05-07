@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PaddleAudio",
+    name="PaddleAudio", 
     version="0.0.0",
     author="",
     author_email="",
