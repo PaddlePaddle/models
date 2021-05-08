@@ -16,6 +16,7 @@ from .dcase import UrbanAcousticScenes
 from .esc50 import ESC50
 from .gtzan import GTZAN
 from .ravdess import RAVDESS
+from .tess import TESS
 from .urban_sound import UrbanSound8K
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     'GTZAN',
     'UrbanAcousticScenes',
     'RAVDESS',
+    'TESS',
 ]

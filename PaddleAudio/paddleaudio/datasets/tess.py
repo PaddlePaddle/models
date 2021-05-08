@@ -27,10 +27,23 @@ __all__ = ['TESS']
 
 class TESS(AudioClassificationDataset):
     """
-    TESS Dataset
+    TESS is a set of 200 target words were spoken in the carrier phrase
+    "Say the word _____' by two actresses (aged 26 and 64 years) and
+    recordings were made of the set portraying each of seven emotions(anger,
+    disgust, fear, happiness, pleasant surprise, sadness, and neutral).
+    There are 2800 stimuli in total.
+
+    Reference:
+        Toronto emotional speech set (TESS)
+        https://doi.org/10.5683/SP2/E8H2MF
     """
 
-    archieves = []
+    archieves = [
+        {
+            'url': 'https://bj.bcebos.com/paddleaudio/datasets/TESS_Toronto_emotional_speech_set.zip',
+            'md5': '1465311b24d1de704c4c63e4ccc470c7',
+        },
+    ]
     label_list = [
         'angry',
         'disgust',
@@ -41,7 +54,7 @@ class TESS(AudioClassificationDataset):
         'sad',
     ]
     meta_info = collections.namedtuple('META_INFO', ('speaker', 'word', 'emotion'))
-    audio_path = os.path.join(DATA_HOME, 'TESS Toronto emotional speech set data')
+    audio_path = 'TESS_Toronto_emotional_speech_set'
     sample_rate = 24414
     duration = 2
 
@@ -76,11 +89,11 @@ class TESS(AudioClassificationDataset):
         return ret
 
     def _get_data(self, mode, seed, n_folds, split) -> Tuple[List[str], List[int]]:
-        if not os.path.isdir(self.audio_path):
+        if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)):
             download_and_decompress(self.archieves, DATA_HOME)
 
         wav_files = []
-        for root, _, files in os.walk(self.audio_path):
+        for root, _, files in os.walk(os.path.join(DATA_HOME, self.audio_path)):
             for file in files:
                 if file.endswith('.wav'):
                     wav_files.append(os.path.join(root, file))

@@ -17,67 +17,49 @@ import ast
 import os
 from typing import List
 
-import librosa
 import numpy as np
 import paddle
-
+from paddleaudio.backends import load as load_audio
 from paddleaudio.features import mel_spect
-from paddleaudio.models import CNN14
-from paddleaudio.utils.log import logger
+from paddleaudio.models.panns import cnn14
+from paddleaudio.utils import logger
 
+# yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-# features
-parser.add_argument("--sr", type=int, default=32000, help="Sample rate of inference audio.")
-parser.add_argument('--window_size', type=int, default=1024)
-parser.add_argument('--hop_size', type=int, default=320)
-parser.add_argument('--mel_bins', type=int, default=64)
-parser.add_argument('--fmin', type=int, default=50)
-parser.add_argument('--fmax', type=int, default=14000)
-# waveform
-parser.add_argument("--wav", type=str, required=True, help="Audio file to infer.")
-parser.add_argument('--sample_duration', type=float, default=1.0)  # 1s
-parser.add_argument('--hop_duration', type=float, default=0.3)  # 0.3s
-
-parser.add_argument("--output_dir", type=str, default='./output_dir')
-parser.add_argument("--use_gpu",
-                    type=ast.literal_eval,
-                    default=True,
-                    help="Whether use GPU for fine-tuning, input should be True or False")
-parser.add_argument("--checkpoint", type=str, default='./assets/cnn14.pdparams', help="Checkpoint of model.")
+parser.add_argument('--device', choices=['cpu', 'gpu'], default='gpu', help='Select which device to predict, defaults to gpu.')
+parser.add_argument('--wav', type=str, required=True, help='Audio file to infer.')
+parser.add_argument('--sample_duration', type=float, default=2.0, help='Duration(in seconds) of tagging samples to predict.')
+parser.add_argument('--hop_duration', type=float, default=0.3, help='Duration(in seconds) between two samples.')
+parser.add_argument('--output_dir', type=str, default='./output_dir', help='Directory to save tagging result.')
 args = parser.parse_args()
+# yapf: enable
 
 
 def split(waveform: np.ndarray, win_size: int, hop_size: int):
     """
-    Split into N audios.
+    Split into N waveforms.
     N is decided by win_size and hop_size.
     """
     assert isinstance(waveform, np.ndarray)
-    ret = []
+    time = []
+    data = []
     for i in range(0, len(waveform), hop_size):
         segment = waveform[i:i + win_size]
         if len(segment) < win_size:
             segment = np.pad(segment, (0, win_size - len(segment)))
-        ret.append(segment)
-    return ret
+        data.append(segment)
+        time.append(i / len(waveform))
+    return time, data
 
 
-def batchify(data: List[List[float]], batch_size: int):
+def batchify(data: List[List[float]], sample_rate: int, batch_size: int, **kwargs):
     """
     Extract features from waveforms and create batches.
     """
     examples = []
     for waveform in data:
-        feat = mel_spect(
-            waveform,
-            sample_rate=args.sr,
-            window_size=args.window_size,
-            hop_length=args.hop_size,
-            mel_bins=args.mel_bins,
-            fmin=args.fmin,
-            fmax=args.fmax,
-        )
-        examples.append(np.expand_dims(feat.transpose(), 0))  # (mel_bins, time) -> (1, time, mel_bins)
+        feats = mel_spect(waveform, sample_rate=sample_rate, **kwargs).transpose()
+        examples.append(feats)
 
     # Seperates data into some batches.
     one_batch = []
@@ -90,15 +72,17 @@ def batchify(data: List[List[float]], batch_size: int):
         yield one_batch
 
 
-def predict(model, data: List[List[float]], batch_size: int = 1, use_gpu: bool = False):
-
-    paddle.set_device('gpu') if use_gpu else paddle.set_device('cpu')
-
-    batches = batchify(data, batch_size)
+def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 1):
+    """
+    Use pretrained model to make predictions.
+    """
+    batches = batchify(data, sample_rate, batch_size)
     results = None
     model.eval()
     for batch in batches:
-        feats = paddle.to_tensor(batch)
+        feats = paddle.to_tensor(batch).unsqueeze(1)  \
+            # (batch_size, num_frames, num_melbins) -> (batch_size, 1, num_frames, num_melbins)
+
         audioset_scores = model(feats)
         if results is None:
             results = audioset_scores.numpy()
@@ -109,14 +93,15 @@ def predict(model, data: List[List[float]], batch_size: int = 1, use_gpu: bool =
 
 
 if __name__ == '__main__':
-    model = CNN14(extract_embedding=False, checkpoint=args.checkpoint)
-    waveform = librosa.load(args.wav, sr=args.sr)[0]
-    data = split(waveform, int(args.sample_duration * args.sr), int(args.hop_duration * args.sr))
-    results = predict(model, data, batch_size=8, use_gpu=args.use_gpu)
+    paddle.set_device(args.device)
+    model = cnn14(pretrained=True, extract_embedding=False)
+    waveform, sr = load_audio(args.wav, sr=None)
+    time, data = split(waveform, int(args.sample_duration * sr), int(args.hop_duration * sr))
+    results = predict(model, data, sr, batch_size=8)
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-    time = np.arange(0, 1, int(args.hop_duration * args.sr) / len(waveform))
-    output_file = os.path.join(args.output_dir, f'audioset_tagging_sr_{args.sr}.npz')
+    time = np.arange(0, 1, int(args.hop_duration * sr) / len(waveform))
+    output_file = os.path.join(args.output_dir, f'audioset_tagging_sr_{sr}.npz')
     np.savez(output_file, time=time, scores=results)
     logger.info(f'Saved tagging results to {output_file}')
