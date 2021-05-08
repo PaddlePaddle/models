@@ -7,9 +7,6 @@
 [submodule "AutoDL"]
 	path = AutoDL
 	url = https://github.com/PaddlePaddle/AutoDL.git
-[submodule "PaddleNLP/PaddleLARK/ERNIE"]
-	path = PaddleNLP/PaddleLARK/ERNIE
-	url = https://github.com/PaddlePaddle/ERNIE.git
 [submodule "PaddleSpeech/DeepSpeech"]
 	path = PaddleSpeech/DeepSpeech
 	url = https://github.com/PaddlePaddle/DeepSpeech.git
@@ -19,6 +16,3 @@
 [submodule "PaddleCV/PaddleDetection"]
 	path = PaddleCV/PaddleDetection
 	url = https://github.com/PaddlePaddle/PaddleDetection.git
-[submodule "PaddleNLP"]
-	path = PaddleNLP
-	url = https://github.com/PaddlePaddle/PaddleNLP.git
