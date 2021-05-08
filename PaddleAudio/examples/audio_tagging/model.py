@@ -17,7 +17,6 @@ from __future__ import division, print_function
 import paddle
 import paddle.nn as nn
 from paddle.utils.download import get_weights_path_from_url
-from ipdb import set_trace
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']
 
 model_urls = {
@@ -227,7 +226,6 @@ def _resnet(arch, Block, depth, pretrained, **kwargs):
         weight_path = get_weights_path_from_url(model_urls[arch][0], model_urls[arch][1])
 
         param = paddle.load(weight_path)
-        set_trace()
         model.set_dict(param)
 
     return model
