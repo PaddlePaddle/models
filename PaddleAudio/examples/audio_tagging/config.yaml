@@ -1,4 +1,3 @@
-
 # Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,8 +36,7 @@ dropout: 0.25
 balance_train_h5 :  './audioset/balance_eval.h5'
 unbalance_train_h5 :  './audioset/unbalance/*.h5'
 balance_eval_h5 :  './audioset/mel-128/balance_eval.h5'
-#audioset_label: './assets/audioset_labels.txt'
-audioset_label: './assets/labels_new.txt'
+audioset_label: './assets/audioset_labels_resnet.txt'
 model_path :  './checkpoints/'
 log_path :  './log'
 checkpoint_step :  5000

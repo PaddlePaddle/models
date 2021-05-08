@@ -163,4 +163,6 @@ def download_assets():
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)
+os.makedirs(c['log_path'],exist_ok=True)
 logger = get_logger(__name__, os.path.join(c['log_path'], 'log.txt'))
+download_assets()
