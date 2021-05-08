@@ -27,7 +27,7 @@ import paddle.nn.functional as F
 from paddle.optimizer import Adam
 from utils import get_logger, get_metrics
 from utils import load_checkpoint, save_checkpoint
-from utils import evaluate
+from evaluate import evaluate
 from visualdl import LogWriter
 import yaml
 
