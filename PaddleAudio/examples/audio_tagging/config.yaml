@@ -33,11 +33,11 @@ epoch_num :  500
 start_lr :  0.00001
 #add dropout in resnet precedding the fc layer
 dropout: 0.25
-balance_train_h5 :  './audioset/balance_eval.h5'
+balance_train_h5 :  './audioset/balance_train.h5'
 unbalance_train_h5 :  './audioset/unbalance/*.h5'
-balance_eval_h5 :  './audioset/mel-128/balance_eval.h5'
+balance_eval_h5 :  './audioset/balance_eval.h5'
 audioset_label: './assets/audioset_labels_resnet.txt'
-model_path :  './checkpoints/'
+model_dir :  './checkpoints/'
 log_path :  './log'
 checkpoint_step :  5000
 lr_dec_per_step :  30000
