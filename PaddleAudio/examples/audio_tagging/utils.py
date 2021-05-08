@@ -1,11 +1,12 @@
-import logging
-import paddle
-import yaml
-import numpy as np
-import os
 import json
-from sklearn.metrics import average_precision_score
+import logging
+import os
+
+import numpy as np
+import paddle
 import paddle.nn.functional as F
+import yaml
+from sklearn.metrics import average_precision_score
 
 __all__ = [
     'get_logger', 'save_checkpoint', 'load_checkpoint', 'get_labels527', 'random_choice', 'get_label_name_mapping'
@@ -25,7 +26,7 @@ def get_labels527():
 
 def get_ytid_clsidx_mapping():
     """
-    Compute the mapping between youtube id and class index. 
+    Compute the mapping between youtube id and class index.
     The class index range from 0 to 526, correspoding to the labels stored in audioset_labels527.txt file
     """
     labels527 = get_labels527()

@@ -13,17 +13,20 @@
 # limitations under the License.
 
 import glob
-import h5py
 import json
-import numpy as np
 import os
-import paddle
-from paddle.io import Dataset, DataLoader, IterableDataset
-from paddleaudio import augmentation
 import subprocess
 import warnings
+
+import h5py
+import librosa
+import numpy as np
+import paddle
+import paddleaudio
 import yaml
-from utils import get_ytid_clsidx_mapping, get_logger, get_labels527
+from paddle.io import DataLoader, Dataset, IterableDataset
+from paddleaudio import augmentation
+from utils import get_labels527, get_logger, get_ytid_clsidx_mapping
 
 with open('./config.yaml') as F:
     c = yaml.load(F, Loader=yaml.FullLoader)
@@ -52,7 +55,7 @@ def spect_permute(spect, tempo_axis, nblocks):
     return new_spect
 
 
-#precompute the mapping   
+#precompute the mapping
 
 logger.info('precomputing mapping for ytid and clsidx ')
 ytid2clsidx, clsidx2ytid = get_ytid_clsidx_mapping()
@@ -66,7 +69,7 @@ def random_choice(a):
 
 class H5AudioSetSingle(Dataset):
     """
-    dataset class for wraping a single h5 file. 
+    dataset class for wraping a single h5 file.
     This class is used by H5Audioset
     """
 
@@ -144,9 +147,9 @@ def get_keys(h5_files):
 class H5AudioSet(Dataset):
     """
     Dataset class for Audioset, with mel features stored in multiple hdf5 files.
-    The h5 files store mel-spectrogram features pre-extracted from wav files. 
+    The h5 files store mel-spectrogram features pre-extracted from wav files.
     Use wav2mel.py to do feature extraction.
-   
+
     """
 
     def __init__(self, h5_files, augment=True, training=True, balance_sampling=True):
@@ -203,7 +206,7 @@ class H5AudioSet(Dataset):
 
 def get_ytid2labels(segment_csv):
     """
-    compute the mapping (dict object) from youtube id to audioset labels. 
+    compute the mapping (dict object) from youtube id to audioset labels.
     """
     with open(segment_csv) as F:
         lines = F.read().split('\n')
@@ -217,7 +220,7 @@ class AudioSet(Dataset):
     """
     Regular Dataset class for Audioset.
     It supports loading wav files or mel feature fiels stored in a given folder
-    
+
     """
 
     def __init__(
@@ -328,6 +331,6 @@ if __name__ == '__main__':
     dataset = H5AudioSet(train_h5_files, balance_sampling=True, augment=True, training=True)
     x, y = dataset[0]
     print(x.shape, y.shape)
-    dataset = H5Dataset(c['balance_eval_h5'], balance_sampling=False, padding=True)
+    dataset = H5AudioSetSingle(c['balance_eval_h5'], balance_sampling=False, padding=True)
     x, y = dataset[0]
     print(x.shape, y.shape)

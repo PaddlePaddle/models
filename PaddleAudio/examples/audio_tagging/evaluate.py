@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import os
+
 import numpy as np
 import paddle
-import argparse
-from model import *
 import paddle.nn.functional as F
 import paddleaudio as pa
-from utils import get_logger, get_metrics
-from utils import get_label_name_mapping
-from utils import get_labels527
 import yaml
-from paddle.utils import download
 from dataset import get_loader
+from model import *
+from paddle.utils import download
 from sklearn.metrics import average_precision_score
+from utils import (get_label_name_mapping, get_labels527, get_logger, get_metrics)
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)

@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+import glob
 import os
 import time
-import glob
+
 import numpy as np
 import paddle
-import argparse
-from dataset import get_loader
-from mixup_utils import mixup_data, MixUpLoss
-from model import *
 import paddle.distributed as dist
-from paddle.io import Dataset, DataLoader, IterableDataset
 import paddle.nn.functional as F
-from paddle.optimizer import Adam
-from utils import get_logger, get_metrics
-from utils import load_checkpoint, save_checkpoint
-from evaluate import evaluate
-from visualdl import LogWriter
 import yaml
+from dataset import get_loader
+from evaluate import evaluate
+from mixup_utils import MixUpLoss, mixup_data
+from model import *
+from paddle.io import DataLoader, Dataset, IterableDataset
+from paddle.optimizer import Adam
+from utils import get_logger, get_metrics, load_checkpoint, save_checkpoint
+from visualdl import LogWriter
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     logger.info(f'using ' + c['model_type'])
     ModelClass = eval(c['model_type'])
 
-    #define loss    
+    #define loss
     bce_loss = F.binary_cross_entropy_with_logits
     loss_fn = MixUpLoss(bce_loss)
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     else:
         model = ModelClass(
-            pretrained=True, num_classes=c['num_classes'], dropout=c['dropout'])  # use imagenet pretrained 
+            pretrained=True, num_classes=c['num_classes'], dropout=c['dropout'])  # use imagenet pretrained
         optimizer = Adam(learning_rate=c['start_lr'], parameters=model.parameters())
         start_epoch = 0
 

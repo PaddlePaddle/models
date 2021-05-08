@@ -1,6 +1,6 @@
+import numpy as np
 import paddle
 import paddle.nn.functional as F
-import numpy as np
 
 
 class MixUpLoss(paddle.nn.Layer):
@@ -9,8 +9,9 @@ class MixUpLoss(paddle.nn.Layer):
         self.criterion = criterion
 
     def forward(self, pred, mixup_target):
-        assert type(mixup_target) in [tuple, list] and len(
-            mixup_target) == 3, 'mixup data should be tuple consists of (ya,yb,lamda)'
+        assert type(mixup_target) in [
+            tuple, list
+        ] and len(mixup_target) == 3, 'mixup data should be tuple consists of (ya,yb,lamda)'
         ya, yb, lamda = mixup_target
         return lamda * self.criterion(pred, ya) \
                 + (1 - lamda) * self.criterion(pred, yb)
