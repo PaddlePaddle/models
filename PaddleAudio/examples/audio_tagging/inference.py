@@ -30,9 +30,11 @@ with open('./config.yaml') as f:
 checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
 logger = get_logger(__name__, os.path.join(c['log_path'], 'inference.txt'))
 
+
 def load_and_extract_feature(file):
     s, r = pa.load(file, sr=c['sample_rate'])
-    x = pa.features.mel_spect(s,
+    x = pa.features.mel_spect(
+        s,
         sample_rate=c['sample_rate'],
         window_size=c['window_size'],
         hop_length=c['hop_size'],
@@ -50,11 +52,11 @@ def load_and_extract_feature(file):
     x = paddle.Tensor(x).unsqueeze((0, 1))
     return x
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Audioset inference')
     parser.add_argument('--device', help='set the gpu device number', type=int, required=False, default=0)
-    parser.add_argument(
-        '--weight', type=str, required=False, default='')
+    parser.add_argument('--weight', type=str, required=False, default='')
     parser.add_argument('--wav_file', type=str, required=False, default='./wav/TKtNAJa-mbQ_11.000.wav')
     parser.add_argument('--top_k', type=int, required=False, default=5)
     args = parser.parse_args([])
@@ -63,8 +65,8 @@ if __name__ == '__main__':
     paddle.set_device('gpu:{}'.format(args.device))
     ModelClass = eval(c['model_type'])
     model = ModelClass(pretrained=False, num_classes=c['num_classes'], dropout=c['dropout'])
-    
-    if args.weight.strip() =='':
+
+    if args.weight.strip() == '':
         args.weight = download.get_weights_path_from_url(checkpoint_url)
 
     model.load_dict(paddle.load(args.weight))

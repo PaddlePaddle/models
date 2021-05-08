@@ -93,48 +93,6 @@ def load_checkpoint(epoch, prefix):
     return model_dict, optim_dict
 
 
-def evaluate(epoch, val_loader, model, loss_fn, log_writer):
-    model.eval()
-    avg_loss = 0.0
-    avg_preci = 0.0
-    avg_recall = 0.0
-    all_labels = []
-    all_preds = []
-    for batch_id, data in enumerate(val_loader()):
-        xd, yd = data
-        xd = xd.unsqueeze((1))
-        label = yd
-        logits = model(xd)
-        loss_val = loss_fn(logits, label)
-        pred = F.softmax(logits)
-        all_labels += [label.numpy()]
-        all_preds += [pred.numpy()]
-
-        preci, recall = get_metrics(label, pred)
-        avg_loss = (avg_loss * batch_id + loss_val.numpy()[0]) / (1 + batch_id)
-        avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
-        avg_recall = (avg_recall * batch_id + recall) / (1 + batch_id)
-
-        msg = f'eval epoch:{epoch}, batch:{batch_id}'
-        msg += f'|{len(val_loader)}'
-        msg += f',loss:{avg_loss:.3}'
-        msg += f',recall:{avg_recall:.3}'
-        msg += f',preci:{avg_preci:.3}'
-        avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
-        avg_recall = (avg_recall * batch_id + recall) / (1 + batch_id)
-        if batch_id % 20 == 0:
-            logger.info(msg)
-            log_writer.add_scalar(tag="eval loss", step=batch_id, value=avg_loss)
-            log_writer.add_scalar(tag="eval preci", step=batch_id, value=avg_preci)
-            log_writer.add_scalar(tag="eval recall", step=batch_id, value=avg_recall)
-
-    all_preds = np.concatenate(all_preds, 0)
-    all_labels = np.concatenate(all_labels, 0)
-    mAP_scores = average_precision_score(all_labels, all_preds, average=None)
-
-    return avg_loss, avg_preci, avg_recall, mAP_scores
-
-
 def get_label_name_mapping():
     with open('./assets/ontology.json') as F:
         ontology = json.load(F)
@@ -163,6 +121,6 @@ def download_assets():
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)
-os.makedirs(c['log_path'],exist_ok=True)
+os.makedirs(c['log_path'], exist_ok=True)
 logger = get_logger(__name__, os.path.join(c['log_path'], 'log.txt'))
 download_assets()

@@ -78,11 +78,11 @@ if __name__ == '__main__':
 
     else:
         model = ModelClass(
-            pretrained=True, num_classes=c['num_classes'], drop_rate=c['dropout'])  # use imagenet pretrained 
+            pretrained=True, num_classes=c['num_classes'], dropout=c['dropout'])  # use imagenet pretrained 
         optimizer = Adam(learning_rate=c['start_lr'], parameters=model.parameters())
         start_epoch = 0
 
-    os.makedirs(c['model_path'], exist_ok=True)
+    os.makedirs(c['model_dir'], exist_ok=True)
     if args.distributed != 0:
         model = paddle.DataParallel(model)
 
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                     if last_model is not None:
                         os.remove(last_model)
 
-                    fn = os.path.join(c['model_path'], '{}_epoch{}_mAP{:.3}_preci{:.3}_recall{:.3}.pdparams'.format(
+                    fn = os.path.join(c['model_dir'], '{}_epoch{}_mAP{:.3}_preci{:.3}_recall{:.3}.pdparams'.format(
                         prefix, epoch, avg_map, val_preci, val_recall))
                     paddle.save(model.state_dict(), fn)
                     last_model = fn

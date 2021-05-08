@@ -72,7 +72,7 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int, **kwarg
         yield one_batch
 
 
-def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 1):
+def predict(model, data: List[List[float]], sample_rate: int, batch_size: int=1):
     """
     Use pretrained model to make predictions.
     """

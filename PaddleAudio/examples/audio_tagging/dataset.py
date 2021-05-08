@@ -51,8 +51,8 @@ def spect_permute(spect, tempo_axis, nblocks):
         new_spect = np.concatenate(blocks, 0)
     return new_spect
 
-#precompute the mapping   
 
+#precompute the mapping   
 
 logger.info('precomputing mapping for ytid and clsidx ')
 ytid2clsidx, clsidx2ytid = get_ytid_clsidx_mapping()
@@ -324,7 +324,7 @@ def get_loader():
 
 
 if __name__ == '__main__':
-    train_h5_files = glob.glob('./audioset/mel-128/*.h5')
+    train_h5_files = glob.glob(c['unbalance_train_h5'])
     dataset = H5AudioSet(train_h5_files, balance_sampling=True, augment=True, training=True)
     x, y = dataset[0]
     print(x.shape, y.shape)
