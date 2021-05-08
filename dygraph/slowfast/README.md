@@ -68,7 +68,7 @@ SlowFast Overview
 
 ## 数据准备
 
-SlowFast模型的训练数据采用Kinetics400数据集，数据下载及准备请参考[数据说明](../PaddleCV/video/data/dataset/README.md)
+SlowFast模型的训练数据采用Kinetics400数据集，数据下载及准备请参考[数据说明](../PaddleCV/video/data/dataset/README.md)。
 
 
 ## 模型训练
