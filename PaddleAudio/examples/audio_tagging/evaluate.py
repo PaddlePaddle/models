@@ -23,15 +23,16 @@ import yaml
 from dataset import get_loader
 from model import *
 from paddle.utils import download
-from sklearn.metrics import average_precision_score
-from utils import (get_label_name_mapping, get_labels527, get_logger, get_metrics)
+from sklearn.metrics import average_precision_score, roc_auc_score
+from utils import get_label_name_mapping, get_labels, get_logger, get_metrics
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)
 
 logger = get_logger(__name__, os.path.join(c['log_path'], 'inference.txt'))
 
-checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
+#checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
+checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mixup_map0.359.pdparams'
 
 
 def evaluate(epoch, val_loader, model, loss_fn, log_writer=None):
@@ -74,8 +75,9 @@ def evaluate(epoch, val_loader, model, loss_fn, log_writer=None):
     all_preds = np.concatenate(all_preds, 0)
     all_labels = np.concatenate(all_labels, 0)
     mAP_scores = average_precision_score(all_labels, all_preds, average=None)
+    auc_scores = roc_auc_score(all_labels, all_preds, average=None)
 
-    return avg_loss, avg_preci, avg_recall, mAP_scores
+    return avg_loss, avg_preci, avg_recall, mAP_scores, auc_scores
 
 
 if __name__ == '__main__':
@@ -97,6 +99,10 @@ if __name__ == '__main__':
     _, val_loader = get_loader()
     logger.info(f'evaluating...')
 
-    val_acc, val_preci, val_recall, mAP_scores = evaluate(0, val_loader, model, F.binary_cross_entropy_with_logits)
+    val_acc, val_preci, val_recall, mAP_scores, auc_scores = evaluate(0, val_loader, model,
+                                                                      F.binary_cross_entropy_with_logits)
     avg_map = np.mean(mAP_scores)
+    auc = np.mean(auc_scores)
+
     logger.info(f'average mAP: {avg_map}')
+    logger.info(f'auc: {auc}')

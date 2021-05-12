@@ -12,5 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .augment import *
-from .core import *
+import numpy as np
+__all__ = ['ParameterError', 'NotImplError']
+
+
+class ParameterError(Exception):
+    """Exception class for Parameter checking"""
+    pass
+
+
+class NotImplError(Exception):
+    def __init__(self, ):
+        super().__init__("The function is not implemented")

@@ -22,7 +22,8 @@ import paddleaudio as pa
 import yaml
 from model import *
 from paddle.utils import download
-from utils import (get_label_name_mapping, get_labels527, get_logger, get_metrics)
+from utils import (get_label_name_mapping, get_labels527, get_logger,
+                   get_metrics)
 
 with open('./config.yaml') as f:
     c = yaml.safe_load(f)
@@ -32,20 +33,19 @@ logger = get_logger(__name__, os.path.join(c['log_path'], 'inference.txt'))
 
 def load_and_extract_feature(file):
     s, r = pa.load(file, sr=c['sample_rate'])
-    x = pa.features.mel_spect(
-        s,
-        sample_rate=c['sample_rate'],
-        window_size=c['window_size'],
-        hop_length=c['hop_size'],
-        mel_bins=c['mel_bins'],
-        fmin=c['fmin'],
-        fmax=c['fmax'],
-        window='hann',
-        center=True,
-        pad_mode='reflect',
-        ref=1.0,
-        amin=1e-10,
-        top_db=None)
+    x = pa.features.mel_spect(s,
+                              sample_rate=c['sample_rate'],
+                              window_size=c['window_size'],
+                              hop_length=c['hop_size'],
+                              mel_bins=c['mel_bins'],
+                              fmin=c['fmin'],
+                              fmax=c['fmax'],
+                              window='hann',
+                              center=True,
+                              pad_mode='reflect',
+                              ref=1.0,
+                              amin=1e-10,
+                              top_db=None)
 
     x = x.T  #!!
     x = paddle.Tensor(x).unsqueeze((0, 1))

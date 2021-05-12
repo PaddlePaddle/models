@@ -40,7 +40,7 @@ logger = get_logger(__name__, os.path.join(c['log_path'], 'log.txt'))
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Audioset training')
-    parser.add_argument('--device', type=int, required=False, default=0)
+    parser.add_argument('--device', type=int, required=False, default=3)
     parser.add_argument('--restore', type=int, required=False, default=-1)
     parser.add_argument('--distributed', type=int, required=False, default=0)
 
@@ -74,13 +74,25 @@ if __name__ == '__main__':
         # p.stop_gradient = False
         optimizer = Adam(learning_rate=c['start_lr'], parameters=model.parameters())
         optimizer.set_state_dict(optim_dict)
-        start_poch = args.restore
+        start_epoch = args.restore
 
     else:
-        model = ModelClass(
-            pretrained=True, num_classes=c['num_classes'], dropout=c['dropout'])  # use imagenet pretrained
+        model = ModelClass(pretrained=False, num_classes=c['num_classes'],
+                           dropout=c['dropout'])  # use imagenet pretrained
+
+        sd = paddle.load('./checkpoints/resnet50.pdparams')
+        sd['conv1.weight'] = np.mean(sd['conv1.weight'], 1, keepdims=True)
+
+        #sd['fc.weight'] = np.random.randn(2048,527).astype('float32')*0.0001
+        #sd['fc.bias'] = np.random.randn(527).astype('float32')*0
+        model.load_dict(sd)
+
         optimizer = Adam(learning_rate=c['start_lr'], parameters=model.parameters())
         start_epoch = 0
+
+    for name, p in model.named_parameters():
+        print(name, p.stop_gradient)
+        p.stop_gradient = False
 
     os.makedirs(c['model_dir'], exist_ok=True)
     if args.distributed != 0:
@@ -90,13 +102,18 @@ if __name__ == '__main__':
 
     epoch_num = c['epoch_num']
     if args.restore != -1:
-        val_acc, val_preci, val_recall, mAP_scores = evaluate(args.restore, val_loader, model, bce_loss, log_writer)
+        val_acc, val_preci, val_recall, mAP_scores, auc_scores = evaluate(args.restore, val_loader, model, bce_loss,
+                                                                          log_writer)
         avg_map = np.mean(mAP_scores)
         logger.info(f'average at epoch {args.restore} is {avg_map}')
+        logger.info(f'auc: {np.mean(auc_scores)}')
+        best_mAP = avg_map
+    else:
+        best_mAP = 0.0
+
     step = 0
-    best_acc = 0
-    best_mAP = 0
-    for epoch in range(start_poch, epoch_num):
+
+    for epoch in range(start_epoch, epoch_num):
 
         train_loader.dataset.shuffle()
         avg_loss = 0.0
@@ -110,7 +127,7 @@ if __name__ == '__main__':
             xd, yd = data
             xd.stop_gradient = False
             yd.stop_gradient = False
-            if c['balance_sampling']:
+            if c['balanced_sampling']:
                 xd = xd.squeeze()
                 yd = yd.squeeze()
             xd = xd.unsqueeze((1))
@@ -125,7 +142,7 @@ if __name__ == '__main__':
                 loss_val.backward()
             optimizer.step()
             model.clear_gradients()
-            pred = F.softmax(logits)
+            pred = F.sigmoid(logits)
             preci, recall = get_metrics(yd.squeeze(), pred)
             avg_loss = (avg_loss * batch_id + loss_val.numpy()[0]) / (1 + batch_id)
             avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
@@ -151,8 +168,11 @@ if __name__ == '__main__':
             if step % c['checkpoint_step'] == 0 and local_rank == 0:
                 save_checkpoint(epoch, model, optimizer, prefix)
 
-                val_acc, val_preci, val_recall, mAP_scores = evaluate(epoch, val_loader, model, bce_loss, log_writer)
+                val_acc, val_preci, val_recall, mAP_scores, auc_scores = evaluate(epoch, val_loader, model, bce_loss,
+                                                                                  log_writer)
                 avg_map = np.mean(mAP_scores)
+                logger.info(f'average at epoch {epoch} is {avg_map}')
+                logger.info(f'auc: {np.mean(auc_scores)}')
 
                 if avg_map > best_mAP:
                     logger.info('mAP improved from {} to {}'.format(best_mAP, avg_map))
@@ -160,17 +180,18 @@ if __name__ == '__main__':
                     if last_model is not None:
                         os.remove(last_model)
 
-                    fn = os.path.join(c['model_dir'], '{}_epoch{}_mAP{:.3}_preci{:.3}_recall{:.3}.pdparams'.format(
-                        prefix, epoch, avg_map, val_preci, val_recall))
+                    fn = os.path.join(
+                        c['model_dir'], '{}_epoch{}_mAP{:.3}_preci{:.3}_recall{:.3}.pdparams'.format(
+                            prefix, epoch, avg_map, val_preci, val_recall))
                     paddle.save(model.state_dict(), fn)
                     last_model = fn
                 else:
                     logger.info(f'mAP {avg_map} did not improved from {best_mAP}')
 
             if step % c['lr_dec_per_step'] == 0 and step != 0:
-                if optimizer.get_lr() <= 3e-6:
+                if optimizer.get_lr() <= 1e-6:
                     factor = 0.95
                 else:
-                    factor = 0.1
+                    factor = 0.5
                 optimizer.set_lr(optimizer.get_lr() * factor)
                 logger.info('decreased lr to {}'.format(optimizer.get_lr()))

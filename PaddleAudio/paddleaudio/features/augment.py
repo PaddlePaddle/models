@@ -13,21 +13,22 @@
 # limitations under the License.
 
 import numpy as np
-import paddle
-
 from ..backends import depth_convert
-from .utils import randint, weighted_sampling
 
 __all__ = ['depth_augment', 'spect_augment', 'random_crop1d', 'random_crop2d']
 
+def randint(high):
+    return int(np.random.randint(0, high=high))
+
+def rand():
+    return float(np.random.rand(1))
 
 def depth_augment(y, choices=['int8', 'int16'], probs=[0.5, 0.5]):
     assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
-    k = weighted_sampling(probs)
-    #k = randint(len(choices))
+    depth = np.random.choice(choices,p = probs)
     src_depth = y.dtype
-    y1 = depth_convert(y, choices[k])
+    y1 = depth_convert(y, depth)
     y2 = depth_convert(y1, src_depth)
     return y2
 
@@ -116,7 +117,7 @@ def random_crop2d(s, crop_len, tempo_axis=0):  # random crop according to tempor
     assert tempo_axis < s.ndim, 'axis out of range'
     n = s.shape[tempo_axis]
     idx = randint(high=n - crop_len)
-    if type(s) == np.ndarray:
+    if type(s) is np.ndarray:
         sli = [slice(None) for i in range(s.ndim)]
         sli[tempo_axis] = slice(idx, idx + crop_len)
         out = s[tuple(sli)]

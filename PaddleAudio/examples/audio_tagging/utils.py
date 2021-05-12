@@ -8,9 +8,7 @@ import paddle.nn.functional as F
 import yaml
 from sklearn.metrics import average_precision_score
 
-__all__ = [
-    'get_logger', 'save_checkpoint', 'load_checkpoint', 'get_labels527', 'random_choice', 'get_label_name_mapping'
-]
+__all__ = ['get_logger', 'save_checkpoint', 'load_checkpoint', 'get_labels', 'random_choice', 'get_label_name_mapping']
 
 
 def random_choice(a):
@@ -18,19 +16,19 @@ def random_choice(a):
     return a[int(i)]
 
 
-def get_labels527():
+def get_labels():
     with open(c['audioset_label']) as F:
-        labels527 = F.read().split('\n')
-    return labels527
+        labels = F.read().split('\n')
+    return labels
 
 
 def get_ytid_clsidx_mapping():
     """
     Compute the mapping between youtube id and class index.
-    The class index range from 0 to 526, correspoding to the labels stored in audioset_labels527.txt file
+    The class index range from 0 to 527, correspoding to the labels stored in audioset_labels.txt file
     """
-    labels527 = get_labels527()
-    label2clsidx = {l: i for i, l in enumerate(labels527)}
+    labels = get_labels()
+    label2clsidx = {l: i for i, l in enumerate(labels)}
     lines = open('./assets/unbalanced_train_segments.csv').read().split('\n')
     lines += open('./assets/balanced_train_segments.csv').read().split('\n')
     lines += open('./assets/eval_segments.csv').read().split('\n')
@@ -44,7 +42,7 @@ def get_ytid_clsidx_mapping():
             label = label.replace('"', '').strip()
             cls_idx.append(label2clsidx[label])
         ytid2clsidx.update({ytid: cls_idx})
-    clsidx2ytid = {i: [] for i in range(527)}
+    clsidx2ytid = {i: [] for i in range(c['num_classes'])}
     for k in ytid2clsidx.keys():
         for v in ytid2clsidx[k]:
             clsidx2ytid[v] += [k]
@@ -74,23 +72,23 @@ def get_logger(name, log_path, level='INFO', fmt='%(asctime)s-%(levelname)s: %(m
 
 
 def save_checkpoint(step, model, optimizer, prefix):
-    logger.info('checkpointing at step', step)
-    last_check = c['model_path'] + '/{}_checkpoint{}.pdparams'.format(prefix, step - c['checkpoint_step'])
+    logger.info(f'checkpointing at step {step}')
+    last_check = c['model_dir'] + '/{}_checkpoint{}.pdparams'.format(prefix, step - c['checkpoint_step'])
     if os.path.exists(last_check):
         os.system('rm ' + last_check)
-    last_check = c['model_path'] + '/{}_checkpoint{}.pdopt'.format(prefix, step - c['checkpoint_step'])
+    last_check = c['model_dir'] + '/{}_checkpoint{}.pdopt'.format(prefix, step - c['checkpoint_step'])
     if os.path.exists(last_check):
         os.system('rm ' + last_check)
 
-    paddle.save(model.state_dict(), c['model_path'] + '/{}_checkpoint{}.pdparams'.format(prefix, step))
-    paddle.save(optimizer.state_dict(), c['model_path'] + '/{}_checkpoint{}.pdopt'.format(prefix, step))
+    paddle.save(model.state_dict(), c['model_dir'] + '/{}_checkpoint{}.pdparams'.format(prefix, step))
+    paddle.save(optimizer.state_dict(), c['model_dir'] + '/{}_checkpoint{}.pdopt'.format(prefix, step))
 
 
 def load_checkpoint(epoch, prefix):
-    file = c['model_path'] + '/{}_checkpoint_model{}.tar'.format(prefix, epoch)
+    file = c['model_dir'] + '/{}_checkpoint_model{}.tar'.format(prefix, epoch)
     logger.info('loading checkpoing ' + file)
-    model_dict = paddle.load(c['model_path'] + '/{}_checkpoint{}.pdparams'.format(prefix, epoch))
-    optim_dict = paddle.load(c['model_path'] + '/{}_checkpoint{}.pdopt'.format(prefix, epoch))
+    model_dict = paddle.load(c['model_dir'] + '/{}_checkpoint{}.pdparams'.format(prefix, epoch))
+    optim_dict = paddle.load(c['model_dir'] + '/{}_checkpoint{}.pdopt'.format(prefix, epoch))
     return model_dict, optim_dict
 
 

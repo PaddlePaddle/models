@@ -96,8 +96,14 @@ class BottleneckBlock(nn.Layer):
         self.conv1 = nn.Conv2D(inplanes, width, 1, bias_attr=False)
         self.bn1 = norm_layer(width)
 
-        self.conv2 = nn.Conv2D(
-            width, width, 3, padding=dilation, stride=stride, groups=groups, dilation=dilation, bias_attr=False)
+        self.conv2 = nn.Conv2D(width,
+                               width,
+                               3,
+                               padding=dilation,
+                               stride=stride,
+                               groups=groups,
+                               dilation=dilation,
+                               bias_attr=False)
         self.bn2 = norm_layer(width)
 
         self.conv3 = nn.Conv2D(width, planes * self.expansion, 1, bias_attr=False)
@@ -151,7 +157,6 @@ class ResNet(nn.Layer):
             resnet18 = ResNet(BasicBlock, 18)
 
     """
-
     def __init__(self, block, depth, num_classes=1000, with_pool=True, dropout=0.5):
         super(ResNet, self).__init__()
         layer_cfg = {18: [2, 2, 2, 2], 34: [3, 4, 6, 3], 50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}
@@ -186,9 +191,9 @@ class ResNet(nn.Layer):
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2D(
-                    self.inplanes, planes * block.expansion, 1, stride=stride, bias_attr=False),
-                norm_layer(planes * block.expansion), )
+                nn.Conv2D(self.inplanes, planes * block.expansion, 1, stride=stride, bias_attr=False),
+                norm_layer(planes * block.expansion),
+            )
 
         layers = []
         layers.append(block(self.inplanes, planes, stride, downsample, 1, 64, previous_dilation, norm_layer))
