@@ -58,7 +58,7 @@ For 11-point evaluation, simply change `evaluate_object_offline_40p.cpp` to `eva
 
 ## Training
 
-Please download the [pre-trained weights](https://pan.baidu.com/s/153s6AJXOS260WeaHUxG1FQ), (access code: vvu). Put it into ```./pretrained```.
+Please download the [pre-trained weights](https://pan.baidu.com/s/1vYFhln2f1M4lM3PeAIpFMw), (access code: 2ccv). Put it into ```./pretrained```.
 
 
 #### Single GPU
