@@ -58,7 +58,7 @@ For 11-point evaluation, simply change `evaluate_object_offline_40p.cpp` to `eva
 
 ## Training
 
-Please download the backbone pre-trained weights, [link](https://pan.baidu.com/s/153s6AJXOS260WeaHUxG1FQ), (access code: vvu). Put it into ```./pretrained```.
+Please download the [pre-trained weights](https://pan.baidu.com/s/153s6AJXOS260WeaHUxG1FQ), (access code: vvu). Put it into ```./pretrained```.
 
 
 #### Single GPU
