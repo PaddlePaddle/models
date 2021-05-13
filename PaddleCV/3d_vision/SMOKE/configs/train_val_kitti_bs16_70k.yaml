@@ -1,0 +1,33 @@
+_base_: '_base_/kitti.yaml'
+
+model:
+  type: SMOKE
+  #pretrained: null
+  backbone:
+    type: DLA34
+    pretrained: "pretrained/dla34.pdparams"
+  head:
+    type: SMOKEPredictor
+    num_classes: 3
+    reg_heads: 10
+    reg_channels: [1, 2, 3, 2, 2]
+    num_chanels: 256
+    norm_type: "gn"
+    in_channels: 64
+  post_process:
+    type: PostProcessor
+    depth_ref: [28.01, 16.32]
+    dim_ref: [[3.88, 1.63, 1.53], [1.78, 1.70, 0.58], [0.88, 1.73, 0.67]]
+    reg_head: 10
+    det_threshold: 0.25
+    max_detection: 50
+    pred_2d: True
+
+loss:
+  type: SMOKELossComputation
+  depth_ref: [28.01, 16.32]
+  dim_ref: [[3.88, 1.63, 1.53], [1.78, 1.70, 0.58], [0.88, 1.73, 0.67]]
+  reg_loss: "DisL1"
+  loss_weight: [1., 10.]
+  max_objs: 50
+
