@@ -100,7 +100,6 @@ def train(model,
     save_models = deque()
     batch_start = time.time()
 
-
     iter = start_iter
     while iter < iters:
         for data in loader:

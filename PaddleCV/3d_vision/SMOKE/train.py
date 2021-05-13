@@ -19,7 +19,7 @@ import argparse
 import paddle
 
 from smoke.cvlibs import manager, Config
-from smoke.utils import get_sys_env, logger
+from smoke.utils import logger
 from smoke.core import train
 
 
@@ -104,7 +104,7 @@ def main(args):
         raise ValueError(
             'The length of train_dataset is 0. Please check if your dataset is valid'
         )
-    val_dataset = cfg.val_dataset if args.do_eval else None
+    val_dataset = None #cfg.val_dataset  if args.do_eval else None
     losses = cfg.loss
 
     msg = '\n---------------Config Information---------------\n'
