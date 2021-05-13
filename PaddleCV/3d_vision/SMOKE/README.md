@@ -109,6 +109,8 @@ Please download and uncompress above model weights first.
 python test.py --config configs/test_export.yaml --model_path path-to-model/model_waymo.pdparams --input_path examples/0615037.png --output_path paddle.png
 ```
 
+<img align="center" src="docs/paddle.png" width="750">
+
 ## Model Deployment
 
 1. Convert to a static-graph model
@@ -142,6 +144,7 @@ Now you can run the inference anywhere without the repo. We provive an example f
 ```bash
 python deploy/infer.py --model_file deploy/inference.pdmodel --params_file deploy/inference.pdiparams --input_path examples/0615037.png --output_path paddle.png
 ```
+<img align="center" src="docs/paddle.png" width="750">
 
 ## Reference
 
