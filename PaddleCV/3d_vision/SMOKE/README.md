@@ -106,7 +106,7 @@ Download the well-trained models here, [smoke-release](https://pan.baidu.com/s/1
 
 Please download and uncompress above model weights first.
 ```bash
-python test.py --config configs/test_export.yaml --model_path path-to-model/model_waymo.pdparams --input_path 0615037.png --output_path paddle.png
+python test.py --config configs/test_export.yaml --model_path path-to-model/model_waymo.pdparams --input_path examples/0615037.png --output_path paddle.png
 ```
 
 ## Model Deployment
