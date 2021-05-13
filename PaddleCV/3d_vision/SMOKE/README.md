@@ -58,7 +58,7 @@ For 11-point evaluation, simply change `evaluate_object_offline_40p.cpp` to `eva
 
 ## Training
 
-Please download the backbone pre-trained weights, [link](https://pan.baidu.com/s/153s6AJXOS260WeaHUxG1FQ), (access code: vvu). Put it into ```./pretrained```.
+Please download the [pre-trained weights](https://pan.baidu.com/s/1vYFhln2f1M4lM3PeAIpFMw), (access code: 2ccv). Put it into ```./pretrained```.
 
 
 #### Single GPU
@@ -106,7 +106,7 @@ Download the well-trained models here, [smoke-release](https://pan.baidu.com/s/1
 
 Please download and uncompress above model weights first.
 ```bash
-python test.py --config configs/test_export.yaml --model_path path-to-model/model_waymo.pdparams --input_path 0615037.png --output_path paddle.png
+python test.py --config configs/test_export.yaml --model_path path-to-model/model_waymo.pdparams --input_path examples/0615037.png --output_path paddle.png
 ```
 
 ## Model Deployment
