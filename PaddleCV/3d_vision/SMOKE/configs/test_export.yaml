@@ -1,4 +1,4 @@
-_base_: 'train_val_kitti_bs16_70k.yaml'
+_base_: 'train_val_kitti.yaml'
 
 model:
   post_process:
