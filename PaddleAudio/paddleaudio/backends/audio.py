@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import warnings
-from typing import Union, List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
-from numpy import ndarray as array
-from scipy.io import wavfile
 import resampy
 import soundfile as sf
+from numpy import ndarray as array
+from scipy.io import wavfile
 
-from paddleaudio.utils import ParameterError
+from ..utils import ParameterError
 
 __all__ = [
     'resample',
@@ -36,10 +36,7 @@ RESAMPLE_MODES = ['kaiser_best', 'kaiser_fast']
 EPS = 1e-8
 
 
-def resample(y: array,
-             src_sr: int,
-             target_sr: int,
-             mode: str = 'kaiser_fast') -> array:
+def resample(y: array, src_sr: int, target_sr: int, mode: str = 'kaiser_fast') -> array:
     """ Audio resampling
 
      This function is the same as using resampy.resample().
@@ -54,8 +51,7 @@ def resample(y: array,
         we recommend the mode kaiser_fast in large scale audio trainning')
 
     if not isinstance(y, np.ndarray):
-        raise ParameterError(
-            'Only support numpy array, but received y in {type(y)}')
+        raise ParameterError('Only support numpy array, but received y in {type(y)}')
 
     if mode not in RESAMPLE_MODES:
         raise ParameterError(f'resample mode must in {RESAMPLE_MODES}')
@@ -63,16 +59,13 @@ def resample(y: array,
     return resampy.resample(y, src_sr, target_sr, filter=mode)
 
 
-def to_mono(y: array,
-            merge_type: str = 'average') -> array:
-    """ convert sterior audio to mono 
+def to_mono(y: array, merge_type: str = 'average') -> array:
+    """ convert sterior audio to mono
     """
     if merge_type not in MERGE_TYPES:
-        raise ParameterError(
-            f'Unsupported merge type {merge_type}, available types are {MERGE_TYPES}')
+        raise ParameterError(f'Unsupported merge type {merge_type}, available types are {MERGE_TYPES}')
     if y.ndim > 2:
-        raise ParameterError(
-            f'Unsupported audio array,  y.ndim > 2, the shape is {y.shape}')
+        raise ParameterError(f'Unsupported audio array,  y.ndim > 2, the shape is {y.shape}')
     if y.ndim == 1:  # nothing to merge
         return y
 
@@ -90,21 +83,18 @@ def to_mono(y: array,
     elif y.dtype == 'int16':
         y_out = y.astype('int32')
         y_out = (y_out[0] + y_out[1]) // 2
-        y_out = np.clip(y_out, np.iinfo(y.dtype).min,
-                        np.iinfo(y.dtype).max).astype(y.dtype)
+        y_out = np.clip(y_out, np.iinfo(y.dtype).min, np.iinfo(y.dtype).max).astype(y.dtype)
 
     elif y.dtype == 'int8':
         y_out = y.astype('int16')
         y_out = (y_out[0] + y_out[1]) // 2
-        y_out = np.clip(y_out, np.iinfo(y.dtype).min,
-                        np.iinfo(y.dtype).max).astype(y.dtype)
+        y_out = np.clip(y_out, np.iinfo(y.dtype).min, np.iinfo(y.dtype).max).astype(y.dtype)
     else:
         raise ParameterError(f'Unsupported dtype: {y.dtype}')
     return y_out
 
 
-def _safe_cast(y: array,
-               dtype: Union[type, str]) -> array:
+def _safe_cast(y: array, dtype: Union[type, str]) -> array:
     """ data type casting in a safe way, i.e., prevent overflow or underflow
 
     This function is used internally.
@@ -112,13 +102,11 @@ def _safe_cast(y: array,
     return np.clip(y, np.iinfo(dtype).min, np.iinfo(dtype).max).astype(dtype)
 
 
-def depth_convert(y: array,
-                  dtype: Union[type, str],
-                  dithering: bool = True) -> array:
+def depth_convert(y: array, dtype: Union[type, str], dithering: bool = True) -> array:
     """Convert audio array to target dtype safely
 
-    This function convert audio waveform to a target dtype, with addition steps of 
-    preventing overflow/underflow and preserving audio range. 
+    This function convert audio waveform to a target dtype, with addition steps of
+    preventing overflow/underflow and preserving audio range.
 
     """
     if dithering:
@@ -126,8 +114,7 @@ def depth_convert(y: array,
 
     SUPPORT_DTYPE = ['int16', 'int8', 'float32', 'float64']
     if y.dtype not in SUPPORT_DTYPE:
-        raise ParameterError(f'Unsupported audio dtype, '
-                             'y.dtype is {y.dtype}, supported dtypes are {SUPPORT_DTYPE}')
+        raise ParameterError(f'Unsupported audio dtype, ' 'y.dtype is {y.dtype}, supported dtypes are {SUPPORT_DTYPE}')
 
     if dtype not in SUPPORT_DTYPE:
         raise ParameterError(f'Unsupported audio dtype, '
@@ -144,8 +131,7 @@ def depth_convert(y: array,
     if dtype == 'int16' or dtype == 'int8':
         if y.dtype in ['float64', 'float32']:
             factor = np.iinfo(dtype).max
-            y = np.clip(y * factor, np.iinfo(dtype).min,
-                        np.iinfo(dtype).max).astype(dtype)
+            y = np.clip(y * factor, np.iinfo(dtype).min, np.iinfo(dtype).max).astype(dtype)
             y = y.astype(dtype)
         else:
             if dtype == 'int16' and y.dtype == 'int8':
@@ -170,7 +156,7 @@ def sound_file_load(file: str,
                     duration: Optional[int] = None) -> Tuple[array, int]:
     """Load audio using soundfile library
 
-    This function load audio file using libsndfile. 
+    This function load audio file using libsndfile.
 
     Reference:
         http://www.mega-nerd.com/libsndfile/#Features
@@ -192,7 +178,7 @@ def sound_file_load(file: str,
 def audio_file_load():
     """Load audio using audiofile library
 
-    This function load audio file using audiofile. 
+    This function load audio file using audiofile.
 
     Reference:
         https://audiofile.68k.org/
@@ -204,7 +190,7 @@ def audio_file_load():
 def sox_file_load():
     """Load audio using sox library
 
-    This function load audio file using sox. 
+    This function load audio file using sox.
 
     Reference:
         http://sox.sourceforge.net/
@@ -212,11 +198,9 @@ def sox_file_load():
     raise NotImplementedError()
 
 
-def normalize(y: array,
-              norm_type: str = 'linear',
-              mul_factor: float = 1.0) -> array:
+def normalize(y: array, norm_type: str = 'linear', mul_factor: float = 1.0) -> array:
     """ normalize an input audio with additional multiplier.
-       
+
     """
 
     if norm_type == 'linear':
@@ -226,36 +210,31 @@ def normalize(y: array,
     elif norm_type == 'gaussian':
         amean = np.mean(y)
         astd = np.std(y)
-        astd = max(astd,EPS)
-        y = mul_factor * (y - amean) / astd 
+        astd = max(astd, EPS)
+        y = mul_factor * (y - amean) / astd
     else:
         raise NotImplementedError(f'norm_type should be in {NORMALMIZE_TYPES}')
 
     return y
 
 
-def save_wav(y: array,
-             sr: int,
-             file: str) -> None:
+def save_wav(y: array, sr: int, file: str) -> None:
     """Save audio file to disk.
-    This function saves audio to disk using scipy.io.wavfile, with additional step 
+    This function saves audio to disk using scipy.io.wavfile, with additional step
     to convert input waveform to int16 unless it already is int16
 
     Notes:
-        It only support raw wav format. 
+        It only support raw wav format.
 
     """
     if not file.endswith('.wav'):
-        raise ParameterError(
-            f'only .wav file supported, but dst file name is: {file}')
+        raise ParameterError(f'only .wav file supported, but dst file name is: {file}')
 
     if sr <= 0:
-        raise ParameterError(
-            f'Sample rate should be larger than 0, recieved sr = {sr}')
+        raise ParameterError(f'Sample rate should be larger than 0, recieved sr = {sr}')
 
     if y.dtype not in ['int16', 'int8']:
-        warnings.warn(
-            f'input data type is {y.dtype}, will convert data to int16 format before saving')
+        warnings.warn(f'input data type is {y.dtype}, will convert data to int16 format before saving')
         y_out = depth_convert(y, 'int16')
     else:
         y_out = y
@@ -263,19 +242,20 @@ def save_wav(y: array,
     wavfile.write(file, sr, y_out)
 
 
-def load(file: str,
-         sr: Optional[int] = None,
-         mono: bool = True,
-         merge_type: str = 'average',  # ch0,ch1,random,average
-         normal: bool = True,
-         norm_type: str = 'linear',
-         norm_mul_factor: float = 1.0,
-         offset: float = 0.0,
-         duration: Optional[int] = None,
-         dtype: str = 'float32',
-         resample_mode: str = 'kaiser_fast') -> Tuple[array, int]:
-    """Load audio file from disk. 
-    This function loads audio from disk using using audio beackend. 
+def load(
+        file: str,
+        sr: Optional[int] = None,
+        mono: bool = True,
+        merge_type: str = 'average',  # ch0,ch1,random,average
+        normal: bool = True,
+        norm_type: str = 'linear',
+        norm_mul_factor: float = 1.0,
+        offset: float = 0.0,
+        duration: Optional[int] = None,
+        dtype: str = 'float32',
+        resample_mode: str = 'kaiser_fast') -> Tuple[array, int]:
+    """Load audio file from disk.
+    This function loads audio from disk using using audio beackend.
 
     Parameters:
 

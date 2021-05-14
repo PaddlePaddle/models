@@ -37,7 +37,7 @@ def download_and_decompress(archives: List[Dict[str, str]], path: str):
         download.get_path_from_url(archive['url'], path, archive['md5'])
 
 
-def load_state_dict_from_url(url: str, path: str, md5: str=None):
+def load_state_dict_from_url(url: str, path: str, md5: str = None):
     """
     Download and load a state dict from url
     """

@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import TypeVar, Iterable, Tuple, Optional, List
+from typing import Iterable, List, Optional, Tuple, TypeVar
 
 import numpy as np
 from numpy import ndarray as array
-
 from paddleaudio.backends import depth_convert
 from paddleaudio.utils import ParameterError
 
@@ -45,10 +44,10 @@ def rand() -> float:
     return float(np.random.rand(1))
 
 
-def depth_augment(y: array, choices: List=['int8', 'int16'], probs: List[float]=[0.5, 0.5]) -> array:
+def depth_augment(y: array, choices: List = ['int8', 'int16'], probs: List[float] = [0.5, 0.5]) -> array:
     """ Audio depth augmentation
 
-    Do audio depth augmentation to simulate the distortion brought by quantization.  
+    Do audio depth augmentation to simulate the distortion brought by quantization.
     """
     assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
@@ -60,10 +59,10 @@ def depth_augment(y: array, choices: List=['int8', 'int16'], probs: List[float]=
     return y2
 
 
-def adaptive_spect_augment(spect: array, tempo_axis: int=0, level: float=0.1) -> array:
-    """Do adpative spectrogram augmentation 
+def adaptive_spect_augment(spect: array, tempo_axis: int = 0, level: float = 0.1) -> array:
+    """Do adpative spectrogram augmentation
 
-    The level of the augmentation is gowern by the paramter level, 
+    The level of the augmentation is gowern by the paramter level,
     ranging from 0 to 1, with 0 represents no augmentation。
 
     """
@@ -98,11 +97,11 @@ def adaptive_spect_augment(spect: array, tempo_axis: int=0, level: float=0.1) ->
 
 
 def spect_augment(spect: array,
-                  tempo_axis: int=0,
-                  max_time_mask: int=3,
-                  max_freq_mask: int=3,
-                  max_time_mask_width: int=30,
-                  max_freq_mask_width: int=20) -> array:
+                  tempo_axis: int = 0,
+                  max_time_mask: int = 3,
+                  max_freq_mask: int = 3,
+                  max_time_mask_width: int = 30,
+                  max_freq_mask_width: int = 20) -> array:
     """Do spectrogram augmentation in both time and freq axis
 
     Reference:
@@ -150,7 +149,7 @@ def random_crop1d(y: array, crop_len: int) -> array:
     return y[idx:idx + crop_len]
 
 
-def random_crop2d(s: array, crop_len: int, tempo_axis: int=0) -> array:
+def random_crop2d(s: array, crop_len: int, tempo_axis: int = 0) -> array:
     """ Do random cropping for 2D array, typically a spectrogram.
 
     The cropping is done in temporal direction on the time-freq input signal.
