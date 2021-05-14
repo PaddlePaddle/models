@@ -20,9 +20,9 @@ import paddle
 import paddle.nn.functional as F
 import paddleaudio as pa
 import yaml
-from model import *
+from model import resnet50
 from paddle.utils import download
-from utils import (get_label_name_mapping, get_labels527, get_logger,
+from utils import (get_label_name_mapping, get_labels, get_logger,
                    get_metrics)
 
 with open('./config.yaml') as f:
@@ -47,7 +47,7 @@ def load_and_extract_feature(file):
                               amin=1e-10,
                               top_db=None)
 
-    x = x.T  #!!
+    x = x.T  # !!
     x = paddle.Tensor(x).unsqueeze((0, 1))
     return x
 

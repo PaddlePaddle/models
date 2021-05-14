@@ -11,12 +11,17 @@ setuptools.setup(
     description="PaddleAudio, in development",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ranchlai/PaddleAudio",
-    packages=setuptools.find_packages(),
+    url="",
+    packages=setuptools.find_packages(exclude=["build*", "test*", "examples*"]),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[ 
+        'numpy >= 1.15.0',
+        'scipy >= 1.0.0',
+        'resampy >= 0.2.2',
+        'soundfile >= 0.9.0']
 )

@@ -12,29 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TypeVar, Iterable, Tuple, Optional, List
+
 import numpy as np
-from ..backends import depth_convert
+from numpy import ndarray as array
 
-__all__ = ['depth_augment', 'spect_augment', 'random_crop1d', 'random_crop2d']
+from paddleaudio.backends import depth_convert
+from paddleaudio.utils import ParameterError
 
-def randint(high):
+__all__ = [
+    'depth_augment',
+    'spect_augment',
+    'random_crop1d',
+    'random_crop2d',
+    'adaptive_spect_augment',
+]
+
+
+def randint(high: int) -> int:
+    """Generate one random integer in range [0 high)
+
+     This is a helper function for random data augmentaiton
+    """
     return int(np.random.randint(0, high=high))
 
-def rand():
+
+def rand() -> float:
+    """Generate one floating-point number in range [0 1)
+
+    This is a helper function for random data augmentaiton
+    """
     return float(np.random.rand(1))
 
-def depth_augment(y, choices=['int8', 'int16'], probs=[0.5, 0.5]):
+
+def depth_augment(y: array, choices: List=['int8', 'int16'], probs: List[float]=[0.5, 0.5]) -> array:
+    """ Audio depth augmentation
+
+    Do audio depth augmentation to simulate the distortion brought by quantization.  
+    """
     assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
-    depth = np.random.choice(choices,p = probs)
+    depth = np.random.choice(choices, p=probs)
     src_depth = y.dtype
     y1 = depth_convert(y, depth)
     y2 = depth_convert(y1, src_depth)
+
     return y2
 
 
-def adaptive_spect_augment(spect, tempo_axis=0, level=0.1):
+def adaptive_spect_augment(spect: array, tempo_axis: int=0, level: float=0.1) -> array:
+    """Do adpative spectrogram augmentation 
 
+    The level of the augmentation is gowern by the paramter level, 
+    ranging from 0 to 1, with 0 represents no augmentation。
+
+    """
     assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:
         nt, nf = spect.shape
@@ -47,35 +79,35 @@ def adaptive_spect_augment(spect, tempo_axis=0, level=0.1):
     num_time_mask = int(10 * level)
     num_freq_mask = int(10 * level)
 
-    # num_zeros = num_time_mask*time_mask_width*nf + num_freq_mask*freq_mask_width*nt
-    # factor = (nt*nf)/(nt*nf-num_zeros)
-
     if tempo_axis == 0:
-        for i in range(num_time_mask):
+        for _ in range(num_time_mask):
             start = randint(nt - time_mask_width)
             spect[start:start + time_mask_width, :] = 0
-        for i in range(num_freq_mask):
+        for _ in range(num_freq_mask):
             start = randint(nf - freq_mask_width)
             spect[:, start:start + freq_mask_width] = 0
     else:
-        for i in range(num_time_mask):
+        for _ in range(num_time_mask):
             start = randint(nt - time_mask_width)
             spect[:, start:start + time_mask_width] = 0
-        for i in range(num_freq_mask):
+        for _ in range(num_freq_mask):
             start = randint(nf - freq_mask_width)
             spect[start:start + freq_mask_width, :] = 0
 
     return spect
 
 
-def spect_augment(
-        spect,
-        tempo_axis=0,
-        max_time_mask=3,
-        max_freq_mask=3,
-        max_time_mask_width=30,
-        max_freq_mask_width=20, ):
+def spect_augment(spect: array,
+                  tempo_axis: int=0,
+                  max_time_mask: int=3,
+                  max_freq_mask: int=3,
+                  max_time_mask_width: int=30,
+                  max_freq_mask_width: int=20) -> array:
+    """Do spectrogram augmentation in both time and freq axis
 
+    Reference:
+
+    """
     assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:
         nt, nf = spect.shape
@@ -89,38 +121,46 @@ def spect_augment(
     freq_mask_width = randint(max_freq_mask_width)
 
     if tempo_axis == 0:
-        for i in range(num_time_mask):
+        for _ in range(num_time_mask):
             start = randint(nt - time_mask_width)
             spect[start:start + time_mask_width, :] = 0
-        for i in range(num_freq_mask):
+        for _ in range(num_freq_mask):
             start = randint(nf - freq_mask_width)
             spect[:, start:start + freq_mask_width] = 0
     else:
-        for i in range(num_time_mask):
+        for _ in range(num_time_mask):
             start = randint(nt - time_mask_width)
             spect[:, start:start + time_mask_width] = 0
-        for i in range(num_freq_mask):
+        for _ in range(num_freq_mask):
             start = randint(nf - freq_mask_width)
             spect[start:start + freq_mask_width, :] = 0
 
     return spect
 
 
-def random_crop1d(y, crop_len):
-    assert y.ndim == 1, 'only accept 1d tensor or numpy array'
+def random_crop1d(y: array, crop_len: int) -> array:
+    """ Do random cropping on 1d input signal
+
+    The input is a 1d signal, typically a sound waveform
+    """
+    if y.ndim != 1:
+        'only accept 1d tensor or numpy array'
     n = len(y)
     idx = randint(n - crop_len)
     return y[idx:idx + crop_len]
 
 
-def random_crop2d(s, crop_len, tempo_axis=0):  # random crop according to temporal direction
-    assert tempo_axis < s.ndim, 'axis out of range'
+def random_crop2d(s: array, crop_len: int, tempo_axis: int=0) -> array:
+    """ Do random cropping for 2D array, typically a spectrogram.
+
+    The cropping is done in temporal direction on the time-freq input signal.
+    """
+    if tempo_axis >= s.ndim:
+        raise ParameterError('axis out of range')
+
     n = s.shape[tempo_axis]
     idx = randint(high=n - crop_len)
-    if type(s) is np.ndarray:
-        sli = [slice(None) for i in range(s.ndim)]
-        sli[tempo_axis] = slice(idx, idx + crop_len)
-        out = s[tuple(sli)]
-    else:
-        out = paddle.index_select(s, paddle.Tensor(np.array([i for i in range(idx, idx + crop_len)])), axis=tempo_axis)
+    sli = [slice(None) for i in range(s.ndim)]
+    sli[tempo_axis] = slice(idx, idx + crop_len)
+    out = s[tuple(sli)]
     return out

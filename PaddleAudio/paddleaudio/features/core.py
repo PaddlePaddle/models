@@ -12,31 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+from typing import Union, List, Optional
+
 import numpy as np
+from numpy import ndarray as array
+
+import scipy
 from numpy.lib.stride_tricks import as_strided
 from scipy.signal import get_window
-import warnings
-import scipy
-from ..utils import ParameterError
+
+from paddleaudio.utils import ParameterError
 
 __all__ = [
-    'stft', 'mfcc', 'hz_to_mel', 'mel_to_hz', 'split_frames','mel_frequencies', 'power_to_db', 'compute_fbank_matrix',
-    'melspectrogram', 'spectrogram', 'mu_encode', 'mu_decode'
+    'stft',
+    'mfcc',
+    'hz_to_mel',
+    'mel_to_hz',
+    'split_frames',
+    'mel_frequencies',
+    'power_to_db',
+    'compute_fbank_matrix',
+    'melspectrogram',
+    'spectrogram',
+    'mu_encode',
+    'mu_decode',
 ]
 
 
-def pad_center(data, size, axis=-1, **kwargs):
+def pad_center(data: array, size: int, axis: int=-1, **kwargs) -> array:
     """Pad an array to a target length along a target axis.
+
     This differs from `np.pad` by centering the data prior to padding,
     analogous to `str.center`
     """
 
     kwargs.setdefault("mode", "constant")
-
     n = data.shape[axis]
-
     lpad = int((size - n) // 2)
-
     lengths = [(0, 0)] * data.ndim
     lengths[axis] = (lpad, int(size - n - lpad))
 
@@ -46,15 +59,9 @@ def pad_center(data, size, axis=-1, **kwargs):
     return np.pad(data, lengths, **kwargs)
 
 
-def split_frames(x, frame_length, hop_length, axis=-1):
+def split_frames(x: array, frame_length: int, hop_length: int, axis: int=-1) -> array:
     """Slice a data array into (overlapping) frames.
-    This implementation uses low-level stride manipulation to avoid
-    making a copy of the data.  The resulting frame representation
-    is a new view of the same input data.
-    However, if the input data is not contiguous in memory, a warning
-    will be issued and the output will be a full copy, rather than
-    a view of the input data.
-    
+
     This function is aligned with librosa.frame
     """
 
@@ -95,12 +102,11 @@ def split_frames(x, frame_length, hop_length, axis=-1):
     return as_strided(x, shape=shape, strides=strides)
 
 
-
-def check_audio(y, mono=True):
+def _check_audio(y, mono=True) -> bool:
     """Determine whether a variable contains valid audio data.  
-    The audio y must be a np.ndarray, ether 1-channel or two channel
-   """
 
+    The audio y must be a np.ndarray, ether 1-channel or two channel
+    """
     if not isinstance(y, np.ndarray):
         raise ParameterError("Audio data must be of type numpy.ndarray")
     if y.ndim > 2:
@@ -120,21 +126,22 @@ def check_audio(y, mono=True):
 
     return True
 
-def hz_to_mel(frequencies, htk=False):
-    r"""
-    Convert Hz to Mels
+
+def hz_to_mel(frequencies: Union[float, List[float], array], htk: bool=False) -> array:
+    """Convert Hz to Mels
+
     This function is aligned with librosa. 
     """
-    frequencies = np.asanyarray(frequencies)
+    freq = np.asanyarray(frequencies)
 
     if htk:
-        return 2595.0 * np.log10(1.0 + frequencies / 700.0)
+        return 2595.0 * np.log10(1.0 + freq / 700.0)
 
     # Fill in the linear part
     f_min = 0.0
     f_sp = 200.0 / 3
 
-    mels = (frequencies - f_min) / f_sp
+    mels = (freq - f_min) / f_sp
 
     # Fill in the log-scale part
 
@@ -142,51 +149,54 @@ def hz_to_mel(frequencies, htk=False):
     min_log_mel = (min_log_hz - f_min) / f_sp  # same (Mels)
     logstep = np.log(6.4) / 27.0  # step size for log region
 
-    if frequencies.ndim:
+    if freq.ndim:
         # If we have array data, vectorize
-        log_t = frequencies >= min_log_hz
-        mels[log_t] = min_log_mel + np.log(frequencies[log_t] / min_log_hz) / logstep
-    elif frequencies >= min_log_hz:
+        log_t = freq >= min_log_hz
+        mels[log_t] = min_log_mel + \
+            np.log(freq[log_t] / min_log_hz) / logstep
+    elif freq >= min_log_hz:
         # If we have scalar data, heck directly
-        mels = min_log_mel + np.log(frequencies / min_log_hz) / logstep
+        mels = min_log_mel + np.log(freq / min_log_hz) / logstep
 
     return mels
 
 
-def mel_to_hz(mels, htk=False):
-    r"""
-    Convert mel bin numbers to frequencies. 
+def mel_to_hz(mels: Union[float, List[float], array], htk: int=False) -> array:
+    """Convert mel bin numbers to frequencies. 
+
     This function is aligned with librosa. 
     """
-    mels = np.asanyarray(mels)
+    mel_array = np.asanyarray(mels)
 
     if htk:
-        return 700.0 * (10.0**(mels / 2595.0) - 1.0)
+        return 700.0 * (10.0**(mel_array / 2595.0) - 1.0)
 
     # Fill in the linear scale
     f_min = 0.0
     f_sp = 200.0 / 3
-    freqs = f_min + f_sp * mels
+    freqs = f_min + f_sp * mel_array
 
     # And now the nonlinear scale
     min_log_hz = 1000.0  # beginning of log region (Hz)
     min_log_mel = (min_log_hz - f_min) / f_sp  # same (Mels)
     logstep = np.log(6.4) / 27.0  # step size for log region
 
-    if mels.ndim:
+    if mel_array.ndim:
         # If we have vector data, vectorize
-        log_t = mels >= min_log_mel
-        freqs[log_t] = min_log_hz * np.exp(logstep * (mels[log_t] - min_log_mel))
-    elif mels >= min_log_mel:
+        log_t = mel_array >= min_log_mel
+        freqs[log_t] = min_log_hz * \
+            np.exp(logstep * (mel_array[log_t] - min_log_mel))
+    elif mel_array >= min_log_mel:
         # If we have scalar data, check directly
-        freqs = min_log_hz * np.exp(logstep * (mels - min_log_mel))
+        freqs = min_log_hz * np.exp(logstep * (mel_array - min_log_mel))
 
     return freqs
 
 
-def mel_frequencies(n_mels=128, fmin=0.0, fmax=11025.0, htk=False):
-    r"""
-    Compute mel frequencies
+def mel_frequencies(n_mels: int=128, fmin: float=0.0, fmax: float=11025.0, htk: bool=False) -> array:
+    """Compute mel frequencies
+
+    This function is aligned with librosa.
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(fmin, htk=htk)
@@ -197,27 +207,26 @@ def mel_frequencies(n_mels=128, fmin=0.0, fmax=11025.0, htk=False):
     return mel_to_hz(mels, htk=htk)
 
 
-def fft_frequencies(sr, n_fft):
-    r"""
-    Compute fft frequencies, used 
+def fft_frequencies(sr: int, n_fft: int) -> array:
+    """Compute fourier frequencies. 
+
+    This function is aligned with librosa. 
     """
     return np.linspace(0, float(sr) / 2, int(1 + n_fft // 2), endpoint=True)
 
 
-def compute_fbank_matrix(
-        sr,
-        n_fft,
-        n_mels=128,
-        fmin=0.0,
-        fmax=None,
-        htk=False,
-        norm="slaney",
-        dtype=np.float32, ):
-    r"""
-    Compute fbank matrix. 
-    This funciton is aligned with librosa.mel()
-    """
+def compute_fbank_matrix(sr: int,
+                         n_fft: int,
+                         n_mels: int=128,
+                         fmin: float=0.0,
+                         fmax: Optional[float]=None,
+                         htk: bool=False,
+                         norm: str="slaney",
+                         dtype: type=np.float32):
+    """Compute fbank matrix. 
 
+    This funciton is aligned with librosa.
+    """
     if norm != "slaney":
         raise ParameterError('norm must set to slaney')
 
@@ -261,20 +270,19 @@ def compute_fbank_matrix(
     return weights
 
 
-def stft(
-        x,
-        n_fft=2048,
-        hop_length=None,
-        win_length=None,
-        window="hann",
-        center=True,
-        dtype=np.complex64,
-        pad_mode="reflect", ):
-    r"""Short-time Fourier transform (STFT).
+def stft(x: array,
+         n_fft: int=2048,
+         hop_length: Optional[int]=None,
+         win_length: Optional[int]=None,
+         window: str="hann",
+         center: bool=True,
+         dtype: type=np.complex64,
+         pad_mode: str="reflect") -> array:
+    """Short-time Fourier transform (STFT).
 
+    This function is aligned with librosa. 
     """
-
-    check_audio(x)
+    _check_audio(x)
     # By default, use the entire frame
     if win_length is None:
         win_length = n_fft
@@ -318,14 +326,13 @@ def stft(
     return stft_matrix
 
 
-
-
-def power_to_db(spect, ref=1.0, amin=1e-10, top_db=80.0):
+def power_to_db(spect: array, ref: float=1.0, amin: float=1e-10, top_db: float=80.0) -> array:
     """Convert a power spectrogram (amplitude squared) to decibel (dB) units
 
     This computes the scaling ``10 * log10(spect / ref)`` in a numerically
     stable way.
 
+    This function is aligned with librosa. 
     """
     spect = np.asarray(spect)
 
@@ -356,10 +363,52 @@ def power_to_db(spect, ref=1.0, amin=1e-10, top_db=80.0):
 
     return log_spec
 
-def mfcc(x, sample_rate=16000, spect=None, n_mfcc=20, dct_type=2, norm="ortho", lifter=0, **kwargs):
+
+def mfcc(x,
+         sample_rate: int=16000,
+         spect: Optional[array]=None,
+         n_mfcc: int=20,
+         dct_type: int=2,
+         norm: str="ortho",
+         lifter: int=0,
+         **kwargs) -> array:
+    """Mel-frequency cepstral coefficients (MFCCs)
+
+    This function is NOT strictly aligned with librosa. The following example shows how to get the
+    same result with librosa: 
+
+    # paddleaudioe mfcc: 
+     kwargs = {
+        'window_size':512,
+        'hop_length':320,
+        'mel_bins':64,
+        'fmin':50,
+         'to_db':False}
+    a = mfcc(x,
+        #sample_rate=16000,
+        spect=None,
+        n_mfcc=20,
+        dct_type=2,
+        norm='ortho',
+        lifter=0,
+        **kwargs)
+
+    # librosa mfcc: 
+    spect = librosa.feature.melspectrogram(x,sr=16000,n_fft=512, 
+                                              win_length=512,
+                                              hop_length=320, 
+                                              n_mels=64, fmin=50)
+    b = librosa.feature.mfcc(x,
+        sr=16000,
+        S=spect,
+        n_mfcc=20,
+        dct_type=2,
+        norm='ortho',
+        lifter=0)
+
+    assert np.mean( (a-b)**2) < 1e-8
+
     """
-    Mel-frequency cepstral coefficients (MFCCs)
-   """
     if spect is None:
         spect = melspectrogram(x, sample_rate=sample_rate, **kwargs)
 
@@ -372,44 +421,52 @@ def mfcc(x, sample_rate=16000, spect=None, n_mfcc=20, dct_type=2, norm="ortho", 
         return M
     else:
         raise ParameterError(f"MFCC lifter={lifter} must be a non-negative number")
-def melspectrogram(x,
-                   sample_rate=16000,
-                   window_size=512,
-                   hop_length=320,
-                   mel_bins=64,
-                   fmin=50,
-                   fmax=None,
-                   window='hann',
-                   center=True,
-                   pad_mode='reflect',
-                   power=2.0,
-                   to_db=True,
-                   ref=1.0,
-                   amin=1e-10,
-                   top_db=None):
-    r""" 
-    compute mel-spectrogram. 
-    sample_rate is default to 16000, which is commonly used in speech/speaker processing. 
-    when fmax is None, it is set to sample_rate//2. 
-    Note that this function will convert mel spectgrum to db scale by default. This is different
-    that of librosa.
+
+
+def melspectrogram(x: array,
+                   sample_rate: int=16000,
+                   window_size: int=512,
+                   hop_length: int=320,
+                   n_mels: int=64,
+                   fmin: int=50,
+                   fmax: Optional[float]=None,
+                   window: str='hann',
+                   center: bool=True,
+                   pad_mode: str='reflect',
+                   power: float=2.0,
+                   to_db: bool=True,
+                   ref: float=1.0,
+                   amin: float=1e-10,
+                   top_db: Optional[float]=None) -> array:
+    """Compute mel-spectrogram. 
+
     Parameters:
-        y (numpy.ndarray): The input wavform is a numpy array [shape=(n,)]
+        x: numpy.ndarray
+        The input wavform is a numpy array [shape=(n,)]
+
+        window_size: int, typically 512, 1024, 2048, etc. 
+        The window size for framing, also used as n_fft for stft
+
 
     Returns:
         The mel-spectrogram in power scale or db scale(default)
 
-    Examples:
-     
+
+    Notes: 
+    1. Sample_rate is default to 16000, which is commonly used in speech/speaker processing. 
+    2. when fmax is None, it is set to sample_rate//2. 
+    3. this function will convert mel spectgrum to db scale by default. This is different
+    that of librosa.
+
     """
-    check_audio(x, mono=True)
+    _check_audio(x, mono=True)
     if len(x) <= 0:
         raise ParameterError('The input waveform is empty')
 
     if fmax is None:
         fmax = sample_rate // 2
     if fmin < 0 or fmin >= fmax:
-        raise ParameterError(f'fmin should be in range [0, fmax),but fmin={fmin},fmax={fmax}')
+        raise ParameterError('fmin and fmax must statisfy 0<fmin<fmax')
 
     s = stft(
         x,
@@ -421,7 +478,7 @@ def melspectrogram(x,
         pad_mode=pad_mode)
 
     spect_power = np.abs(s)**power
-    fb_matrix = compute_fbank_matrix(sr=sample_rate, n_fft=window_size, n_mels=mel_bins, fmin=fmin, fmax=fmax)
+    fb_matrix = compute_fbank_matrix(sr=sample_rate, n_fft=window_size, n_mels=n_mels, fmin=fmin, fmax=fmax)
     mel_spect = np.matmul(fb_matrix, spect_power)
     if to_db:
         return power_to_db(mel_spect, ref=ref, amin=amin, top_db=top_db)
@@ -429,14 +486,19 @@ def melspectrogram(x,
         return mel_spect
 
 
-def spectrogram(x,
-                sample_rate=16000,
-                window_size=512,
-                hop_length=320,
-                window='hann',
-                center=True,
-                pad_mode='reflect',
-                power=2):
+def spectrogram(x: array,
+                sample_rate: int=16000,
+                window_size: int=512,
+                hop_length: int=320,
+                window: str='hann',
+                center: bool=True,
+                pad_mode: str='reflect',
+                power: float=2.0) -> array:
+    """Compute spectrogram from an input waveform. 
+
+    This function is a wrapper for librosa.feature.stft, with addition step to 
+    compute the magnitude of the complex spectrogram.
+    """
 
     s = stft(
         x,
@@ -450,27 +512,43 @@ def spectrogram(x,
     return np.abs(s)**power
 
 
-def mu_encode(y, mu=255, quantize=True):
-    r"""
-    mu-law encoding
+def mu_encode(x: array, mu: int=255, quantized: bool=True) -> array:
+    """Mu-law encoding. 
+
+    Compute the mu-law decoding given an input code. 
+    When quantized is True, the result will be converted to 
+    integer in range [0,mu-1]. Otherwise, the resulting signal 
+    is in range [-1,1]
+
+
+    Reference:
+        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
+
     """
     mu = 255
     y = np.sign(x) * np.log1p(mu * np.abs(x)) / np.log1p(mu)
-    if quantize:
+    if quantized:
         y = np.floor((y + 1) / 2 * mu + 0.5)  # convert to [0 , mu-1]
     return y
 
 
-def mu_decode(y, mu=255, quantized=True):
-    r"""
-    mu-law decoding
+def mu_decode(y: array, mu: int=255, quantized: bool=True) -> array:
+    """Mu-law decoding. 
+
+    Compute the mu-law decoding given an input code. 
+
+    it assumes that the input y is in
+    range [0,mu-1] when quantize is True and [-1,1] otherwise 
+
+    Reference:
+        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
+
     """
     if mu < 1:
         raise ParameterError('mu is typically set as 2**k-1, k=1, 2, 3,...')
 
     mu = mu - 1
-    if quantized:  #undo the quantization
+    if quantized:  # undo the quantization
         y = y * 2 / mu - 1
     x = np.sign(y) / mu * ((1 + mu)**np.abs(y) - 1)
     return x
-
