@@ -22,25 +22,26 @@ batch_size :  64
 val_batch_size: 8
 num_classes: 527
 mixup :  True
-mixup_alpha :  0.5
+mixup_alpha :  1.0
 max_mel_len :  501
-mel_crop_len :  448 # used for augmentation
-balance_sampling :  True
+mel_crop_len :  480 # used for augmentation
+balanced_sampling :  True
 epoch_num :  500
 # for training from scratch
-#start_lr :  0.0003
-# for fine-tune
 start_lr :  0.00001
+# for fine-tune
+#start_lr :  0.00001
 #add dropout in resnet precedding the fc layer
-dropout: 0.25
-balance_train_h5 :  './audioset/balance_train.h5'
-unbalance_train_h5 :  './audioset/unbalance/*.h5'
-balance_eval_h5 :  './audioset/balance_eval.h5'
-audioset_label: './assets/audioset_labels_resnet.txt'
+dropout: 0.10
+balanced_train_h5 :  './audioset/balanced_train.h5'
+unbalanced_train_h5 :  './audioset/unbalanced/*.h5'
+balanced_eval_h5 :  './audioset/balanced_eval.h5'
+#audioset_label: './assets/audioset_labels_resnet.txt'
+audioset_label: './assets/audioset_labels_panns.txt'
 model_dir :  './checkpoints/'
-log_path :  './log'
-checkpoint_step :  5000
-lr_dec_per_step :  30000
+log_path :  './log5'
+checkpoint_step :  3000
+lr_dec_per_step :  60000
 num_workers :  0
 
 max_time_mask: 5
