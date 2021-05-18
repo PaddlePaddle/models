@@ -131,7 +131,7 @@ python evaluation.py
 
 ## Inference
 
-You can do inference give an input audio file by
+You can do inference by passing an input audio file to [inference.py](./inference.py）
 
 ```
 python inference.py --wav_file <path-to-your-wav-file> --top_k 5
