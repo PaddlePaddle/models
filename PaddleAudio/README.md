@@ -21,7 +21,7 @@ pip install .
 ```
 
 ## Quick start
-### Load audio and extract spectrogram
+### Audio loading and feature extraction
 ```
 import paddleaudio as pa
 s,r = pa.load(f)
