@@ -46,7 +46,7 @@ if __name__ == '__main__':
         c = yaml.safe_load(f)
     log_writer = LogWriter(logdir=c['log_path'])
 
-    prefix = 'new_random_fc_large_dropout_bn0_mixup_{}'.format(c['model_type'])
+    prefix = 'mixup_{}'.format(c['model_type'])
     if args.distributed != 0:
         dist.init_parallel_env()
         local_rank = dist.get_rank()
@@ -72,10 +72,6 @@ if __name__ == '__main__':
         model_dict, optim_dict = load_checkpoint(c['model_dir'], args.restore,
                                                  prefix)
         model.load_dict(model_dict)
-        # when loading a state dict, stop_gradent must set to False manully
-        # for p in model.parameters():
-        # print(p.stop_gradient)
-        # p.stop_gradient = False
         optimizer = Adam(learning_rate=c['start_lr'],
                          parameters=model.parameters())
         optimizer.set_state_dict(optim_dict)
