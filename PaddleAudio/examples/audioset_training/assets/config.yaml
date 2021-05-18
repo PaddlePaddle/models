@@ -18,6 +18,7 @@ hop_size: 640
 mel_bins: 128
 fmin: 50
 fmax: 16000
+
 batch_size :  64
 val_batch_size: 8
 num_classes: 527
@@ -28,19 +29,21 @@ mel_crop_len :  480 # used for augmentation
 balanced_sampling :  True
 epoch_num :  500
 # for training from scratch
-start_lr :  0.00001
-# for fine-tune
+start_lr :  0.0003
+warm_steps: 1000
+# for fine-tuning
 #start_lr :  0.00001
 #add dropout in resnet precedding the fc layer
-dropout: 0.10
+dropout: 0.20
+
+# set the data path accordingly
 balanced_train_h5 :  './audioset/balanced_train.h5'
 unbalanced_train_h5 :  './audioset/unbalanced/*.h5'
 balanced_eval_h5 :  './audioset/balanced_eval.h5'
-#audioset_label: './assets/audioset_labels_resnet.txt'
-audioset_label: './assets/audioset_labels_panns.txt'
+audioset_label: './assets/audioset_labels.txt'
 model_dir :  './checkpoints/'
-log_path :  './log5'
-checkpoint_step :  3000
+log_path :  './log'
+checkpoint_step :  5000
 lr_dec_per_step :  60000
 num_workers :  0
 

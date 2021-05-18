@@ -44,12 +44,16 @@ def rand() -> float:
     return float(np.random.rand(1))
 
 
-def depth_augment(y: array, choices: List = ['int8', 'int16'], probs: List[float] = [0.5, 0.5]) -> array:
+def depth_augment(y: array,
+                  choices: List = ['int8', 'int16'],
+                  probs: List[float] = [0.5, 0.5]) -> array:
     """ Audio depth augmentation
 
     Do audio depth augmentation to simulate the distortion brought by quantization.
     """
-    assert len(probs) == len(choices), 'number of choices {} must be equal to size of probs {}'.format(
+    assert len(probs) == len(
+        choices
+    ), 'number of choices {} must be equal to size of probs {}'.format(
         len(choices), len(probs))
     depth = np.random.choice(choices, p=probs)
     src_depth = y.dtype
@@ -59,7 +63,9 @@ def depth_augment(y: array, choices: List = ['int8', 'int16'], probs: List[float
     return y2
 
 
-def adaptive_spect_augment(spect: array, tempo_axis: int = 0, level: float = 0.1) -> array:
+def adaptive_spect_augment(spect: array,
+                           tempo_axis: int = 0,
+                           level: float = 0.1) -> array:
     """Do adpative spectrogram augmentation
 
     The level of the augmentation is gowern by the paramter level,

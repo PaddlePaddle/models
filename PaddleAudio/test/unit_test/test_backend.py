@@ -1,11 +1,8 @@
-import pytest
-
-import numpy as np
-import scipy
 import librosa
-
-
+import numpy as np
 import paddleaudio
+import pytest
+import scipy
 
 TEST_FILE = './test/data/test_audio.wav'
 
@@ -13,7 +10,7 @@ TEST_FILE = './test/data/test_audio.wav'
 def relative_err(a, b, real=True):
     """compute relative error of two matrices or vectors"""
     if real:
-        return np.sum((a-b)**2) / (EPS+np.sum(a**2)+np.sum(b**2))
+        return np.sum((a - b)**2) / (EPS + np.sum(a**2) + np.sum(b**2))
     else:
         err = np.sum((a.real-b.real)**2) / \
             (EPS+np.sum(a.real**2)+np.sum(b.real**2))
@@ -40,9 +37,12 @@ def test_load():
     assert r == 16000
     assert s.dtype == 'float32'
 
-    s, r = paddleaudio.load(TEST_FILE, sr=16000,
-                            offset=1, duration=2, dtype='int16')
-    assert len(s)/r == 2.0
+    s, r = paddleaudio.load(TEST_FILE,
+                            sr=16000,
+                            offset=1,
+                            duration=2,
+                            dtype='int16')
+    assert len(s) / r == 2.0
     assert r == 16000
     assert s.dtype == 'int16'
 
@@ -62,6 +62,7 @@ def test_depth_convert():
     assert np.min(y) >= -128
     assert np.std(y) > EPS
 
+
 # test case for resample
 rs_test_data = [
     (32000, 'kaiser_fast'),
@@ -72,29 +73,28 @@ rs_test_data = [
     (8000, 'kaiser_best'),
     (22050, 'kaiser_best'),
     (44100, 'kaiser_best'),
-
 ]
 
 
 @pytest.mark.parametrize('sr,mode', rs_test_data)
 def test_resample(sr, mode):
     y = paddleaudio.resample(x, 16000, sr, mode=mode)
-    factor = sr/16000
-    err = relative_err(len(y), len(x)*factor)
+    factor = sr / 16000
+    err = relative_err(len(y), len(x) * factor)
     print('err:', err)
     assert err < EPS
 
+
 def test_normalize():
-    y = paddleaudio.normalize(x,norm_type='linear',mul_factor=0.5)
+    y = paddleaudio.normalize(x, norm_type='linear', mul_factor=0.5)
     assert np.max(y) < 0.5 + EPS
 
-    y = paddleaudio.normalize(x,norm_type='linear',mul_factor=2.0)
+    y = paddleaudio.normalize(x, norm_type='linear', mul_factor=2.0)
     assert np.max(y) <= 2.0 + EPS
 
-    y = paddleaudio.normalize(x,norm_type='gaussian',mul_factor=1.0)
-    print('np.std(y):',np.std(y))
-    assert np.abs( np.std(y) - 1.0 ) < EPS
-
+    y = paddleaudio.normalize(x, norm_type='gaussian', mul_factor=1.0)
+    print('np.std(y):', np.std(y))
+    assert np.abs(np.std(y) - 1.0) < EPS
 
 
 if __name__ == '__main__':

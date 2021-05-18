@@ -52,22 +52,28 @@ def pad_center(data: array, size: int, axis: int = -1, **kwargs) -> array:
     lengths[axis] = (lpad, int(size - n - lpad))
 
     if lpad < 0:
-        raise ParameterError(("Target size ({size:d}) must be " "at least input size ({n:d})"))
+        raise ParameterError(("Target size ({size:d}) must be "
+                              "at least input size ({n:d})"))
 
     return np.pad(data, lengths, **kwargs)
 
 
-def split_frames(x: array, frame_length: int, hop_length: int, axis: int = -1) -> array:
+def split_frames(x: array,
+                 frame_length: int,
+                 hop_length: int,
+                 axis: int = -1) -> array:
     """Slice a data array into (overlapping) frames.
 
     This function is aligned with librosa.frame
     """
 
     if not isinstance(x, np.ndarray):
-        raise ParameterError(f"Input must be of type numpy.ndarray, given type(x)={type(x)}")
+        raise ParameterError(
+            f"Input must be of type numpy.ndarray, given type(x)={type(x)}")
 
     if x.shape[axis] < frame_length:
-        raise ParameterError(f"Input is too short (n={x.shape[axis]:d})" f" for frame_length={frame_length:d}")
+        raise ParameterError(f"Input is too short (n={x.shape[axis]:d})"
+                             f" for frame_length={frame_length:d}")
 
     if hop_length < 1:
         raise ParameterError(f"Invalid hop_length: {hop_length:d}")
@@ -108,10 +114,12 @@ def _check_audio(y, mono=True) -> bool:
     if not isinstance(y, np.ndarray):
         raise ParameterError("Audio data must be of type numpy.ndarray")
     if y.ndim > 2:
-        raise ParameterError(f"Invalid shape for audio ndim={y.ndim:d}, shape={y.shape}")
+        raise ParameterError(
+            f"Invalid shape for audio ndim={y.ndim:d}, shape={y.shape}")
 
     if mono and y.ndim == 2:
-        raise ParameterError(f"Invalid shape for mono audio ndim={y.ndim:d}, shape={y.shape}")
+        raise ParameterError(
+            f"Invalid shape for mono audio ndim={y.ndim:d}, shape={y.shape}")
 
     if (mono and len(y) == 0) or (not mono and y.shape[1] < 0):
         raise ParameterError(f"Audio is empty ndim={y.ndim:d}, shape={y.shape}")
@@ -125,7 +133,8 @@ def _check_audio(y, mono=True) -> bool:
     return True
 
 
-def hz_to_mel(frequencies: Union[float, List[float], array], htk: bool = False) -> array:
+def hz_to_mel(frequencies: Union[float, List[float], array],
+              htk: bool = False) -> array:
     """Convert Hz to Mels
 
     This function is aligned with librosa.
@@ -159,7 +168,8 @@ def hz_to_mel(frequencies: Union[float, List[float], array], htk: bool = False) 
     return mels
 
 
-def mel_to_hz(mels: Union[float, List[float], array], htk: int = False) -> array:
+def mel_to_hz(mels: Union[float, List[float], array],
+              htk: int = False) -> array:
     """Convert mel bin numbers to frequencies.
 
     This function is aligned with librosa.
@@ -191,7 +201,10 @@ def mel_to_hz(mels: Union[float, List[float], array], htk: int = False) -> array
     return freqs
 
 
-def mel_frequencies(n_mels: int = 128, fmin: float = 0.0, fmax: float = 11025.0, htk: bool = False) -> array:
+def mel_frequencies(n_mels: int = 128,
+                    fmin: float = 0.0,
+                    fmax: float = 11025.0,
+                    htk: bool = False) -> array:
     """Compute mel frequencies
 
     This function is aligned with librosa.
@@ -300,16 +313,22 @@ def stft(x: array,
     # Pad the time series so that frames are centered
     if center:
         if n_fft > x.shape[-1]:
-            warnings.warn(f"n_fft={n_fft} is too small for input signal of length={x.shape[-1]}")
+            warnings.warn(
+                f"n_fft={n_fft} is too small for input signal of length={x.shape[-1]}"
+            )
         x = np.pad(x, int(n_fft // 2), mode=pad_mode)
 
     elif n_fft > x.shape[-1]:
-        raise ParameterError(f"n_fft={n_fft} is too small for input signal of length={x.shape[-1]}")
+        raise ParameterError(
+            f"n_fft={n_fft} is too small for input signal of length={x.shape[-1]}"
+        )
 
     # Window the time series.
     x_frames = split_frames(x, frame_length=n_fft, hop_length=hop_length)
     # Pre-allocate the STFT matrix
-    stft_matrix = np.empty((int(1 + n_fft // 2), x_frames.shape[1]), dtype=dtype, order="F")
+    stft_matrix = np.empty((int(1 + n_fft // 2), x_frames.shape[1]),
+                           dtype=dtype,
+                           order="F")
     fft = np.fft  # use numpy fft as default
     # Constrain STFT block sizes to 256 KB
     MAX_MEM_BLOCK = 2**8 * 2**10
@@ -319,12 +338,17 @@ def stft(x: array,
 
     for bl_s in range(0, stft_matrix.shape[1], n_columns):
         bl_t = min(bl_s + n_columns, stft_matrix.shape[1])
-        stft_matrix[:, bl_s:bl_t] = fft.rfft(fft_window * x_frames[:, bl_s:bl_t], axis=0)
+        stft_matrix[:,
+                    bl_s:bl_t] = fft.rfft(fft_window * x_frames[:, bl_s:bl_t],
+                                          axis=0)
 
     return stft_matrix
 
 
-def power_to_db(spect: array, ref: float = 1.0, amin: float = 1e-10, top_db: float = 80.0) -> array:
+def power_to_db(spect: array,
+                ref: float = 1.0,
+                amin: float = 1e-10,
+                top_db: Optional[float] = 80.0) -> array:
     """Convert a power spectrogram (amplitude squared) to decibel (dB) units
 
     This computes the scaling ``10 * log10(spect / ref)`` in a numerically
@@ -338,9 +362,10 @@ def power_to_db(spect: array, ref: float = 1.0, amin: float = 1e-10, top_db: flo
         raise ParameterError("amin must be strictly positive")
 
     if np.issubdtype(spect.dtype, np.complexfloating):
-        warnings.warn("power_to_db was called on complex input so phase "
-                      "information will be discarded. To suppress this warning, "
-                      "call power_to_db(np.abs(D)**2) instead.")
+        warnings.warn(
+            "power_to_db was called on complex input so phase "
+            "information will be discarded. To suppress this warning, "
+            "call power_to_db(np.abs(D)**2) instead.")
         magnitude = np.abs(spect)
     else:
         magnitude = spect
@@ -363,7 +388,7 @@ def power_to_db(spect: array, ref: float = 1.0, amin: float = 1e-10, top_db: flo
 
 
 def mfcc(x,
-         sample_rate: int = 16000,
+         sr: int = 16000,
          spect: Optional[array] = None,
          n_mfcc: int = 20,
          dct_type: int = 2,
@@ -383,7 +408,6 @@ def mfcc(x,
         'fmin':50,
          'to_db':False}
     a = mfcc(x,
-        #sample_rate=16000,
         spect=None,
         n_mfcc=20,
         dct_type=2,
@@ -408,21 +432,23 @@ def mfcc(x,
 
     """
     if spect is None:
-        spect = melspectrogram(x, sample_rate=sample_rate, **kwargs)
+        spect = melspectrogram(x, sr=sr, **kwargs)
 
     M = scipy.fftpack.dct(spect, axis=0, type=dct_type, norm=norm)[:n_mfcc]
 
     if lifter > 0:
-        factor = np.sin(np.pi * np.arange(1, 1 + n_mfcc, dtype=M.dtype) / lifter)
+        factor = np.sin(np.pi * np.arange(1, 1 + n_mfcc, dtype=M.dtype) /
+                        lifter)
         return M * factor[:, np.newaxis]
     elif lifter == 0:
         return M
     else:
-        raise ParameterError(f"MFCC lifter={lifter} must be a non-negative number")
+        raise ParameterError(
+            f"MFCC lifter={lifter} must be a non-negative number")
 
 
 def melspectrogram(x: array,
-                   sample_rate: int = 16000,
+                   sr: int = 16000,
                    window_size: int = 512,
                    hop_length: int = 320,
                    n_mels: int = 64,
@@ -451,8 +477,8 @@ def melspectrogram(x: array,
 
 
     Notes:
-    1. Sample_rate is default to 16000, which is commonly used in speech/speaker processing.
-    2. when fmax is None, it is set to sample_rate//2.
+    1. sr is default to 16000, which is commonly used in speech/speaker processing.
+    2. when fmax is None, it is set to sr//2.
     3. this function will convert mel spectgrum to db scale by default. This is different
     that of librosa.
 
@@ -462,7 +488,7 @@ def melspectrogram(x: array,
         raise ParameterError('The input waveform is empty')
 
     if fmax is None:
-        fmax = sample_rate // 2
+        fmax = sr // 2
     if fmin < 0 or fmin >= fmax:
         raise ParameterError('fmin and fmax must statisfy 0<fmin<fmax')
 
@@ -475,7 +501,11 @@ def melspectrogram(x: array,
              pad_mode=pad_mode)
 
     spect_power = np.abs(s)**power
-    fb_matrix = compute_fbank_matrix(sr=sample_rate, n_fft=window_size, n_mels=n_mels, fmin=fmin, fmax=fmax)
+    fb_matrix = compute_fbank_matrix(sr=sr,
+                                     n_fft=window_size,
+                                     n_mels=n_mels,
+                                     fmin=fmin,
+                                     fmax=fmax)
     mel_spect = np.matmul(fb_matrix, spect_power)
     if to_db:
         return power_to_db(mel_spect, ref=ref, amin=amin, top_db=top_db)
@@ -484,7 +514,7 @@ def melspectrogram(x: array,
 
 
 def spectrogram(x: array,
-                sample_rate: int = 16000,
+                sr: int = 16000,
                 window_size: int = 512,
                 hop_length: int = 320,
                 window: str = 'hann',

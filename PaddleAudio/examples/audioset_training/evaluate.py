@@ -20,26 +20,20 @@ import paddle
 import paddle.nn.functional as F
 import paddleaudio as pa
 import yaml
-from dataset import get_loader
-from model import *
+from dataset import get_val_loader
+from model import resnet50
 from paddle.utils import download
 from sklearn.metrics import average_precision_score, roc_auc_score
-from utils import get_label_name_mapping, get_labels, get_logger, get_metrics
-
-with open('./config.yaml') as f:
-    c = yaml.safe_load(f)
-
-logger = get_logger(__name__, os.path.join(c['log_path'], 'inference.txt'))
+from utils import compute_dprime
 
 #checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
-checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mixup_map0.359.pdparams'
+#checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mixup_map0.359.pdparams'
+checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.401.pdparams'
 
 
-def evaluate(epoch, val_loader, model, loss_fn, log_writer=None):
+def evaluate(epoch, val_loader, model, loss_fn):
     model.eval()
     avg_loss = 0.0
-    avg_preci = 0.0
-    avg_recall = 0.0
     all_labels = []
     all_preds = []
     for batch_id, data in enumerate(val_loader()):
@@ -52,57 +46,56 @@ def evaluate(epoch, val_loader, model, loss_fn, log_writer=None):
         pred = F.softmax(logits)
         all_labels += [label.numpy()]
         all_preds += [pred.numpy()]
-
-        preci, recall = get_metrics(label, pred)
-        avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
-        avg_recall = (avg_recall * batch_id + recall) / (1 + batch_id)
         avg_loss = (avg_loss * batch_id + loss_val.numpy()[0]) / (1 + batch_id)
-
         msg = f'eval epoch:{epoch}, batch:{batch_id}'
         msg += f'|{len(val_loader)}'
         msg += f',loss:{avg_loss:.3}'
-        msg += f',recall:{avg_recall:.3}'
-        msg += f',preci:{avg_preci:.3}'
-        avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
-        avg_recall = (avg_recall * batch_id + recall) / (1 + batch_id)
         if batch_id % 20 == 0:
-            logger.info(msg)
-            if log_writer is not None:
-                log_writer.add_scalar(tag="eval loss", step=batch_id, value=avg_loss)
-                log_writer.add_scalar(tag="eval preci", step=batch_id, value=avg_preci)
-                log_writer.add_scalar(tag="eval recall", step=batch_id, value=avg_recall)
+            print(msg)
 
     all_preds = np.concatenate(all_preds, 0)
     all_labels = np.concatenate(all_labels, 0)
-    mAP_scores = average_precision_score(all_labels, all_preds, average=None)
-    auc_scores = roc_auc_score(all_labels, all_preds, average=None)
-
-    return avg_loss, avg_preci, avg_recall, mAP_scores, auc_scores
+    mAP_score = np.mean(
+        average_precision_score(all_labels, all_preds, average=None))
+    auc_score = np.mean(roc_auc_score(all_labels, all_preds, average=None))
+    dprime = compute_dprime(auc_score)
+    return avg_loss, mAP_score, auc_score, dprime
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Audioset inference')
-    parser.add_argument('--device', help='set the gpu device number', type=int, required=False, default=0)
+    parser.add_argument('--config',
+                        type=str,
+                        required=False,
+                        default='./assets/config.yaml')
+    parser.add_argument('--device',
+                        help='set the gpu device number',
+                        type=int,
+                        required=False,
+                        default=0)
     parser.add_argument('--weight', type=str, required=False, default='')
-    args = parser.parse_args([])
+    args = parser.parse_args()
 
+    with open(args.config) as f:
+        c = yaml.safe_load(f)
     paddle.set_device('gpu:{}'.format(args.device))
     ModelClass = eval(c['model_type'])
-    model = ModelClass(pretrained=False, num_classes=c['num_classes'], dropout=c['dropout'])
-
+    model = ModelClass(pretrained=False,
+                       num_classes=c['num_classes'],
+                       dropout=c['dropout'])
     if args.weight.strip() == '':
+        print(f'Using pretrained weight: {checkpoint_url}')
         args.weight = download.get_weights_path_from_url(checkpoint_url)
     model.load_dict(paddle.load(args.weight))
     model.eval()
 
-    _, val_loader = get_loader()
-    logger.info(f'evaluating...')
+    val_loader = get_val_loader(c)
 
-    val_acc, val_preci, val_recall, mAP_scores, auc_scores = evaluate(0, val_loader, model,
-                                                                      F.binary_cross_entropy_with_logits)
-    avg_map = np.mean(mAP_scores)
-    auc = np.mean(auc_scores)
+    print(f'Evaluating...')
+    avg_loss, mAP_score, auc_score, dprime = evaluate(
+        0, val_loader, model, F.binary_cross_entropy_with_logits)
 
-    logger.info(f'average mAP: {avg_map}')
-    logger.info(f'auc: {auc}')
+    print(f'mAP: {mAP_score:.3}')
+    print(f'auc: {auc_score:.3}')
+    print(f'd-prime: {dprime:.3}')

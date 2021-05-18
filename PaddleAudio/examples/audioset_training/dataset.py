@@ -29,9 +29,6 @@ from paddle.io import DataLoader, Dataset, IterableDataset
 from paddleaudio import augment
 from utils import get_labels, get_ytid_clsidx_mapping
 
-with open('./config.yaml') as f:
-    c = yaml.safe_load(f)
-
 
 def spect_permute(spect, tempo_axis, nblocks):
     """spectrogram  permutaion"""
@@ -45,11 +42,17 @@ def spect_permute(spect, tempo_axis, nblocks):
 
     block_width = nt // nblocks + 1
     if tempo_axis == 1:
-        blocks = [spect[:, block_width * i:(i + 1) * block_width] for i in range(nblocks)]
+        blocks = [
+            spect[:, block_width * i:(i + 1) * block_width]
+            for i in range(nblocks)
+        ]
         np.random.shuffle(blocks)
         new_spect = np.concatenate(blocks, 1)
     else:
-        blocks = [spect[block_width * i:(i + 1) * block_width, :] for i in range(nblocks)]
+        blocks = [
+            spect[block_width * i:(i + 1) * block_width, :]
+            for i in range(nblocks)
+        ]
         np.random.shuffle(blocks)
         new_spect = np.concatenate(blocks, 0)
     return new_spect
@@ -75,28 +78,39 @@ class H5AudioSet(Dataset):
     The h5 files store mel-spectrogram features pre-extracted from wav files.
     Use wav2mel.py to do feature extraction.
     """
-    def __init__(self, h5_files, augment=True, training=True, balanced_sampling=True):
+    def __init__(self,
+                 h5_files,
+                 config,
+                 augment=True,
+                 training=True,
+                 balanced_sampling=True):
         super(H5AudioSet, self).__init__()
         self.h5_files = h5_files
+        self.config = config
         self.file_pointers = [h5py.File(f) for f in h5_files]
         self.all_keys, self.key2file = get_keys(self.file_pointers)
         self.augment = augment
         self.training = training
         self.balanced_sampling = balanced_sampling
-        print(f'{len(self.h5_files)} h5 files, totally {len(self.all_keys)} audio files listed')
+        print(
+            f'{len(self.h5_files)} h5 files, totally {len(self.all_keys)} audio files listed'
+        )
         self.ytid2clsidx, self.clsidx2ytid = get_ytid_clsidx_mapping()
 
     def _process(self, x):
-        assert x.shape[0] == c['mel_bins'], 'the first dimension must be mel frequency'
+        assert x.shape[0] == self.config[
+            'mel_bins'], 'the first dimension must be mel frequency'
 
-        target_len = c['max_mel_len']
+        target_len = self.config['max_mel_len']
         if x.shape[1] <= target_len:
             pad_width = (target_len - x.shape[1]) // 2 + 1
             x = np.pad(x, ((0, 0), (pad_width, pad_width)))
         x = x[:, :target_len]
 
         if self.training and self.augment:
-            x = augment.random_crop2d(x, c['mel_crop_len'], tempo_axis=1)
+            x = augment.random_crop2d(x,
+                                      self.config['mel_crop_len'],
+                                      tempo_axis=1)
             x = spect_permute(x, tempo_axis=1, nblocks=random_choice([0, 2, 3]))
             aug_level = random_choice([0.2, 0.1, 0])
             x = augment.adaptive_spect_augment(x, tempo_axis=1, level=aug_level)
@@ -105,7 +119,7 @@ class H5AudioSet(Dataset):
     def __getitem__(self, idx):
 
         if self.balanced_sampling:
-            cls_id = int(np.random.randint(0, c['num_classes']))
+            cls_id = int(np.random.randint(0, self.config['num_classes']))
             keys = self.clsidx2ytid[cls_id]
             k = random_choice(self.all_keys)
             cls_ids = self.ytid2clsidx[k]
@@ -117,7 +131,7 @@ class H5AudioSet(Dataset):
         x = fp[k][:, :]
         x = self._process(x)
 
-        y = np.zeros((c['num_classes'], ), 'float32')
+        y = np.zeros((self.config['num_classes'], ), 'float32')
         y[cls_ids] = 1.0
 
         return x, y
@@ -144,37 +158,60 @@ def worker_init(worker_id):
     np.random.seed(int(time.time()) % 100 + worker_id)
 
 
-def get_loader():
+def get_train_loader(config):
 
-    train_h5_files = glob.glob(c['unbalanced_train_h5'])
-    train_h5_files += [c['balanced_train_h5']]
+    train_h5_files = glob.glob(config['unbalanced_train_h5'])
+    train_h5_files += [config['balanced_train_h5']]
 
-    train_dataset = H5AudioSet(train_h5_files, balanced_sampling=c['balanced_sampling'], augment=True, training=True)
-    val_dataset = H5AudioSet([c['balanced_eval_h5']], balanced_sampling=False, augment=False)
+    train_dataset = H5AudioSet(train_h5_files,
+                               config,
+                               balanced_sampling=config['balanced_sampling'],
+                               augment=True,
+                               training=True)
 
     train_loader = DataLoader(train_dataset,
                               shuffle=True,
-                              batch_size=c['batch_size'],
+                              batch_size=config['batch_size'],
                               drop_last=True,
-                              num_workers=c['num_workers'],
+                              num_workers=config['num_workers'],
                               use_buffer_reader=True,
                               use_shared_memory=True,
                               worker_init_fn=worker_init)
 
+    return train_loader
+
+
+def get_val_loader(config):
+
+    val_dataset = H5AudioSet([config['balanced_eval_h5']],
+                             config,
+                             balanced_sampling=False,
+                             augment=False)
+
     val_loader = DataLoader(val_dataset,
                             shuffle=False,
-                            batch_size=c['val_batch_size'],
+                            batch_size=config['val_batch_size'],
                             drop_last=False,
-                            num_workers=c['num_workers'])
+                            num_workers=config['num_workers'])
 
-    return train_loader, val_loader
+    return val_loader
 
 
 if __name__ == '__main__':
-    train_h5_files = glob.glob(c['unbalanced_train_h5'])
-    dataset = H5AudioSet(train_h5_files, balanced_sampling=True, augment=True, training=True)
+    # do some testing here
+    with open('./assets/config.yaml') as f:
+        config = yaml.safe_load(f)
+    train_h5_files = glob.glob(config['unbalanced_train_h5'])
+    dataset = H5AudioSet(train_h5_files,
+                         config,
+                         balanced_sampling=True,
+                         augment=True,
+                         training=True)
     x, y = dataset[1]
     print(x.shape, y.shape)
-    dataset = H5AudioSet([c['balanced_eval_h5']], balanced_sampling=False, augment=False)
+    dataset = H5AudioSet([config['balanced_eval_h5']],
+                         config,
+                         balanced_sampling=False,
+                         augment=False)
     x, y = dataset[0]
     print(x.shape, y.shape)

@@ -1,18 +1,15 @@
-# PaddleAudio:  a light-weight audio library for PaddlePaddle
+# PaddleAudio:  The audio library for PaddlePaddle
 
 ## Introduction
-PaddleAudio is a lightweight audio toolkit to speed up your audio research and development loop in PaddlePaddle. It currently provides a collection of audio dataests, feature functions and transforms, preprocessing scripts, and state-of-the-art pretrained models in sound tagging(multi-label)/classifcation, anmolay sound detection. More models and feaetures on audio processing are on the roadmap.
+PaddleAudio is the audio toolkit to speed up your audio research and development loop in PaddlePaddle. It currently provides a collection of audio datasets, feature extraction functions and transforms, preprocessing scripts, and state-of-the-art pre-trained models in sound tagging(multi-label)/classification, anomaly sound detection. More models and features on audio processing are on the roadmap.
 
 
 
 ## Features
-- Fast and smart audio loading, designed specially for deep networks
-- Spectrogram features are compactable with kaildi and librosa
-- Use hdf5 as dataest backend for large scale audio data storage and fast retrival, hence enabling faster training
-- State-of-the-art(sota) or on-par-with sota audio models in sound tagging on audioset/sound classications on esc50, and more to come
-- Ready to use audio embedding with a line of code, includs sound embedding and more.
-- Models and training processing are configurable in yaml file
-- Ready to use opensource audio datasets, including English / Mandrin / Cantonese and more
+- Spectrogram and related features are compatible with librosa.
+- State-of-the-art models in sound tagging on Audioset, sound classification on esc50, and more to come.
+- Ready to use audio embedding with a line of code, includes sound embedding and more on the roadmap.
+- Ready to use open source audio datasets, including English / Mandarin / Cantonese and more
 
 
 ## Install
@@ -24,19 +21,17 @@ pip install .
 ```
 
 ## Quick start
-#### Load audio and extrat spectrogram
+### Load audio and extract spectrogram
 ```
-import paddleAudio as pa
+import paddleaudio as pa
 s,r = pa.load(f)
-mel = pa.features.mel_spect(s,r)
+mel_spect = pa.melspectrogram(s,sr=r)
 ```
 
-#### Sound tagging example
+###  Examples
+We provides a set of examples to help you get started in using PaddleAudio quickly.
+- [PANNs:  acoustic scene and events analysis using pre-trained models](./examples/panns)
+- [Environmental Sound classification on ESC-50 dataset](./examples/sound_classification)
+- [Training a audio-tagging network on Audioset](./examples/audioset_training)
 
-```
-
-
-```
-
-
-#### Dataset exmaple
+Please refer to [example directory](./examples) for more details.
