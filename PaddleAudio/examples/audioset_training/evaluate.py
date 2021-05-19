@@ -24,26 +24,22 @@ from dataset import get_val_loader
 from model import resnet50
 from paddle.utils import download
 from sklearn.metrics import average_precision_score, roc_auc_score
-from utils import compute_dprime
+from utils import compute_dprime,download_assets
 
-#checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
-#checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mixup_map0.359.pdparams'
-checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.401.pdparams'
-
+checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.416.pdparams'
 
 def evaluate(epoch, val_loader, model, loss_fn):
     model.eval()
     avg_loss = 0.0
     all_labels = []
     all_preds = []
-    for batch_id, data in enumerate(val_loader()):
-        xd, yd = data
-        xd = xd.unsqueeze((1))
-        label = yd
-        logits = model(xd)
+    for batch_id, (x, y) in enumerate(val_loader()):
+        x = x.unsqueeze((1))
+        label = y
+        logits = model(x)
         loss_val = loss_fn(logits, label)
 
-        pred = F.softmax(logits)
+        pred = F.sigmoid(logits)
         all_labels += [label.numpy()]
         all_preds += [pred.numpy()]
         avg_loss = (avg_loss * batch_id + loss_val.numpy()[0]) / (1 + batch_id)
@@ -76,7 +72,7 @@ if __name__ == '__main__':
                         default=0)
     parser.add_argument('--weight', type=str, required=False, default='')
     args = parser.parse_args()
-
+    download_assets()
     with open(args.config) as f:
         c = yaml.safe_load(f)
     paddle.set_device('gpu:{}'.format(args.device))

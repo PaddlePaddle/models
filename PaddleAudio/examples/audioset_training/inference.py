@@ -27,8 +27,7 @@ from utils import (download_assets, get_label_name_mapping, get_labels,
 
 download_assets()
 
-#checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/mixup_resnet50_checkpoint33.pdparams'
-checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.401.pdparams'
+checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.416.pdparams'
 
 
 def load_and_extract_feature(file, c):

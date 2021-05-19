@@ -129,29 +129,27 @@ if __name__ == '__main__':
         model.train()
         model.clear_gradients()
         t0 = time.time()
-        for batch_id, data in enumerate(train_loader()):
+        for batch_id, (x,y) in enumerate(train_loader()):
             if step < warm_steps:
                 optimizer.set_lr(lrs[step])
-            xd, yd = data
-            xd.stop_gradient = False
-            yd.stop_gradient = False
+            x.stop_gradient = False
             if c['balanced_sampling']:
-                xd = xd.squeeze()
-                yd = yd.squeeze()
-            xd = xd.unsqueeze((1))
+                x = x.squeeze()
+                y = y.squeeze()
+            x = x.unsqueeze((1))
             if c['mixup']:
-                mixed_x, mixed_y = mixup_data(xd, yd, c['mixup_alpha'])
+                mixed_x, mixed_y = mixup_data(x, y, c['mixup_alpha'])
                 logits = model(mixed_x)
                 loss_val = loss_fn(logits, mixed_y)
                 loss_val.backward()
             else:
-                logits = model(xd)
-                loss_val = bce_loss(logits, yd)
+                logits = model(x)
+                loss_val = bce_loss(logits, y)
                 loss_val.backward()
             optimizer.step()
             model.clear_gradients()
             pred = F.sigmoid(logits)
-            preci, recall = get_metrics(yd.squeeze().numpy(), pred.numpy())
+            preci, recall = get_metrics(y.squeeze().numpy(), pred.numpy())
             avg_loss = (avg_loss * batch_id + loss_val.numpy()[0]) / (1 +
                                                                       batch_id)
             avg_preci = (avg_preci * batch_id + preci) / (1 + batch_id)
