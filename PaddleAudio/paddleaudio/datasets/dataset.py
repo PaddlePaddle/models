@@ -12,29 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import os
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import paddle
+from pathos.multiprocessing import ProcessPool
+from pathos.threading import ThreadPool
 from tqdm import tqdm
 
 from ..backends import load as load_audio
 from ..features import linear_spect, log_spect, mel_spect
-from ..utils.log import logger
+
+feat_funcs = {
+    'raw': None,
+    'mel_spect': mel_spect,
+    'linear_spect': linear_spect,
+    'log_spect': log_spect,
+}
 
 
 class AudioClassificationDataset(paddle.io.Dataset):
     """
     Base class of audio classification dataset.
     """
-    _feat_func = {
-        'raw': None,
-        'mel_spect': mel_spect,
-        'linear_spect': linear_spect,
-        'log_spect': log_spect,
-    }
-
     def __init__(self,
                  files: List[str],
                  labels: List[int],
@@ -53,9 +55,9 @@ class AudioClassificationDataset(paddle.io.Dataset):
         """
         super(AudioClassificationDataset, self).__init__()
 
-        if feat_type not in self._feat_func.keys():
+        if feat_type not in feat_funcs.keys():
             raise RuntimeError(\
-                f"Unknown feat_type: {feat_type}, it must be one in {list(self._feat_func.keys())}")
+                f"Unknown feat_type: {feat_type}, it must be one in {list(feat_funcs.keys())}")
 
         self.files = files
         self.labels = labels
@@ -78,7 +80,7 @@ class AudioClassificationDataset(paddle.io.Dataset):
         else:
             waveform = np.pad(waveform, (0, normal_length - len(waveform)))
 
-        feat_func = self._feat_func[self.feat_type]
+        feat_func = feat_funcs[self.feat_type]
 
         record = {}
         record['feat'] = feat_func(waveform, sample_rate=self.sample_rate, **
@@ -92,3 +94,91 @@ class AudioClassificationDataset(paddle.io.Dataset):
 
     def __len__(self):
         return len(self.files)
+
+
+class ASRDataset(paddle.io.Dataset):
+    """
+    Base class of audio ASR dataset.
+    """
+    def __init__(self, feat_type: str, data: List[collections.namedtuple], **kwargs):
+        super(ASRDataset, self).__init__()
+
+        if feat_type not in feat_funcs.keys():
+            raise RuntimeError(\
+                f"Unknown feat_type: {feat_type}, it must be one in {list(feat_funcs.keys())}")
+
+        self.feat_type = feat_type
+        self.feat_config = kwargs  # Pass keyword arguments to customize feature config
+        self.records = self._convert_to_records(data)
+
+    def _convert_to_records(self, data: List[collections.namedtuple]):
+        def _convert(sample):
+            record = {}
+            # To show all fields in a namedtuple: `type(sample)._fields`
+            for field in type(sample)._fields:
+                record[field] = getattr(sample, field)
+
+            waveform, sr = load_audio(sample[0])  # The first element of sample is file path
+            feat_func = feat_funcs[self.feat_type]
+            feat = feat_func(waveform, sample_rate=sr, **self.feat_config) if feat_func else waveform
+            record.update({'feat': feat, 'duration': len(waveform) / sr})
+            return record
+
+        records = list(tqdm(map(_convert, data), total=len(data)))
+        return records
+
+    def __getitem__(self, idx):
+        record = self.records[idx]
+        # TODO: To confirm what fields a ASR model wants.
+        return np.array(record['feat']), np.array(record['text'])
+
+    def __len__(self):
+        return len(self.records)
+
+
+class TTSDataset(paddle.io.Dataset):
+    """
+    Base class of audio TTS dataset.
+    """
+    def __init__(self, feat_type: str, data: List[collections.namedtuple], **kwargs):
+        super(TTSDataset, self).__init__()
+        raise NotImplementedError
+
+    def _convert_to_records(self, data: List[collections.namedtuple]):
+        raise NotImplementedError
+
+    def __getitem__(self, idx):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+
+class DatasetFactory(object):
+    """
+    """
+    task2cls = {
+        'asr': ASRDataset,
+        'tts': TTSDataset,
+        'cls': AudioClassificationDataset,
+    }
+
+    def __init__(self, task: str, feat_type: 'str', data: List[collections.namedtuple], *args, **kwargs):
+
+        if task is not None and task.lower() in self.task2cls:
+            dataset_cls = self.task2cls[task.lower()]
+        else:
+            raise RuntimeError(f'Argement \'task\' must be one in {list(self.task2cls.keys())}, but got {task}')
+
+        self._dataset = dataset_cls(feat_type, data, *args, **kwargs)  # Real dataset instance
+        self.feat_config = self._dataset.feat_config
+
+    @property
+    def records(self):
+        return self._dataset.records
+
+    def __getitem__(self, idx):
+        return self._dataset.__getitem__(idx)
+
+    def __len__(self):
+        return self._dataset.__len__()

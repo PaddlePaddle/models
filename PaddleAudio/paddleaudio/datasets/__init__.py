@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .aishell import Aishell
 from .dcase import UrbanAcousticScenes
 from .esc50 import ESC50
 from .gtzan import GTZAN
+from .librispeech import LibriSpeech
 from .ravdess import RAVDESS
 from .tess import TESS
 from .urban_sound import UrbanSound8K
 
 __all__ = [
+    'Aishell',
+    'LibriSpeech'
     'ESC50',
     'UrbanSound8K',
     'GTZAN',
