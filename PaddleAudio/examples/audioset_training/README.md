@@ -125,7 +125,7 @@ python evaluation.py
 | TAL Net \[5\]* | 0.362| 0.965 |2.56|
 | DeepRes \[6\]* | 0.392 | 0.971|2.68|
 | PANNS \[1\]  |  0.420 ** |  0.970|2.66|
-| This example  |  0.401 |  0.967  |2.60|
+| This example  |  0.416 |  0.968  |2.62|
 
 (* indicate different evaluation set than ours, ** stats are different from the paper as we re-evaluated on our version of dataset)
 
