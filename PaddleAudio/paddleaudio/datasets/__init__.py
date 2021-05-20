@@ -23,7 +23,7 @@ from .urban_sound import UrbanSound8K
 
 __all__ = [
     'Aishell',
-    'LibriSpeech'
+    'LibriSpeech',
     'ESC50',
     'UrbanSound8K',
     'GTZAN',
