@@ -52,13 +52,15 @@ def split(waveform: np.ndarray, win_size: int, hop_size: int):
     return time, data
 
 
-def batchify(data: List[List[float]], sample_rate: int, batch_size: int, **kwargs):
+def batchify(data: List[List[float]], sample_rate: int, batch_size: int,
+             **kwargs):
     """
     Extract features from waveforms and create batches.
     """
     examples = []
     for waveform in data:
-        feats = mel_spect(waveform, sample_rate=sample_rate, **kwargs).transpose()
+        feats = mel_spect(waveform, sample_rate=sample_rate,
+                          **kwargs).transpose()
         examples.append(feats)
 
     # Seperates data into some batches.
@@ -72,7 +74,10 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int, **kwarg
         yield one_batch
 
 
-def predict(model, data: List[List[float]], sample_rate: int, batch_size: int = 1):
+def predict(model,
+            data: List[List[float]],
+            sample_rate: int,
+            batch_size: int = 1):
     """
     Use pretrained model to make predictions.
     """
@@ -96,7 +101,8 @@ if __name__ == '__main__':
     paddle.set_device(args.device)
     model = cnn14(pretrained=True, extract_embedding=False)
     waveform, sr = load_audio(args.wav, sr=None)
-    time, data = split(waveform, int(args.sample_duration * sr), int(args.hop_duration * sr))
+    time, data = split(waveform, int(args.sample_duration * sr),
+                       int(args.hop_duration * sr))
     results = predict(model, data, sr, batch_size=8)
 
     if not os.path.exists(args.output_dir):

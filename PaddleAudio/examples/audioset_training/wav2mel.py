@@ -4,9 +4,8 @@ import os
 
 import h5py
 import numpy as np
-import tqdm
-
 import paddleaudio as pa
+import tqdm
 
 parser = argparse.ArgumentParser(description='wave2mel')
 parser.add_argument('--wav_file', type=str, required=False, default='')
@@ -20,10 +19,12 @@ parser.add_argument('--dst_h5_file', type=str, required=False, default='')
 parser.add_argument('--sample_rate', type=int, required=False, default=32000)
 parser.add_argument('--window_size', type=int, required=False, default=1024)
 parser.add_argument('--mel_bins', type=int, required=False, default=128)
-parser.add_argument('--hop_length', type=int, required=False, default=640)  #20ms
+parser.add_argument('--hop_length', type=int, required=False,
+                    default=640)  #20ms
 parser.add_argument('--fmin', type=int, required=False, default=50)  #25ms
 parser.add_argument('--fmax', type=int, required=False, default=16000)  #25ms
-parser.add_argument('--skip_existed', type=int, required=False, default=1)  #25ms
+parser.add_argument('--skip_existed', type=int, required=False,
+                    default=1)  #25ms
 
 args = parser.parse_args()
 
@@ -63,19 +64,19 @@ if len(h5_files) > 0:
             s = src_h5[key][:]
             s = pa.depth_convert(s, 'float32')
             # s = pa.resample(s,32000,args.sample_rate)
-            x = pa.features.mel_spect(s,
-                                      sample_rate=args.sample_rate,
-                                      window_size=args.window_size,
-                                      hop_length=args.hop_length,
-                                      mel_bins=args.mel_bins,
-                                      fmin=args.fmin,
-                                      fmax=args.fmax,
-                                      window='hann',
-                                      center=True,
-                                      pad_mode='reflect',
-                                      ref=1.0,
-                                      amin=1e-10,
-                                      top_db=None)
+            x = pa.features.melspectrogram(s,
+                                           sr=args.sample_rate,
+                                           window_size=args.window_size,
+                                           hop_length=args.hop_length,
+                                           n_mels=args.mel_bins,
+                                           fmin=args.fmin,
+                                           fmax=args.fmax,
+                                           window='hann',
+                                           center=True,
+                                           pad_mode='reflect',
+                                           ref=1.0,
+                                           amin=1e-10,
+                                           top_db=None)
             dst_h5.create_dataset(key, data=x)
         src_h5.close()
         dst_h5.close()
@@ -90,20 +91,19 @@ if len(wav_files) > 0:
     print(f'{len(wav_files)} wav files listed')
     for f in tqdm.tqdm(wav_files):
         s, _ = pa.load(f, sr=args.sample_rate)
-        # s = pa.resample(s,32000,args.sample_rate)
-        x = pa.features.mel_spect(s,
-                                  sample_rate=args.sample_rate,
-                                  window_size=args.window_size,
-                                  hop_length=args.hop_length,
-                                  mel_bins=args.mel_bins,
-                                  fmin=args.fmin,
-                                  fmax=args.fmax,
-                                  window='hann',
-                                  center=True,
-                                  pad_mode='reflect',
-                                  ref=1.0,
-                                  amin=1e-10,
-                                  top_db=None)
+        x = pa.melspectrogram(s,
+                              sr=args.sample_rate,
+                              window_size=args.window_size,
+                              hop_length=args.hop_length,
+                              n_mels=args.mel_bins,
+                              fmin=args.fmin,
+                              fmax=args.fmax,
+                              window='hann',
+                              center=True,
+                              pad_mode='reflect',
+                              ref=1.0,
+                              amin=1e-10,
+                              top_db=None)
         #         figure(figsize=(8,8))
         #         imshow(x)
         #         show()

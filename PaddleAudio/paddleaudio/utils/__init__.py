@@ -14,5 +14,6 @@
 
 from .download import *
 from .env import *
+from .error import *
 from .log import *
 from .time import *

@@ -4,3 +4,4 @@ nohup.out
 __pycache__/
 *.wav
 *.m4a
+obsolete/**
