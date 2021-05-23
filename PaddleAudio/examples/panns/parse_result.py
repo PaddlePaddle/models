@@ -73,7 +73,9 @@ if __name__ == "__main__":
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-    output_file = os.path.join(args.output_dir, os.path.basename(args.tagging_file).split('.')[0] + '.txt')
+    output_file = os.path.join(
+        args.output_dir,
+        os.path.basename(args.tagging_file).split('.')[0] + '.txt')
     with open(output_file, 'w') as f:
         for time, score in zip(times, scores):
             f.write(f'{time}\n')
