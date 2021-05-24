@@ -18,17 +18,35 @@ import json
 import os
 from typing import Dict, List, Tuple
 
+from paddle.io import Dataset
+from tqdm import tqdm
+
+from ..backends import load as load_audio
 from ..utils.download import decompress, download_and_decompress
 from ..utils.env import DATA_HOME
 from ..utils.log import logger
-from .dataset import DatasetFactory
+from .dataset import feat_funcs
 
-__all__ = ['Aishell']
+__all__ = ['AISHELL1']
 
 
-class Aishell(DatasetFactory):
+class AISHELL1(Dataset):
     """
-    Aishell
+    This Open Source Mandarin Speech Corpus, AISHELL-ASR0009-OS1, is 178 hours long.
+    It is a part of AISHELL-ASR0009, of which utterance contains 11 domains, including
+    smart home, autonomous driving, and industrial production. The whole recording was
+    put in quiet indoor environment, using 3 different devices at the same time: high
+    fidelity microphone (44.1kHz, 16-bit,); Android-system mobile phone (16kHz, 16-bit),
+    iOS-system mobile phone (16kHz, 16-bit). Audios in high fidelity were re-sampled
+    to 16kHz to build AISHELL- ASR0009-OS1. 400 speakers from different accent areas
+    in China were invited to participate in the recording. The manual transcription
+    accuracy rate is above 95%, through professional speech annotation and strict
+    quality inspection. The corpus is divided into training, development and testing
+    sets.
+
+    Reference:
+        AISHELL-1: An Open-Source Mandarin Speech Corpus and A Speech Recognition Baseline
+        https://arxiv.org/abs/1709.05522
     """
 
     archieves = [
@@ -43,13 +61,13 @@ class Aishell(DatasetFactory):
     manifest_path = os.path.join('data_aishell', 'manifest')
     subset = ['train', 'dev', 'test']
 
-    def __init__(self, task: str = 'asr', subset: str = 'train', feat_type: str = 'raw', **kwargs):
-        """
-        """
-        assert subset in self.subset, 'Dataset subset must be one in train, dev and test, but got {}'.format(subset)
+    def __init__(self, subset: str = 'train', feat_type: str = 'raw', **kwargs):
+        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(self.subset, subset)
         self.subset = subset
         self.feat_type = feat_type
-        super(Aishell, self).__init__(task=task, feat_type=self.feat_type, data=self._get_data(), **kwargs)
+        self.feat_config = kwargs
+        self._data = self._get_data()
+        super(AISHELL1, self).__init__()
 
     def _get_text_info(self) -> Dict[str, str]:
         ret = {}
@@ -85,13 +103,28 @@ class Aishell(DatasetFactory):
 
         return data
 
+    def _convert_to_record(self, idx: int):
+        sample = self._data[idx]
+
+        record = {}
+        # To show all fields in a namedtuple: `type(sample)._fields`
+        for field in type(sample)._fields:
+            record[field] = getattr(sample, field)
+
+        waveform, sr = load_audio(sample[0])  # The first element of sample is file path
+        feat_func = feat_funcs[self.feat_type]
+        feat = feat_func(waveform, sample_rate=sr, **self.feat_config) if feat_func else waveform
+        record.update({'feat': feat, 'duration': len(waveform) / sr})
+        return record
+
     def create_manifest(self, prefix='manifest'):
         if not os.path.isdir(os.path.join(DATA_HOME, self.manifest_path)):
             os.makedirs(os.path.join(DATA_HOME, self.manifest_path))
 
         manifest_file = os.path.join(DATA_HOME, self.manifest_path, f'{prefix}.{self.subset}')
         with codecs.open(manifest_file, 'w', 'utf-8') as f:
-            for record in self.records:
+            for idx in tqdm(range(len(self))):
+                record = self._convert_to_record(idx)
                 record_line = json.dumps(
                     {
                         'utt': record['utt_id'],
@@ -102,3 +135,10 @@ class Aishell(DatasetFactory):
                     ensure_ascii=False)
                 f.write(record_line + '\n')
         logger.info(f'Manifest file {manifest_file} created.')
+
+    def __getitem__(self, idx):
+        record = self._convert_to_record(idx)
+        return tuple(record.values())
+
+    def __len__(self):
+        return len(self._data)

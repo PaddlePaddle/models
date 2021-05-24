@@ -18,17 +18,29 @@ import json
 import os
 from typing import Dict, List, Tuple
 
+from paddle.io import Dataset
+from tqdm import tqdm
+
+from ..backends import load as load_audio
 from ..utils.download import decompress, download_and_decompress
 from ..utils.env import DATA_HOME
 from ..utils.log import logger
-from .dataset import DatasetFactory
+from .dataset import feat_funcs
 
-__all__ = ['LibriSpeech']
+__all__ = ['LIBRISPEECH']
 
 
-class LibriSpeech(DatasetFactory):
+class LIBRISPEECH(Dataset):
     """
-    LibriSpeech
+    LibriSpeech is a corpus of approximately 1000 hours of 16kHz read English speech,
+    prepared by Vassil Panayotov with the assistance of Daniel Povey. The data is
+    derived from read audiobooks from the LibriVox project, and has been carefully
+    segmented and aligned.
+
+    Reference:
+        LIBRISPEECH: AN ASR CORPUS BASED ON PUBLIC DOMAIN AUDIO BOOKS
+        http://www.danielpovey.com/files/2015_icassp_librispeech.pdf
+        https://arxiv.org/abs/1709.05522
     """
 
     source_url = 'http://www.openslr.org/resources/12/'
@@ -69,13 +81,13 @@ class LibriSpeech(DatasetFactory):
     subset = ['train-clean-100', 'train-clean-360', 'train-clean-500', \
             'dev-clean', 'dev-other', 'test-clean', 'test-other']
 
-    def __init__(self, task: str = 'asr', subset: str = 'train-clean-100', feat_type: str = 'raw', **kwargs):
-        """
-        """
-        assert subset in self.subset, 'Dataset subset must be one in train, dev and test, but got {}'.format(subset)
+    def __init__(self, subset: str = 'train-clean-100', feat_type: str = 'raw', **kwargs):
+        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(self.subset, subset)
         self.subset = subset
         self.feat_type = feat_type
-        super(LibriSpeech, self).__init__(task=task, feat_type=self.feat_type, data=self._get_data(), **kwargs)
+        self.feat_config = kwargs
+        self._data = self._get_data()
+        super(LIBRISPEECH, self).__init__()
 
     def _get_speaker_info(self) -> Dict[str, str]:
         ret = {}
@@ -126,13 +138,28 @@ class LibriSpeech(DatasetFactory):
 
         return data
 
+    def _convert_to_record(self, idx: int):
+        sample = self._data[idx]
+
+        record = {}
+        # To show all fields in a namedtuple: `type(sample)._fields`
+        for field in type(sample)._fields:
+            record[field] = getattr(sample, field)
+
+        waveform, sr = load_audio(sample[0])  # The first element of sample is file path
+        feat_func = feat_funcs[self.feat_type]
+        feat = feat_func(waveform, sample_rate=sr, **self.feat_config) if feat_func else waveform
+        record.update({'feat': feat, 'duration': len(waveform) / sr})
+        return record
+
     def create_manifest(self, prefix='manifest'):
         if not os.path.isdir(os.path.join(DATA_HOME, self.manifest_path)):
             os.makedirs(os.path.join(DATA_HOME, self.manifest_path))
 
         manifest_file = os.path.join(DATA_HOME, self.manifest_path, f'{prefix}.{self.subset}')
         with codecs.open(manifest_file, 'w', 'utf-8') as f:
-            for record in self.records:
+            for idx in tqdm(range(len(self))):
+                record = self._convert_to_record(idx)
                 record_line = json.dumps(
                     {
                         'utt': record['utt_id'],
@@ -145,3 +172,10 @@ class LibriSpeech(DatasetFactory):
                     ensure_ascii=False)
                 f.write(record_line + '\n')
         logger.info(f'Manifest file {manifest_file} created.')
+
+    def __getitem__(self, idx):
+        record = self._convert_to_record(idx)
+        return tuple(record.values())
+
+    def __len__(self):
+        return len(self._data)
