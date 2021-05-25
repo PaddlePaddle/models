@@ -40,21 +40,33 @@ class RAVDESS(AudioClassificationDataset):
 
     archieves = [
         {
-            'url': 'https://zenodo.org/record/1188976/files/Audio_Song_Actors_01-24.zip',
+            'url':
+            'https://zenodo.org/record/1188976/files/Audio_Song_Actors_01-24.zip',
             'md5': '5411230427d67a21e18aa4d466e6d1b9',
         },
         {
-            'url': 'https://zenodo.org/record/1188976/files/Audio_Speech_Actors_01-24.zip',
+            'url':
+            'https://zenodo.org/record/1188976/files/Audio_Speech_Actors_01-24.zip',
             'md5': 'bc696df654c87fed845eb13823edef8a',
         },
     ]
-    label_list = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised']
+    label_list = [
+        'neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust',
+        'surprised'
+    ]
     meta_info = collections.namedtuple(
-        'META_INFO', ('modality', 'vocal_channel', 'emotion', 'emotion_intensity', 'statement', 'repitition', 'actor'))
+        'META_INFO', ('modality', 'vocal_channel', 'emotion',
+                      'emotion_intensity', 'statement', 'repitition', 'actor'))
     speech_path = os.path.join(DATA_HOME, 'Audio_Speech_Actors_01-24')
     song_path = os.path.join(DATA_HOME, 'Audio_Song_Actors_01-24')
 
-    def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
+    def __init__(self,
+                 mode='train',
+                 seed=0,
+                 n_folds=5,
+                 split=1,
+                 feat_type='raw',
+                 **kwargs):
         """
         Ags:
             mode (:obj:`str`, `optional`, defaults to `train`):
@@ -70,7 +82,10 @@ class RAVDESS(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(RAVDESS, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(RAVDESS, self).__init__(files=files,
+                                      labels=labels,
+                                      feat_type=feat_type,
+                                      **kwargs)
 
     def _get_meta_info(self, files) -> List[collections.namedtuple]:
         ret = []
@@ -79,8 +94,10 @@ class RAVDESS(AudioClassificationDataset):
             ret.append(self.meta_info(*basename_without_extend.split('-')))
         return ret
 
-    def _get_data(self, mode, seed, n_folds, split) -> Tuple[List[str], List[int]]:
-        if not os.path.isdir(self.speech_path) and not os.path.isdir(self.song_path):
+    def _get_data(self, mode, seed, n_folds,
+                  split) -> Tuple[List[str], List[int]]:
+        if not os.path.isdir(self.speech_path) and not os.path.isdir(
+                self.song_path):
             download_and_decompress(self.archieves, DATA_HOME)
 
         wav_files = []
@@ -95,7 +112,9 @@ class RAVDESS(AudioClassificationDataset):
                     wav_files.append(os.path.join(root, file))
 
         random.seed(seed)  # shuffle samples to split data
-        random.shuffle(wav_files)  # make sure using the same seed to create train and dev dataset
+        random.shuffle(
+            wav_files
+        )  # make sure using the same seed to create train and dev dataset
         meta_info = self._get_meta_info(wav_files)
 
         files = []
@@ -115,8 +134,3 @@ class RAVDESS(AudioClassificationDataset):
                 labels.append(target)
 
         return files, labels
-
-
-if __name__ == "__main__":
-    train_ds = RAVDESS(mode='train', feat_type='mel_spect')
-    dev_ds = RAVDESS(mode='dev', feat_type='mel_spect')

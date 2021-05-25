@@ -23,13 +23,12 @@ from pathos.threading import ThreadPool
 from tqdm import tqdm
 
 from ..backends import load as load_audio
-from ..features import linear_spect, log_spect, mel_spect
+from ..features import melspectrogram, mfcc
 
 feat_funcs = {
     'raw': None,
-    'mel_spect': mel_spect,
-    'linear_spect': linear_spect,
-    'log_spect': log_spect,
+    'melspectrogram': melspectrogram,
+    'mfcc': mfcc,
 }
 
 
@@ -37,7 +36,11 @@ class AudioClassificationDataset(paddle.io.Dataset):
     """
     Base class of audio classification dataset.
     """
-    def __init__(self, files: List[str], labels: List[int], feat_type: str = 'raw', **kwargs):
+    def __init__(self,
+                 files: List[str],
+                 labels: List[int],
+                 feat_type: str = 'raw',
+                 **kwargs):
         """
         Ags:
             files (:obj:`List[str]`): A list of absolute path of audio files.
@@ -67,13 +70,15 @@ class AudioClassificationDataset(paddle.io.Dataset):
         feat_func = feat_funcs[self.feat_type]
 
         record = {}
-        record['feat'] = feat_func(waveform, sample_rate=sample_rate, **self.feat_config) if feat_func else waveform
+        record['feat'] = feat_func(waveform, sample_rate, **
+                                   self.feat_config) if feat_func else waveform
         record['label'] = label
         return record
 
     def __getitem__(self, idx):
         record = self._convert_to_record(idx)
-        return np.array(record['feat']).transpose(), np.array(record['label'], dtype=np.int64)
+        return np.array(record['feat']).transpose(), np.array(record['label'],
+                                                              dtype=np.int64)
 
     def __len__(self):
         return len(self.files)

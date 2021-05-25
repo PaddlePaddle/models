@@ -20,7 +20,7 @@ from typing import List
 import numpy as np
 import paddle
 from paddleaudio.backends import load as load_audio
-from paddleaudio.features import mel_spect
+from paddleaudio.features import melspectrogram
 from paddleaudio.models.panns import cnn14
 from paddleaudio.utils import logger
 
@@ -59,8 +59,7 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int,
     """
     examples = []
     for waveform in data:
-        feats = mel_spect(waveform, sample_rate=sample_rate,
-                          **kwargs).transpose()
+        feats = melspectrogram(waveform, sample_rate, **kwargs).transpose()
         examples.append(feats)
 
     # Seperates data into some batches.
