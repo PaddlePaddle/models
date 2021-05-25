@@ -56,7 +56,6 @@ def kitti_evaluation(dataset, predictions, output_dir):
         subprocess.Popen('g++ -O3 -DNDEBUG -o evaluate_object_3d_offline evaluate_object_3d_offline.cpp', shell=True)
     command = "./evaluate_object_3d_offline {} {}".format(label_dir, output_dir)
 
-    #output = subprocess.check_output(command, shell=True, universal_newlines=True).strip()
     os.system(command)
 
 def generate_kitti_3d_detection(prediction, predict_txt):

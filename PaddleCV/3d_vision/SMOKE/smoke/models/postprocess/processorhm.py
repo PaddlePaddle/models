@@ -85,10 +85,6 @@ class PostProcessorHm(nn.Layer):
         box2d = self.smoke_coder.decode_bbox_2d_without_transmat(pred_proj_points,
                                                         pred_bbox_size, cam_info[1])
         # change variables to the same dimension
-        # clses = paddle.reshape(clses, (clses.numel(), 1))
-        # pred_alphas = paddle.reshape(pred_alphas, (pred_alphas.numel(), 1))
-        # pred_rotys = paddle.reshape(pred_rotys, (pred_rotys.numel(), 1))
-        # scores = paddle.reshape(scores, (scores.numel(), 1))
         clses = paddle.reshape(clses, (-1, 1))
         pred_alphas = paddle.reshape(pred_alphas, (-1, 1))
         pred_rotys = paddle.reshape(pred_rotys, (-1, 1))
