@@ -20,12 +20,6 @@ import shutil
 
 from smoke.utils.miscellaneous import mkdir
 
-ID_TYPE_CONVERSION = {
-    0: 'Car',
-    1: 'Cyclist',
-    2: 'Pedestrian'
-}
-
 def kitti_evaluation(dataset, predictions, output_dir):
     """Do evaluation by process kitti eval program
 
@@ -39,12 +33,13 @@ def kitti_evaluation(dataset, predictions, output_dir):
         shutil.rmtree(os.path.join(output_dir, 'data'))
     predict_folder = os.path.join(output_dir, 'data')  # only recognize data
     mkdir(predict_folder)
-
+    type_id_conversion = getattr(dataset, 'TYPE_ID_CONVERSION')
+    id_type_conversion = {value:key for key, value in type_id_conversion.items()}
     for image_id, prediction in predictions.items():
         predict_txt = image_id + '.txt'
         predict_txt = os.path.join(predict_folder, predict_txt)
 
-        generate_kitti_3d_detection(prediction, predict_txt)
+        generate_kitti_3d_detection(prediction, predict_txt, id_type_conversion)
     
     output_dir = os.path.abspath(output_dir)
     root_dir = os.getcwd()
@@ -58,7 +53,7 @@ def kitti_evaluation(dataset, predictions, output_dir):
 
     os.system(command)
 
-def generate_kitti_3d_detection(prediction, predict_txt):
+def generate_kitti_3d_detection(prediction, predict_txt, id_type_conversion):
     """write kitti 3d detection result to txt file 
 
     Args:
@@ -71,9 +66,8 @@ def generate_kitti_3d_detection(prediction, predict_txt):
             w.writerow([])
         else:
             for p in prediction:
-                # p = p.numpy()
                 p = p.round(4)
-                type = ID_TYPE_CONVERSION[int(p[0])]
+                type = id_type_conversion[int(p[0])]
                 row = [type, 0, 0] + p[1:].tolist()
                 w.writerow(row)
 

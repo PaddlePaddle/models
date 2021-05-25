@@ -58,7 +58,7 @@ For 11-point evaluation, simply change `evaluate_object_offline_40p.cpp` to `eva
 
 ## Training
 
-Please download the [pre-trained weights](https://pan.baidu.com/s/1vYFhln2f1M4lM3PeAIpFMw), (access code: 2ccv). Put it into ```./pretrained```.
+Please download the [pre-trained weights](https://bj.bcebos.com/paddleseg/3d/smoke/dla34.pdparams). Put it into ```./pretrained```.
 
 
 #### Single GPU
@@ -99,7 +99,7 @@ The performance on WAYMO 3D detection is as follows:
 | Pedestrian  | 0.35    | 0.34  | 0.34  | 
 | Cyclist     | 0.54   | 0.53   | 0.53  |
 
-Download the well-trained models here, [smoke-release](https://pan.baidu.com/s/1L5clxXbEUiRX5DX6VXM5RQ), access icode: ln30
+Download the well-trained models here, [smoke-release](https://bj.bcebos.com/paddleseg/3d/smoke/smoke-release.zip).
 
 
 ## Testing

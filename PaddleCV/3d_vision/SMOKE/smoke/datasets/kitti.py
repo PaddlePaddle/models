@@ -33,12 +33,6 @@ from smoke.utils.heatmap_coder import (
 )
 
 
-TYPE_ID_CONVERSION = {
-    'Car': 0,
-    'Cyclist': 1,
-    'Pedestrian': 2,
-}
-
 @manager.DATASETS.add_component
 class KITTI(paddle.io.Dataset):
     """Parsing KITTI format dataset
@@ -48,6 +42,12 @@ class KITTI(paddle.io.Dataset):
     """
     def __init__(self, dataset_root, mode="train", transforms=None, flip_prob=0.5, aug_prob=0.3):
         super().__init__()
+
+        self.TYPE_ID_CONVERSION = {
+            'Car': 0,
+            'Cyclist': 1,
+            'Pedestrian': 2,
+        }
         
         mode = mode.lower()
 
@@ -265,7 +265,7 @@ class KITTI(paddle.io.Dataset):
                         if row["type"] in self.classes:
                             annotations.append({
                                 "class": row["type"],
-                                "label": TYPE_ID_CONVERSION[row["type"]],
+                                "label": self.TYPE_ID_CONVERSION[row["type"]],
                                 "truncation": float(row["truncated"]),
                                 "occlusion": float(row["occluded"]),
                                 "alpha": float(row["alpha"]),
