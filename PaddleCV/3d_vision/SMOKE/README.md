@@ -15,9 +15,7 @@ conda create -n paddle_latest python=3.7
 
 conda actviate paddle_latest
 
-wget https://paddle-wheel.bj.bcebos.com/develop-gpu-cuda9-cudnn7-mkl/paddlepaddle_gpu-2.1.0.dev0.post90-cp37-cp37m-linux_x86_64.whl
-
-pip install paddlepaddle_gpu-2.1.0.dev0.post90-cp37-cp37m-linux_x86_64.whl -i https://mirror.baidu.com/pypi/simple
+pip install paddlepaddle -i https://mirror.baidu.com/pypi/simple
 
 pip install -r requirement.txt
 ```
