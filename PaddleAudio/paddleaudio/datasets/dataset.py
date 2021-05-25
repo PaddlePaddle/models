@@ -37,19 +37,11 @@ class AudioClassificationDataset(paddle.io.Dataset):
     """
     Base class of audio classification dataset.
     """
-    def __init__(self,
-                 files: List[str],
-                 labels: List[int],
-                 sample_rate: int,
-                 duration: float,
-                 feat_type: str = 'raw',
-                 **kwargs):
+    def __init__(self, files: List[str], labels: List[int], feat_type: str = 'raw', **kwargs):
         """
         Ags:
             files (:obj:`List[str]`): A list of absolute path of audio files.
             labels (:obj:`List[int]`): Labels of audio files.
-            sample_rate (:obj:`int`): Sample rate of audio files.
-            duration (:obj:`float`): Duration of audio files.
             feat_type (:obj:`str`, `optional`, defaults to `raw`):
                 It identifies the feature type that user wants to extrace of an audio file.
         """
@@ -61,8 +53,6 @@ class AudioClassificationDataset(paddle.io.Dataset):
 
         self.files = files
         self.labels = labels
-        self.sample_rate = sample_rate
-        self.duration = duration
 
         self.feat_type = feat_type
         self.feat_config = kwargs  # Pass keyword arguments to customize feature config
@@ -73,18 +63,11 @@ class AudioClassificationDataset(paddle.io.Dataset):
     def _convert_to_record(self, idx):
         file, label = self.files[idx], self.labels[idx]
 
-        waveform, _ = load_audio(file, sr=self.sample_rate)
-        normal_length = self.sample_rate * self.duration
-        if len(waveform) > normal_length:
-            waveform = waveform[:normal_length]
-        else:
-            waveform = np.pad(waveform, (0, normal_length - len(waveform)))
-
+        waveform, sample_rate = load_audio(file)
         feat_func = feat_funcs[self.feat_type]
 
         record = {}
-        record['feat'] = feat_func(waveform, sample_rate=self.sample_rate, **
-                                   self.feat_config) if feat_func else waveform
+        record['feat'] = feat_func(waveform, sample_rate=sample_rate, **self.feat_config) if feat_func else waveform
         record['label'] = label
         return record
 

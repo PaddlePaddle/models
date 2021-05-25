@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .aishell import AISHELL1
-from .dcase import UrbanAcousticScenes
+from .dcase import UrbanAcousticScenes, UrbanAudioVisualScenes
 from .esc50 import ESC50
 from .gtzan import GTZAN
 from .librispeech import LIBRISPEECH
@@ -28,6 +28,7 @@ __all__ = [
     'UrbanSound8K',
     'GTZAN',
     'UrbanAcousticScenes',
+    'UrbanAudioVisualScenes',
     'RAVDESS',
     'TESS',
 ]

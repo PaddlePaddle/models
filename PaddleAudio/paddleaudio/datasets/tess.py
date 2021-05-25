@@ -55,8 +55,6 @@ class TESS(AudioClassificationDataset):
     ]
     meta_info = collections.namedtuple('META_INFO', ('speaker', 'word', 'emotion'))
     audio_path = 'TESS_Toronto_emotional_speech_set'
-    sample_rate = 24414
-    duration = 2
 
     def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
         """
@@ -74,12 +72,7 @@ class TESS(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(TESS, self).__init__(files=files,
-                                   labels=labels,
-                                   sample_rate=self.sample_rate,
-                                   duration=self.duration,
-                                   feat_type=feat_type,
-                                   **kwargs)
+        super(TESS, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self, files) -> List[collections.namedtuple]:
         ret = []
