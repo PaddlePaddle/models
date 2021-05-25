@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Copy-paste from PaddleSeg"""
+"""
+Copy-paste from PaddleSeg.
+https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.1/paddleseg/utils/logger.py
+"""
 
 import sys
 import time

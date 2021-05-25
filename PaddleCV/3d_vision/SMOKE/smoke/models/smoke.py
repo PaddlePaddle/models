@@ -38,6 +38,5 @@ class SMOKE(nn.Layer):
 
     def init_weight(self, bias_lr_factor=2):
         for sublayer in self.sublayers():
-            if hasattr(sublayer, 'bias'):
-                if sublayer.bias is not None:
-                    sublayer.bias.optimize_attr['learning_rate'] = bias_lr_factor
+            if hasattr(sublayer, 'bias') and sublayer.bias is not None:
+                sublayer.bias.optimize_attr['learning_rate'] = bias_lr_factor

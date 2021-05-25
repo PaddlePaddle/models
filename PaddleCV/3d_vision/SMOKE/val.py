@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Copy-paste from PaddleSeg with minor modifications """
+""" 
+Copy-paste from PaddleSeg with minor modifications.
+https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.1/val.py
+"""
 
 import argparse
 import os
