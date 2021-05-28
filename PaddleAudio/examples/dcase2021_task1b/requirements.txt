@@ -1,0 +1,2 @@
+paddle-audio
+h5py==3.2.1

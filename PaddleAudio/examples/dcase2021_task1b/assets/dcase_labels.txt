@@ -1,0 +1,10 @@
+airport
+bus
+metro
+metro_station
+park
+public_square
+shopping_mall
+street_pedestrian
+street_traffic
+tram
