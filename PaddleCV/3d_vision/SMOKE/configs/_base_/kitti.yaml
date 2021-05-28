@@ -1,0 +1,30 @@
+batch_size: 8
+iters: 70000
+
+train_dataset:
+  type: KITTI
+  dataset_root: datasets/kitti/training
+  transforms:
+    - type: Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  flip_prob: 0.5
+  aug_prob: 0.3
+  mode: train
+
+val_dataset:
+  type: KITTI
+  dataset_root: datasets/kitti/training
+  transforms:
+    - type: Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  mode: val
+
+optimizer:
+  type: Adam
+
+lr_scheduler:
+  type: MultiStepDecay
+  milestones: [36000, 55000]
+  learning_rate: 1.25e-4 
