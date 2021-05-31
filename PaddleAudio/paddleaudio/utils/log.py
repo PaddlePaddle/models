@@ -72,11 +72,13 @@ class Logger(object):
         for key, conf in log_config.items():
             logging.addLevelName(conf['level'], key)
             self.__dict__[key] = functools.partial(self.__call__, conf['level'])
-            self.__dict__[key.lower()] = functools.partial(self.__call__, conf['level'])
+            self.__dict__[key.lower()] = functools.partial(
+                self.__call__, conf['level'])
 
-        self.format = colorlog.ColoredFormatter('%(log_color)s[%(asctime)-15s] [%(levelname)8s]%(reset)s - %(message)s',
-                                                log_colors={key: conf['color']
-                                                            for key, conf in log_config.items()})
+        self.format = colorlog.ColoredFormatter(
+            '%(log_color)s[%(asctime)-15s] [%(levelname)s]%(reset)s - %(message)s',
+            log_colors={key: conf['color']
+                        for key, conf in log_config.items()})
 
         self.handler = logging.StreamHandler()
         self.handler.setFormatter(self.format)
