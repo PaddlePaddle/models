@@ -15,6 +15,8 @@
 import pickle
 
 from paddle.utils import download
+from paddleaudio.utils.log import logger
+from utils import get_pickle_results, get_txt_from_url
 
 URL = {
     'zs_feature':
@@ -25,26 +27,9 @@ URL = {
     'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/eval_split.txt'
 }
 
-
-def get_txt_from_url(url):
-    """Download and read text lines from url, remove empty lines if any.
-    """
-    file_path = download.get_weights_path_from_url(url)
-    with open(file_path) as f:
-        lines = f.read().split('\n')
-    return [l for l in lines if len(l) > 0]
-
-
-def get_pickle_results():
-    weight = download.get_weights_path_from_url(URL['zs_feature'])
-    with open(weight, 'rb') as f:
-        results = pickle.load(f)
-    return results
-
-
 if __name__ == '__main__':
 
-    results = get_pickle_results()
+    results = get_pickle_results(URL['zs_feature'])
     eval_list = get_txt_from_url(URL['eval_split'])
 
     check_in_eval = {e + '-05': True for e in eval_list}
@@ -53,8 +38,8 @@ if __name__ == '__main__':
         if check_in_eval.get(r[0].split('/')[-1][:-4])
     ]
     acc = sum(acc) / len(acc)
-    print(f'Zero-shot validation accuracy: {acc}')
+    logger.warning(f'Zero-shot validation accuracy: {acc}')
 
     acc = [r[1] == r[2] for r in results]
     acc = sum(acc) / len(acc)
-    print(f'Zero-shot accuracy for the whole dataset: {acc}')
+    logger.info(f'Zero-shot accuracy for the whole dataset: {acc}')

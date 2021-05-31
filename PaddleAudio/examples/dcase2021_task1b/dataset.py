@@ -21,7 +21,6 @@ import time
 import warnings
 
 import h5py
-import librosa
 import numpy as np
 import paddle
 import paddleaudio
@@ -29,6 +28,7 @@ import yaml
 from paddle.io import DataLoader, Dataset, IterableDataset
 from paddle.utils import download
 from paddleaudio import augment
+from paddleaudio.utils.log import logger
 
 CLIP_FEATURE_URL = 'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/clip_image_features_lp.pkl'
 
@@ -45,7 +45,7 @@ def get_clip_features():
 
 def spect_permute(spect, tempo_axis, nblocks):
     """spectrogram  permutaion"""
-    assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
+    assert spect.ndim == 2, 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:
         nt, nf = spect.shape
     else:
@@ -106,7 +106,7 @@ class H5AudioSet(Dataset):
         self.augment = augment
         self.training = training
         self.balanced_sampling = balanced_sampling
-        print(
+        logger.info(
             f'{len(self.h5_files)} h5 files, totally {len(self.all_keys)} audio files listed'
         )
         self.labels = open(self.config['label']).read().split('\n')
@@ -207,7 +207,7 @@ def get_val_loader(config):
 
 
 def get_test_loader(config):
-    print(config['test_h5'])
+    logger.info(config['test_h5'])
     test_dataset = H5AudioSet([config['test_h5']],
                               config,
                               balanced_sampling=False,
@@ -234,10 +234,10 @@ if __name__ == '__main__':
                          augment=True,
                          training=True)
     x, y, p = dataset[1]
-    print(x.shape, y, p.shape)
+    logger.info(f'{x.shape}, {y, p.shape}')
     dataset = H5AudioSet([config['eval_h5']],
                          config,
                          balanced_sampling=False,
                          augment=False)
     x, y, p = dataset[0]
-    print(x.shape, y, p.shape)
+    logger.info(f'{x.shape}, {y, p.shape}')

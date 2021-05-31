@@ -32,11 +32,10 @@ import paddle.nn.functional as F
 from PIL import Image
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
-from utils import (build_rn50_model, build_rn101_model, build_vit_model,
-                   tokenize, transform)
+from utils import (build_rn50_model, build_rn101_model, build_vit_model,transform)
 
 image_files = glob.glob('images/*.png')
-# use only the middle frame of a video
+# Use only the middle frame of a video
 image_files = [f for f in image_files if '-05' in f]
 train_split_file = '<train_split.txt>'
 eval_split_file = '<eval_split.txt>'

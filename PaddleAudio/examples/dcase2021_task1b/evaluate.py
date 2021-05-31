@@ -24,6 +24,7 @@ import yaml
 from dataset import get_val_loader
 from model import resnet50
 from paddle.utils import download
+from paddleaudio.utils.log import logger
 
 checkpoint_url = {
     'audio_only':
@@ -57,7 +58,7 @@ def evaluate(epoch, val_loader, model, loss_fn, task_type='audio_only'):
         msg += f',acc:{avg_acc:.3}'
 
         if batch_id % 20 == 0:
-            print(msg)
+            logger.info(msg)
 
     return avg_loss, avg_acc
 
@@ -95,7 +96,8 @@ if __name__ == '__main__':
                        dropout=c['dropout'],
                        task_type=args.task_type)
     if args.weight.strip() == '':
-        print(f'Using pretrained weight: {checkpoint_url[args.task_type]}')
+        logger.info(
+            f'Using pretrained weight: {checkpoint_url[args.task_type]}')
         args.weight = download.get_weights_path_from_url(
             checkpoint_url[args.task_type])
     model.load_dict(paddle.load(args.weight))
@@ -103,11 +105,11 @@ if __name__ == '__main__':
 
     val_loader = get_val_loader(c)
 
-    print(f'Evaluating...')
+    logger.info(f'Evaluating...')
     val_loss, val_acc = evaluate(0,
                                  val_loader,
                                  model,
                                  nn.NLLLoss(),
                                  task_type=args.task_type)
-    print(f'Overall acc: {val_acc:.3}')
-    print(f'Overall loss: {val_loss:.3}')
+    logger.info(f'Overall acc: {val_acc:.3}')
+    logger.info(f'Overall loss: {val_loss:.3}')

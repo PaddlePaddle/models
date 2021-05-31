@@ -14,17 +14,41 @@
 
 import json
 import os
+import pickle
 
 import numpy as np
 import paddle
 import paddle.nn.functional as F
+from paddle.utils import download
 
 __all__ = [
-    'save_checkpoint',
-    'load_checkpoint',
-    'MixUpLoss',
-    'mixup_data'
+    'save_checkpoint', 'load_checkpoint', 'MixUpLoss', 'mixup_data',
+    'get_txt_from_url', 'get_feature_from_url'
 ]
+
+
+def get_txt_from_url(url):
+    """Download and read text lines from url, remove empty lines if any.
+    """
+    file_path = download.get_weights_path_from_url(url)
+    with open(file_path) as f:
+        lines = f.read().split('\n')
+    return [l for l in lines if len(l) > 0]
+
+
+def get_pickle_results(url):
+    weight = download.get_weights_path_from_url(url)
+    with open(weight, 'rb') as f:
+        results = pickle.load(f)
+    return results
+
+
+def get_feature_from_url(url):
+    """Download and read features as numpy array from url.
+    """
+    file_path = download.get_weights_path_from_url(url)
+    feature = np.load(file_path)
+    return feature
 
 
 def save_checkpoint(model_dir, step, model, optimizer, prefix):

@@ -28,6 +28,7 @@ from evaluate import evaluate
 from model import resnet18, resnet50, resnet101
 from paddle.io import DataLoader, Dataset, IterableDataset
 from paddle.optimizer import Adam
+from paddleaudio.utils.log import logger
 from utils import MixUpLoss, load_checkpoint, mixup_data, save_checkpoint
 from visualdl import LogWriter
 
@@ -64,7 +65,7 @@ if __name__ == '__main__':
         paddle.set_device('gpu:{}'.format(args.device))
         local_rank = 0
 
-    print(f'using ' + c['model_type'])
+    logger.info(f'using ' + c['model_type'])
     ModelClass = eval(c['model_type'])
 
     #define loss
@@ -94,7 +95,7 @@ if __name__ == '__main__':
                            dropout=c['dropout'])  # use imagenet pretrained
 
         start_epoch = 0
-        print(f'Using pretrained weight: {AUDIOSET_URL}')
+        logger.info(f'Using pretrained weight: {AUDIOSET_URL}')
         weight = download.get_weights_path_from_url(AUDIOSET_URL)
         model.load_dict(paddle.load(weight))
         optimizer = Adam(learning_rate=c['start_lr'],
@@ -135,9 +136,8 @@ if __name__ == '__main__':
                 p = None  # do not use probability from video branch
             if step < warm_steps:
                 optimizer.set_lr(lrs[step])
-            #print(xd.stop_gradient,yd.stop_gradient)
+
             xd.stop_gradient = False
-            # yd.stop_gradient = False
             if c['balanced_sampling']:
                 xd = xd.squeeze()
                 yd = yd.squeeze()
@@ -174,7 +174,7 @@ if __name__ == '__main__':
             msg += f',remained:{remain:.1}h'
 
             if batch_id % 50 == 0 and local_rank == 0:
-                print(msg)
+                logger.info(msg)
                 log_writer.add_scalar(tag="train loss",
                                       step=step,
                                       value=avg_loss)
@@ -194,7 +194,7 @@ if __name__ == '__main__':
                 model.clear_gradients()
 
                 if val_acc > best_acc:
-                    print('acc improved from {} to {}'.format(
+                    logger.info('acc improved from {} to {}'.format(
                         best_acc, val_acc))
                     best_acc = val_acc
                     fn = os.path.join(
@@ -202,7 +202,8 @@ if __name__ == '__main__':
                         f'{prefix}_epoch{epoch}_acc{val_acc:.3}.pdparams')
                     paddle.save(model.state_dict(), fn)
                 else:
-                    print(f'acc {val_acc} did not improved from {best_acc}')
+                    logger.info(
+                        f'acc {val_acc} did not improved from {best_acc}')
 
             if step % c['lr_dec_per_step'] == 0 and step != 0:
                 if optimizer.get_lr() <= 1e-6:
@@ -210,4 +211,4 @@ if __name__ == '__main__':
                 else:
                     factor = 0.8
                 optimizer.set_lr(optimizer.get_lr() * factor)
-                print('decreased lr to {}'.format(optimizer.get_lr()))
+                logger.info('decreased lr to {}'.format(optimizer.get_lr()))

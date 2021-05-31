@@ -72,11 +72,7 @@ To evaluate zero-shot accuracy, run
 ``` sh
 python evaluate_visual_zs.py
 ```
-
-
-
-
- and the detail results can be found in [assets/clip_zero_shot_results.pkl](./assets/clip_results.pkl)
+The above script will automatically download pre-extracted zero-shot features and perform the evaluation.
 
 #### linear-probe classification
 For linear-probe, see [README_LP.md](README_LP.md)
@@ -85,7 +81,7 @@ For linear-probe, see [README_LP.md](README_LP.md)
 We can combine audio and video branch in a late-fusion manner. THe network architecture is as follows,
 ![network](./assets/network_arch.png)
 
-The audio-visual task utilizes embedding output form CLIP image encoder. For the convenience of this demo, the embedding is already pickled as ['.assets/file2feature.pkl](.assets/file2feature.pkl).
+The audio-visual task utilizes embedding output form CLIP image encoder. For the convenience of this demo, the embedding has been pre-extracted and will be automatically downloaded before training.
 
 
 To train audio-visual network, run

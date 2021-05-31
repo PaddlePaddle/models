@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import numpy as np
-from paddle.utils import download
+from paddleaudio.utils.log import logger
 from sklearn.linear_model import LogisticRegression
+from utils import get_feature_from_url, get_txt_from_url
 
 URL = {
     'train_feat':
@@ -28,23 +29,6 @@ URL = {
     'eval_split':
     'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/eval_split.txt'
 }
-
-
-def get_txt_from_url(url):
-    """Download and read text lines from url, remove empty lines if any.
-    """
-    file_path = download.get_weights_path_from_url(url)
-    with open(file_path) as f:
-        lines = f.read().split('\n')
-    return [l for l in lines if len(l) > 0]
-
-
-def get_feature_from_url(url):
-    """Download and read features as numpy array from url.
-    """
-    file_path = download.get_weights_path_from_url(url)
-    feature = np.load(file_path)
-    return feature
 
 
 def split_dataset(image_files, train_split):
@@ -81,20 +65,21 @@ if __name__ == '__main__':
         f.split('/')[-1].split('-')[0] for f in val_files if len(f) > 0
     ]
 
-    print(f'train files {len(train_files)}, validation files: {len(val_files)}')
+    logger.info(
+        f'train files {len(train_files)}, validation files: {len(val_files)}')
 
     train_features = get_feature_from_url(URL['train_feat'])
     eval_features = get_feature_from_url(URL['eval_feat'])
 
-    print('Training logistic regression...')
+    logger.info('Training logistic regression...')
     # train the logistic regression model
     classifier = LogisticRegression(random_state=0,
                                     C=0.01,
                                     max_iter=1000,
                                     verbose=1)
     classifier.fit(train_features, train_labels)
-    print('done')
+    logger.info('done')
     # Evaluate using the logistic regression classifier
     predictions = classifier.predict(eval_features)
     accuracy = np.mean((eval_labels == predictions).astype(np.float)) * 100.
-    print(f"Accuracy = {accuracy:.3f}")
+    logger.info(f"Accuracy = {accuracy:.3f}")
