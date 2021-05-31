@@ -33,5 +33,5 @@ We provide a set of examples to help you get started in using PaddleAudio quickl
 - [PANNs:  acoustic scene and events analysis using pre-trained models](./examples/panns)
 - [Environmental Sound classification on ESC-50 dataset](./examples/sound_classification)
 - [Training a audio-tagging network on Audioset](./examples/audioset_training)
-- [Audio-visual scene classification](./examples/dcase2021_task1b)
+
 Please refer to [example directory](./examples) for more details.
