@@ -27,7 +27,20 @@ import paddle
 import paddleaudio
 import yaml
 from paddle.io import DataLoader, Dataset, IterableDataset
+from paddle.utils import download
 from paddleaudio import augment
+
+CLIP_FEATURE_URL = 'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/clip_image_features_lp.pkl'
+
+
+def get_clip_features():
+    """Download pre-extracted clip features"""
+
+    file_path = download.get_weights_path_from_url(CLIP_FEATURE_URL)
+    with open(file_path, 'rb') as f:
+        clip_feature = pickle.load(f)
+
+    return clip_feature
 
 
 def spect_permute(spect, tempo_axis, nblocks):
@@ -72,10 +85,6 @@ def get_keys(file_pointers):
     return all_keys, key2file
 
 
-with open('./assets/file2feature.pkl', 'rb') as f:
-    file2feature = pickle.load(f)
-
-
 class H5AudioSet(Dataset):
     """
     Dataset class for Audioset, with mel features stored in multiple hdf5 files.
@@ -89,6 +98,7 @@ class H5AudioSet(Dataset):
                  training=True,
                  balanced_sampling=True):
         super(H5AudioSet, self).__init__()
+        self.clip_feature = get_clip_features()
         self.h5_files = h5_files
         self.config = config
         self.file_pointers = [h5py.File(f) for f in h5_files]
@@ -146,7 +156,7 @@ class H5AudioSet(Dataset):
 
         #y = np.zeros((self.config['num_classes'], ), 'float32')
         #y[cls_ids] = 1.0
-        return x, cls_ids, file2feature[k]
+        return x, cls_ids, self.clip_feature[k]
 
     def __len__(self):
         return len(self.all_keys)

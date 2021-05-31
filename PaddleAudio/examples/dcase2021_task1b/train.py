@@ -31,7 +31,7 @@ from paddle.optimizer import Adam
 from utils import MixUpLoss, load_checkpoint, mixup_data, save_checkpoint
 from visualdl import LogWriter
 
-checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.416.pdparams'
+AUDIOSET_URL = 'https://bj.bcebos.com/paddleaudio/examples/audioset/weights/resnet50_map0.416.pdparams'
 
 from paddle.utils import download
 
@@ -94,8 +94,8 @@ if __name__ == '__main__':
                            dropout=c['dropout'])  # use imagenet pretrained
 
         start_epoch = 0
-        print(f'Using pretrained weight: {checkpoint_url}')
-        weight = download.get_weights_path_from_url(checkpoint_url)
+        print(f'Using pretrained weight: {AUDIOSET_URL}')
+        weight = download.get_weights_path_from_url(AUDIOSET_URL)
         model.load_dict(paddle.load(weight))
         optimizer = Adam(learning_rate=c['start_lr'],
                          parameters=model.parameters())

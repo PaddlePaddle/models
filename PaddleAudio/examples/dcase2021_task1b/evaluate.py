@@ -27,9 +27,9 @@ from paddle.utils import download
 
 checkpoint_url = {
     'audio_only':
-    'https://bj.bcebos.com/paddleaudio/paddleaudio/dcase21task1b_resnet50_audio_only_mixup=True_epoch188_acc0.771.pdparams',
+    'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/weights/r50_audio_only.pdparams',
     'audio_visual':
-    'https://bj.bcebos.com/paddleaudio/paddleaudio/dcase21task1b_resnet50_audio_visual_mixup=True_epoch92_acc0.925.pdparams'
+    'https://bj.bcebos.com/paddleaudio/examples/dcase21_task1b/weights/r50_audio_visual.pdparams'
 }
 
 

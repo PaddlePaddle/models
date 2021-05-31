@@ -1,2 +1,4 @@
-paddle-audio
-h5py==3.2.1
+paddleaudio
+# for clip linear-probe
+scikit-learn~=0.24.1
+

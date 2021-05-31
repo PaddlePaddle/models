@@ -22,6 +22,8 @@ import paddle.nn.functional as F
 __all__ = [
     'save_checkpoint',
     'load_checkpoint',
+    'MixUpLoss',
+    'mixup_data'
 ]
 
 
