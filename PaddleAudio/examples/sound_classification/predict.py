@@ -22,7 +22,7 @@ import paddle.nn.functional as F
 from model import SoundClassifier
 from paddleaudio.backends import load as load_audio
 from paddleaudio.datasets import ESC50
-from paddleaudio.features import mel_spect
+from paddleaudio.features import melspectrogram
 from paddleaudio.models.panns import cnn14
 
 # yapf: disable
@@ -37,14 +37,16 @@ args = parser.parse_args()
 
 def extract_features(file: str, **kwargs):
     waveform, sr = load_audio(args.wav, sr=None)
-    feats = mel_spect(waveform, sample_rate=sr, **kwargs).transpose()
+    feats = melspectrogram(waveform, sr, **kwargs).transpose()
     return feats
 
 
 if __name__ == '__main__':
     paddle.set_device(args.device)
 
-    model = SoundClassifier(backbone=cnn14(pretrained=False, extract_embedding=True), num_class=len(ESC50.label_list))
+    model = SoundClassifier(backbone=cnn14(pretrained=False,
+                                           extract_embedding=True),
+                            num_class=len(ESC50.label_list))
     model.set_state_dict(paddle.load(args.checkpoint))
     model.eval()
 

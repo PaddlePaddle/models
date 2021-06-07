@@ -43,16 +43,15 @@ if __name__ == "__main__":
 
     backbone = cnn14(pretrained=True, extract_embedding=True)
     model = SoundClassifier(backbone, num_class=len(ESC50.label_list))
-    optimizer = paddle.optimizer.Adam(learning_rate=args.learning_rate, parameters=model.parameters())
+    optimizer = paddle.optimizer.Adam(learning_rate=args.learning_rate,
+                                      parameters=model.parameters())
     criterion = paddle.nn.loss.CrossEntropyLoss()
 
-    train_ds = ESC50(mode='train', feat_type='mel_spect')
-    dev_ds = ESC50(mode='dev', feat_type='mel_spect')
+    train_ds = ESC50(mode='train', feat_type='melspectrogram')
+    dev_ds = ESC50(mode='dev', feat_type='melspectrogram')
 
-    train_sampler = paddle.io.DistributedBatchSampler(train_ds,
-                                                      batch_size=args.batch_size,
-                                                      shuffle=True,
-                                                      drop_last=False)
+    train_sampler = paddle.io.DistributedBatchSampler(
+        train_ds, batch_size=args.batch_size, shuffle=True, drop_last=False)
     train_loader = paddle.io.DataLoader(
         train_ds,
         batch_sampler=train_sampler,
@@ -78,7 +77,8 @@ if __name__ == "__main__":
             loss = criterion(logits, labels)
             loss.backward()
             optimizer.step()
-            if isinstance(optimizer._learning_rate, paddle.optimizer.lr.LRScheduler):
+            if isinstance(optimizer._learning_rate,
+                          paddle.optimizer.lr.LRScheduler):
                 optimizer._learning_rate.step()
             optimizer.clear_grad()
 
@@ -97,10 +97,12 @@ if __name__ == "__main__":
                 avg_loss /= args.log_freq
                 avg_acc = num_corrects / num_samples
 
-                print_msg = 'Epoch={}/{}, Step={}/{}'.format(epoch, args.epochs, batch_idx + 1, steps_per_epoch)
+                print_msg = 'Epoch={}/{}, Step={}/{}'.format(
+                    epoch, args.epochs, batch_idx + 1, steps_per_epoch)
                 print_msg += ' loss={:.4f}'.format(avg_loss)
                 print_msg += ' acc={:.4f}'.format(avg_acc)
-                print_msg += ' lr={:.6f} step/sec={:.2f} | ETA {}'.format(lr, timer.timing, timer.eta)
+                print_msg += ' lr={:.6f} step/sec={:.2f} | ETA {}'.format(
+                    lr, timer.timing, timer.eta)
                 logger.train(print_msg)
 
                 avg_loss = 0
@@ -108,7 +110,10 @@ if __name__ == "__main__":
                 num_samples = 0
 
         if epoch % args.save_freq == 0 and batch_idx + 1 == steps_per_epoch and local_rank == 0:
-            dev_sampler = paddle.io.BatchSampler(dev_ds, batch_size=args.batch_size, shuffle=False, drop_last=False)
+            dev_sampler = paddle.io.BatchSampler(dev_ds,
+                                                 batch_size=args.batch_size,
+                                                 shuffle=False,
+                                                 drop_last=False)
             dev_loader = paddle.io.DataLoader(
                 dev_ds,
                 batch_sampler=dev_sampler,
@@ -134,7 +139,10 @@ if __name__ == "__main__":
             logger.eval(print_msg)
 
             # Save model
-            save_dir = os.path.join(args.checkpoint_dir, 'epoch_{}'.format(epoch))
+            save_dir = os.path.join(args.checkpoint_dir,
+                                    'epoch_{}'.format(epoch))
             logger.info('Saving model checkpoint to {}'.format(save_dir))
-            paddle.save(model.state_dict(), os.path.join(save_dir, 'model.pdparams'))
-            paddle.save(optimizer.state_dict(), os.path.join(save_dir, 'model.pdopt'))
+            paddle.save(model.state_dict(),
+                        os.path.join(save_dir, 'model.pdparams'))
+            paddle.save(optimizer.state_dict(),
+                        os.path.join(save_dir, 'model.pdopt'))
