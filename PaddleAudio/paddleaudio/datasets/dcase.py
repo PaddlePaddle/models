@@ -20,7 +20,7 @@ from ..utils.download import download_and_decompress
 from ..utils.env import DATA_HOME
 from .dataset import AudioClassificationDataset
 
-__all__ = ['UrbanAcousticScenes']
+__all__ = ['UrbanAcousticScenes', 'UrbanAudioVisualScenes']
 
 
 class UrbanAcousticScenes(AudioClassificationDataset):
@@ -119,8 +119,6 @@ class UrbanAcousticScenes(AudioClassificationDataset):
     }
     subset_meta_info = collections.namedtuple('SUBSET_META_INFO', ('filename', 'scene_label'))
     audio_path = os.path.join(base_name, 'audio')
-    sample_rate = 44100  # 44.1 khz
-    duration = 10  # 10s
 
     def __init__(self, mode: str = 'train', feat_type: str = 'raw', **kwargs):
         """
@@ -131,12 +129,7 @@ class UrbanAcousticScenes(AudioClassificationDataset):
                 It identifies the feature type that user wants to extrace of an audio file.
         """
         files, labels = self._get_data(mode)
-        super(UrbanAcousticScenes, self).__init__(files=files,
-                                                  labels=labels,
-                                                  sample_rate=self.sample_rate,
-                                                  duration=self.duration,
-                                                  feat_type=feat_type,
-                                                  **kwargs)
+        super(UrbanAcousticScenes, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self, subset: str = None, skip_header: bool = True) -> List[collections.namedtuple]:
         if subset is None:
@@ -164,7 +157,121 @@ class UrbanAcousticScenes(AudioClassificationDataset):
         files = []
         labels = []
         for sample in meta_info:
-            filename, label = sample
+            filename, label = sample[:2]
+            filename = os.path.basename(filename)
+            target = self.label_list.index(label)
+
+            files.append(os.path.join(DATA_HOME, self.audio_path, filename))
+            labels.append(int(target))
+
+        return files, labels
+
+
+class UrbanAudioVisualScenes(AudioClassificationDataset):
+    """
+    TAU Urban Audio Visual Scenes 2021 Development dataset contains synchronized audio
+    and video recordings from 12 European cities in 10 different scenes.
+    This dataset consists of 10-seconds audio and video segments from 10
+    acoustic scenes. The total amount of audio in the development set is 34 hours.
+
+    Reference:
+        A Curated Dataset of Urban Scenes for Audio-Visual Scene Analysis
+        https://arxiv.org/abs/2011.00030
+    """
+
+    source_url = 'https://zenodo.org/record/4477542/files/'
+    base_name = 'TAU-urban-audio-visual-scenes-2021-development'
+
+    archieves = [
+        {
+            'url': source_url + base_name + '.meta.zip',
+            'md5': '76e3d7ed5291b118372e06379cb2b490',
+        },
+        {
+            'url': source_url + base_name + '.audio.1.zip',
+            'md5': '186f6273f8f69ed9dbdc18ad65ac234f',
+        },
+        {
+            'url': source_url + base_name + '.audio.2.zip',
+            'md5': '7fd6bb63127f5785874a55aba4e77aa5',
+        },
+        {
+            'url': source_url + base_name + '.audio.3.zip',
+            'md5': '61396bede29d7c8c89729a01a6f6b2e2',
+        },
+        {
+            'url': source_url + base_name + '.audio.4.zip',
+            'md5': '6ddac89717fcf9c92c451868eed77fe1',
+        },
+        {
+            'url': source_url + base_name + '.audio.5.zip',
+            'md5': 'af4820756cdf1a7d4bd6037dc034d384',
+        },
+        {
+            'url': source_url + base_name + '.audio.6.zip',
+            'md5': 'ebd11ec24411f2a17a64723bd4aa7fff',
+        },
+        {
+            'url': source_url + base_name + '.audio.7.zip',
+            'md5': '2be39a76aeed704d5929d020a2909efd',
+        },
+        {
+            'url': source_url + base_name + '.audio.8.zip',
+            'md5': '972d8afe0874720fc2f28086e7cb22a9',
+        },
+    ]
+    label_list = ['airport', 'shopping_mall', 'metro_station', 'street_pedestrian', \
+        'public_square', 'street_traffic', 'tram', 'bus', 'metro', 'park']
+
+    meta_base_path = os.path.join(base_name, base_name + '.meta')
+    meta = os.path.join(meta_base_path, 'meta.csv')
+    meta_info = collections.namedtuple('META_INFO', ('filename_audio', 'filename_video', 'scene_label', 'identifier'))
+    subset_meta = {
+        'train': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_train.csv'),
+        'dev': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_evaluate.csv'),
+        'test': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_test.csv'),
+    }
+    subset_meta_info = collections.namedtuple('SUBSET_META_INFO', ('filename_audio', 'filename_video', 'scene_label'))
+    audio_path = os.path.join(base_name, 'audio')
+
+    def __init__(self, mode: str = 'train', feat_type: str = 'raw', **kwargs):
+        """
+        Ags:
+            mode (:obj:`str`, `optional`, defaults to `train`):
+                It identifies the dataset mode (train or dev).
+            feat_type (:obj:`str`, `optional`, defaults to `raw`):
+                It identifies the feature type that user wants to extrace of an audio file.
+        """
+        files, labels = self._get_data(mode)
+        super(UrbanAudioVisualScenes, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+
+    def _get_meta_info(self, subset: str = None, skip_header: bool = True) -> List[collections.namedtuple]:
+        if subset is None:
+            meta_file = self.meta
+            meta_info = self.meta_info
+        else:
+            assert subset in self.subset_meta, f'Subset must be one in {list(self.subset_meta.keys())}, but got {subset}.'
+            meta_file = self.subset_meta[subset]
+            meta_info = self.subset_meta_info
+
+        ret = []
+        with open(os.path.join(DATA_HOME, meta_file), 'r') as rf:
+            lines = rf.readlines()[1:] if skip_header else rf.readlines()
+            for line in lines:
+                ret.append(meta_info(*line.strip().split('\t')))
+        return ret
+
+    def _get_data(self, mode: str) -> Tuple[List[str], List[int]]:
+        if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)) or \
+            not os.path.isfile(os.path.join(DATA_HOME, self.meta)):
+            download_and_decompress(self.archieves, os.path.join(DATA_HOME, self.base_name))
+
+        meta_info = self._get_meta_info(subset=mode, skip_header=True)
+
+        files = []
+        labels = []
+        for sample in meta_info:
+            filename, _, label = sample[:3]
             filename = os.path.basename(filename)
             target = self.label_list.index(label)
 

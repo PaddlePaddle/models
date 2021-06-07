@@ -45,8 +45,6 @@ class GTZAN(AudioClassificationDataset):
     meta = os.path.join('genres', 'input.mf')
     meta_info = collections.namedtuple('META_INFO', ('file_path', 'label'))
     audio_path = 'genres'
-    sample_rate = 22050
-    duration = 30
 
     def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
         """
@@ -64,12 +62,7 @@ class GTZAN(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(GTZAN, self).__init__(files=files,
-                                    labels=labels,
-                                    sample_rate=self.sample_rate,
-                                    duration=self.duration,
-                                    feat_type=feat_type,
-                                    **kwargs)
+        super(GTZAN, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self) -> List[collections.namedtuple]:
         ret = []
