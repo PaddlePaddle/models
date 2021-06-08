@@ -1,6 +1,6 @@
-# Wav2vec2 models for Speech recognition
+# Wav2vec 2.0 for Speech recognition
 
-This is paddle-paddle version of Facebook's Wav2vec2.0 [1], with code and pre-trained weighted ported from [Fairseq](https://github.com/pytorch/fairseq/) and [huggingface](https://github.com/huggingface/transformers).
+This is paddle-paddle version of Facebook's Wav2vec 2.0 [1], with code and pre-trained weighted ported from [Fairseq](https://github.com/pytorch/fairseq/) and [huggingface](https://github.com/huggingface/transformers).
 
 ## Supported configs
 
@@ -19,7 +19,7 @@ python test.py --device "gpu:0" --audio <audio_file> --config <config_name>
 ```
 If you do not have gpu or run out of gpu memory, try cpu:
 ``` bash
-python test.py --device "cpu:0" --audio <audio_file> --config <config_name>
+python test.py --device "cpu" --audio <audio_file> --config <config_name>
 ```
 
 Supported config-names are  "wav2vec2-base-960h", "wav2vec2-large-960h", "wav2vec2-large-960h-lv60", "wav2vec2-large-960h-lv60-self".
@@ -31,6 +31,8 @@ If successful, you will see output as follows,
 [2021-06-07 20:43:27,783] [INFO] - true==> particularly so on this last night when only two of the little cubicles were occupied the thousands of others standing with dark empty doors
 ```
 
+## Accuracy notes
+The accuracy test against origin implementation is provided in the [unit_test](../../test) section. Accuracy is measured in logit level by computing logic mean and standard-deviation and the discrepancy is less than 1e-4 for both mean and std. 
 
 
 ## Reference
