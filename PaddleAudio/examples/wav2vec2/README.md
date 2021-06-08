@@ -34,6 +34,24 @@ If successful, you will see output as follows,
 ## Accuracy notes
 The accuracy test against origin implementation is provided in the [unit_test](../../test) section. Accuracy is measured in logit level by computing logic mean and standard-deviation and the discrepancy is less than 1e-4 for both mean and std. 
 
+## Performance
+
+Performance for all four models is measured in word error rate (WER). Librispeech test and dev splits are used. To simplify this example, we do not incorporate language models (LM).  Experiments results are summarized in the following table.
+
+|model-name|LM|dev-clean |dev-other |test-clean |test-other |
+| :--- | :--- | :--- | :--- |:--- |:--- |
+|wav2vec2-base-960h|None| 3.7 |9.7 | 3.8 | 10.1 |
+|wav2vec2-large-960h|None| 3.2 |7.3 | 3.2 | 7.7 |
+|wav2vec2-large-960h-lv60|None| 2.6 |5.1 | 2.6 | 5.6 |
+|wav2vec2-large-960h-lv60-self|None| 2.1 |4.3 | 2.3 | 5.0 |
+
+ For the largest model "wav2vec2-large-960h-lv60-self" with self-training but without LM, the WER for test-clean and dev-clean are 2.3 and 2.1 respectively, which are very close to the results in the paper (2.0/1.9). 
+
+ Users can replicate the above results by 
+ ``` 
+python test_librispeech.py -d <device> -t <test-dev-clean-other-path> -c <model-name> -o <result_file.txt>
+ ```
+
 
 ## Reference
 [1] Baevski, Alexei, et al. “Wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations.” Advances in Neural Information Processing Systems, vol. 33, 2020, pp. 12449–12460.
