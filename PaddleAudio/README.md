@@ -23,13 +23,36 @@ pip install .
 ## Quick start
 ### Audio loading and feature extraction
 ``` python
-import paddleaudio as pa
-s,r = pa.load(f)
-mel_spect = pa.melspectrogram(s,sr=r)
+import paddleaudio
+s,r = paddleaudio.load(f)
+mel_spect = paddleaudio.melspectrogram(s,sr=r)
+```
+
+### Speech recognition using wav2vec 2.0
+``` python
+import paddleaudio
+from paddleaudio.models.wav2vec2 import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+
+model = Wav2Vec2ForCTC('wav2vec2-base-960h', pretrained=True)
+tokenizer = Wav2Vec2Tokenizer()
+# load audio and normalize
+s, _ = paddleaudio.load('your_audio.wav', sr=16000, normal=True, norm_type='gaussian')
+
+with paddle.no_grad():
+    x = paddle.to_tensor(s)
+    logits = model(x.unsqueeze(0))
+    # get the token index prediction
+    idx = paddle.argmax(logits, -1)
+    # decode to text
+    text = tokenizer.decode(idx[0])
+    print(text)
+
 ```
 
 ###  Examples
 We provide a set of examples to help you get started in using PaddleAudio quickly.
+
+- [Wav2vec 2.0 for speech recognition](./examples/wav2vec2)
 - [PANNs:  acoustic scene and events analysis using pre-trained models](./examples/panns)
 - [Environmental Sound classification on ESC-50 dataset](./examples/sound_classification)
 - [Training a audio-tagging network on Audioset](./examples/audioset_training)
