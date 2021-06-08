@@ -13,48 +13,14 @@ class Wav2Vec2Tokenizer():
     """
     Constructs a Wav2Vec2 tokenizer.
 
-    This tokenizer inherits from :class:`~transformers.PreTrainedTokenizer` which contains some of the main methods.
-    Users should refer to the superclass for more information regarding such methods.
+    This tokenizer used for decoding predictions into letters.
 
     Args:
         vocab_file (:obj:`str`):
             File containing the vocabulary.
-        bos_token (:obj:`str`, `optional`, defaults to :obj:`"<s>"`):
-            The beginning of sentence token.
-        eos_token (:obj:`str`, `optional`, defaults to :obj:`"</s>"`):
-            The end of sentence token.
-        unk_token (:obj:`str`, `optional`, defaults to :obj:`"<unk>"`):
-            The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
-            token instead.
-        pad_token (:obj:`str`, `optional`, defaults to :obj:`"<pad>"`):
-            The token used for padding, for example when batching sequences of different lengths.
-        word_delimiter_token (:obj:`str`, `optional`, defaults to :obj:`"|"`):
-            The token used for defining the end of a word.
-        do_lower_case (:obj:`bool`, `optional`, defaults to :obj:`False`):
-            Whether or not to lowercase the output when decoding.
-        do_normalize (:obj:`bool`, `optional`, defaults to :obj:`False`):
-            Whether or not to zero-mean unit-variance normalize the input. Normalizing can help to significantly
-            improve the performance for some models, *e.g.*, `wav2vec2-lv60
-            <https://huggingface.co/models?search=lv60>`__.
-        return_attention_mask (:obj:`bool`, `optional`, defaults to :obj:`False`):
-            Whether or not :meth:`~transformers.Wav2Vec2Tokenizer.__call__` should return :obj:`attention_mask`.
+        The other arguments should be left unchanged for this version of wav2vec models.
 
-            .. note::
-
-                Wav2Vec2 models that have set ``config.feat_extract_norm == "group"``, such as `wav2vec2-base
-                <https://huggingface.co/facebook/wav2vec2-base-960h>`__, have **not** been trained using
-                :obj:`attention_mask`. For such models, :obj:`input_values` should simply be padded with 0 and no
-                :obj:`attention_mask` should be passed.
-
-                For Wav2Vec2 models that have set ``config.feat_extract_norm == "layer"``, such as `wav2vec2-lv60
-                <https://huggingface.co/facebook/wav2vec2-large-960h-lv60-self>`__, :obj:`attention_mask` should be
-                passed for batched inference.
-
-        **kwargs
-            Additional keyword arguments passed along to :class:`~transformers.PreTrainedTokenizer`
     """
-
-    vocab_files_names = 'facebook/wav2vec2-base-960h'
     model_input_names = ["input_values", "attention_mask"]
 
     def __init__(self,

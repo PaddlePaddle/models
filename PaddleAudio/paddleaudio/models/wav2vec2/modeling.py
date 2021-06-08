@@ -28,6 +28,18 @@ from .config_utils import PretrainedConfig
 
 __all__ = ['Wav2Vec2ForCTC', 'Wav2Vec2Model']
 
+CONFIG_NAMES = [
+    'wav2vec2-base-960h',
+    'wav2vec2-large-960h',
+    'wav2vec2-large-960h-lv60',
+    'wav2vec2-large-960h-lv60-self',
+]
+URL_BASE = 'https://bj.bcebos.com/paddleaudio/models/wav2vec2/'
+AUDIO_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.flac'
+TEXT_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.txt'
+
+from paddle.utils import download
+
 
 def is_tensor(x):
 
@@ -689,7 +701,7 @@ class Wav2Vec2Encoder(nn.Layer):
         )
 
 
-class Wav2Vec2PreTrainedModel(nn.Layer):
+class Wav2Vec2PretrainedModel(nn.Layer):
     """
     An abstract class to handle weights initialization and a simple interface for downloading and loading pretrained
     models.
@@ -846,7 +858,7 @@ class Wav2Vec2EncoderStableLayerNorm(nn.Layer):
         )
 
 
-class Wav2Vec2Model(Wav2Vec2PreTrainedModel):
+class Wav2Vec2Model(Wav2Vec2PretrainedModel):
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -943,20 +955,7 @@ class Wav2Vec2Model(Wav2Vec2PreTrainedModel):
         )
 
 
-CONFIG_NAMES = [
-    'wav2vec2-base-960h',
-    'wav2vec2-large-960h',
-    'wav2vec2-large-960h-lv60',
-    'wav2vec2-large-960h-lv60-self',
-]
-URL_BASE = 'https://bj.bcebos.com/paddleaudio/models/wav2vec2/'
-AUDIO_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.flac'
-TEXT_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.txt'
-
-from paddle.utils import download
-
-
-class Wav2Vec2ForCTC(Wav2Vec2PreTrainedModel):
+class Wav2Vec2ForCTC(Wav2Vec2PretrainedModel):
     def __init__(self, config_name, pretrained=True):
         super().__init__()
 

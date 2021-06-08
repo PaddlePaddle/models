@@ -63,7 +63,6 @@ if __name__ == '__main__':
                         type=str,
                         required=False,
                         default='wav2vec2-base-960h')
-    parser.add_argument('-w', '--weight', type=str, required=False, default='')
     parser.add_argument('-a', '--audio', type=str, required=False, default='')
     args = parser.parse_args()
 

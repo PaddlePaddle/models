@@ -19,7 +19,7 @@ import paddle
 import paddle.nn.functional as F
 
 
-def _gelu_python(x):
+def gelu(x):
     """
     Original Implementation of the GELU activation function in Google BERT repo when initially created. For
     information: OpenAI GPT's GELU is slightly different (and gives slightly different results): 0.5 * x * (1 +
@@ -29,9 +29,6 @@ def _gelu_python(x):
     return x * 0.5 * (1.0 + paddle.erf(x / math.sqrt(2.0)))
 
 
-gelu = _gelu_python
-
-
 def gelu_new(x):
     """
     Implementation of the GELU activation function currently in Google BERT repo (identical to OpenAI GPT). Also see
@@ -39,12 +36,6 @@ def gelu_new(x):
     """
     return 0.5 * x * (1.0 + paddle.tanh(
         math.sqrt(2.0 / math.pi) * (x + 0.044715 * paddle.pow(x, 3.0))))
-
-
-# if version.parse(torch.__version__) < version.parse("1.4"):
-#     gelu = _gelu_python
-# else:
-#     gelu = F.gelu
 
 
 def gelu_fast(x):
