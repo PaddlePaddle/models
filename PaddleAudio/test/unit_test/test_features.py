@@ -1,19 +1,26 @@
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import librosa
 import numpy as np
 import paddleaudio as pa
 import pytest
-import scipy
+from paddle.utils import download
 
-
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def load_audio():
-    x, r = librosa.load('./test/data/test_audio.wav')
-    #x,r = librosa.load('../data/test_audio.wav',sr=16000)
-    return x, r
-
-
-## start testing
-x, r = load_audio()
+AUDIO_URL = 'https://bj.bcebos.com/paddleaudio/test/data/test_audio.wav'
+TEST_FILE = download.get_weights_path_from_url(AUDIO_URL)
+x, r = librosa.load(TEST_FILE)
 EPS = 1e-8
 
 
