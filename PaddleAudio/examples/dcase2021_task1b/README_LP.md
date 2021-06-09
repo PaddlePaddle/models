@@ -32,7 +32,7 @@ import paddle.nn.functional as F
 from PIL import Image
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
-from utils import (build_rn50_model, build_rn101_model, build_vit_model,transform)
+from clip import build_model, transform
 
 image_files = glob.glob('images/*.png')
 # Use only the middle frame of a video
@@ -68,10 +68,7 @@ if __name__ == '__main__':
     train_files, val_files = split_dataset(image_files, train_split_file)
     print(f'train files {len(train_files)}, validation files: {len(val_files)}')
 
-    # build model and load the pre-trained weight.
-    model = build_vit_model()
-    sd = paddle.load('./assets/ViT-B-32.pdparams')
-    model.load_dict(sd)
+    model = build_model('VIT')
     model.eval()
 
     # compute features using clip
