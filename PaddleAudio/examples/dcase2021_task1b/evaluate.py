@@ -66,21 +66,20 @@ def evaluate(epoch, val_loader, model, loss_fn, task_type='audio_only'):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='dcase 2021 task1b')
-    parser.add_argument('--config',
-                        type=str,
-                        required=False,
-                        default='./assets/config.yaml')
-    parser.add_argument('--device',
-                        help='set the gpu device number',
-                        type=int,
-                        required=False,
-                        default=7)
-
-    parser.add_argument('--task_type',
-                        help='task type: audio-only, audio_visual',
-                        type=str,
-                        required=False,
-                        default='audio_only')  # or audio_visual
+    parser.add_argument(
+        '--config', type=str, required=False, default='./assets/config.yaml')
+    parser.add_argument(
+        '--device',
+        choices=['cpu', 'gpu'],
+        default="gpu",
+        help="Select which device to train model, defaults to gpu.")
+    parser.add_argument(
+        '--task_type',
+        choices=['audio-only', 'audio_visual'],
+        help='task type',
+        type=str,
+        required=False,
+        default='audio_only')  # or audio_visual
     parser.add_argument('--weight', type=str, required=False, default='')
     args = parser.parse_args()
 
@@ -89,27 +88,25 @@ if __name__ == '__main__':
     ], 'task_type must be one of [audio_only auido_visual]'
     with open(args.config) as f:
         c = yaml.safe_load(f)
-    paddle.set_device('gpu:{}'.format(args.device))
+    paddle.set_device(args.device)
     ModelClass = eval(c['model_type'])
-    model = ModelClass(pretrained=False,
-                       num_classes=c['num_classes'],
-                       dropout=c['dropout'],
-                       task_type=args.task_type)
+    model = ModelClass(
+        pretrained=False,
+        num_classes=c['num_classes'],
+        dropout=c['dropout'],
+        task_type=args.task_type)
     if args.weight.strip() == '':
         logger.info(
             f'Using pretrained weight: {checkpoint_url[args.task_type]}')
-        args.weight = download.get_weights_path_from_url(
-            checkpoint_url[args.task_type])
+        args.weight = download.get_weights_path_from_url(checkpoint_url[
+            args.task_type])
     model.load_dict(paddle.load(args.weight))
     model.eval()
 
     val_loader = get_val_loader(c)
 
     logger.info(f'Evaluating...')
-    val_loss, val_acc = evaluate(0,
-                                 val_loader,
-                                 model,
-                                 nn.NLLLoss(),
-                                 task_type=args.task_type)
+    val_loss, val_acc = evaluate(
+        0, val_loader, model, nn.NLLLoss(), task_type=args.task_type)
     logger.info(f'Overall acc: {val_acc:.3}')
     logger.info(f'Overall loss: {val_loss:.3}')

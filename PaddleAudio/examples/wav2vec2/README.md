@@ -1,6 +1,6 @@
-# Wav2vec 2.0 for Speech recognition
+# Wav2vec 2.0 for Speech Recognition
 
-This is paddle-paddle version of Facebook's Wav2vec 2.0 [1], with code and pre-trained weighted ported from [Fairseq](https://github.com/pytorch/fairseq/) and [huggingface](https://github.com/huggingface/transformers).
+This is paddlepaddle version of Facebook's Wav2vec 2.0 [1], with code and pre-trained weighted ported from [Fairseq](https://github.com/pytorch/fairseq/) and [huggingface](https://github.com/huggingface/transformers).
 
 ## Supported configs
 

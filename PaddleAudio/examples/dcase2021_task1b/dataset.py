@@ -91,6 +91,7 @@ class H5AudioSet(Dataset):
     The h5 files store mel-spectrogram features pre-extracted from wav files.
     Use wav2mel.py to do feature extraction.
     """
+
     def __init__(self,
                  h5_files,
                  config,
@@ -130,9 +131,8 @@ class H5AudioSet(Dataset):
         x = x[:, :target_len]
 
         if self.training and self.augment:
-            x = augment.random_crop2d(x,
-                                      self.config['mel_crop_len'],
-                                      tempo_axis=1)
+            x = augment.random_crop2d(
+                x, self.config['mel_crop_len'], tempo_axis=1)
             x = spect_permute(x, tempo_axis=1, nblocks=random_choice([0, 2, 3]))
             aug_level = random_choice([0.2, 0.1, 0])
             x = augment.adaptive_spect_augment(x, tempo_axis=1, level=aug_level)
@@ -163,61 +163,57 @@ class H5AudioSet(Dataset):
 
 
 def worker_init(worker_id):
-
     time.sleep(worker_id / 32)
     np.random.seed(int(time.time()) % 100 + worker_id)
 
 
 def get_train_loader(config):
-
     train_h5_files = [config['train_h5']]
+    train_dataset = H5AudioSet(
+        train_h5_files,
+        config,
+        balanced_sampling=config['balanced_sampling'],
+        augment=True,
+        training=True)
 
-    train_dataset = H5AudioSet(train_h5_files,
-                               config,
-                               balanced_sampling=config['balanced_sampling'],
-                               augment=True,
-                               training=True)
-
-    train_loader = DataLoader(train_dataset,
-                              shuffle=True,
-                              batch_size=config['batch_size'],
-                              drop_last=True,
-                              num_workers=config['num_workers'],
-                              use_buffer_reader=True,
-                              use_shared_memory=True,
-                              worker_init_fn=worker_init)
+    train_loader = DataLoader(
+        train_dataset,
+        shuffle=True,
+        batch_size=config['batch_size'],
+        drop_last=True,
+        num_workers=config['num_workers'],
+        use_buffer_reader=True,
+        use_shared_memory=True,
+        worker_init_fn=worker_init)
 
     return train_loader
 
 
 def get_val_loader(config):
+    val_dataset = H5AudioSet(
+        [config['eval_h5']], config, balanced_sampling=False, augment=False)
 
-    val_dataset = H5AudioSet([config['eval_h5']],
-                             config,
-                             balanced_sampling=False,
-                             augment=False)
-
-    val_loader = DataLoader(val_dataset,
-                            shuffle=False,
-                            batch_size=config['val_batch_size'],
-                            drop_last=False,
-                            num_workers=config['num_workers'])
+    val_loader = DataLoader(
+        val_dataset,
+        shuffle=False,
+        batch_size=config['val_batch_size'],
+        drop_last=False,
+        num_workers=config['num_workers'])
 
     return val_loader
 
 
 def get_test_loader(config):
     logger.info(config['test_h5'])
-    test_dataset = H5AudioSet([config['test_h5']],
-                              config,
-                              balanced_sampling=False,
-                              augment=False)
+    test_dataset = H5AudioSet(
+        [config['test_h5']], config, balanced_sampling=False, augment=False)
 
-    test_loader = DataLoader(test_dataset,
-                             shuffle=False,
-                             batch_size=config['val_batch_size'],
-                             drop_last=False,
-                             num_workers=config['num_workers'])
+    test_loader = DataLoader(
+        test_dataset,
+        shuffle=False,
+        batch_size=config['val_batch_size'],
+        drop_last=False,
+        num_workers=config['num_workers'])
 
     return test_loader
 
@@ -227,17 +223,15 @@ if __name__ == '__main__':
     with open('./assets/config.yaml') as f:
         config = yaml.safe_load(f)
     train_h5_files = [config['train_h5']]
-
-    dataset = H5AudioSet(train_h5_files,
-                         config,
-                         balanced_sampling=True,
-                         augment=True,
-                         training=True)
+    dataset = H5AudioSet(
+        train_h5_files,
+        config,
+        balanced_sampling=True,
+        augment=True,
+        training=True)
     x, y, p = dataset[1]
     logger.info(f'{x.shape}, {y, p.shape}')
-    dataset = H5AudioSet([config['eval_h5']],
-                         config,
-                         balanced_sampling=False,
-                         augment=False)
+    dataset = H5AudioSet(
+        [config['eval_h5']], config, balanced_sampling=False, augment=False)
     x, y, p = dataset[0]
     logger.info(f'{x.shape}, {y, p.shape}')

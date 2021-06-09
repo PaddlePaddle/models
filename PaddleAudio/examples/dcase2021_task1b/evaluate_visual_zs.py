@@ -28,10 +28,8 @@ URL = {
 }
 
 if __name__ == '__main__':
-
     results = get_pickle_results(URL['zs_feature'])
     eval_list = get_txt_from_url(URL['eval_split'])
-
     check_in_eval = {e + '-05': True for e in eval_list}
     acc = [
         r[1] == r[2] for r in results

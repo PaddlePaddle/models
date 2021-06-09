@@ -56,12 +56,8 @@ class BasicBlock(nn.Layer):
             raise NotImplementedError(
                 "Dilation > 1 not supported in BasicBlock")
 
-        self.conv1 = nn.Conv2D(inplanes,
-                               planes,
-                               3,
-                               padding=1,
-                               stride=stride,
-                               bias_attr=False)
+        self.conv1 = nn.Conv2D(
+            inplanes, planes, 3, padding=1, stride=stride, bias_attr=False)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU()
         self.conv2 = nn.Conv2D(planes, planes, 3, padding=1, bias_attr=False)
@@ -109,20 +105,19 @@ class BottleneckBlock(nn.Layer):
         self.conv1 = nn.Conv2D(inplanes, width, 1, bias_attr=False)
         self.bn1 = norm_layer(width)
 
-        self.conv2 = nn.Conv2D(width,
-                               width,
-                               3,
-                               padding=dilation,
-                               stride=stride,
-                               groups=groups,
-                               dilation=dilation,
-                               bias_attr=False)
+        self.conv2 = nn.Conv2D(
+            width,
+            width,
+            3,
+            padding=dilation,
+            stride=stride,
+            groups=groups,
+            dilation=dilation,
+            bias_attr=False)
         self.bn2 = norm_layer(width)
 
-        self.conv3 = nn.Conv2D(width,
-                               planes * self.expansion,
-                               1,
-                               bias_attr=False)
+        self.conv3 = nn.Conv2D(
+            width, planes * self.expansion, 1, bias_attr=False)
         self.bn3 = norm_layer(planes * self.expansion)
         self.relu = nn.ReLU()
         self.downsample = downsample
@@ -173,6 +168,7 @@ class ResNet(nn.Layer):
             resnet18 = ResNet(BasicBlock, 18)
 
     """
+
     def __init__(
             self,
             block,
@@ -198,12 +194,13 @@ class ResNet(nn.Layer):
         self.inplanes = 64
         self.dilation = 1
         self.bn0 = nn.BatchNorm2D(128)
-        self.conv1 = nn.Conv2D(1,
-                               self.inplanes,
-                               kernel_size=7,
-                               stride=2,
-                               padding=3,
-                               bias_attr=False)
+        self.conv1 = nn.Conv2D(
+            1,
+            self.inplanes,
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias_attr=False)
         self.bn1 = self._norm_layer(self.inplanes)
         self.relu = nn.ReLU()
         self.relu2 = nn.ReLU()
@@ -241,13 +238,13 @@ class ResNet(nn.Layer):
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2D(self.inplanes,
-                          planes * block.expansion,
-                          1,
-                          stride=stride,
-                          bias_attr=False),
-                norm_layer(planes * block.expansion),
-            )
+                nn.Conv2D(
+                    self.inplanes,
+                    planes * block.expansion,
+                    1,
+                    stride=stride,
+                    bias_attr=False),
+                norm_layer(planes * block.expansion), )
 
         layers = []
         layers.append(

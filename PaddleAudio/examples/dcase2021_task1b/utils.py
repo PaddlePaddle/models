@@ -62,10 +62,10 @@ def save_checkpoint(model_dir, step, model, optimizer, prefix):
 def load_checkpoint(model_dir, epoch, prefix):
     file = model_dir + '/{}_checkpoint_model{}.tar'.format(prefix, epoch)
     print('loading checkpoing ' + file)
-    model_dict = paddle.load(model_dir +
-                             '/{}_checkpoint{}.pdparams'.format(prefix, epoch))
-    optim_dict = paddle.load(model_dir +
-                             '/{}_checkpoint{}.pdopt'.format(prefix, epoch))
+    model_dict = paddle.load(model_dir + '/{}_checkpoint{}.pdparams'.format(
+        prefix, epoch))
+    optim_dict = paddle.load(model_dir + '/{}_checkpoint{}.pdopt'.format(prefix,
+                                                                         epoch))
     return model_dict, optim_dict
 
 
@@ -75,6 +75,7 @@ class MixUpLoss(paddle.nn.Layer):
     Reference:
     Zhang, Hongyi, et al. “Mixup: Beyond Empirical Risk Minimization.” International Conference on Learning Representations, 2017.
     """
+
     def __init__(self, criterion):
         super(MixUpLoss, self).__init__()
         self.criterion = criterion

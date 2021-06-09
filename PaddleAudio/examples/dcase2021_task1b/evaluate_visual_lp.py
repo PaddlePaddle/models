@@ -51,7 +51,6 @@ def split_dataset(image_files, train_split):
 
 
 if __name__ == '__main__':
-
     image_files = get_txt_from_url(URL['image_list'])
     train_split = get_txt_from_url(URL['train_split'])
     eval_split = get_txt_from_url(URL['eval_split'])
@@ -73,10 +72,8 @@ if __name__ == '__main__':
 
     logger.info('Training logistic regression...')
     # train the logistic regression model
-    classifier = LogisticRegression(random_state=0,
-                                    C=0.01,
-                                    max_iter=1000,
-                                    verbose=1)
+    classifier = LogisticRegression(
+        random_state=0, C=0.01, max_iter=1000, verbose=1)
     classifier.fit(train_features, train_labels)
     logger.info('done')
     # Evaluate using the logistic regression classifier

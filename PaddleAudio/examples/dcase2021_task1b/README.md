@@ -1,27 +1,22 @@
 # DCASE challenge 2021 task1b, Audio-visual scene classification
-
 In this example, we give a much <b>stronger</b> baseline for the [task-1b of DCASE challenge](http://dcase.community/challenge2021/task-acoustic-scene-classification#subtask-b).
 
 ## Introduction
-
-The task of audio-visual scene classification is to combine audio stream and video stream in order to do scene classification.  Different from sound event classification, scene classification is more complex as different combination of sound events can occur in the same scene. Therefore, scene classification is more prune to over-fitting. In this example, we utilize our pre-trained resent50 in the [audioset training example](../audioset_training) for audio-only classification. For video-only track, we use recent advance in contrastive language-image pre-training, aka CLIP\[5\] to do zero-shot/linear-probe image scene classification, obtained 0.772 and 0.88  overall classification accuracy respectively. .
+The task of audio-visual scene classification is to combine audio stream and video stream in order to do scene classification.  Different from sound event classification, scene classification is more complex as different combination of sound events can occur in the same scene. Therefore, scene classification is more prune to over-fitting. In this example, we utilize our pre-trained resent50 in the [audioset training example](../audioset_training) for audio-only classification. For video-only track, we use recent advance in contrastive language-image pre-training, aka CLIP\[5\] to do zero-shot/linear-probe image scene classification, obtained 0.772 and 0.88  overall classification accuracy respectively.
 
 Finally, we combined both audio and visual stream in later-fusion manner and obtained 0.925 overall accuracy, which largely over-takes the performance in the [ICASSP paper](https://github.com/shanwangshan/TAU-urban-audio-visual-scenes)\[1\].
 
 ## Demo structure
-- model.py: the modified resent models, support both audio-visual and audio-only tasks
-- train.py: for training the model
-- evaluate.py: for evaluation for audio-visual and audio-only
-- dataset.py: read mel features from h5
-- utils.py: some utility functions, e.g., mixup
-- video_only_lp.py: linear-probe using clip for video-only task
-- zs_evaluate.py: zero-shot evaluation using clip for video-only task
-- wav2mel.py: convert wav to mel and store in h5, for faster training
-- asserts/: all the necessary files/data/config
-
+- [model.py](model.py): the modified resent models, support both audio-visual and audio-only tasks
+- [train.py](train.py): for training the model
+- [dataset.py](dataset.py): read mel features from h5
+- [utils.py](utils.py): some utility functions, e.g., mixup
+- [evaluate.py](evaluate.py): for evaluation for audio-visual and audio-only
+- [evaluate_visual_lp.py](evaluate_visual_lp.py): linear-probe using clip for video-only task
+- [evaluate_visual_zs.py](evaluate_visual_zs.py): zero-shot evaluation using clip for video-only task
+- [assets](assets): all the necessary files/data/config
 
 ## Dataset
-
 Data was recorded in the following 10 scenes:
 - Airport - airport
 - Indoor shopping mall - shopping_mall
@@ -35,23 +30,20 @@ Data was recorded in the following 10 scenes:
 - Urban park - park
 
 ### Audio-only
-
 For audio-only scene classification, we extract the same feature as described in  [audioset training example](../audioset_training) and use the same network, namely resent50, except that we add extra fc-layers and one final classification head for the 10-way classification. We also add dropout to reduce over-fitting. See [model.py](model.py) for details.
 
 Training audio-only network:
 ``` sh
-python train.py --device=0 --task_type=audio_only --config='./assets/config.yaml'
+python train.py --device='gpu' --task_type=audio_only --config='./assets/config.yaml'
 ```
 
 To evaluate using our pre-trained weights, try
 ``` sh
-python evaluate.py --device=0 --task_type=audio_only --config='./assets/config.yaml'
+python evaluate.py --device='gpu' --task_type=audio_only --config='./assets/config.yaml'
 ```
 
-
-
 ### Video-only
-For video-only task, we use OpenAI CLIP for
+For video-only task, we use OpenAI CLIP for scene classification. 
 #### Convert video to images
 We first extract images at 1 frame per second from the provided video files for further process. Using ffmpeg, this can be done as follows,
 
@@ -72,9 +64,10 @@ To evaluate zero-shot accuracy, run
 ``` sh
 python evaluate_visual_zs.py
 ```
+
 The above script will automatically download pre-extracted zero-shot features and perform the evaluation.
 
-#### linear-probe classification
+#### Linear-probe classification
 For linear-probe, see [README_LP.md](README_LP.md)
 
 ### Audio-visual task
@@ -86,18 +79,17 @@ The audio-visual task utilizes embedding output form CLIP image encoder. For the
 
 To train audio-visual network, run
 ``` sh
-python train.py --device=0 --task_type='audio_visual' --config='./assets/config.yaml'
+python train.py --device='gpu' --task_type='audio_visual' --config='./assets/config.yaml'
 ```
 
 To evaluate using our pre-trained weights, run
 ``` sh
-python evaluate.py --device=0 --task_type='audio_visual' --config='./assets/config.yaml'
+python evaluate.py --device='gpu' --task_type='audio_visual' --config='./assets/config.yaml'
 ```
 
 With audioset\[4\] pre-training, mixup\[3\] and spectrogram augmentation techniques, we achieve <b>92.5%</b> overall classification score.  
 
 ### Performance
-
 |task|acc|
 |--|--|
 |video-only(linear probe)|0.893|

@@ -42,10 +42,10 @@ from paddleaudio.models.wav2vec2 import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 model = Wav2Vec2ForCTC('wav2vec2-base-960h', pretrained=True)
 tokenizer = Wav2Vec2Tokenizer()
 # Load audio and normalize
-s, _ = paddleaudio.load('your_audio.wav', sr=16000, normal=True, norm_type='gaussian')
+wav, _ = paddleaudio.load('your_audio.wav', sr=16000, normal=True, norm_type='gaussian')
 
 with paddle.no_grad():
-    x = paddle.to_tensor(s)
+    x = paddle.to_tensor(wav)
     logits = model(x.unsqueeze(0))
     # Get the token index prediction
     idx = paddle.argmax(logits, -1)
