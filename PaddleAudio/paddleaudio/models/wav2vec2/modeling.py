@@ -1,5 +1,5 @@
-# Copyright 2021 The Fairseq Authors and the HuggingFace Inc. team. All rights reserved.
 # Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright 2021 The Fairseq Authors and the HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -406,7 +406,6 @@ class Wav2Vec2FeatureProjection(nn.Layer):
         return hidden_states
 
 
-# Copied from transformers.models.bart.modeling_bart.BartAttention with Bart->Wav2Vec2
 class Wav2Vec2Attention(nn.Layer):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
     def __init__(
@@ -872,7 +871,6 @@ class Wav2Vec2Model(Wav2Vec2PretrainedModel):
         else:
             self.encoder = Wav2Vec2Encoder(config)
 
-    # self.init_weights()
 
     def forward(
         self,
