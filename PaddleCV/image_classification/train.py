@@ -98,6 +98,14 @@ def build_program(is_train, main_prog, startup_prog, args):
                         use_dynamic_loss_scaling=args.use_dynamic_loss_scaling,
                         use_pure_fp16=args.use_pure_fp16,
                         use_fp16_guard=True)
+                elif args.use_amp_bf16:
+                    optimizer = paddle.static.amp.bf16.decorate_bf16(
+                        optimizer,
+                        amp_lists=paddle.static.amp.bf16.
+                        AutoMixedPrecisionListsBF16(
+                            custom_bf16_list={"conv2d"}),
+                        use_bf16_guard=None,
+                        use_pure_bf16=args.use_pure_bf16)
 
                 optimizer.minimize(avg_cost)
                 if args.use_ema:
@@ -220,10 +228,11 @@ def train(args):
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
 
-    if args.use_amp:
-        optimizer.amp_init(place,
-                scope=paddle.static.global_scope(),
-                test_program=test_prog if args.validate else None)
+    if args.use_amp or args.use_amp_bf16:
+        optimizer.amp_init(
+            place,
+            scope=paddle.static.global_scope(),
+            test_program=test_prog if args.validate else None)
 
     num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
     if args.use_dali:
