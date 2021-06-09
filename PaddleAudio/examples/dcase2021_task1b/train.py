@@ -66,7 +66,7 @@ if __name__ == '__main__':
         dist.init_parallel_env()
         local_rank = dist.get_rank()
     else:
-        paddle.set_device('gpu:{}'.format(args.device))
+        paddle.set_device(args.device)
         local_rank = 0
 
     logger.info(f'using ' + c['model_type'])

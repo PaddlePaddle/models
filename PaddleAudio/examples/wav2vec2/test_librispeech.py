@@ -109,29 +109,24 @@ def levenshtein(s, t):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='testing wav2vec2.0')
-    parser.add_argument('-d',
-                        '--device',
-                        help='set the device, e.g., gpu:0',
-                        type=str,
-                        required=False,
-                        default='gpu:0')
-    parser.add_argument('-c',
-                        '--config',
-                        type=str,
-                        required=False,
-                        default='wav2vec2-base-960h')
+    parser.add_argument(
+        '-d',
+        '--device',
+        choices=['cpu', 'gpu'],
+        default="gpu",
+        help="Select which device to train model, defaults to gpu.")
+    parser.add_argument(
+        '-c',
+        '--config',
+        type=str,
+        required=False,
+        default='wav2vec2-base-960h')
 
-    parser.add_argument('-t',
-                        '--test_path',
-                        type=str,
-                        required=False,
-                        default='./test_clean')
+    parser.add_argument(
+        '-t', '--test_path', type=str, required=False, default='./test_clean')
     parser.add_argument('-o', '--output', type=str, required=False, default='')
-    parser.add_argument('-l',
-                        '--log_interval',
-                        type=int,
-                        required=False,
-                        default=20)
+    parser.add_argument(
+        '-l', '--log_interval', type=int, required=False, default=20)
 
     args = parser.parse_args()
 

@@ -50,19 +50,19 @@ def load_sample_audio_text():
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='testing wav2vec2.0')
-    parser.add_argument('-d',
-                        '--device',
-                        help='set the device, e.g., gpu:0',
-                        type=str,
-                        required=False,
-                        default='gpu:0')
-    parser.add_argument('-c',
-                        '--config',
-                        type=str,
-                        required=False,
-                        default='wav2vec2-base-960h')
+    parser.add_argument(
+        '-d',
+        '--device',
+        choices=['cpu', 'gpu'],
+        default="gpu",
+        help="Select which device to train model, defaults to gpu.")
+    parser.add_argument(
+        '-c',
+        '--config',
+        type=str,
+        required=False,
+        default='wav2vec2-base-960h')
     parser.add_argument('-a', '--audio', type=str, required=False, default='')
     args = parser.parse_args()
 
@@ -80,7 +80,6 @@ if __name__ == '__main__':
 
     with paddle.no_grad():
         logits = model(x)
-
     # get the token index prediction
     idx = paddle.argmax(logits, -1)
     # decode to text

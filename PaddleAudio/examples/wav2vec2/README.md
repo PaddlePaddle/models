@@ -15,7 +15,7 @@ This is paddlepaddle version of Facebook's Wav2vec 2.0 [1], with code and pre-tr
 
 Run the speech recognition test with your audio file,
 ``` bash
-python test.py --device "gpu:0" --audio <audio_file> --config <config_name>
+python test.py --device "gpu" --audio <audio_file> --config <config_name>
 ```
 If you do not have gpu or run out of gpu memory, try cpu:
 ``` bash
