@@ -24,8 +24,14 @@ pip install .
 ### Audio loading and feature extraction
 ``` python
 import paddleaudio
-s,r = paddleaudio.load(f)
-mel_spect = paddleaudio.melspectrogram(s,sr=r)
+
+audio_file = 'test.flac'
+wav, sr = paddleaudio.load(audio_file, sr=16000)
+mel_feature = paddleaudio.melspectrogram(wav,
+                                       sr=sr,
+                                       window_size=320,
+                                       hop_length=160,
+                                       n_mels=80)
 ```
 
 ### Speech recognition using wav2vec 2.0
@@ -35,15 +41,15 @@ from paddleaudio.models.wav2vec2 import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 
 model = Wav2Vec2ForCTC('wav2vec2-base-960h', pretrained=True)
 tokenizer = Wav2Vec2Tokenizer()
-# load audio and normalize
+# Load audio and normalize
 s, _ = paddleaudio.load('your_audio.wav', sr=16000, normal=True, norm_type='gaussian')
 
 with paddle.no_grad():
     x = paddle.to_tensor(s)
     logits = model(x.unsqueeze(0))
-    # get the token index prediction
+    # Get the token index prediction
     idx = paddle.argmax(logits, -1)
-    # decode to text
+    # Decode prediction to text
     text = tokenizer.decode(idx[0])
     print(text)
 
