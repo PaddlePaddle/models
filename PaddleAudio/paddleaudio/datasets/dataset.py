@@ -18,8 +18,6 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import paddle
-from pathos.multiprocessing import ProcessPool
-from pathos.threading import ThreadPool
 from tqdm import tqdm
 
 from ..backends import load as load_audio

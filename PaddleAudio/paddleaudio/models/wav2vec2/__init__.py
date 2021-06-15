@@ -1,4 +1,5 @@
 # Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright 2021 The Fairseq Authors and the HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import backends, features, losses, metrics
-from .backends import *
-from .features import *
+from .modeling import Wav2Vec2ForCTC, Wav2Vec2Model
+from .tokenizer import Wav2Vec2Tokenizer
