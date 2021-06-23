@@ -21,12 +21,12 @@ from paddle import Tensor
 
 
 class STFT(nn.Layer):
-    """Compute short-time Fourier transform(STFT) of a given signal, typically an audio waveform.
+    """Compute short-time Fourier transformation(STFT) of a given signal, typically an audio waveform.
     The STFT is implemented with strided nn.Conv1D, and the weight is not learnable by default. To fine-tune the Fourier
     coefficients, set stop_gradient=False before training.
 
     Notes
-        This transform is consistent of librosa.stft.
+        This stft transform is consistent with librosa.stft().
     """
     def __init__(self,
                  n_fft: int = 2048,
@@ -102,6 +102,7 @@ class Spectrogram(nn.Layer):
                  pad_mode: str = 'reflect',
                  power: float = 2.0):
         """Compute spectrogram of a given signal, typically an audio waveform.
+        The spectorgram is defined as the complex norm of the short-time Fourier transformation.
 
         Notes:
             The spectrogram transform relies on STFT transform to compute the spectrogram. By default,
@@ -140,14 +141,16 @@ class MelSpectrogram(nn.Layer):
                  center: bool = True,
                  pad_mode: str = 'reflect',
                  power: float = 2.0,
-                 n_mels: int = 64,
+                 n_mels: int = 128,
                  fmin: float = 0.0,
                  fmax: Optional[float] = None):
-        """Compute spectrogram of a given signal, typically an audio waveform.
+        """Compute the melspectrogram of a given signal, typically an audio waveform.
+        THe melspectrogram is also known as filterbank or fbank feature in audio community.
 
         Notes:
-            The mel-spectrogram transform relies on Spectrogram transform and paddleaudio.functional.compute_fbank_matrix. By default,
-             the weight is not learnable. To fine-tune the Fourier coefficients, set stop_gradient=False before training.
+            The melspectrogram transform relies on Spectrogram transform and paddleaudio.functional.compute_fbank_matrix. By default,
+            the Fourier coefficients are not learnable. To fine-tune the Fourier coefficients, set stop_gradient=False before training.
+            The fbank matrix is handcrafted and not learnable even if stop_gradient=False.
         """
         super(MelSpectrogram, self).__init__()
 
@@ -167,9 +170,9 @@ class MelSpectrogram(nn.Layer):
         self.fbank_matrix = self.fbank_matrix.unsqueeze(0)
 
     def forward(self, input: Tensor) -> Tensor:
-        spectrogram = self._spectrogram(input)
-        mel_spectrogram = paddle.bmm(self.fbank_matrix, spectrogram)
-        return mel_spectrogram
+        spect_feature = self._spectrogram(input)
+        mel_feature = paddle.bmm(self.fbank_matrix, spect_feature)
+        return mel_feature
 
     def __repr__(self):
         return f'MelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax}, '\
@@ -193,6 +196,7 @@ class LogMelSpectrogram(nn.Layer):
         """Compute log-mel-spectrogram (also known as LogFBank) feature of a given signal, typically an audio waveform.
 
 
+
         Notes:
             The LogMelSpectrogram transform relies on MelSpectrogram transform to compute spectrogram in mel-scale,
              and then use paddleaudio.functional.power_to_db to convert it into log-scale, also known as decibel(dB) scale.
@@ -204,9 +208,9 @@ class LogMelSpectrogram(nn.Layer):
                                               n_mels, fmin, fmax)
 
     def forward(self, input: Tensor) -> Tensor:
-        mel_spectrogram = self._melspectrogram(input)
-        log_mel_spectrogram = F.power_to_db(mel_spectrogram)
-        return log_mel_spectrogram
+        mel_feature = self._melspectrogram(input)
+        log_mel_feature = F.power_to_db(mel_feature)
+        return log_mel_feature
 
     def __repr__(self):
         return f'LogMelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax}, '\
@@ -253,6 +257,7 @@ class ISTFT(nn.Layer):
         self.idft_mat = self.idft_mat.unsqueeze((0, 1))
 
     def forward(self, spectrum: Tensor, signal_length: int) -> Tensor:
+
         assert spectrum.ndim in [
             3, 4
         ], f'The input spectrum must be a 3-d or 4-d tensor,but received ndim={spectrum.ndim} instead'
@@ -275,23 +280,10 @@ class ISTFT(nn.Layer):
             imag_full = paddle.concat([imag, -imag[:, -2:0:-1]], 1)
         part1 = paddle.matmul(self.idft_mat[:, :, :, :, 0], real_full)
         part2 = paddle.matmul(self.idft_mat[:, :, :, :, 1], imag_full)
-        r = part1[0] - part2[0]
-        valid = r[:, self.n_fft // 2 - self.win_length // 2:self.n_fft // 2 +
-                  self.win_length // 2, :]
-        overlap = (self.win_length - self.hop_length) // 2
-        signal = paddle.zeros((
-            bs,
-            self.hop_length * frame_num,
-        ))
-        for i in range(frame_num):
-            pos = i * self.hop_length
-            signal[:, pos:pos +
-                   self.hop_length] = valid[:,
-                                            overlap:self.win_length - overlap,
-                                            i]
-        diff = signal.shape[-1] - signal_length
-        reconstructed = signal[:, diff // 2:-diff // 2]
-        return reconstructed
+        frames = part1[0] - part2[0]
+        signal = F.deframe(frames, self.n_fft, self.hop_length, self.win_length,
+                           signal_length)
+        return signal
 
     def __repr__(self, ):
         return f'Inverse stft(n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
