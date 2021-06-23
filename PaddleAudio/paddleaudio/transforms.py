@@ -115,8 +115,7 @@ class Spectrogram(nn.Layer):
                           pad_mode)
 
     def __repr__(self, ):
-        return f'Spectrogram(n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
-               f'win_length:{self.win_length}, window:{self.window}, power:{self.power})'
+        return f'Spectrogram(power:{self.power})|' + str(self._stft)
 
     def forward(self, input: Tensor) -> Tensor:
         assert input.ndim == 2, f'input must satisfy input.ndim==2, but received input.dim = {input.ndim}'
@@ -160,7 +159,7 @@ class MelSpectrogram(nn.Layer):
         self.fmin = fmin
         self.fmax = fmax
 
-        if fmax == None:
+        if fmax is None:
             fmax = sr // 2
         self.fbank_matrix = F.compute_fbank_matrix(sr=sr,
                                                    n_fft=n_fft,
@@ -168,6 +167,7 @@ class MelSpectrogram(nn.Layer):
                                                    fmin=fmin,
                                                    fmax=fmax)
         self.fbank_matrix = self.fbank_matrix.unsqueeze(0)
+        self.register_buffer('fbank_matrix', self.fbank_matrix)
 
     def forward(self, input: Tensor) -> Tensor:
         spect_feature = self._spectrogram(input)
@@ -175,9 +175,8 @@ class MelSpectrogram(nn.Layer):
         return mel_feature
 
     def __repr__(self):
-        return f'MelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax}, '\
-                f'n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
-               f'win_length:{self.win_length}, power:{self.power})'
+        return f'MelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax})|' + str(
+            self._spectrogram)
 
 
 class LogMelSpectrogram(nn.Layer):
@@ -213,9 +212,7 @@ class LogMelSpectrogram(nn.Layer):
         return log_mel_feature
 
     def __repr__(self):
-        return f'LogMelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax}, '\
-                f'n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
-               f'win_length:{self.win_length}, power:{self.power})'
+        return 'LogMelSpectrogram|' + str(self._melspectrogram)
 
 
 class ISTFT(nn.Layer):

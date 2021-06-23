@@ -26,17 +26,42 @@ EPS = 1e-10
 
 
 def complex_norm(x: Tensor) -> Tensor:
-    """Compute compext norm of a given  tensor, typically the result of a complex Fourier transform.
+    """Compute compext norm of a given tensor.
+    Typically,the input tensor is the result of a complex Fourier transform.
+
+    Parameters:
+        x: The input tensor of shape [..., 2]
 
     Returns:
         The element-wised l2-norm of input complex tensor.
-
     """
     if x.shape[-1] != 2:
         raise ParameterError(
             f'complex tensor must be of shape [..., 2], but received {x.shape} instead'
         )
     return paddle.sqrt(paddle.square(x).sum(axis=-1))
+
+
+def magphase(x: Tensor) -> Tuple[Tensor, Tensor]:
+    """Compute compext norm of a given tensor.
+    Typically,the input tensor is the result of a complex Fourier transform.
+
+    Parameters:
+        x: The input tensor of shape [..., 2]
+
+    Returns:
+        The element-wised l2-norm of input complex tensor.
+    """
+    if x.shape[-1] != 2:
+        raise ParameterError(
+            f'complex tensor must be of shape [..., 2], but received {x.shape} instead'
+        )
+    mag = paddle.sqrt(paddle.square(x).sum(axis=-1))
+    x0 = x.reshape((-1, 2))
+    phase = paddle.atan2(x0[:, 0], x0[:, 1])
+    phase = phase.reshape(x.shape[:2])
+
+    return mag, phase
 
 
 def pad_center(data: Tensor,
@@ -62,10 +87,10 @@ def pad_center(data: Tensor,
     return padded_data
 
 
-def hz_to_mel(freq: float, htk: bool = False) -> float:
-    """Convert Hz to Mels
+def hz_to_mel(freq: Union[Tensor, float], htk: bool = False) -> float:
+    """Convert Hz to Mels.
 
-    This function is consistent with librosa.
+    This function is consistent with librosa.hz_to_mel().
     """
 
     if htk:
@@ -94,14 +119,16 @@ def hz_to_mel(freq: float, htk: bool = False) -> float:
             1 - mask)  # will replace by masked_fill OP in future
     else:
         if freq >= min_log_hz:
-            # If we have scalar data, heck directly
             mels = min_log_mel + math.log(freq / min_log_hz + 1e-10) / logstep
 
     return mels
 
 
 def mel_to_hz(mel: Union[float, Tensor], htk: bool = False) -> Tensor:
+    """Convert mel bin numbers to frequencies.
 
+    This function is consistent with librosa.mel_to_hz().
+    """
     if htk:
         return 700.0 * (10.0**(mel / 2595.0) - 1.0)
 
@@ -128,9 +155,9 @@ def mel_frequencies(n_mels: int = 128,
                     fmin: float = 0.0,
                     fmax: float = 11025.0,
                     htk: bool = False):
-    """Compute mel frequencies
+    """Compute mel frequencies.
 
-    This function is consistent with librosa.
+    This function is consistent with librosa.mel_frequencies().
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(fmin, htk=htk)
@@ -143,15 +170,7 @@ def mel_frequencies(n_mels: int = 128,
 def fft_frequencies(sr: int, n_fft: int) -> Tensor:
     """Compute fourier frequencies.
 
-    This function is consistent with librosa.
-    """
-    return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2))
-
-
-def fft_frequencies(sr: int, n_fft: int) -> Tensor:
-    """Compute fourier frequencies.
-
-    This function is consistent with librosa.
+    This function is consistent with librosa.fft_frequencies().
     """
     return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2))
 
@@ -166,7 +185,7 @@ def compute_fbank_matrix(sr: int,
                          dtype: str = 'float32'):
     """Compute fbank matrix.
 
-    This function is consistent with librosa.
+    This function is consistent with librosa.filters.mel().
     """
     if norm != 'slaney':
         raise ParameterError('norm must set to slaney')
@@ -175,7 +194,6 @@ def compute_fbank_matrix(sr: int,
         fmax = float(sr) / 2
 
     # Initialize the weights
-    n_mels = int(n_mels)
     weights = paddle.zeros((n_mels, int(1 + n_fft // 2)), dtype=dtype)
 
     # Center freqs of each FFT bin
@@ -205,17 +223,19 @@ def compute_fbank_matrix(sr: int,
     return weights
 
 
-def dft_matrix(n: int, retrun_complex=False) -> Tensor:
+def dft_matrix(n: int, return_complex: bool = False) -> Tensor:
     """Compute dft matrix given dimension n.
     """
     x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
     z = x * y * (-2 * math.pi / n)
     cos = paddle.cos(z).unsqueeze(-1)
     sin = paddle.sin(z).unsqueeze(-1)
+    if return_complex:
+        return cos + paddle.to_tensor([1j]) * sin
     return paddle.concat([cos, sin], -1)
 
 
-def idft_matrix(n: int, return_complex=False) -> Tensor:
+def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
     """Compute inverse discrete Fourier transform matrix
     """
 
@@ -223,6 +243,8 @@ def idft_matrix(n: int, return_complex=False) -> Tensor:
     z = x * y * (2 * math.pi / n)
     cos = paddle.cos(z).unsqueeze(-1)
     sin = paddle.sin(z).unsqueeze(-1)
+    if return_complex:
+        return cos + paddle.to_tensor([1j]) * sin
     return paddle.concat([cos, sin], -1)
 
 
@@ -269,9 +291,9 @@ def get_window(window: Union[str, Tuple[str, float]],
     except KeyError as e:
         raise ValueError("Unknown window type.") from e
 
-    params = (win_length, ) + args + (sym, )
-
-    return winfunc(*params)
+    params = (win_length, ) + args
+    kwargs = {'sym': sym}
+    return winfunc(*params, **kwargs)
 
 
 def power_to_db(magnitude: Tensor,
@@ -308,7 +330,6 @@ def power_to_db(magnitude: Tensor,
 
 def mu_encode(x: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
     """Mu-law encoding.
-
     Compute the mu-law decoding given an input code.
     When quantized is True, the result will be converted to
     integer in range [0,mu-1]. Otherwise, the resulting signal
@@ -329,10 +350,9 @@ def mu_encode(x: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
 
 def mu_decode(y: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
     """Mu-law decoding.
-
     Compute the mu-law decoding given an input code.
 
-    it assumes that the input y is in
+    This function assumes that the input y is in the
     range [0,mu-1] when quantize is True and [-1,1] otherwise
 
     Reference:
@@ -347,3 +367,35 @@ def mu_decode(y: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
         y = y * 2 / mu - 1
     x = paddle.sign(y) / mu * ((1 + mu)**paddle.abs(y) - 1)
     return x
+
+
+def deframe(frames: Tensor,
+            n_fft: int,
+            hop_length: int,
+            win_length: int,
+            signal_length: Optional[int] = None):
+    """Unpack audio frames into audio singal. The frames are typically the output of inverse STFT that
+    needs to be converted back to audio signals.
+
+    This function is implemented by transposing and reshaping.
+    """
+    assert frames.ndim == 2 or frames.ndim == 3, f'The input frame must be a 2-d or 3-d tensor,but received ndim={frames.ndim} instead'
+    if frames.ndim == 2:
+        frames = frames.unsqueeze(0)
+    assert n_fft == frames.shape[
+        1], f'n_fft must be the same as the fraquency dimension of frames, but received {n_fft}!={frames.shape[1]}'
+    frame_num = frames.shape[-1]
+    overlap = (win_length - hop_length) // 2
+    signal = paddle.zeros((
+        frames.shape[0],
+        hop_length * frame_num,
+    ))
+    start = n_fft // 2 - win_length // 2
+    signal = frames[:, start + overlap:start + win_length - overlap, :]
+    signal = signal.transpose((0, 2, 1))
+    signal = signal.reshape((frames.shape[0], -1))
+    if signal_length is None:
+        return signal
+    else:
+        diff = signal.shape[-1] - signal_length
+        return signal[:, diff // 2:-diff // 2]

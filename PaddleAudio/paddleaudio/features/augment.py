@@ -45,7 +45,7 @@ def rand() -> float:
 
 
 def depth_augment(y: array,
-                  choices: List = ['int8', 'int16'],
+                  choices: List[str] = ['int8', 'int16'],
                   probs: List[float] = [0.5, 0.5]) -> array:
     """ Audio depth augmentation
 

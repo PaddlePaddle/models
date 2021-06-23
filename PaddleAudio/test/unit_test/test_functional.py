@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+
 import numpy as np
 import paddle
 import paddleaudio
 import paddleaudio.functional as F
 import pytest
+import scipy
 
 EPS = 1e-8
 
@@ -32,22 +35,34 @@ def test_hz_mel_convert():
     assert np.allclose(hz, hz0)
 
 
-win_test_data = [
-    ('hamming', ),
-    ('hann', ),
-    #'kaiser',
-    ('gaussian', 100),
-    ('exponential', None, 1.0),
-    ('triang', ),
-    ('bohman', ),
-    ('blackman', ),
-    ('cosine', ),
-]
+def generate_window_test_data():
+    names = [
+        ('hamming', ),
+        ('hann', ),
+        (
+            'taylor',
+            4,
+            30,
+            True,
+        ),
+        #'kaiser',
+        ('gaussian', 100),
+        ('exponential', None, 1.0),
+        ('triang', ),
+        ('bohman', ),
+        ('blackman', ),
+        ('cosine', ),
+    ]
+    win_length = [512, 400, 1024, 2048]
+    fftbins = [True, False]
+    return itertools.product(names, win_length, fftbins)
 
 
-@pytest.mark.parametrize('name', win_test_data)
-def test_get_window(name):
-    assert F.get_window(name, 1024, fftbins=True).shape == [1024]
+@pytest.mark.parametrize('name,win_length,fftbins', generate_window_test_data())
+def test_get_window(name, win_length, fftbins):
+    src = F.get_window(name, win_length, fftbins=fftbins)
+    target = scipy.signal.get_window(name, win_length, fftbins=fftbins)
+    assert np.allclose(src.numpy(), target, atol=1e-5)
 
 
 p2db_test_data = [
@@ -64,15 +79,15 @@ def test_power_to_db(ref_value, amin, top_db):
     pd_data = paddle.to_tensor(np_data)
     src = F.power_to_db(pd_data, ref_value, amin, top_db)
     target = paddleaudio.features.power_to_db(np_data, ref_value, amin, top_db)
-    assert np.allclose(src.numpy(), target)
+    assert np.allclose(src.numpy(), target, atol=1e-5)
+
 
 def test_mu_codec():
     x = np.random.rand(16000).astype('float32')
     xt = paddle.to_tensor(x)
-    xqt = F.mu_encode(xt) 
+    xqt = F.mu_encode(xt)
     xq = paddleaudio.features.mu_encode(x)
     xqd = paddleaudio.features.mu_decode(xq)
-    xqdt = F.mu_decode(xqt) 
-    assert np.allclose(xq, xqt.numpy())
-    assert np.allclose(xqd, xqdt.numpy())
-    
+    xqdt = F.mu_decode(xqt)
+    assert np.allclose(xq, xqt.numpy(), atol=1e-5)
+    assert np.allclose(xqd, xqdt.numpy(), atol=1e-5)

@@ -64,7 +64,7 @@ def split_frames(x: array,
                  axis: int = -1) -> array:
     """Slice a data array into (overlapping) frames.
 
-    This function is aligned with librosa.frame
+    This function is consistent with librosa.frame()
     """
 
     if not isinstance(x, np.ndarray):
@@ -137,7 +137,7 @@ def hz_to_mel(frequencies: Union[float, List[float], array],
               htk: bool = False) -> array:
     """Convert Hz to Mels
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.hz_to_mel().
     """
     freq = np.asanyarray(frequencies)
 
@@ -172,7 +172,7 @@ def mel_to_hz(mels: Union[float, List[float], array],
               htk: int = False) -> array:
     """Convert mel bin numbers to frequencies.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.mel_to_hz().
     """
     mel_array = np.asanyarray(mels)
 
@@ -207,7 +207,7 @@ def mel_frequencies(n_mels: int = 128,
                     htk: bool = False) -> array:
     """Compute mel frequencies
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.mel_frequencies()
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(fmin, htk=htk)
@@ -221,7 +221,7 @@ def mel_frequencies(n_mels: int = 128,
 def fft_frequencies(sr: int, n_fft: int) -> array:
     """Compute fourier frequencies.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.fft_frequencies().
     """
     return np.linspace(0, float(sr) / 2, int(1 + n_fft // 2), endpoint=True)
 
@@ -236,7 +236,7 @@ def compute_fbank_matrix(sr: int,
                          dtype: type = np.float32):
     """Compute fbank matrix.
 
-    This funciton is aligned with librosa.
+    This function is consistent with librosa.filters.mel().
     """
     if norm != "slaney":
         raise ParameterError('norm must set to slaney')
@@ -291,7 +291,7 @@ def stft(x: array,
          pad_mode: str = "reflect") -> array:
     """Short-time Fourier transform (STFT).
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.stft()
     """
     _check_audio(x)
     # By default, use the entire frame
@@ -354,7 +354,7 @@ def power_to_db(spect: array,
     This computes the scaling ``10 * log10(spect / ref)`` in a numerically
     stable way.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.power_to_db().
     """
     spect = np.asarray(spect)
 
@@ -397,7 +397,7 @@ def mfcc(x,
          **kwargs) -> array:
     """Mel-frequency cepstral coefficients (MFCCs)
 
-    This function is NOT strictly aligned with librosa. The following example shows how to get the
+    This function is NOT strictly consistent with librosa.feature.mfcc(). The following example shows how to get the
     same result with librosa:
 
     # paddleaudioe mfcc:
@@ -416,7 +416,7 @@ def mfcc(x,
         **kwargs)
 
     # librosa mfcc:
-    spect = librosa.feature.melspectrogram(x,sr=16000,n_fft=512,
+    spect = librosa.feature.melspectrogram(x,=16000,n_fft=512,
                                               win_length=512,
                                               hop_length=320,
                                               n_mels=64, fmin=50)
@@ -479,7 +479,7 @@ def melspectrogram(x: array,
     Notes:
     1. sr is default to 16000, which is commonly used in speech/speaker processing.
     2. when fmax is None, it is set to sr//2.
-    3. this function will convert mel spectgrum to db scale by default. This is different
+    3. this function will convert mel-spectrogram to db scale by default, which is different
     that of librosa.
 
     """

@@ -130,11 +130,3 @@ def test_mfcc():
                              norm='ortho',
                              lifter=0)
     assert relative_err(a, b) < EPS
-
-
-if __name__ == '__main__':
-    test_melspectrogram()
-    test_melspectrogram_db()
-    test_stft()
-    test_split_frames()
-    test_mfcc()
