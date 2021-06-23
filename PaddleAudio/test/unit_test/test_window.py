@@ -47,8 +47,9 @@ def test_window(win_length, sym):
                        scipy.signal.get_window('hann', win_length, not sym),
                        atol=1e-6)
 
-    assert np.allclose(paddleaudio.window.tukey(win_length,0.5, sym).numpy(),
-                       scipy.signal.get_window(('tukey',0.5), win_length, not sym),
+    assert np.allclose(paddleaudio.window.tukey(win_length, 0.5, sym).numpy(),
+                       scipy.signal.get_window(('tukey', 0.5), win_length,
+                                               not sym),
                        atol=1e-6)
     assert np.allclose(paddleaudio.window.gaussian(win_length, 0.5,
                                                    sym).numpy(),
@@ -61,10 +62,8 @@ def test_window(win_length, sym):
                                                win_length, not sym),
                        atol=1e-6)
 
-
-    assert np.allclose(paddleaudio.window.taylor(win_length, 4, 30,True,
-                                                      sym).numpy(),
-                       scipy.signal.get_window(('taylor', 4, 30,True),
+    assert np.allclose(paddleaudio.window.taylor(win_length, 4, 30, True,
+                                                 sym).numpy(),
+                       scipy.signal.get_window(('taylor', 4, 30, True),
                                                win_length, not sym),
                        atol=1e-6)
-
