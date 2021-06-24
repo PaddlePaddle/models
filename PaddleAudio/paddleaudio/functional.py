@@ -21,8 +21,26 @@ from paddle import Tensor
 from ._internal import *
 from .utils.error import ParameterError
 
-_needs_param = ['gaussian', 'exponential']
 EPS = 1e-10
+
+__all_ = [
+    'complex_norm',
+    'magphase',
+    'mel_to_hz',
+    'hz_to_mel',
+    'pad_center',
+    'mel_frequencies',
+    'fft_frequencies',
+    'compute_fbank_matrix',
+    'dft_matrix',
+    'idft_matrix',
+    'get_window',
+    'power_to_db',
+    'enframe'
+    'deframe',
+    'mu_encode',
+    'mu_decode',
+]
 
 
 def complex_norm(x: Tensor) -> Tensor:
@@ -277,7 +295,7 @@ def get_window(window: Union[str, Tuple[str, float]],
         if len(window) > 1:
             args = window[1:]
     elif isinstance(window, str):
-        if window in _needs_param:
+        if window in ['gaussian', 'exponential']:
             raise ValueError("The '" + window + "' window needs one or "
                              "more parameters -- pass a tuple.")
         else:
@@ -367,6 +385,11 @@ def mu_decode(y: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
         y = y * 2 / mu - 1
     x = paddle.sign(y) / mu * ((1 + mu)**paddle.abs(y) - 1)
     return x
+
+
+def enframe(signal: Tensor, hop_length: int, win_length: int) -> Tensor:
+
+    raise NotImplementedError()
 
 
 def deframe(frames: Tensor,
