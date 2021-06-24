@@ -13,6 +13,6 @@
 # limitations under the License.
 
 from . import backends, features, functional, losses, metrics, transforms
-from ._internal import *
 from .backends import *
 from .features import *
+from .signal import *

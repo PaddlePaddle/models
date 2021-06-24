@@ -18,7 +18,7 @@ from typing import List, Optional, Tuple, Union
 import paddle
 from paddle import Tensor
 
-from ._internal import *
+from .signal import *
 from .utils.error import ParameterError
 
 EPS = 1e-10
