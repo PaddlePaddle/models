@@ -32,24 +32,26 @@ class AMSoftmaxLoss(nn.Layer):
     def __init__(self,
                  feature_dim: int,
                  n_classes: int,
+                 eps: float = 1e-5,
                  m: float = 0.3,
                  s: float = 30.0):
         super(AMSoftmaxLoss, self).__init__()
         self.w = paddle.create_parameter((feature_dim, n_classes), 'float32')
+        self.eps = eps
         self.s = s
         self.m = m
         self.nll_loss = nn.NLLLoss()
         self.n_classes = n_classes
 
     def forward(self, logit, label):
-        logit = F.normalize(logit, p=2, axis=1)
-        wn = F.normalize(self.w, p=2, axis=0)
+        logit = F.normalize(logit, p=2, axis=1, epsilon=self.eps)
+        wn = F.normalize(self.w, p=2, axis=0, epsilon=self.eps)
         cosine = paddle.matmul(logit, wn)
         y = paddle.zeros((logit.shape[0], self.n_classes))
         for i in range(logit.shape[0]):
             y[i, label[i]] = self.m
-        prob = F.log_softmax((cosine - y) * self.s, -1)
-        return self.nll_loss(prob, label)
+        pred = F.log_softmax((cosine - y) * self.s, -1)
+        return self.nll_loss(pred, label), pred
 
 
 if __name__ == '__main__':
