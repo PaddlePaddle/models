@@ -20,7 +20,8 @@ import paddleaudio.functional as F
 from paddle import Tensor
 
 __all__ = [
-    'STFT', 'ISTFT', 'Spectrogram', 'MelSpectrogram', 'LogMelSpectrogram'
+    'STFT', 'ISTFT', 'Spectrogram', 'MelSpectrogram', 'LogMelSpectrogram',
+    'RandomMasking', 'CenterPadding', 'RandomCropping', 'Compose'
 ]
 
 
@@ -40,8 +41,8 @@ class STFT(nn.Layer):
             The folllowing window names are supported: 'hamming','hann','kaiser','gaussian',
             'exponential','triang','bohman','blackman','cosine','tukey','taylor'.
             The default value is 'hann'
-        center(bool): if True, the signal is padded so that frame t is centered at input[t * hop_length].
-            If False, frame t begins at input[t * hop_length]
+        center(bool): if True, the signal is padded so that frame t is centered at x[t * hop_length].
+            If False, frame t begins at x[t * hop_length]
             The default value is True
         pad_mode(str): the mode to pad the signal if necessary. The supported modes are 'reflect' and 'constant'.
         The default value is 'reflect'.
@@ -50,9 +51,9 @@ class STFT(nn.Layer):
             Otherwise, it will return the full spectrum that have n_fft+1 frequency values.
             The default value is True.
     Shape:
-        - input: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (batch, signal_length).
+        - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (batch, signal_length).
         - output: 2-D tensor with shape [batch_size, freq_dim, frame_number,2], where freq_dim = n_fft+1 if one_sided is False and n_fft//2+1 if True.
-        The batch_size is set to 1 if input singal is 1D tensor.
+        The batch_size is set to 1 if input singal x is 1D tensor.
     Notes:
         This result of stft transform is consistent with librosa.stft() in the default value setting.
     """
@@ -100,14 +101,14 @@ class STFT(nn.Layer):
         for param in self.parameters():
             param.stop_gradient = True
 
-    def forward(self, input: Tensor):
-        assert input.ndim in [
+    def forward(self, x: Tensor):
+        assert x.ndim in [
             1, 2
-        ], f'The input signal must be a 1-d tensor for non-batched signal or 2-d tensor for batched signal,but received ndim={input.ndim} instead'
-        if input.ndim == 1:
-            x = input.unsqueeze((0, 1))
-        elif input.ndim == 2:
-            x = input.unsqueeze(0)
+        ], f'The input signal x must be a 1-d tensor for non-batched signal or 2-d tensor for batched signal,but received ndim={input.ndim} instead'
+        if x.ndim == 1:
+            x = x.unsqueeze((0, 1))
+        elif x.ndim == 2:
+            x = x.unsqueeze(1)
 
         if self.center:
             x = paddle.nn.functional.pad(x,
@@ -122,8 +123,8 @@ class STFT(nn.Layer):
         return signal
 
     def __repr__(self, ):
-        return f'stft(n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
-               f'win_length:{self.win_length}, window:{self.window})'
+        return  self.__class__.__name__ +f'(n_fft={self.n_fft}, hop_length={self.hop_length}, '\
+               f'win_length={self.win_length}, window="{self.window}")'
 
 
 class Spectrogram(nn.Layer):
@@ -149,19 +150,12 @@ class Spectrogram(nn.Layer):
                           pad_mode)
 
     def __repr__(self, ):
-        return f'Spectrogram(power:{self.power})|' + str(self._stft)
+        p_repr = str(self._stft).split('(')[-1].split(')')[0]
+        local_repr = f'power={self.power}'
+        return self.__class__.__name__ + '(' + p_repr + ', ' + local_repr + ')'
 
-    def forward(self, input: Tensor) -> Tensor:
-        assert input.ndim in [
-            1, 2
-        ], f'The input signal must be a 1-d tensor for non-batched signal or 2-d tensor for batched signal,but received ndim={input.ndim} instead'
-        if input.ndim == 1:
-            x = input.unsqueeze((0, 1))
-        elif input.ndim == 2:
-            x = input.unsqueeze(0)
-        # print(type(super()))
-        fft_signal = self._stft(input)
-        # (batch_size, n_fft // 2 + 1, time_steps, 2)
+    def forward(self, x: Tensor) -> Tensor:
+        fft_signal = self._stft(x)
         spectrogram = paddle.square(fft_signal).sum(-1)
         if self.power == 2.0:
             pass
@@ -209,21 +203,16 @@ class MelSpectrogram(nn.Layer):
         self.fbank_matrix = self.fbank_matrix.unsqueeze(0)
         self.register_buffer('fbank_matrix', self.fbank_matrix)
 
-    def forward(self, input: Tensor) -> Tensor:
-        assert input.ndim in [
-            1, 2
-        ], f'The input signal must be a 1-d tensor for non-batched signal or 2-d tensor for batched signal,but received ndim={input.ndim} instead'
-        if input.ndim == 1:
-            x = input.unsqueeze((0, 1))
-        elif input.ndim == 2:
-            x = input.unsqueeze(0)
-        spect_feature = self._spectrogram(input)
-        mel_feature = paddle.bmm(self.fbank_matrix, spect_feature)
+    def forward(self, x: Tensor) -> Tensor:
+        spect_feature = self._spectrogram(x)
+        mel_feature = paddle.matmul(self.fbank_matrix, spect_feature)
         return mel_feature
 
     def __repr__(self):
-        return f'MelSpectrogram(n_mels:{self.n_mels}, fmin:{self.fmin}, fmax:{self.fmax})|' + str(
-            self._spectrogram)
+
+        p_repr = str(self._spectrogram).split('(')[-1].split(')')[0]
+        local_repr = f'n_mels={self.n_mels}, fmin={self.fmin}, fmax={self.fmax}'
+        return self.__class__.__name__ + '(' + local_repr + ', ' + p_repr + ')'
 
 
 class LogMelSpectrogram(nn.Layer):
@@ -253,20 +242,15 @@ class LogMelSpectrogram(nn.Layer):
                                               window, center, pad_mode, power,
                                               n_mels, fmin, fmax)
 
-    def forward(self, input: Tensor) -> Tensor:
-        assert input.ndim in [
-            1, 2
-        ], f'The input signal must be a 1-d tensor for non-batched signal or 2-d tensor for batched signal,but received ndim={input.ndim} instead'
-        if input.ndim == 1:
-            x = input.unsqueeze((0, 1))
-        elif input.ndim == 2:
-            x = input.unsqueeze(0)
-        mel_feature = self._melspectrogram(input)
+    def forward(self, x: Tensor) -> Tensor:
+        mel_feature = self._melspectrogram(x)
         log_mel_feature = F.power_to_db(mel_feature)
         return log_mel_feature
 
     def __repr__(self):
-        return 'LogMelSpectrogram|' + str(self._melspectrogram)
+        p_repr = str(self._melspectrogram)
+        return self.__class__.__name__ + '(' + p_repr.split('(')[-1].split(
+            ')')[0] + ')'
 
 
 class ISTFT(nn.Layer):
@@ -300,7 +284,7 @@ class ISTFT(nn.Layer):
 
         assert self.hop_length < self.win_length, f'hop_length must be smaller than win_length, but {self.hop_length}>={self.win_length}'
 
-        fft_window = F.get_window(window, win_length)
+        fft_window = F.get_window(window, self.win_length)
         fft_window = 1.0 / fft_window
         fft_window = F.pad_center(fft_window, n_fft)
         fft_window = fft_window.unsqueeze((1, 2))
@@ -337,5 +321,71 @@ class ISTFT(nn.Layer):
         return signal
 
     def __repr__(self, ):
-        return f'Inverse stft(n_fft:{self.n_fft}, hop_length:{self.hop_length}, '\
-               f'win_length:{self.win_length}, window:{self.window})'
+        return self.__class__.__name__ + f'(n_fft={self.n_fft}, hop_length={self.hop_length}, '\
+               f'win_length={self.win_length}, window="{self.window}")'
+
+
+class RandomMasking(nn.Layer):
+    def __init__(self,
+                 max_mask_count: int = 3,
+                 max_mask_width: int = 30,
+                 axis: int = -1):
+        super(RandomMasking, self).__init__()
+        self.axis = axis
+        self.max_mask_count = max_mask_count
+        self.max_mask_width = max_mask_width
+
+    def forward(self, x):
+        return F.random_masking(
+            x,
+            max_mask_count=self.max_mask_count,
+            max_mask_width=self.max_mask_width,
+            axis=self.axis,
+        )
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(max_mask_count={self.max_mask_count}, max_mask_width={self.max_mask_width}, axis={self.axis})'
+
+
+class Compose():
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, x):
+        for t in self.transforms:
+            x = t(x)
+        return x
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += '\n)'
+        return format_string
+
+
+class RandomCropping(nn.Layer):
+    def __init__(self, crop_size: int, axis: int = -1):
+        super(RandomCropping, self).__init__()
+        self.crop_size = crop_size
+        self.axis = axis
+
+    def forward(self, x):
+        return F.RandomCropping(x, crop_size=self.crop_size, axis=self.axis)
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(crop_size={self.crop_size}, axis={self.axis})'
+
+
+class CenterPadding(nn.Layer):
+    def __init__(self, target_size: int, axis: int = -1):
+        super(CenterPadding, self).__init__()
+        self.target_size = target_size
+        self.axis = axis
+
+    def forward(self, x):
+        return F.center_padding(x, self.target_size, axis=self.axis)
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(axis={self.axis}, target_size={self.target_size})'
