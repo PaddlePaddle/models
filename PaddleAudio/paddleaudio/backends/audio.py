@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import warnings
 from typing import List, Optional, Tuple, Type, Union
 
@@ -21,6 +22,7 @@ from numpy import ndarray as array
 from scipy.io import wavfile
 
 from ..utils import ParameterError
+from ._ffmpeg import DecodingError, FFmpegAudioFile
 
 __all__ = [
     'resample',
@@ -40,7 +42,7 @@ def resample(y: array,
              src_sr: int,
              target_sr: int,
              mode: str = 'kaiser_fast') -> array:
-    """ Audio resampling
+    """Audio resampling
 
      This function is the same as using resampy.resample().
 
@@ -65,7 +67,7 @@ def resample(y: array,
 
 
 def to_mono(y: array, merge_type: str = 'average') -> array:
-    """ convert sterior audio to mono
+    """Convert stereo audio to mono audio
     """
     if merge_type not in MERGE_TYPES:
         raise ParameterError(
@@ -107,24 +109,22 @@ def to_mono(y: array, merge_type: str = 'average') -> array:
 
 
 def _safe_cast(y: array, dtype: Union[type, str]) -> array:
-    """ data type casting in a safe way, i.e., prevent overflow or underflow
+    """Data type casting in a safe way, i.e., prevent overflow or underflow
 
     This function is used internally.
     """
+    import pdb
+    pdb.set_trace()
     return np.clip(y, np.iinfo(dtype).min, np.iinfo(dtype).max).astype(dtype)
 
 
-def depth_convert(y: array,
-                  dtype: Union[type, str],
-                  dithering: bool = True) -> array:
+def depth_convert(y: array, dtype: Union[type, str]) -> array:
     """Convert audio array to target dtype safely
 
     This function convert audio waveform to a target dtype, with addition steps of
     preventing overflow/underflow and preserving audio range.
 
     """
-    if dithering:
-        warnings.warn('dithering is not implemented')
 
     SUPPORT_DTYPE = ['int16', 'int8', 'float32', 'float64']
     if y.dtype not in SUPPORT_DTYPE:
@@ -169,7 +169,34 @@ def depth_convert(y: array,
     return y
 
 
-def sound_file_load(file: str,
+def audioread_load(file: os.PathLike,
+                   offset: Optional[float] = None,
+                   duration: Optional[int] = None) -> Tuple[array, int]:
+    """Load audio file using audioread ffmpeg backend
+
+    """
+    with FFmpegAudioFile(file) as f:
+        # import pdb;pdb.set_trace()
+        sr = f.samplerate
+        buffer = b''
+        for d in f.read_data():
+            buffer += d
+    wav = np.frombuffer(buffer, dtype='int16')
+    if f.channels != 1:
+        wav = wav.reshape((
+            -1,
+            f.channels,
+        )).transpose(1, 0)
+    if offset:
+        wav = wav[int(offset * sr):]
+    if duration is not None:
+        frame_duration = int(duration * sr)
+        wav = wav[:frame_duration]
+
+    return wav, sr
+
+
+def sound_file_load(file: os.PathLike,
                     offset: Optional[float] = None,
                     dtype: str = 'int16',
                     duration: Optional[int] = None) -> Tuple[array, int]:
@@ -221,8 +248,9 @@ def normalize(y: array,
               norm_type: str = 'linear',
               mul_factor: float = 1.0) -> array:
     """ normalize an input audio with additional multiplier.
-
     """
+    if y.dtype not in ['float32', 'float64']:
+        y = y.astype('float32')
 
     if norm_type == 'linear':
         amax = np.max(np.abs(y))
@@ -239,7 +267,7 @@ def normalize(y: array,
     return y
 
 
-def save_wav(y: array, sr: int, file: str) -> None:
+def save_wav(y: array, sr: int, file: os.PathLike) -> None:
     """Save audio file to disk.
     This function saves audio to disk using scipy.io.wavfile, with additional step
     to convert input waveform to int16 unless it already is int16
@@ -268,7 +296,7 @@ def save_wav(y: array, sr: int, file: str) -> None:
 
 
 def load(
-        file: str,
+        file: os.PathLike,
         sr: Optional[int] = None,
         mono: bool = True,
         merge_type: str = 'average',  # ch0,ch1,random,average
@@ -287,8 +315,19 @@ def load(
     Notes:
 
     """
-
-    y, r = sound_file_load(file, offset=offset, dtype=dtype, duration=duration)
+    try:
+        y, r = sound_file_load(file,
+                               offset=offset,
+                               dtype=dtype,
+                               duration=duration)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f'Trying to load a file that doesnot exist {file}')
+    except:
+        try:
+            y, r = audioread_load(file, offset=offset, duration=duration)
+        except DecodingError:
+            raise DecodingError(f'Failed to load and decode file {file}')
 
     if not ((y.ndim == 1 and len(y) > 0) or (y.ndim == 2 and len(y[0]) > 0)):
         raise ParameterError(f'audio file {file} looks empty')
