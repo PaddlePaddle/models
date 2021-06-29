@@ -24,23 +24,15 @@ from .utils.error import ParameterError
 EPS = 1e-10
 
 __all_ = [
-    'complex_norm',
-    'magphase',
-    'mel_to_hz',
-    'hz_to_mel',
-    'pad_center',
-    'mel_frequencies',
-    'fft_frequencies',
-    'compute_fbank_matrix',
-    'dft_matrix',
-    'idft_matrix',
-    'get_window',
-    'power_to_db',
-    'enframe'
-    'deframe',
-    'mu_encode',
-    'mu_decode',
+    'complex_norm', 'magphase', 'mel_to_hz', 'hz_to_mel', 'pad_center',
+    'mel_frequencies', 'fft_frequencies', 'compute_fbank_matrix', 'dft_matrix',
+    'idft_matrix', 'get_window', 'power_to_db', 'enframe'
+    'deframe', 'mu_encode', 'mu_decode', 'random_masking', 'random_cropping'
 ]
+
+
+def _randint(n):
+    return int(paddle.randint(n))
 
 
 def complex_norm(x: Tensor) -> Tensor:
@@ -422,3 +414,91 @@ def deframe(frames: Tensor,
     else:
         diff = signal.shape[-1] - signal_length
         return signal[:, diff // 2:-diff // 2]
+
+
+def random_masking(x: Tensor,
+                   max_mask_count: int = 3,
+                   max_mask_width: int = 30,
+                   axis: int = -1) -> Tensor:
+    """Do random masking for a given input tensor x along given axis defined by axis.
+    [N,frames,frequencis] => [N,frames,frequencis]
+
+    Reference:
+
+    """
+    assert x.ndim == 2 or x.ndim, f'only supports 2d or 3d tensor, but received ndim={x.ndim}'
+    if x.ndim == 2:
+        x = x.unsqueeze(0)  #extend for batching
+        squeeze = True
+        if axis != -1:
+            assert axis in [
+                0, 1, -1
+            ], f'mask axis must be in [0,1,-1] for 2d tensor input,but received {axis}'
+            axis += 1
+    else:
+        squeeze = False
+        assert axis in [
+            1, 2, -1, -2
+        ], f'mask axis must be in [1,2,-1,-2] for 3d tensor input,but received {axis}'
+
+    zero_tensor = paddle.to_tensor(0.0, dtype=x.dtype)
+
+    n = x.shape[axis]
+    num_time_mask = _randint(max_mask_count + 1)
+    time_mask_width = _randint(max_mask_width) + 1
+
+    if axis == 1:
+        for _ in range(num_time_mask):
+            start = _randint(n - time_mask_width)
+            x[:, start:start + time_mask_width, :] = zero_tensor
+    else:
+        for _ in range(num_time_mask):
+            start = _randint(n - time_mask_width)
+            x[:, :, start:start + time_mask_width] = zero_tensor
+    if squeeze:
+        x = x.squeeze()
+    return x
+
+
+def random_cropping(x: Tensor, crop_size: int, axis=-1) -> Tensor:
+    """ Do random cropping to the target length defined by n at axis defined by aixs.
+    """
+    assert axis < x.ndim, f'axis must be smaller than x.ndim, but received aixs={axis},x.ndim={x.ndim}'
+    assert x.ndim in [
+        1, 2, 3
+    ], f'only accept 1d/2d/3d tensor, but recieved x.ndim={x.ndim}'
+    shape = x.shape
+    if crop_size >= shape[axis]:
+        return x  # nothing to do
+
+    start = _randint(shape[axis] - crop_size)
+    axes = [i for i in range(x.ndim)]
+    starts = [0 for i in range(x.ndim)]
+    ends = [shape[i] for i in range(x.ndim)]
+    starts[axis] = start
+    ends[axis] = start + crop_size
+    return paddle.slice(x, axes, starts, ends)
+
+
+def center_padding(x, target_size, axis=-1):
+    assert axis < x.ndim, f'axis must be smaller than x.ndim, but received aixs={axis},x.ndim={x.ndim}'
+    assert x.ndim in [
+        1, 2, 3
+    ], f'only accept 1d/2d/3d tensor, but recieved x.ndim={x.ndim}'
+    shape = x.shape
+    if target_size <= shape[axis]:
+        return x  # nothing to do
+
+    size_diff_hf = (target_size - shape[axis]) // 2
+    pad_shape = shape[:]
+    pad_shape[axis] = size_diff_hf
+    pad_tensor = paddle.zeros(pad_shape, x.dtype)
+    size_diff_hf2 = target_size - shape[axis] - size_diff_hf
+    if size_diff_hf2 != size_diff_hf:
+        pad_shape = shape[:]
+        pad_shape[axis] = size_diff_hf2
+        pad_tensor2 = paddle.zeros(pad_shape, x.dtype)
+    else:
+        pad_tensor2 = pad_tensor
+
+    return paddle.concat([pad_tensor, x, pad_tensor2], axis=axis)
