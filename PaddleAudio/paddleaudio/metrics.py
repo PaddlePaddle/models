@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import namedtuple
 from typing import List, Tuple, Union
 
 import numpy as np
@@ -37,7 +38,18 @@ def compute_eer(
         labels = np.array(labels)
     if isinstance(scores, list):
         scores = np.array(scores)
-
+    label_set = list(np.unique(labels))
+    assert len(
+        label_set
+    ) == 2, f'the input labels must contains both two labels, but recieved set(labels) = {label_set}'
+    label_set.sort()
+    assert label_set == [
+        0, 1
+    ], 'the input labels must contain 0 and 1 for distinct and identical id. '
+    eps = 1e-8
+    assert np.min(scores) >= -1.0 - eps and np.max(
+        scores
+    ) < 1.0 + eps, 'the score must be in the range between -1.0 and 1.0'
     same_id_scores = scores[labels == 1]
     diff_id_scores = scores[labels == 0]
     thresh = np.linspace(np.min(diff_id_scores), np.max(same_id_scores), 1000)
@@ -48,9 +60,13 @@ def compute_eer(
     fa_rate = np.mean(fa_matrix, 1)
 
     thresh_idx = np.argmin(np.abs(fa_rate - fr_rate))
-    eer = (fr_rate[thresh_idx] + fa_rate[thresh_idx]) / 2
-    thresh_for_eer = thresh[thresh_idx, 0]
-    return eer, thresh_for_eer, fr_rate, fa_rate
+    result = namedtuple('speaker', ('eer', 'thresh', 'fa', 'fr'))
+    result.eer = (fr_rate[thresh_idx] + fa_rate[thresh_idx]) / 2
+    result.thresh = thresh[thresh_idx, 0]
+    result.fr = fr_rate
+    result.fa = fa_rate
+
+    return result
 
 
 def compute_min_dcf(fr_rate, fa_rate, p_target=0.05, c_miss=1.0, c_fa=1.0):
