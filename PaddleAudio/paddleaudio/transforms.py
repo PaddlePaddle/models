@@ -344,7 +344,8 @@ class RandomMasking(nn.Layer):
         )
 
     def __repr__(self, ):
-        return self.__class__.__name__ + f'(max_mask_count={self.max_mask_count}, max_mask_width={self.max_mask_width}, axis={self.axis})'
+        return self.__class__.__name__ + f'(max_mask_count={self.max_mask_count}, '+\
+            f'max_mask_width={self.max_mask_width}, axis={self.axis})'
 
 
 class Compose():
@@ -389,3 +390,47 @@ class CenterPadding(nn.Layer):
 
     def __repr__(self, ):
         return self.__class__.__name__ + f'(axis={self.axis}, target_size={self.target_size})'
+
+
+class MuEncoding(nn.Layer):
+    def __init__(self, mu: int):
+        super(MuEncoding, self).__init__()
+        assert mu > 0, f'mu must be postive, but received mu = {mu}'
+        self.mu = mu
+
+    def forward(self, x: Tensor) -> Tensor:
+        return F.mu_encode(x, mu=self.mu)
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(mu={self.mu})'
+
+
+class MuDecoding(nn.Layer):
+    def __init__(self, mu: int):
+        super(MuDecoding, self).__init__()
+        assert mu > 0, f'mu must be postive, but received mu = {mu}'
+        self.mu = mu
+
+    def forward(self, x: Tensor) -> Tensor:
+        return F.mu_decode(x, mu=self.mu)
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(mu={self.mu})'
+
+
+class RandomMuCodec(nn.Layer):
+    def __init__(self, min_mu: int = 63, max_mu: int = 255):
+        super(RandomMuCodec, self).__init__()
+        assert min_mu > 0, f'mu must be postive, but received min_mu = {min_mu}'
+        assert max_mu > min_mu, f'max_mu must > min_mu, but received max_mu = {max_mu}, min_mu = {min_mu}'
+        self.max_mu = max_mu
+        self.min_mu = min_mu
+
+    def forward(self, x: Tensor) -> Tensor:
+        mu = int(paddle.randint(low=self.min_mu, high=self.max_mu))
+        code = F.mu_encode(x, mu=mu)
+        x_out = F.mu_decode(code, mu=mu)
+        return x_out
+
+    def __repr__(self, ):
+        return self.__class__.__name__ + f'(min_mu={self.min_mu}, max_mu={self.max_mu})'
