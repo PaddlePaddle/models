@@ -350,7 +350,6 @@ def mu_encode(x: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
         https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
 
     """
-    mu = 255
     y = paddle.sign(x) * paddle.log1p(mu * paddle.abs(x)) / math.log1p(mu)
     if quantized:
         y = (y + 1) / 2 * mu + 0.5  # convert to [0 , mu-1]
@@ -358,15 +357,19 @@ def mu_encode(x: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
     return y
 
 
-def mu_decode(y: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
+def mu_decode(x: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
     """Mu-law decoding.
     Compute the mu-law decoding given an input code.
 
-    This function assumes that the input y is in the
+    This function assumes that the input x is in the
     range [0,mu-1] when quantize is True and [-1,1] otherwise
+
+    Notes:
+        the shape and ndim of input
 
     Reference:
         https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
+
 
     """
     if mu < 1:
@@ -374,8 +377,8 @@ def mu_decode(y: Tensor, mu: int = 255, quantized: bool = True) -> Tensor:
 
     mu = mu - 1
     if quantized:  # undo the quantization
-        y = y * 2 / mu - 1
-    x = paddle.sign(y) / mu * ((1 + mu)**paddle.abs(y) - 1)
+        x = x * 2 / mu - 1
+    x = paddle.sign(x) / mu * ((1 + mu)**paddle.abs(x) - 1)
     return x
 
 
@@ -444,17 +447,17 @@ def random_masking(x: Tensor,
     zero_tensor = paddle.to_tensor(0.0, dtype=x.dtype)
 
     n = x.shape[axis]
-    num_time_mask = _randint(max_mask_count + 1)
-    time_mask_width = _randint(max_mask_width) + 1
+    num_masks = _randint(max_mask_count + 1)
+    mask_width = _randint(max_mask_width) + 1
 
     if axis == 1:
-        for _ in range(num_time_mask):
-            start = _randint(n - time_mask_width)
-            x[:, start:start + time_mask_width, :] = zero_tensor
+        for _ in range(num_masks):
+            start = _randint(n - mask_width)
+            x[:, start:start + mask_width, :] = zero_tensor
     else:
-        for _ in range(num_time_mask):
-            start = _randint(n - time_mask_width)
-            x[:, :, start:start + time_mask_width] = zero_tensor
+        for _ in range(num_masks):
+            start = _randint(n - mask_width)
+            x[:, :, start:start + mask_width] = zero_tensor
     if squeeze:
         x = x.squeeze()
     return x
