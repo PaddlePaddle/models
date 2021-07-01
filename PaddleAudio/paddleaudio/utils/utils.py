@@ -13,7 +13,15 @@
 # limitations under the License.
 
 import math
+import os
 import time
+
+import numpy as np
+
+
+class ParameterError(Exception):
+    """Exception class for Parameter checking"""
+    pass
 
 
 class Timer(object):

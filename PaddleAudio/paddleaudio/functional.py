@@ -19,7 +19,7 @@ import paddle
 from paddle import Tensor
 
 from .signal import *
-from .utils.error import ParameterError
+from .utils import ParameterError
 
 EPS = 1e-10
 
