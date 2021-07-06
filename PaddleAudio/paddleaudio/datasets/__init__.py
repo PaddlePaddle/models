@@ -20,6 +20,7 @@ from .librispeech import LIBRISPEECH
 from .ravdess import RAVDESS
 from .tess import TESS
 from .urban_sound import UrbanSound8K
+from .voxceleb1 import VoxCeleb1
 
 __all__ = [
     'AISHELL1',
@@ -31,4 +32,5 @@ __all__ = [
     'UrbanAudioVisualScenes',
     'RAVDESS',
     'TESS',
+    'VoxCeleb1',
 ]
