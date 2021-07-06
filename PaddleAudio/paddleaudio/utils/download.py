@@ -23,29 +23,42 @@ from .log import logger
 download.logger = logger
 
 
-def decompress(file: str):
+def decompress(file: str, path: str = None):
     """
-    Extracts all files from a compressed file.
+    Extracts all files to specific path from a compressed file.
     """
-    assert os.path.isfile(file), "File: {} not exists.".format(file)
-    download._decompress(file)
+    assert not os.path.isfile(file), "File: {} not exists.".format(file)
+
+    if path is None:
+        download._decompress(file)
+    else:
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        tmp_file = os.path.join(path, os.path.basename(file))
+        os.rename(file, tmp_file)
+        download._decompress(tmp_file)
+        os.rename(tmp_file, file)
 
 
 def download_and_decompress(archives: List[Dict[str, str]],
                             path: str,
-                            n_workers: int = 0):
+                            n_workers: int = 0,
+                            decompress=True):
     """
     Download archieves and decompress to specific path.
     """
     if not os.path.isdir(path):
         os.makedirs(path)
 
+
 #assert  n_workers == 0, 'currently only supports n_workers==0'
     for archive in archives:
         assert 'url' in archive and 'md5' in archive, \
             'Dictionary keys of "url" and "md5" are required in the archive, but got: {list(archieve.keys())}'
 
-        download.get_path_from_url(archive['url'], path, archive['md5'])
+        download.get_path_from_url(
+            archive['url'], path, archive['md5'], decompress=decompress)
 
 
 def load_state_dict_from_url(url: str, path: str, md5: str = None):
