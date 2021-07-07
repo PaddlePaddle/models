@@ -27,7 +27,7 @@ def decompress(file: str, path: str = None):
     """
     Extracts all files to specific path from a compressed file.
     """
-    assert not os.path.isfile(file), "File: {} not exists.".format(file)
+    assert os.path.isfile(file), "File: {} not exists.".format(file)
 
     if path is None:
         download._decompress(file)
@@ -44,7 +44,7 @@ def decompress(file: str, path: str = None):
 def download_and_decompress(archives: List[Dict[str, str]],
                             path: str,
                             n_workers: int = 0,
-                            decompress=True):
+                            decompress: bool = True):
     """
     Download archieves and decompress to specific path.
     """
