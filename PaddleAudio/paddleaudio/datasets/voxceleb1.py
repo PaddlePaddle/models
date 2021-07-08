@@ -187,33 +187,45 @@ class VoxCeleb1(Dataset):
         ]
         return chunk_lst
 
-    def _get_audio_info(self, wav_file: str) -> List[List[str]]:
+    def _get_audio_info(self, wav_file: str,
+                        split_chunks: bool) -> List[List[str]]:
         waveform, sr = load_audio(wav_file)
         spk_id, sess_id, utt_id = wav_file.split("/")[-3:]
         audio_id = '-'.join([spk_id, sess_id, utt_id.split(".")[0]])
         audio_duration = waveform.shape[0] / sr
 
-        # Split into pieces of self.chunk_duration seconds.
         ret = []
-        uniq_chunks_list = self._get_chunks(self.chunk_duration, audio_id,
-                                            audio_duration)
-        for chunk in uniq_chunks_list:
-            s, e = chunk.split("_")[-2:]  # Timestamps of start and end
-            start_sample = int(float(s) * sr)
-            end_sample = int(float(e) * sr)
-            # id, duration, wav, start, stop, spk_id
+        if split_chunks:  # Split into pieces of self.chunk_duration seconds.
+            uniq_chunks_list = self._get_chunks(self.chunk_duration, audio_id,
+                                                audio_duration)
+
+            for chunk in uniq_chunks_list:
+                s, e = chunk.split("_")[-2:]  # Timestamps of start and end
+                start_sample = int(float(s) * sr)
+                end_sample = int(float(e) * sr)
+                # id, duration, wav, start, stop, spk_id
+                ret.append([
+                    chunk, audio_duration, wav_file, start_sample, end_sample,
+                    spk_id
+                ])
+        else:  # Keep whole audio.
             ret.append([
-                chunk, audio_duration, wav_file, start_sample, end_sample,
-                spk_id
+                audio_id, audio_duration, wav_file, 0, waveform.shape[0], spk_id
             ])
         return ret
 
-    def generate_csv(self, wav_files: List[str], output_file: str):
+    def generate_csv(self,
+                     wav_files: List[str],
+                     output_file: str,
+                     split_chunks: bool = True):
         logger.info(f'Generating csv: {output_file}')
         header = ["id", "duration", "wav", "start", "stop", "spk_id"]
 
         infos = list(
-            tqdm(map(self._get_audio_info, wav_files), total=len(wav_files)))
+            tqdm(
+                map(self._get_audio_info, wav_files,
+                    [split_chunks] * len(wav_files)),
+                total=len(wav_files)))
 
         csv_lines = []
         for info in infos:
@@ -228,15 +240,19 @@ class VoxCeleb1(Dataset):
 
     def prepare_data(self):
         # Audio of speakers in veri_test_file should not be included in training set.
-        test_files = []
+        enrol_files = set()
+        test_files = set()
         with open(self.veri_test_file, 'r') as f:
             for line in f.readlines():
-                _, file, _ = line.strip().split(' ')
-                test_files.append(file)
+                _, enrol_file, test_file = line.strip().split(' ')
+                enrol_files.add(os.path.join(self.wav_path, enrol_file))
+                test_files.add(os.path.join(self.wav_path, test_file))
+            enrol_files = sorted(enrol_files)
+            test_files = sorted(test_files)
 
         test_spks = set()
-        for file in test_files:
-            spk = file.split('/')[0]
+        for file in (enrol_files + test_files):
+            spk = file.split('/wav/')[1].split('/')[0]
             test_spks.add(spk)
 
         audio_files = []
@@ -261,6 +277,14 @@ class VoxCeleb1(Dataset):
 
         self.generate_csv(train_files, os.path.join(self.csv_path, 'train.csv'))
         self.generate_csv(dev_files, os.path.join(self.csv_path, 'dev.csv'))
+        self.generate_csv(
+            enrol_files,
+            os.path.join(self.csv_path, 'enrol.csv'),
+            split_chunks=False)
+        self.generate_csv(
+            test_files,
+            os.path.join(self.csv_path, 'test.csv'),
+            split_chunks=False)
 
     def __getitem__(self, idx):
         return self._convert_to_record(idx)
