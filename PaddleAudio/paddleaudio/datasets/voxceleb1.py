@@ -73,7 +73,7 @@ class VoxCeleb1(Dataset):
     meta_path = os.path.join(base_path, 'meta')
     veri_test_file = os.path.join(meta_path, 'veri_test2.txt')
     csv_path = os.path.join(base_path, 'csv')
-    subsets = ['train', 'dev', 'test']
+    subsets = ['train', 'dev', 'enrol', 'test']
 
     def __init__(self,
                  subset: str = 'train',
@@ -152,10 +152,9 @@ class VoxCeleb1(Dataset):
         for field in type(sample)._fields:
             record[field] = getattr(sample, field)
 
-        waveform, sr = load_audio(
-            record['wav'])  # The first element of sample is file path
+        waveform, sr = load_audio(record['wav'])
 
-        if self.subset == 'train' and self.random_chunk:
+        if self.random_chunk:
             num_wav_samples = waveform.shape[0]
             num_chunk_samples = int(self.chunk_duration * sr)
             start = random.randint(0, num_wav_samples - num_chunk_samples - 1)
@@ -171,10 +170,12 @@ class VoxCeleb1(Dataset):
         feat_func = feat_funcs[self.feat_type]
         feat = feat_func(
             waveform, sr=sr, **self.feat_config) if feat_func else waveform
-        record.update({
-            'feat': feat,
-            'label': self.spk_id2label[record['spk_id']]
-        })
+
+        record.update({'feat': feat})
+        if self.subset in ['train',
+                           'dev']:  # Labels are available in train and dev.
+            record.update({'label': self.spk_id2label[record['spk_id']]})
+
         return record
 
     @staticmethod
