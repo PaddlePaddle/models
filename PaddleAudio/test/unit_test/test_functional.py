@@ -20,15 +20,16 @@ import paddleaudio
 import paddleaudio.functional as F
 import pytest
 import scipy
+import utils
 
 EPS = 1e-8
 
 
 def test_hz_mel_convert():
     hz = np.linspace(0, 32000, 100).astype('float32')
-    mel0 = paddleaudio.core.hz_to_mel(hz)
+    mel0 = paddleaudio.utils._librosa.hz_to_mel(hz)
     mel1 = F.hz_to_mel(paddle.to_tensor(hz)).numpy()
-    hz0 = paddleaudio.core.mel_to_hz(mel0)
+    hz0 = paddleaudio.utils._librosa.mel_to_hz(mel0)
     hz1 = F.mel_to_hz(paddle.to_tensor(mel0)).numpy()
     assert np.allclose(hz0, hz1)
     assert np.allclose(mel0, mel1)
@@ -78,16 +79,22 @@ def test_power_to_db(ref_value, amin, top_db):
     np_data = np.random.rand(100, 100).astype('float32') + 1e-6
     pd_data = paddle.to_tensor(np_data)
     src = F.power_to_db(pd_data, ref_value, amin, top_db)
-    target = paddleaudio.features.power_to_db(np_data, ref_value, amin, top_db)
+    target = paddleaudio.utils._librosa.power_to_db(np_data, ref_value, amin,
+                                                    top_db)
     assert np.allclose(src.numpy(), target, atol=1e-5)
 
 
 def test_mu_codec():
-    x = np.random.rand(16000).astype('float32')
-    xt = paddle.to_tensor(x)
-    xqt = F.mu_encode(xt)
-    xq = paddleaudio.features.mu_encode(x)
-    xqd = paddleaudio.features.mu_decode(xq)
-    xqdt = F.mu_decode(xqt)
-    assert np.allclose(xq, xqt.numpy(), atol=1e-5)
-    assert np.allclose(xqd, xqdt.numpy(), atol=1e-5)
+    x, _ = utils.load_example_audio1()
+    x = paddle.to_tensor(x)
+    code = F.mu_law_encode(x)
+    xr = F.mu_law_decode(code)
+    assert np.allclose(xr.numpy(), x.numpy(), atol=1e-1)
+
+    code = F.mu_law_encode(x, mu=1024)
+    xr = F.mu_law_decode(code, mu=1024)
+    assert np.allclose(xr.numpy(), x.numpy(), atol=1e-2)
+
+    code = F.mu_law_encode(x, mu=65536)
+    xr = F.mu_law_decode(code, mu=65536)
+    assert np.allclose(xr.numpy(), x.numpy(), atol=1e-4)

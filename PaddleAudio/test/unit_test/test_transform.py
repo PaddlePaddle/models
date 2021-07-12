@@ -16,8 +16,8 @@ import numpy as np
 import paddle
 import paddleaudio
 import pytest
-from paddleaudio.features.core import melspectrogram
 from paddleaudio.transforms import ISTFT, STFT, MelSpectrogram
+from paddleaudio.utils._librosa import melspectrogram
 
 EPS = 1e-8
 import itertools
@@ -82,13 +82,13 @@ def test_stft(n_fft, hop_length, window, win_length, pad_mode):
 
     src = stft(signal_tensor.unsqueeze(0)).numpy()[0]
 
-    target = paddleaudio.features.stft(signal,
-                                       n_fft=n_fft,
-                                       win_length=win_length,
-                                       hop_length=hop_length,
-                                       window=window,
-                                       center=center,
-                                       pad_mode=pad_mode)
+    target = paddleaudio.utils._librosa.stft(signal,
+                                             n_fft=n_fft,
+                                             win_length=win_length,
+                                             hop_length=hop_length,
+                                             window=window,
+                                             center=center,
+                                             pad_mode=pad_mode)
 
     assert np.allclose(target.real, src[:, :, 0], rtol=1e-5, atol=1e-2)
     assert np.allclose(target.imag, src[:, :, 1], rtol=1e-5, atol=1e-2)

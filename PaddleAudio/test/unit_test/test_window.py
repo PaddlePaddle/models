@@ -30,39 +30,37 @@ test_data = [
 
 @pytest.mark.parametrize('win_length,sym', test_data)
 def test_window(win_length, sym):
-
-    assert np.allclose(paddleaudio.window.blackman(win_length, sym).numpy(),
+    assert np.allclose(paddleaudio.blackman_window(win_length, sym).numpy(),
                        scipy.signal.get_window('blackman', win_length, not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.bohman(win_length, sym).numpy(),
+    assert np.allclose(paddleaudio.bohman_window(win_length, sym).numpy(),
                        scipy.signal.get_window('bohman', win_length, not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.triang(win_length, sym).numpy(),
+    assert np.allclose(paddleaudio.triang_window(win_length, sym).numpy(),
                        scipy.signal.get_window('triang', win_length, not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.hamming(win_length, sym).numpy(),
+    assert np.allclose(paddleaudio.hamming_window(win_length, sym).numpy(),
                        scipy.signal.get_window('hamming', win_length, not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.hann(win_length, sym).numpy(),
+    assert np.allclose(paddleaudio.hann_window(win_length, sym).numpy(),
                        scipy.signal.get_window('hann', win_length, not sym),
                        atol=1e-6)
-
-    assert np.allclose(paddleaudio.window.tukey(win_length, 0.5, sym).numpy(),
+    assert np.allclose(paddleaudio.tukey_window(win_length, 0.5, sym).numpy(),
                        scipy.signal.get_window(('tukey', 0.5), win_length,
                                                not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.gaussian(win_length, 0.5,
+    assert np.allclose(paddleaudio.gaussian_window(win_length, 0.5,
                                                    sym).numpy(),
                        scipy.signal.get_window(('gaussian', 0.5), win_length,
                                                not sym),
                        atol=1e-6)
-    assert np.allclose(paddleaudio.window.exponential(win_length, None, 1.0,
+    assert np.allclose(paddleaudio.exponential_window(win_length, None, 1.0,
                                                       sym).numpy(),
                        scipy.signal.get_window(('exponential', None, 1.0),
                                                win_length, not sym),
                        atol=1e-6)
 
-    assert np.allclose(paddleaudio.window.taylor(win_length, 4, 30, True,
+    assert np.allclose(paddleaudio.taylor_window(win_length, 4, 30, True,
                                                  sym).numpy(),
                        scipy.signal.get_window(('taylor', 4, 30, True),
                                                win_length, not sym),

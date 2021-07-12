@@ -14,9 +14,10 @@
 
 import librosa
 import numpy as np
-import paddleaudio as pa
 import pytest
 from paddle.utils import download
+from paddleaudio.utils._librosa import (melspectrogram, mfcc, power_to_db,
+                                        split_frames, stft)
 
 AUDIO_URL = 'https://bj.bcebos.com/paddleaudio/test/data/test_audio.wav'
 TEST_FILE = download.get_weights_path_from_url(AUDIO_URL)
@@ -39,7 +40,7 @@ def relative_err(a, b, real=True):
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_melspectrogram():
-    a = pa.melspectrogram(
+    a = melspectrogram(
         x,
         window_size=512,
         sr=16000,
@@ -61,16 +62,16 @@ def test_melspectrogram():
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_melspectrogram_db():
 
-    a = pa.melspectrogram(x,
-                          window_size=512,
-                          sr=16000,
-                          hop_length=320,
-                          n_mels=64,
-                          fmin=50,
-                          to_db=True,
-                          ref=1.0,
-                          amin=1e-10,
-                          top_db=None)
+    a = melspectrogram(x,
+                       window_size=512,
+                       sr=16000,
+                       hop_length=320,
+                       n_mels=64,
+                       fmin=50,
+                       to_db=True,
+                       ref=1.0,
+                       amin=1e-10,
+                       top_db=None)
     b = librosa.feature.melspectrogram(x,
                                        sr=16000,
                                        n_fft=512,
@@ -78,13 +79,13 @@ def test_melspectrogram_db():
                                        hop_length=320,
                                        n_mels=64,
                                        fmin=50)
-    b = pa.power_to_db(b, ref=1.0, amin=1e-10, top_db=None)
+    b = power_to_db(b, ref=1.0, amin=1e-10, top_db=None)
     assert relative_err(a, b) < EPS
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_stft():
-    a = pa.stft(x, n_fft=1024, hop_length=320, win_length=512)
+    a = stft(x, n_fft=1024, hop_length=320, win_length=512)
     b = librosa.stft(x, n_fft=1024, hop_length=320, win_length=512)
     assert a.shape == b.shape
     assert relative_err(a, b, real=False) < EPS
@@ -93,7 +94,7 @@ def test_stft():
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_split_frames():
     a = librosa.util.frame(x, frame_length=512, hop_length=320)
-    b = pa.split_frames(x, frame_length=512, hop_length=320)
+    b = split_frames(x, frame_length=512, hop_length=320)
     assert relative_err(a, b) < EPS
 
 
@@ -106,7 +107,7 @@ def test_mfcc():
         'fmin': 50,
         'to_db': False
     }
-    a = pa.mfcc(
+    a = mfcc(
         x,
         #sample_rate=16000,
         spect=None,
