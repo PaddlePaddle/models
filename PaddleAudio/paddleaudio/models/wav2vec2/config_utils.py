@@ -21,7 +21,7 @@ import json
 import os
 from typing import Any, Dict, Tuple, Union
 
-from paddleaudio.utils.log import logger
+from paddleaudio.utils import default_logger as logger
 
 __all__ = ['PretrainedConfig']
 

@@ -17,8 +17,8 @@ from typing import Iterable, List, Optional, Tuple, TypeVar
 import numpy as np
 from numpy import ndarray as array
 from paddleaudio.backends import depth_convert
-from paddleaudio.features.core import pad_center
 from paddleaudio.utils import ParameterError
+from paddleaudio.utils.features import pad_center
 
 __all__ = [
     'depth_augment',
@@ -28,6 +28,7 @@ __all__ = [
     'random_crop2d',
     'adaptive_spect_augment',
     'random_crop_or_pad1d',
+    'center_crop_or_pad1d',
 ]
 
 
@@ -112,9 +113,6 @@ def spect_augment(spect: array,
                   max_time_mask_width: int = 30,
                   max_freq_mask_width: int = 20) -> array:
     """Do spectrogram augmentation in both time and freq axis
-
-    Reference:
-
     """
     assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:

@@ -13,15 +13,15 @@
 
 # limitations under the License.
 
-from . import window
-from .window import blackman as blackman_window
-from .window import bohman as bohman_window
-from .window import cosine as cosine_window
-from .window import exponential as exponential_window
-from .window import gaussian as gaussian_window
-from .window import hamming as hamming_window
-from .window import hann as hann_window
-from .window import kaiser as kaiser_window
-from .window import taylor as taylor_window
-from .window import triang as triang_window
-from .window import tukey as tukey_window
+from . import windowing
+from .windowing import blackman as blackman_window
+from .windowing import bohman as bohman_window
+from .windowing import cosine as cosine_window
+from .windowing import exponential as exponential_window
+from .windowing import gaussian as gaussian_window
+from .windowing import hamming as hamming_window
+from .windowing import hann as hann_window
+from .windowing import kaiser as kaiser_window
+from .windowing import taylor as taylor_window
+from .windowing import triang as triang_window
+from .windowing import tukey as tukey_window

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import backends, features, functional, losses, transforms
+from . import backends, functional, transforms
 from .backends import *
-from .features import *
-from .signal import *
-from .utils import metrics
+from .core import *
