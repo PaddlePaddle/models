@@ -29,9 +29,9 @@ __all__ = [
     'RandomMasking',
     'CenterPadding',
     'RandomCropping',
-    'RandomMuCodec',
-    'MuDecoding',
-    'MuEncoding',
+    'RandomMuLawCodec',
+    'MuLawDecoding',
+    'MuLawEncoding',
 ]
 
 
@@ -576,7 +576,7 @@ class CenterPadding(nn.Layer):
                 f'(axis={self.axis}, target_size={self.target_size})')
 
 
-class MuEncoding(nn.Layer):
+class MuLawEncoding(nn.Layer):
     """Apply Mu-law Encoding transform to the input singal, typically an audio waveform.
 
     Parameters:
@@ -592,7 +592,7 @@ class MuEncoding(nn.Layer):
 
     """
     def __init__(self, mu: int = 256):
-        super(MuEncoding, self).__init__()
+        super(MuLawEncoding, self).__init__()
         assert mu > 0, f'mu must be positive, but received mu = {mu}'
         self.mu = mu
 
@@ -603,7 +603,7 @@ class MuEncoding(nn.Layer):
         return self.__class__.__name__ + f'(mu={self.mu})'
 
 
-class MuDecoding(nn.Layer):
+class MuLawDecoding(nn.Layer):
     """Apply Mu-law decoding to the input tensor, typically an audio waveform.
 
     Parameters:
@@ -611,13 +611,13 @@ class MuDecoding(nn.Layer):
         mu(int): the maximum value (depth) of encoded signal. The signal to be decoded must be
             in range [0,mu-1].
         quantized(bool): indicate whether the signal has been quantized. The value of quantized parameter should be
-        consistent with that used in MuEncoding.
+        consistent with that used in MuLawEncoding.
     Notes:
         Please refer to paddleaudio.functional.mu_decode() for more details.
 
     """
     def __init__(self, mu: int = 256):
-        super(MuDecoding, self).__init__()
+        super(MuLawDecoding, self).__init__()
         assert mu > 0, f'mu must be positive, but received mu = {mu}'
         self.mu = mu
 
@@ -628,8 +628,8 @@ class MuDecoding(nn.Layer):
         return self.__class__.__name__ + f'(mu={self.mu})'
 
 
-class RandomMuCodec(nn.Layer):
-    """Apply Random MuEncoding and MuDecoding to the input singal.
+class RandomMuLawCodec(nn.Layer):
+    """Apply Random MuLawEncoding and MuLawDecoding to the input singal.
     This is useful for simulating audio compression and quantization effects and is commonly
     used in training deep neural networks.
 
@@ -638,11 +638,11 @@ class RandomMuCodec(nn.Layer):
         max_mu(int): the upper bound of mu as a random variable. At each time of the transform,
             the exact mu will be randomly chosen from uniform ~ [min_mu, max_mu].
     Notes:
-        Please refer to MuDecoding() and MuEncoding() for more details.
+        Please refer to MuLawDecoding() and MuLawEncoding() for more details.
 
     """
     def __init__(self, min_mu: int = 63, max_mu: int = 255):
-        super(RandomMuCodec, self).__init__()
+        super(RandomMuLawCodec, self).__init__()
         assert min_mu > 0, (f'mu must be positive, ' +
                             f'but received min_mu = {min_mu}')
 
@@ -654,8 +654,8 @@ class RandomMuCodec(nn.Layer):
 
     def forward(self, x: Tensor) -> Tensor:
         mu = int(paddle.randint(low=self.min_mu, high=self.max_mu))
-        code = F.mu_encode(x, mu=mu)
-        x_out = F.mu_decode(code, mu=mu)
+        code = F.mu_law_encode(x, mu=mu)
+        x_out = F.mu_law_decode(code, mu=mu)
         return x_out
 
     def __repr__(self, ):

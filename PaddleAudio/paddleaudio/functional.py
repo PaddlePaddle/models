@@ -41,8 +41,8 @@ __all_ = [
     'power_to_db',
     'enframe',
     'deframe',
-    'mu_encode',
-    'mu_decode',
+    'mu_law_encode',
+    'mu_law_decode',
     'random_masking',
     'random_cropping',
     'center_padding',
@@ -95,8 +95,9 @@ def hz_to_mel(freq: Union[Tensor, float], htk: bool = False) -> float:
     """Convert Hz to Mels.
 
     Parameters:
-        freq: the input tensor of arbitary shape, or a single floating point number.
+        freq: the input tensor of arbitrary shape, or a single floating point number.
         htk: use HTK formula to do the conversion.
+            The default value is False.
     Returns:
         The frequencies represented in Mel-scale.
     Notes:
@@ -383,7 +384,7 @@ def power_to_db(magnitude: Tensor,
     return log_spec
 
 
-def mu_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
+def mu_law_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
     """Mu-law encoding.
     Compute the mu-law decoding given an input code.
     When quantized is True, the result will be converted to
@@ -408,17 +409,17 @@ def mu_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
     return y
 
 
-def mu_decode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
+def mu_law_decode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
     """Mu-law decoding.
     Compute the mu-law decoding given an input code.
 
     Parameters:
         x(Tensor): the input tensor of arbitrary shape to be decoded.
         mu(int): the maximum value of encoded signal, which should be the
-        same as that in mu_encode().
+        same as that in mu_law_encode().
 
         quantized(bool): whether the signal has been quantized to integers.
-        The value should be the same as that used in mu_encode()
+        The value should be the same as that used in mu_law_encode()
 
     Notes:
         This function assumes that the input x is in the
@@ -453,7 +454,6 @@ def deframe(frames: Tensor,
     Parameters:
         frames(Tensor): the input audio frames of shape [N,n_fft,frame_number] or [n_fft,frame_number]
         The frames are typically obtained from the output of inverse STFT.
-
         n_fft(int): the number of fft bins, see paddleaudio.functional.stft()
         hop_length(int): the hop length, see paddleaudio.functional.stft()
         win_length(int): the window length, see paddleaudio.functional.stft()
@@ -569,7 +569,7 @@ def random_cropping(x: Tensor, target_size: int, axis=-1) -> Tensor:
                            f'but received aixs={axis},x.ndim={x.ndim}')
 
     assert x.ndim in [1, 2, 3], ('only accept 1d/2d/3d tensor, ' +
-                                 f'but recieved x.ndim={x.ndim}')
+                                 f'but received x.ndim={x.ndim}')
 
     shape = x.shape
     if target_size >= shape[axis]:
