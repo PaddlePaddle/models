@@ -17,6 +17,7 @@ from .dcase import UrbanAcousticScenes, UrbanAudioVisualScenes
 from .esc50 import ESC50
 from .gtzan import GTZAN
 from .librispeech import LIBRISPEECH
+from .open_rir_noise import OpenRIRNoise
 from .ravdess import RAVDESS
 from .tess import TESS
 from .urban_sound import UrbanSound8K
@@ -33,4 +34,5 @@ __all__ = [
     'RAVDESS',
     'TESS',
     'VoxCeleb1',
+    'OpenRIRNoise',
 ]
