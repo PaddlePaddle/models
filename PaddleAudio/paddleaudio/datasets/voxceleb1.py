@@ -60,18 +60,18 @@ class VoxCeleb1(Dataset):
     archieves_meta = [
         {
             'url':
-            'https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/iden_split.txt',
-            'md5': '09710b779bc221585f5837ef0341a1d2',
+            'https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt',
+            'md5': 'b73110731c9223c1461fe49cb48dddfc',
         },
     ]
 
-    num_speakers = 1251  # For speaker identification task
+    num_speakers = 1211  # For speaker verification task
     meta_info = collections.namedtuple(
         'META_INFO', ('id', 'duration', 'wav', 'start', 'stop', 'spk_id'))
     base_path = os.path.join(DATA_HOME, 'vox1')
     wav_path = os.path.join(base_path, 'wav')
     meta_path = os.path.join(base_path, 'meta')
-    iden_split_file = os.path.join(meta_path, 'iden_split.txt')
+    veri_test_file = os.path.join(meta_path, 'veri_test2.txt')
     csv_path = os.path.join(base_path, 'csv')
     subsets = ['train', 'dev', 'test']
 
@@ -80,6 +80,7 @@ class VoxCeleb1(Dataset):
                  feat_type: str = 'raw',
                  random_chunk: bool = True,
                  chunk_duration: float = 3.0,
+                 split_ratio: float = 0.9,
                  seed: int = 0,
                  **kwargs):
 
@@ -90,9 +91,10 @@ class VoxCeleb1(Dataset):
         self.spk_id2label = {}
         self.feat_type = feat_type
         self.feat_config = kwargs
-        self._data = self._get_data()
         self.random_chunk = random_chunk
         self.chunk_duration = chunk_duration
+        self.split_ratio = split_ratio
+        self._data = self._get_data()
         super(VoxCeleb1, self).__init__()
 
         # Set up a seed to reproduce training or predicting result.
@@ -103,18 +105,15 @@ class VoxCeleb1(Dataset):
         if not os.path.isdir(self.base_path):
             download_and_decompress(
                 self.archieves_audio_dev, self.base_path, decompress=False)
-
             download_and_decompress(
                 self.archieves_audio_test, self.base_path, decompress=True)
 
             # Download all parts and concatenate the files into one zip file.
-            # The result is same as using the command `cat vox1_dev* > vox1_dev_wav.zip`.
             dev_zipfile = os.path.join(self.base_path, 'vox1_dev_wav.zip')
-            with open(dev_zipfile, 'wb') as f:
-                for part_of_zip in glob.glob(
-                        os.path.join(self.base_path, 'vox1_dev_wav_parta*')):
-                    with open(part_of_zip, 'rb') as p:
-                        f.write(p.read())
+            logger.info(f'Concatenating all parts to: {dev_zipfile}')
+            os.system(
+                f'cat {os.path.join(self.base_path, "vox1_dev_wav_parta*")} > {dev_zipfile}'
+            )
 
             # Extract all audio files of dev and test set.
             decompress(dev_zipfile, self.base_path)
@@ -129,18 +128,19 @@ class VoxCeleb1(Dataset):
             os.makedirs(self.csv_path)
             self.prepare_data()
 
-        spk_id_set = set()
         data = []
         with open(os.path.join(self.csv_path, f'{self.subset}.csv'), 'r') as rf:
             for line in rf.readlines()[1:]:
                 audio_id, duration, wav, start, stop, spk_id = line.strip(
                 ).split(',')
-                spk_id_set.add(spk_id)
                 data.append(
                     self.meta_info(audio_id, float(duration), wav, int(start),
                                    int(stop), spk_id))
-        for idx, uniq_spk_id in enumerate(sorted(list(spk_id_set))):
-            self.spk_id2label[uniq_spk_id] = idx
+
+        with open(os.path.join(self.meta_path, 'spk_id2label.txt'), 'r') as f:
+            for line in f.readlines():
+                spk_id, label = line.strip().split(' ')
+                self.spk_id2label[spk_id] = int(label)
 
         return data
 
@@ -227,17 +227,40 @@ class VoxCeleb1(Dataset):
                 csv_writer.writerow(line)
 
     def prepare_data(self):
-        train_files, dev_files, test_files = [], [], []
-        id2subset = {1: train_files, 2: dev_files, 3: test_files}
-        with open(self.iden_split_file, 'r') as f:
+        # Audio of speakers in veri_test_file should not be included in training set.
+        test_files = []
+        with open(self.veri_test_file, 'r') as f:
             for line in f.readlines():
-                subset_id, rel_file = line.strip().split(' ')
-                abs_file = os.path.join(self.wav_path, rel_file)
-                id2subset[int(subset_id)].append(abs_file)
+                _, file, _ = line.strip().split(' ')
+                test_files.append(file)
+
+        test_spks = set()
+        for file in test_files:
+            spk = file.split('/')[0]
+            test_spks.add(spk)
+
+        audio_files = []
+        speakers = set()
+        for file in glob.glob(
+                os.path.join(self.wav_path, "**", "*.wav"), recursive=True):
+            spk = file.split('/wav/')[1].split('/')[0]
+            if spk in test_spks:
+                continue
+            speakers.add(spk)
+            audio_files.append(file)
+
+        with open(os.path.join(self.meta_path, 'spk_id2label.txt'), 'w') as f:
+            for label, spk_id in enumerate(sorted(speakers)):  # 1211 speakers
+                f.write(f'{spk_id} {label}\n')
+
+        audio_files = sorted(audio_files)
+        random.shuffle(audio_files)
+        split_idx = int(self.split_ratio * len(audio_files))
+        train_files, dev_files = audio_files[:
+                                             split_idx], audio_files[split_idx:]
 
         self.generate_csv(train_files, os.path.join(self.csv_path, 'train.csv'))
         self.generate_csv(dev_files, os.path.join(self.csv_path, 'dev.csv'))
-        self.generate_csv(test_files, os.path.join(self.csv_path, 'test.csv'))
 
     def __getitem__(self, idx):
         return self._convert_to_record(idx)

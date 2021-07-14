@@ -17,6 +17,7 @@ __all__ = [
     'get_logger',
     'Timer',
     'seconds_to_hms',
+    'decompress',
     'download_and_decompress',
     'load_state_dict_from_url',
     'default_logger',
@@ -78,6 +79,7 @@ def get_logger(name: Optional[str] = None,
 
 class Timer(object):
     '''Calculate runing speed and estimated time of arrival(ETA)'''
+
     def __init__(self, total_step: int):
         self.total_step = total_step
         self.last_start_step = 0
@@ -127,7 +129,27 @@ def seconds_to_hms(seconds: int) -> str:
     return hms_str
 
 
-def download_and_decompress(archives: List[Dict[str, str]], path: str):
+def decompress(file: str, path: str = os.PathLike):
+    """
+    Extracts all files to specific path from a compressed file.
+    """
+    assert os.path.isfile(file), "File: {} not exists.".format(file)
+
+    if path is None:
+        download._decompress(file)
+    else:
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        tmp_file = os.path.join(path, os.path.basename(file))
+        os.rename(file, tmp_file)
+        download._decompress(tmp_file)
+        os.rename(tmp_file, file)
+
+
+def download_and_decompress(archives: List[Dict[str, str]],
+                            path: os.PathLike,
+                            decompress: bool = True):
     """
     Download archieves and decompress to specific path.
     """
@@ -138,7 +160,8 @@ def download_and_decompress(archives: List[Dict[str, str]], path: str):
         assert 'url' in archive and 'md5' in archive, \
             'Dictionary keys of "url" and "md5" are required in the archive, but got: {list(archieve.keys())}'
 
-        download.get_path_from_url(archive['url'], path, archive['md5'])
+        download.get_path_from_url(
+            archive['url'], path, archive['md5'], decompress=decompress)
 
 
 def load_state_dict_from_url(url: str, path: str, md5: str = None):
