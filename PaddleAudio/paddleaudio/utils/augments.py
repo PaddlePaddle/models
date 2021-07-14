@@ -18,13 +18,17 @@ import numpy as np
 from numpy import ndarray as array
 from paddleaudio.backends import depth_convert
 from paddleaudio.utils import ParameterError
+from paddleaudio.utils._librosa import pad_center
 
 __all__ = [
     'depth_augment',
     'spect_augment',
     'random_crop1d',
+    'center_crop1d',
     'random_crop2d',
     'adaptive_spect_augment',
+    'random_crop_or_pad1d',
+    'center_crop_or_pad1d',
 ]
 
 
@@ -45,7 +49,7 @@ def rand() -> float:
 
 
 def depth_augment(y: array,
-                  choices: List = ['int8', 'int16'],
+                  choices: List[str] = ['int8', 'int16'],
                   probs: List[float] = [0.5, 0.5]) -> array:
     """ Audio depth augmentation
 
@@ -109,9 +113,6 @@ def spect_augment(spect: array,
                   max_time_mask_width: int = 30,
                   max_freq_mask_width: int = 20) -> array:
     """Do spectrogram augmentation in both time and freq axis
-
-    Reference:
-
     """
     assert spect.ndim == 2., 'only supports 2d tensor or numpy array'
     if tempo_axis == 0:
@@ -149,10 +150,58 @@ def random_crop1d(y: array, crop_len: int) -> array:
     The input is a 1d signal, typically a sound waveform
     """
     if y.ndim != 1:
-        'only accept 1d tensor or numpy array'
+        raise ParameterError('only accept 1d numpy array')
     n = len(y)
     idx = randint(n - crop_len)
     return y[idx:idx + crop_len]
+
+
+def center_crop1d(y: array, crop_len: int) -> array:
+    """ Do random cropping on 1d input signal
+
+    The input is a 1d signal, typically a sound waveform
+    """
+    if y.ndim != 1:
+        raise ParameterError(
+            f'only accept 1d numpy array, but received y.ndim={y.ndim}')
+
+    n = len(y)
+    start = (n - crop_len) // 2
+    return y[start:start + crop_len]
+
+
+def random_crop_or_pad1d(y: array, crop_len: int) -> array:
+    """ Do random cropping or padding to the target length defined by crop_len,given a 1d input signal
+
+    The input is a 1d signal, typically a sound waveform.
+    """
+    if y.ndim != 1:
+        raise ParameterError(
+            f'only accept 1d numpy array, but received y.ndim={y.ndim}')
+    n = len(y)
+    if crop_len == n:
+        return y
+    elif crop_len > n:
+        return pad_center(y, crop_len)
+    else:
+        return random_crop1d(y, crop_len)
+
+
+def center_crop_or_pad1d(y: array, crop_len: int) -> array:
+    """ Do random cropping or padding to the target length defined by crop_len,given a 1d input signal
+
+    The input is a 1d signal, typically a sound waveform.
+    """
+    if y.ndim != 1:
+        raise ParameterError(
+            f'only accept 1d numpy array, but received y.ndim={y.ndim}')
+    n = len(y)
+    if crop_len == n:
+        return y
+    elif crop_len > n:
+        return pad_center(y, crop_len)
+    else:
+        return center_crop1d(y, crop_len)
 
 
 def random_crop2d(s: array, crop_len: int, tempo_axis: int = 0) -> array:

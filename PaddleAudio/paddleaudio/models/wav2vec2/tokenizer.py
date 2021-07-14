@@ -19,10 +19,10 @@ from itertools import groupby
 from typing import Dict, List, Optional, Union
 
 from paddle.utils import download
-from paddleaudio.utils.log import Logger
+from paddleaudio.utils import get_logger
 
 URL_BASE = 'https://bj.bcebos.com/paddleaudio/models/wav2vec2/'
-logger = Logger(__file__)
+logger = get_logger(__file__)
 
 
 class Wav2Vec2Tokenizer():

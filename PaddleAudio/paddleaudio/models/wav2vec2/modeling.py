@@ -22,6 +22,7 @@ import numpy as np
 import paddle
 import paddle.nn.functional as F
 from paddle import nn
+from paddle.utils import download
 
 from .activations import ACT2FN
 from .config_utils import PretrainedConfig
@@ -38,11 +39,8 @@ URL_BASE = 'https://bj.bcebos.com/paddleaudio/models/wav2vec2/'
 AUDIO_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.flac'
 TEXT_URL = 'https://bj.bcebos.com/paddleaudio/test/data/librispeech/sample1.txt'
 
-from paddle.utils import download
-
 
 def is_tensor(x):
-
     return isinstance(x, paddle.Tensor)
 
 
@@ -382,7 +380,6 @@ class Wav2Vec2LayerNormConvLayer(nn.Layer):
 
     def forward(self, hidden_states):
         hidden_states = self.conv(hidden_states)
-        #import pdb;pdb.set_trace()
         hidden_states = hidden_states.transpose((0, 2, 1))
         hidden_states = self.layer_norm(hidden_states)
         hidden_states = hidden_states.transpose((0, 2, 1))
@@ -687,12 +684,6 @@ class Wav2Vec2Encoder(nn.Layer):
                                   output_attentions=output_attentions)
             hidden_states = layer_outputs[0]
 
-        #  if output_attentions:
-        #  all_self_attentions = all_self_attentions + (layer_outputs[1],)
-
-    #   if not return_dict:
-    #return tuple(v for v in [hidden_states, all_hidden_states, all_self_attentions] if v is not None)
-
         return BaseModelOutput(
             last_hidden_state=hidden_states,
             hidden_states=None,
@@ -870,7 +861,6 @@ class Wav2Vec2Model(Wav2Vec2PretrainedModel):
             self.encoder = Wav2Vec2EncoderStableLayerNorm(config)
         else:
             self.encoder = Wav2Vec2Encoder(config)
-
 
     def forward(
         self,

@@ -19,8 +19,9 @@ import numpy as np
 import scipy
 from numpy import ndarray as array
 from numpy.lib.stride_tricks import as_strided
-from paddleaudio.utils import ParameterError
 from scipy.signal import get_window
+
+from .utils import ParameterError
 
 __all__ = [
     'stft',
@@ -28,23 +29,20 @@ __all__ = [
     'hz_to_mel',
     'mel_to_hz',
     'split_frames',
+    'pad_center',
     'mel_frequencies',
     'power_to_db',
     'compute_fbank_matrix',
     'melspectrogram',
     'spectrogram',
-    'mu_encode',
-    'mu_decode',
 ]
 
 
 def pad_center(data: array, size: int, axis: int = -1, **kwargs) -> array:
     """Pad an array to a target length along a target axis.
-
     This differs from `np.pad` by centering the data prior to padding,
     analogous to `str.center`
     """
-
     kwargs.setdefault("mode", "constant")
     n = data.shape[axis]
     lpad = int((size - n) // 2)
@@ -52,8 +50,8 @@ def pad_center(data: array, size: int, axis: int = -1, **kwargs) -> array:
     lengths[axis] = (lpad, int(size - n - lpad))
 
     if lpad < 0:
-        raise ParameterError(("Target size ({size:d}) must be "
-                              "at least input size ({n:d})"))
+        raise ParameterError(f"Target size {size:d} must be "
+                             f"at least input size {n}")
 
     return np.pad(data, lengths, **kwargs)
 
@@ -63,10 +61,8 @@ def split_frames(x: array,
                  hop_length: int,
                  axis: int = -1) -> array:
     """Slice a data array into (overlapping) frames.
-
-    This function is aligned with librosa.frame
+    This function is consistent with librosa.frame()
     """
-
     if not isinstance(x, np.ndarray):
         raise ParameterError(
             f"Input must be of type numpy.ndarray, given type(x)={type(x)}")
@@ -108,7 +104,6 @@ def split_frames(x: array,
 
 def _check_audio(y, mono=True) -> bool:
     """Determine whether a variable contains valid audio data.
-
     The audio y must be a np.ndarray, ether 1-channel or two channel
     """
     if not isinstance(y, np.ndarray):
@@ -129,15 +124,13 @@ def _check_audio(y, mono=True) -> bool:
 
     if not np.isfinite(y).all():
         raise ParameterError("Audio buffer is not finite everywhere")
-
     return True
 
 
 def hz_to_mel(frequencies: Union[float, List[float], array],
               htk: bool = False) -> array:
     """Convert Hz to Mels
-
-    This function is aligned with librosa.
+    This function is consistent with librosa.hz_to_mel().
     """
     freq = np.asanyarray(frequencies)
 
@@ -172,10 +165,9 @@ def mel_to_hz(mels: Union[float, List[float], array],
               htk: int = False) -> array:
     """Convert mel bin numbers to frequencies.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.mel_to_hz().
     """
     mel_array = np.asanyarray(mels)
-
     if htk:
         return 700.0 * (10.0**(mel_array / 2595.0) - 1.0)
 
@@ -206,8 +198,7 @@ def mel_frequencies(n_mels: int = 128,
                     fmax: float = 11025.0,
                     htk: bool = False) -> array:
     """Compute mel frequencies
-
-    This function is aligned with librosa.
+    This function is consistent with librosa.mel_frequencies()
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(fmin, htk=htk)
@@ -221,7 +212,7 @@ def mel_frequencies(n_mels: int = 128,
 def fft_frequencies(sr: int, n_fft: int) -> array:
     """Compute fourier frequencies.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.fft_frequencies().
     """
     return np.linspace(0, float(sr) / 2, int(1 + n_fft // 2), endpoint=True)
 
@@ -235,8 +226,7 @@ def compute_fbank_matrix(sr: int,
                          norm: str = "slaney",
                          dtype: type = np.float32):
     """Compute fbank matrix.
-
-    This funciton is aligned with librosa.
+    This function is consistent with librosa.filters.mel().
     """
     if norm != "slaney":
         raise ParameterError('norm must set to slaney')
@@ -290,8 +280,7 @@ def stft(x: array,
          dtype: type = np.complex64,
          pad_mode: str = "reflect") -> array:
     """Short-time Fourier transform (STFT).
-
-    This function is aligned with librosa.
+    This function is consistent with librosa.stft()
     """
     _check_audio(x)
     # By default, use the entire frame
@@ -350,11 +339,10 @@ def power_to_db(spect: array,
                 amin: float = 1e-10,
                 top_db: Optional[float] = 80.0) -> array:
     """Convert a power spectrogram (amplitude squared) to decibel (dB) units
-
     This computes the scaling ``10 * log10(spect / ref)`` in a numerically
     stable way.
 
-    This function is aligned with librosa.
+    This function is consistent with librosa.power_to_db().
     """
     spect = np.asarray(spect)
 
@@ -397,10 +385,9 @@ def mfcc(x,
          **kwargs) -> array:
     """Mel-frequency cepstral coefficients (MFCCs)
 
-    This function is NOT strictly aligned with librosa. The following example shows how to get the
+    This function is NOT strictly consistent with librosa.feature.mfcc(). The following example shows how to get the
     same result with librosa:
-
-    # paddleaudioe mfcc:
+    # paddleaudio mfcc:
      kwargs = {
         'window_size':512,
         'hop_length':320,
@@ -414,9 +401,8 @@ def mfcc(x,
         norm='ortho',
         lifter=0,
         **kwargs)
-
     # librosa mfcc:
-    spect = librosa.feature.melspectrogram(x,sr=16000,n_fft=512,
+    spect = librosa.feature.melspectrogram(x,=16000,n_fft=512,
                                               win_length=512,
                                               hop_length=320,
                                               n_mels=64, fmin=50)
@@ -429,7 +415,6 @@ def mfcc(x,
         lifter=0)
 
     assert np.mean( (a-b)**2) < 1e-8
-
     """
     if spect is None:
         spect = melspectrogram(x, sr=sr, **kwargs)
@@ -463,25 +448,19 @@ def melspectrogram(x: array,
                    amin: float = 1e-10,
                    top_db: Optional[float] = None) -> array:
     """Compute mel-spectrogram.
-
     Parameters:
         x: numpy.ndarray
         The input wavform is a numpy array [shape=(n,)]
-
         window_size: int, typically 512, 1024, 2048, etc.
         The window size for framing, also used as n_fft for stft
-
-
     Returns:
         The mel-spectrogram in power scale or db scale(default)
-
 
     Notes:
     1. sr is default to 16000, which is commonly used in speech/speaker processing.
     2. when fmax is None, it is set to sr//2.
-    3. this function will convert mel spectgrum to db scale by default. This is different
+    3. this function will convert mel-spectrogram to db scale by default, which is different
     that of librosa.
-
     """
     _check_audio(x, mono=True)
     if len(x) <= 0:
@@ -522,7 +501,6 @@ def spectrogram(x: array,
                 pad_mode: str = 'reflect',
                 power: float = 2.0) -> array:
     """Compute spectrogram from an input waveform.
-
     This function is a wrapper for librosa.feature.stft, with addition step to
     compute the magnitude of the complex spectrogram.
     """
@@ -536,45 +514,3 @@ def spectrogram(x: array,
              pad_mode=pad_mode)
 
     return np.abs(s)**power
-
-
-def mu_encode(x: array, mu: int = 255, quantized: bool = True) -> array:
-    """Mu-law encoding.
-
-    Compute the mu-law decoding given an input code.
-    When quantized is True, the result will be converted to
-    integer in range [0,mu-1]. Otherwise, the resulting signal
-    is in range [-1,1]
-
-
-    Reference:
-        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-
-    """
-    mu = 255
-    y = np.sign(x) * np.log1p(mu * np.abs(x)) / np.log1p(mu)
-    if quantized:
-        y = np.floor((y + 1) / 2 * mu + 0.5)  # convert to [0 , mu-1]
-    return y
-
-
-def mu_decode(y: array, mu: int = 255, quantized: bool = True) -> array:
-    """Mu-law decoding.
-
-    Compute the mu-law decoding given an input code.
-
-    it assumes that the input y is in
-    range [0,mu-1] when quantize is True and [-1,1] otherwise
-
-    Reference:
-        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-
-    """
-    if mu < 1:
-        raise ParameterError('mu is typically set as 2**k-1, k=1, 2, 3,...')
-
-    mu = mu - 1
-    if quantized:  # undo the quantization
-        y = y * 2 / mu - 1
-    x = np.sign(y) / mu * ((1 + mu)**np.abs(y) - 1)
-    return x
