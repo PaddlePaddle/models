@@ -202,4 +202,5 @@ if __name__ == "__main__":
     scores = cos_sim_func(enrol_embeddings, test_embeddings)
     EER, threshold = compute_eer(np.asarray(labels), scores.numpy())
     logger.info(
-        f'EER of verification test: {EER}, score threshold: {threshold}')
+        f'EER of verification test: {EER*100:.4f}%, score threshold: {threshold:.5f}'
+    )
