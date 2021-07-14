@@ -18,7 +18,7 @@ import numpy as np
 from numpy import ndarray as array
 from paddleaudio.backends import depth_convert
 from paddleaudio.utils import ParameterError
-from paddleaudio.utils.features import pad_center
+from paddleaudio.utils._librosa import pad_center
 
 __all__ = [
     'depth_augment',
