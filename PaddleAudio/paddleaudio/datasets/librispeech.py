@@ -22,10 +22,10 @@ from paddle.io import Dataset
 from tqdm import tqdm
 
 from ..backends import load as load_audio
-from ..utils.download import decompress, download_and_decompress
-from ..utils.env import DATA_HOME
-from ..utils.log import logger
+from ..utils import DATA_HOME, decompress, download_and_decompress, get_logger
 from .dataset import feat_funcs
+
+logger = get_logger()
 
 __all__ = ['LIBRISPEECH']
 
@@ -75,14 +75,19 @@ class LIBRISPEECH(Dataset):
         },
     ]
     speaker_meta = os.path.join('LibriSpeech', 'SPEAKERS.TXT')
-    utt_info = collections.namedtuple('META_INFO', ('file_path', 'utt_id', 'text', 'spk_id', 'spk_gender'))
+    utt_info = collections.namedtuple(
+        'META_INFO', ('file_path', 'utt_id', 'text', 'spk_id', 'spk_gender'))
     audio_path = 'LibriSpeech'
     manifest_path = os.path.join('LibriSpeech', 'manifest')
     subset = ['train-clean-100', 'train-clean-360', 'train-clean-500', \
             'dev-clean', 'dev-other', 'test-clean', 'test-other']
 
-    def __init__(self, subset: str = 'train-clean-100', feat_type: str = 'raw', **kwargs):
-        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(self.subset, subset)
+    def __init__(self,
+                 subset: str = 'train-clean-100',
+                 feat_type: str = 'raw',
+                 **kwargs):
+        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(
+            self.subset, subset)
         self.subset = subset
         self.feat_type = feat_type
         self.feat_config = kwargs
@@ -95,7 +100,8 @@ class LIBRISPEECH(Dataset):
             for line in rf.readlines():
                 if ';' in line:  # Skip dataset abstract
                     continue
-                spk_id, gender = map(str.strip, line.split('|')[:2])  # spk_id, gender
+                spk_id, gender = map(str.strip,
+                                     line.split('|')[:2])  # spk_id, gender
                 ret.update({spk_id: gender})
         return ret
 
@@ -103,27 +109,32 @@ class LIBRISPEECH(Dataset):
         ret = {}
         with open(trans_file, 'r') as rf:
             for line in rf.readlines():
-                utt_id, text = map(str.strip, line.split(' ', 1))  # utt_id, text
+                utt_id, text = map(str.strip, line.split(' ',
+                                                         1))  # utt_id, text
                 ret.update({utt_id: text})
         return ret
 
     def _get_data(self):
         if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)) or \
             not os.path.isfile(os.path.join(DATA_HOME, self.speaker_meta)):
-            download_and_decompress(self.archieves, DATA_HOME, len(self.archieves))
+            download_and_decompress(self.archieves, DATA_HOME,
+                                    len(self.archieves))
 
         # Speaker info
         speaker_info = self._get_speaker_info()
 
         # Text info
         text_info = {}
-        for root, _, files in os.walk(os.path.join(DATA_HOME, self.audio_path, self.subset)):
+        for root, _, files in os.walk(
+                os.path.join(DATA_HOME, self.audio_path, self.subset)):
             for file in files:
                 if file.endswith('.trans.txt'):
-                    text_info.update(self._get_text_info(os.path.join(root, file)))
+                    text_info.update(
+                        self._get_text_info(os.path.join(root, file)))
 
         data = []
-        for root, _, files in os.walk(os.path.join(DATA_HOME, self.audio_path, self.subset)):
+        for root, _, files in os.walk(
+                os.path.join(DATA_HOME, self.audio_path, self.subset)):
             for file in files:
                 if file.endswith('.flac'):
                     utt_id = os.path.splitext(file)[0]
@@ -134,7 +145,9 @@ class LIBRISPEECH(Dataset):
                     file_path = os.path.join(root, file)
                     text = text_info[utt_id]
                     spk_gender = speaker_info[spk_id]
-                    data.append(self.utt_info(file_path, utt_id, text, spk_id, spk_gender))
+                    data.append(
+                        self.utt_info(file_path, utt_id, text, spk_id,
+                                      spk_gender))
 
         return data
 
@@ -146,9 +159,12 @@ class LIBRISPEECH(Dataset):
         for field in type(sample)._fields:
             record[field] = getattr(sample, field)
 
-        waveform, sr = load_audio(sample[0])  # The first element of sample is file path
+        waveform, sr = load_audio(
+            sample[0])  # The first element of sample is file path
         feat_func = feat_funcs[self.feat_type]
-        feat = feat_func(waveform, sample_rate=sr, **self.feat_config) if feat_func else waveform
+        feat = feat_func(
+            waveform, sample_rate=sr, **
+            self.feat_config) if feat_func else waveform
         record.update({'feat': feat, 'duration': len(waveform) / sr})
         return record
 
@@ -156,20 +172,20 @@ class LIBRISPEECH(Dataset):
         if not os.path.isdir(os.path.join(DATA_HOME, self.manifest_path)):
             os.makedirs(os.path.join(DATA_HOME, self.manifest_path))
 
-        manifest_file = os.path.join(DATA_HOME, self.manifest_path, f'{prefix}.{self.subset}')
+        manifest_file = os.path.join(DATA_HOME, self.manifest_path,
+                                     f'{prefix}.{self.subset}')
         with codecs.open(manifest_file, 'w', 'utf-8') as f:
             for idx in tqdm(range(len(self))):
                 record = self._convert_to_record(idx)
-                record_line = json.dumps(
-                    {
-                        'utt': record['utt_id'],
-                        'feat': record['file_path'],
-                        'feat_shape': (record['duration'], ),
-                        'text': record['text'],
-                        'spk': record['spk_id'],
-                        'gender': record['spk_gender'],
-                    },
-                    ensure_ascii=False)
+                record_line = json.dumps({
+                    'utt': record['utt_id'],
+                    'feat': record['file_path'],
+                    'feat_shape': (record['duration'], ),
+                    'text': record['text'],
+                    'spk': record['spk_id'],
+                    'gender': record['spk_gender'],
+                },
+                                         ensure_ascii=False)
                 f.write(record_line + '\n')
         logger.info(f'Manifest file {manifest_file} created.')
 

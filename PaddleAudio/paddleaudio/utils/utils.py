@@ -21,6 +21,10 @@ __all__ = [
     'download_and_decompress',
     'load_state_dict_from_url',
     'default_logger',
+    'USER_HOME',
+    'PPAUDIO_HOME',
+    'MODEL_HOME',
+    'DATA_HOME',
 ]
 
 import logging
@@ -177,3 +181,41 @@ def load_state_dict_from_url(url: str, path: str, md5: str = None):
 
 default_logger = get_logger(__file__)
 download.logger = default_logger
+
+
+def _get_user_home():
+    return os.path.expanduser('~')
+
+
+def _get_ppaudio_home():
+    if 'PPAUDIO_HOME' in os.environ:
+        home_path = os.environ['PPAUDIO_HOME']
+        if os.path.exists(home_path):
+            if os.path.isdir(home_path):
+                return home_path
+            else:
+                raise RuntimeError(
+                    'The environment variable PPAUDIO_HOME {} is not a directory.'
+                    .format(home_path))
+        else:
+            return home_path
+    return os.path.join(_get_user_home(), '.paddleaudio')
+
+
+def _get_sub_home(directory):
+    home = os.path.join(_get_ppaudio_home(), directory)
+    if not os.path.exists(home):
+        os.makedirs(home)
+    return home
+
+
+'''
+PPAUDIO_HOME     -->  the root directory for storing PaddleAudio related data. Default to ~/.paddleaudio. Users can change the
+├                            default value through the PPAUDIO_HOME environment variable.
+├─ MODEL_HOME    -->  Store model files.
+└─ DATA_HOME     -->  Store automatically downloaded datasets.
+'''
+USER_HOME = _get_user_home()
+PPAUDIO_HOME = _get_ppaudio_home()
+MODEL_HOME = _get_sub_home('models')
+DATA_HOME = _get_sub_home('datasets')

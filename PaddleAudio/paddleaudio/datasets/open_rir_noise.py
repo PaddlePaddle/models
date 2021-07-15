@@ -24,10 +24,10 @@ from tqdm import tqdm
 
 from ..backends import load as load_audio
 from ..backends import save_wav
-from ..utils.download import decompress, download_and_decompress
-from ..utils.env import DATA_HOME
-from ..utils.log import logger
+from ..utils import DATA_HOME, decompress, download_and_decompress, get_logger
 from .dataset import feat_funcs
+
+logger = get_logger()
 
 __all__ = ['OpenRIRNoise']
 

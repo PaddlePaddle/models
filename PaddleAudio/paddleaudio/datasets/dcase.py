@@ -16,8 +16,7 @@ import collections
 import os
 from typing import List, Tuple
 
-from ..utils.download import download_and_decompress
-from ..utils.env import DATA_HOME
+from ..utils import DATA_HOME, download_and_decompress
 from .dataset import AudioClassificationDataset
 
 __all__ = ['UrbanAcousticScenes', 'UrbanAudioVisualScenes']
@@ -111,13 +110,16 @@ class UrbanAcousticScenes(AudioClassificationDataset):
         'public_square', 'street_traffic', 'tram', 'bus', 'metro', 'park']
 
     meta = os.path.join(base_name, 'meta.csv')
-    meta_info = collections.namedtuple('META_INFO', ('filename', 'scene_label', 'identifier', 'source_label'))
+    meta_info = collections.namedtuple(
+        'META_INFO', ('filename', 'scene_label', 'identifier', 'source_label'))
     subset_meta = {
         'train': os.path.join(base_name, 'evaluation_setup', 'fold1_train.csv'),
-        'dev': os.path.join(base_name, 'evaluation_setup', 'fold1_evaluate.csv'),
+        'dev': os.path.join(base_name, 'evaluation_setup',
+                            'fold1_evaluate.csv'),
         'test': os.path.join(base_name, 'evaluation_setup', 'fold1_test.csv'),
     }
-    subset_meta_info = collections.namedtuple('SUBSET_META_INFO', ('filename', 'scene_label'))
+    subset_meta_info = collections.namedtuple('SUBSET_META_INFO',
+                                              ('filename', 'scene_label'))
     audio_path = os.path.join(base_name, 'audio')
 
     def __init__(self, mode: str = 'train', feat_type: str = 'raw', **kwargs):
@@ -129,9 +131,11 @@ class UrbanAcousticScenes(AudioClassificationDataset):
                 It identifies the feature type that user wants to extrace of an audio file.
         """
         files, labels = self._get_data(mode)
-        super(UrbanAcousticScenes, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(UrbanAcousticScenes, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
 
-    def _get_meta_info(self, subset: str = None, skip_header: bool = True) -> List[collections.namedtuple]:
+    def _get_meta_info(self, subset: str = None, skip_header: bool = True
+                       ) -> List[collections.namedtuple]:
         if subset is None:
             meta_file = self.meta
             meta_info = self.meta_info
@@ -225,13 +229,19 @@ class UrbanAudioVisualScenes(AudioClassificationDataset):
 
     meta_base_path = os.path.join(base_name, base_name + '.meta')
     meta = os.path.join(meta_base_path, 'meta.csv')
-    meta_info = collections.namedtuple('META_INFO', ('filename_audio', 'filename_video', 'scene_label', 'identifier'))
+    meta_info = collections.namedtuple(
+        'META_INFO',
+        ('filename_audio', 'filename_video', 'scene_label', 'identifier'))
     subset_meta = {
-        'train': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_train.csv'),
-        'dev': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_evaluate.csv'),
-        'test': os.path.join(meta_base_path, 'evaluation_setup', 'fold1_test.csv'),
+        'train':
+        os.path.join(meta_base_path, 'evaluation_setup', 'fold1_train.csv'),
+        'dev':
+        os.path.join(meta_base_path, 'evaluation_setup', 'fold1_evaluate.csv'),
+        'test':
+        os.path.join(meta_base_path, 'evaluation_setup', 'fold1_test.csv'),
     }
-    subset_meta_info = collections.namedtuple('SUBSET_META_INFO', ('filename_audio', 'filename_video', 'scene_label'))
+    subset_meta_info = collections.namedtuple(
+        'SUBSET_META_INFO', ('filename_audio', 'filename_video', 'scene_label'))
     audio_path = os.path.join(base_name, 'audio')
 
     def __init__(self, mode: str = 'train', feat_type: str = 'raw', **kwargs):
@@ -243,9 +253,11 @@ class UrbanAudioVisualScenes(AudioClassificationDataset):
                 It identifies the feature type that user wants to extrace of an audio file.
         """
         files, labels = self._get_data(mode)
-        super(UrbanAudioVisualScenes, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(UrbanAudioVisualScenes, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
 
-    def _get_meta_info(self, subset: str = None, skip_header: bool = True) -> List[collections.namedtuple]:
+    def _get_meta_info(self, subset: str = None, skip_header: bool = True
+                       ) -> List[collections.namedtuple]:
         if subset is None:
             meta_file = self.meta
             meta_info = self.meta_info
@@ -264,7 +276,8 @@ class UrbanAudioVisualScenes(AudioClassificationDataset):
     def _get_data(self, mode: str) -> Tuple[List[str], List[int]]:
         if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)) or \
             not os.path.isfile(os.path.join(DATA_HOME, self.meta)):
-            download_and_decompress(self.archieves, os.path.join(DATA_HOME, self.base_name))
+            download_and_decompress(self.archieves,
+                                    os.path.join(DATA_HOME, self.base_name))
 
         meta_info = self._get_meta_info(subset=mode, skip_header=True)
 

@@ -19,11 +19,15 @@ import os
 import numpy as np
 import paddle
 import paddle.nn.functional as F
+from augment import EnvCorrupt, TimeDomainSpecAugment
 from loss import AdditiveAngularMargin, LogSoftmaxWrapper
 from model import SpeakerClassifier
-from paddleaudio.datasets import VoxCeleb1
+from paddleaudio.datasets import OpenRIRNoise, VoxCeleb1
 from paddleaudio.models.ecapa_tdnn import ECAPA_TDNN
-from paddleaudio.utils import Timer, logger
+from paddleaudio.transforms import MelSpectrogram
+from paddleaudio.utils import Timer, get_logger
+
+logger = get_logger()
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -40,16 +44,22 @@ args = parser.parse_args()
 # yapf: enable
 
 
-def feature_normalize(batch, mean_norm: bool = True, std_norm: bool = True):
-    feats = np.stack([item['feat'] for item in batch])
+def waveform_collate_fn(batch):
+    waveforms = np.stack([item['feat'] for item in batch])
     labels = np.stack([item['label'] for item in batch])
 
+    return {'waveforms': waveforms, 'labels': labels}
+
+
+def feature_normalize(feats: paddle.Tensor,
+                      mean_norm: bool = True,
+                      std_norm: bool = True):
     # Features normalization if needed
-    mean = np.expand_dims(feats.mean(axis=-1), -1) if mean_norm else 1
-    std = np.expand_dims(feats.std(axis=-1), -1) if std_norm else 1
+    mean = feats.mean(axis=-1, keepdim=True) if mean_norm else 1
+    std = feats.std(axis=-1, keepdim=True) if std_norm else 1
     feats = (feats - mean) / std
 
-    return {'feats': feats, 'labels': labels}
+    return feats
 
 
 if __name__ == "__main__":
@@ -68,6 +78,16 @@ if __name__ == "__main__":
         "lin_neurons": 192,
     }
     ecapa_tdnn = ECAPA_TDNN(**model_conf)
+    add_noise = EnvCorrupt(
+        reverb_prob=0.0,
+        noise_prob=1.0,
+        noise_snr_low=0,
+        noise_snr_high=15,
+        rir_scale_factor=1.0,
+        noise_dataset=OpenRIRNoise('noise'),
+    )
+    feature_extractor = MelSpectrogram(
+        sr=16000, n_fft=400, hop_length=160, n_mels=80, f_min=50)
     model = SpeakerClassifier(
         backbone=ecapa_tdnn, num_class=VoxCeleb1.num_speakers)
     optimizer = paddle.optimizer.AdamW(
@@ -94,18 +114,8 @@ if __name__ == "__main__":
             if local_rank == 0:
                 logger.warning('Train from scratch.')
 
-    train_ds = VoxCeleb1(
-        subset='train',
-        feat_type='melspectrogram',
-        n_mels=80,
-        window_size=400,
-        hop_length=160)
-    dev_ds = VoxCeleb1(
-        subset='dev',
-        feat_type='melspectrogram',
-        n_mels=80,
-        window_size=400,
-        hop_length=160)
+    train_ds = VoxCeleb1('train')
+    dev_ds = VoxCeleb1('dev')
 
     train_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True, drop_last=False)
@@ -113,8 +123,7 @@ if __name__ == "__main__":
         train_ds,
         batch_sampler=train_sampler,
         num_workers=args.num_workers,
-        collate_fn=lambda x: feature_normalize(
-            x, mean_norm=True, std_norm=False),
+        collate_fn=waveform_collate_fn,
         return_list=True,
         use_buffer_reader=True,
     )
@@ -130,7 +139,11 @@ if __name__ == "__main__":
         num_corrects = 0
         num_samples = 0
         for batch_idx, batch in enumerate(train_loader):
-            feats, labels = batch['feats'], batch['labels']
+            waveforms, labels = batch['waveforms'], batch['labels']
+            waveforms = add_noise(waveforms)  # Waveforms augment
+            feats = feature_extractor(waveforms)  # Features extraction
+            feats = feature_normalize(
+                feats, mean_norm=True, std_norm=False)  # Features normalization
             logits = model(feats)
 
             loss = criterion(logits, labels)
@@ -162,7 +175,7 @@ if __name__ == "__main__":
                 print_msg += ' acc={:.4f}'.format(avg_acc)
                 print_msg += ' lr={:.6f} step/sec={:.2f} | ETA {}'.format(
                     lr, timer.timing, timer.eta)
-                logger.train(print_msg)
+                logger.info(print_msg)
 
                 avg_loss = 0
                 num_corrects = 0
@@ -182,8 +195,7 @@ if __name__ == "__main__":
             dev_loader = paddle.io.DataLoader(
                 dev_ds,
                 batch_sampler=dev_sampler,
-                collate_fn=lambda x: feature_normalize(
-                    x, mean_norm=True, std_norm=False),
+                collate_fn=waveform_collate_fn,
                 num_workers=args.num_workers,
                 return_list=True,
             )
@@ -191,22 +203,21 @@ if __name__ == "__main__":
             model.eval()
             num_corrects = 0
             num_samples = 0
-            with logger.processing(
-                    'Evaluation on validation dataset', interval=100):
-                for batch_idx, batch in enumerate(dev_loader):
-                    feats, labels = batch['feats'], batch['labels']
-                    logits = model(feats)
-                    # loss = criterion(logits, labels)
+            logger.info('Evaluation on validation dataset')
+            for batch_idx, batch in enumerate(dev_loader):
+                waveforms, labels = batch['waveforms'], batch['labels']
+                feats = feature_extractor(waveforms)
+                feats = feature_normalize(feats, mean_norm=True, std_norm=False)
+                logits = model(feats)
 
-                    preds = paddle.argmax(logits, axis=1)
-                    num_corrects += (preds == labels).numpy().sum()
-                    num_samples += feats.shape[0]
+                preds = paddle.argmax(logits, axis=1)
+                num_corrects += (preds == labels).numpy().sum()
+                num_samples += feats.shape[0]
 
             print_msg = '[Evaluation result]'
             print_msg += ' dev_acc={:.4f}'.format(num_corrects / num_samples)
-            # print_msg += 'avg_loss={:.4f}'.format(loss.numpy()[0] / num_samples)
 
-            logger.eval(print_msg)
+            logger.info(print_msg)
 
             # Save model
             save_dir = os.path.join(args.checkpoint_dir,

@@ -17,8 +17,7 @@ import os
 import random
 from typing import List, Tuple
 
-from ..utils.download import download_and_decompress
-from ..utils.env import DATA_HOME
+from ..utils import DATA_HOME, download_and_decompress
 from .dataset import AudioClassificationDataset
 
 __all__ = ['GTZAN']
@@ -41,12 +40,21 @@ class GTZAN(AudioClassificationDataset):
             'md5': '5b3d6dddb579ab49814ab86dba69e7c7',
         },
     ]
-    label_list = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+    label_list = [
+        'blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal',
+        'pop', 'reggae', 'rock'
+    ]
     meta = os.path.join('genres', 'input.mf')
     meta_info = collections.namedtuple('META_INFO', ('file_path', 'label'))
     audio_path = 'genres'
 
-    def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
+    def __init__(self,
+                 mode='train',
+                 seed=0,
+                 n_folds=5,
+                 split=1,
+                 feat_type='raw',
+                 **kwargs):
         """
         Ags:
             mode (:obj:`str`, `optional`, defaults to `train`):
@@ -62,7 +70,8 @@ class GTZAN(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(GTZAN, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(GTZAN, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self) -> List[collections.namedtuple]:
         ret = []
@@ -71,14 +80,17 @@ class GTZAN(AudioClassificationDataset):
                 ret.append(self.meta_info(*line.strip().split('\t')))
         return ret
 
-    def _get_data(self, mode, seed, n_folds, split) -> Tuple[List[str], List[int]]:
+    def _get_data(self, mode, seed, n_folds,
+                  split) -> Tuple[List[str], List[int]]:
         if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)) or \
             not os.path.isfile(os.path.join(DATA_HOME, self.meta)):
             download_and_decompress(self.archieves, DATA_HOME)
 
         meta_info = self._get_meta_info()
         random.seed(seed)  # shuffle samples to split data
-        random.shuffle(meta_info)  # make sure using the same seed to create train and dev dataset
+        random.shuffle(
+            meta_info
+        )  # make sure using the same seed to create train and dev dataset
 
         files = []
         labels = []
@@ -90,11 +102,13 @@ class GTZAN(AudioClassificationDataset):
             fold = idx // n_samples_per_fold + 1
 
             if mode == 'train' and int(fold) != split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, label, filename))
+                files.append(
+                    os.path.join(DATA_HOME, self.audio_path, label, filename))
                 labels.append(target)
 
             if mode != 'train' and int(fold) == split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, label, filename))
+                files.append(
+                    os.path.join(DATA_HOME, self.audio_path, label, filename))
                 labels.append(target)
 
         return files, labels

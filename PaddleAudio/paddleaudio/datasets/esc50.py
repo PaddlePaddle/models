@@ -16,8 +16,7 @@ import collections
 import os
 from typing import List, Tuple
 
-from ..utils.download import download_and_decompress
-from ..utils.env import DATA_HOME
+from ..utils import DATA_HOME, download_and_decompress
 from .dataset import AudioClassificationDataset
 
 __all__ = ['ESC50']
@@ -99,11 +98,16 @@ class ESC50(AudioClassificationDataset):
         'Hand saw',
     ]
     meta = os.path.join('ESC-50-master', 'meta', 'esc50.csv')
-    meta_info = collections.namedtuple('META_INFO',
-                                       ('filename', 'fold', 'target', 'category', 'esc10', 'src_file', 'take'))
+    meta_info = collections.namedtuple(
+        'META_INFO',
+        ('filename', 'fold', 'target', 'category', 'esc10', 'src_file', 'take'))
     audio_path = os.path.join('ESC-50-master', 'audio')
 
-    def __init__(self, mode: str = 'train', split: int = 1, feat_type: str = 'raw', **kwargs):
+    def __init__(self,
+                 mode: str = 'train',
+                 split: int = 1,
+                 feat_type: str = 'raw',
+                 **kwargs):
         """
         Ags:
             mode (:obj:`str`, `optional`, defaults to `train`):
@@ -114,7 +118,8 @@ class ESC50(AudioClassificationDataset):
                 It identifies the feature type that user wants to extrace of an audio file.
         """
         files, labels = self._get_data(mode, split)
-        super(ESC50, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(ESC50, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self) -> List[collections.namedtuple]:
         ret = []

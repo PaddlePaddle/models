@@ -23,8 +23,10 @@ from metrics import compute_eer
 from model import SpeakerClassifier
 from paddleaudio.datasets import VoxCeleb1
 from paddleaudio.models.ecapa_tdnn import ECAPA_TDNN
-from paddleaudio.utils import Timer, logger
+from paddleaudio.utils import Timer, get_logger
 from tqdm import tqdm
+
+logger = get_logger()
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)

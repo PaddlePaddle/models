@@ -16,8 +16,7 @@ import collections
 import os
 from typing import List, Tuple
 
-from ..utils.download import download_and_decompress
-from ..utils.env import DATA_HOME
+from ..utils import DATA_HOME, download_and_decompress
 from .dataset import AudioClassificationDataset
 
 __all__ = ['UrbanSound8K']
@@ -37,20 +36,27 @@ class UrbanSound8K(AudioClassificationDataset):
 
     archieves = [
         {
-            'url': 'https://zenodo.org/record/1203745/files/UrbanSound8K.tar.gz',
+            'url':
+            'https://zenodo.org/record/1203745/files/UrbanSound8K.tar.gz',
             'md5': '9aa69802bbf37fb986f71ec1483a196e',
         },
     ]
     label_list = ["air_conditioner", "car_horn", "children_playing", "dog_bark", "drilling", \
         "engine_idling", "gun_shot", "jackhammer", "siren", "street_music"]
     meta = os.path.join('UrbanSound8K', 'metadata', 'UrbanSound8K.csv')
-    meta_info = collections.namedtuple('META_INFO',
-                                       ('filename', 'fsid', 'start', 'end', 'salience', 'fold', 'class_id', 'label'))
+    meta_info = collections.namedtuple(
+        'META_INFO', ('filename', 'fsid', 'start', 'end', 'salience', 'fold',
+                      'class_id', 'label'))
     audio_path = os.path.join('UrbanSound8K', 'audio')
 
-    def __init__(self, mode: str = 'train', split: int = 1, feat_type: str = 'raw', **kwargs):
+    def __init__(self,
+                 mode: str = 'train',
+                 split: int = 1,
+                 feat_type: str = 'raw',
+                 **kwargs):
         files, labels = self._get_data(mode, split)
-        super(UrbanSound8K, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(UrbanSound8K, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
         """
         Ags:
             mode (:obj:`str`, `optional`, defaults to `train`):
@@ -80,11 +86,15 @@ class UrbanSound8K(AudioClassificationDataset):
         for sample in meta_info:
             filename, _, _, _, _, fold, target, _ = sample
             if mode == 'train' and int(fold) != split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, f'fold{fold}', filename))
+                files.append(
+                    os.path.join(DATA_HOME, self.audio_path, f'fold{fold}',
+                                 filename))
                 labels.append(int(target))
 
             if mode != 'train' and int(fold) == split:
-                files.append(os.path.join(DATA_HOME, self.audio_path, f'fold{fold}', filename))
+                files.append(
+                    os.path.join(DATA_HOME, self.audio_path, f'fold{fold}',
+                                 filename))
                 labels.append(int(target))
 
         return files, labels

@@ -20,7 +20,7 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 from paddleaudio.backends import load as load_audio
-from paddleaudio.utils.download import download_and_decompress
+from paddleaudio.utils import download_and_decompress
 from signal_processing import (compute_amplitude, convolve1d, dB_to_amplitude,
                                notch_filter, reverberate)
 
