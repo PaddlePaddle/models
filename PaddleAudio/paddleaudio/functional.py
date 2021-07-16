@@ -59,14 +59,24 @@ def complex_norm(x: Tensor) -> Tensor:
     """Compute compext norm of a given tensor.
     Typically, the input tensor is the result of a complex Fourier transform.
     Parameters:
-        x(Tensor): The input tensor of shape [..., 2]
+        x(Tensor): The input tensor of shape (..., 2)
 
     Returns:
         The element-wised l2-norm of input complex tensor.
+     Examples:
+
+        .. code-block:: python
+
+        x = paddle.rand((32, 16000))
+        y = F.stft(x, n_fft=512)
+        z = F.complex_norm(y)
+        print(z.shape)
+        >> [32, 257, 126]
+
     """
     if x.shape[-1] != 2:
         raise ParameterError(
-            f'complex tensor must be of shape [..., 2], but received {x.shape} instead'
+            f'complex tensor must be of shape (..., 2), but received {x.shape} instead'
         )
     return paddle.sqrt(paddle.square(x).sum(axis=-1))
 
@@ -75,13 +85,27 @@ def magphase(x: Tensor) -> Tuple[Tensor, Tensor]:
     """Compute compext norm of a given tensor.
     Typically,the input tensor is the result of a complex Fourier transform.
     Parameters:
-        x(Tensor): The input tensor of shape [..., 2].
+        x(Tensor): The input tensor of shape (..., 2).
     Returns:
         The tuple of magnitude and phase.
+
+    Shape:
+        x: the shape of x is arbitrary, with the shape of last axis being 2
+        outputs: the shapes of magnitude and phase are both input.shape[:-1]
+
+     Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.randn((10, 10, 2))
+        angle, phase = F.magphase(x)
+
     """
     if x.shape[-1] != 2:
         raise ParameterError(
-            f'complex tensor must be of shape [..., 2], but received {x.shape} instead'
+            f'complex tensor must be of shape (..., 2), but received {x.shape} instead'
         )
     mag = paddle.sqrt(paddle.square(x).sum(axis=-1))
     x0 = x.reshape((-1, 2))
@@ -91,7 +115,8 @@ def magphase(x: Tensor) -> Tuple[Tensor, Tensor]:
     return mag, phase
 
 
-def hz_to_mel(freq: Union[Tensor, float], htk: bool = False) -> float:
+def hz_to_mel(freq: Union[Tensor, float],
+              htk: bool = False) -> Union[Tensor, float]:
     """Convert Hz to Mels.
 
     Parameters:
@@ -102,6 +127,19 @@ def hz_to_mel(freq: Union[Tensor, float], htk: bool = False) -> float:
         The frequencies represented in Mel-scale.
     Notes:
         This function is consistent with librosa.hz_to_mel().
+
+     Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        print(F.hz_to_mel(10))
+        >> 10
+        print(F.hz_to_mel(paddle.to_tensor([0, 100, 1600])))
+        >> Tensor(shape=[3], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [0., 1.50000000, 21.83624077])
+
     """
 
     if htk:
@@ -135,7 +173,8 @@ def hz_to_mel(freq: Union[Tensor, float], htk: bool = False) -> float:
     return mels
 
 
-def mel_to_hz(mel: Union[float, Tensor], htk: bool = False) -> Tensor:
+def mel_to_hz(mel: Union[float, Tensor],
+              htk: bool = False) -> Union[float, Tensor]:
     """Convert mel bin numbers to frequencies.
 
     Parameters:
@@ -145,6 +184,19 @@ def mel_to_hz(mel: Union[float, Tensor], htk: bool = False) -> Tensor:
         The frequencies represented in hz.
     Notes:
         This function is consistent with librosa.mel_to_hz().
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        print(F.mel_to_hz(10))
+        >> 666.6666666666667
+        print(F.mel_to_hz(paddle.to_tensor([0, 1.0, 10.0])))
+        >> Tensor(shape=[3], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [0., 66.66666412, 666.66662598])
+
     """
     if htk:
         return 700.0 * (10.0**(mel / 2595.0) - 1.0)
@@ -171,7 +223,7 @@ def mel_to_hz(mel: Union[float, Tensor], htk: bool = False) -> Tensor:
 def mel_frequencies(n_mels: int = 128,
                     f_min: float = 0.0,
                     f_max: float = 11025.0,
-                    htk: bool = False):
+                    htk: bool = False) -> Tensor:
     """Compute mel frequencies.
 
     Parameters:
@@ -181,8 +233,21 @@ def mel_frequencies(n_mels: int = 128,
         htk: whether to use htk formula.
     Returns:
         The frequencies represented in Mel-scale
+
     Notes:
         This function is consistent with librosa.mel_frequencies().
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        print(F.mel_frequencies(8))
+        >> Tensor(shape=[8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [0., 475.33898926, 950.67797852, 1551.68481445, 2533.36230469,
+                4136.09960938, 6752.81396484, 11024.99902344])
+
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(f_min, htk=htk)
@@ -200,8 +265,18 @@ def fft_frequencies(sr: int, n_fft: int) -> Tensor:
         n_fft(float): he number of fft bins.
     Returns:
         The frequencies represented in hz.
+    Notes:
+        This function is consistent with librosa.fft_frequencies().
 
-    This function is consistent with librosa.fft_frequencies().
+    Examples:
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        print(F.fft_frequencies(16000, 512))
+        >> Tensor(shape=[257], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [0., 31.25000000, 62.50000000, ...]
+
     """
     return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2))
 
@@ -211,7 +286,7 @@ def compute_fbank_matrix(sr: int,
                          n_mels: int = 128,
                          f_min: float = 0.0,
                          f_max: Optional[float] = None,
-                         htk: bool = False):
+                         htk: bool = False) -> Tensor:
     """Compute fbank matrix.
 
     Parameters:
@@ -225,9 +300,22 @@ def compute_fbank_matrix(sr: int,
         be complex type. Otherwise, the real and image part will be stored in the last
         axis of returned tensor.
     Returns:
-        The fbank matrix of shape [n_mels, int(1+n_fft//2)].
+        The fbank matrix of shape (n_mels, int(1+n_fft//2)).
+    Shape:
+        output: (n_mels, int(1+n_fft//2))
     Notes:
         This function is consistent with librosa.filters.mel().
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        m = F.compute_fbank_matrix(16000, 512)
+        print(m.shape)
+        >>[128, 257]
+
     """
 
     if f_max is None:
@@ -270,15 +358,34 @@ def dft_matrix(n: int, return_complex: bool = False) -> Tensor:
         return_complex(bool): whether to return complex matrix. If True, the matrix will
             be complex type. Otherwise, the real and image part will be stored in the last
             axis of returned tensor.
+    Shape:
+        output: [n, n] or [n,n,2]
+
     Returns:
-        Complex tensor of shape [n,n] if return_complex=True, and of shape [n,n,2] otherwise.
+        Complex tensor of shape (n,n) if return_complex=True, and of shape (n,n,2) otherwise.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        m = F.dft_matrix(512)
+        print(m.shape)
+        >> [512, 512, 2]
+        m = F.dft_matrix(512, return_complex=True)
+        print(m.shape)
+        >> [512, 512]
+
     """
     x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
     z = x * y * (-2 * math.pi / n)
-    cos = paddle.cos(z).unsqueeze(-1)
-    sin = paddle.sin(z).unsqueeze(-1)
+    cos = paddle.cos(z)
+    sin = paddle.sin(z)
     if return_complex:
         return cos + paddle.to_tensor([1j]) * sin
+    cos = cos.unsqueeze(-1)
+    sin = sin.unsqueeze(-1)
     return paddle.concat([cos, sin], -1)
 
 
@@ -291,15 +398,30 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
             be complex type. Otherwise, the real and image part will be stored in the last
             axis of returned tensor.
     Returns:
-        Complex tensor of shape [n,n] if return_complex=True, and of shape [n,n,2] otherwise.
+        Complex tensor of shape (n,n) if return_complex=True, and of shape (n,n,2) otherwise.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        m = F.dft_matrix(512)
+        print(m.shape)
+        >> [512, 512, 2]
+        m = F.dft_matrix(512, return_complex=True)
+        print(m.shape)
+        >> [512, 512]
+
     """
 
     x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
     z = x * y * (2 * math.pi / n)
-    cos = paddle.cos(z).unsqueeze(-1)
-    sin = paddle.sin(z).unsqueeze(-1)
+    cos = paddle.cos(z)
+    sin = paddle.sin(z)
     if return_complex:
         return cos + paddle.to_tensor([1j]) * sin
+    cos = cos.unsqueeze(-1)
+    sin = sin.unsqueeze(-1)
     return paddle.concat([cos, sin], -1)
 
 
@@ -316,6 +438,16 @@ def get_window(window: Union[str, Tuple[str, float]],
        The window represented as a tensor.
     Notes:
         This functional is consistent with scipy.signal.get_window()
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        w = F.get_window('hann', win_length=128)
+        print(w.shape)
+        >> [128]
+
     """
     sym = not fftbins
 
@@ -363,8 +495,22 @@ def power_to_db(magnitude: Tensor,
             spectrum is clipped(to to_db).
     Returns:
         The spectrogram in log-scale.
+    shape:
+        input: any shape
+        output: same as input
     Notes:
         This function is consistent with librosa.power_to_db().
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        F.power_to_db(paddle.rand((10, 10)))
+        >> Tensor(shape=[2, 2], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [[-6.22858429, -3.51512218],
+                [-0.38168561, -1.44466150]])
+
     """
     if amin <= 0:
         raise ParameterError("amin must be strictly positive")
@@ -397,9 +543,18 @@ def mu_law_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
         clip to be in range [0,mu-1].
         quantized(bool): indicate whether the signal will quantized to integers.
 
+    Examples:
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        F.mu_law_encode(paddle.randn((2, 8)))
+        >> Tensor(shape=[2, 8], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
+                [[0, 5, 30, 255, 255, 255, 12, 13],
+                [0, 241, 8, 243, 7, 35, 84, 228]])
+
     Reference:
         https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-
     """
     mu = mu - 1
     y = paddle.sign(x) * paddle.log1p(mu * paddle.abs(x)) / math.log1p(mu)
@@ -420,14 +575,29 @@ def mu_law_decode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
 
         quantized(bool): whether the signal has been quantized to integers.
         The value should be the same as that used in mu_law_encode()
+    shape:
+        input: any shape
+        output: same as input
 
     Notes:
         This function assumes that the input x is in the
-    range [0,mu-1] when quantize is True and [-1,1] otherwise.
+        range [0,mu-1] when quantize is True and [-1,1] otherwise.
+
+
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        F.mu_law_decode(paddle.randint(0, 255, shape=(2, 8)))
+        >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [[0.00796641, -0.28048742, -0.13789690,  0.67482352, -0.05550348, -0.00377374,  0.64593655,  0.03134083],
+                [0.45497340, -0.29312974,  0.29312995, -0.70499402,  0.51892924, -0.15078513,  0.07322186,  0.70499456]])
 
     Reference:
         https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-
     """
     if mu < 1:
         raise ParameterError('mu is typically set as 2**k-1, k=1, 2, 3,...')
@@ -452,7 +622,7 @@ def deframe(frames: Tensor,
     The frames are typically the output of inverse STFT that needs to be converted back to audio signals.
 
     Parameters:
-        frames(Tensor): the input audio frames of shape [N,n_fft,frame_number] or [n_fft,frame_number]
+        frames(Tensor): the input audio frames of shape (N,n_fft,frame_number) or (n_fft,frame_number)
         The frames are typically obtained from the output of inverse STFT.
         n_fft(int): the number of fft bins, see paddleaudio.functional.stft()
         hop_length(int): the hop length, see paddleaudio.functional.stft()
@@ -466,7 +636,20 @@ def deframe(frames: Tensor,
         This function is implemented by transposing and reshaping.
 
      Shape:
-        - frames: 2-D tensor of shape [batch, signal_length].
+        - input:  (N,n_fft,frame_number] or (n_fft,frame_number)
+        - output: ( N, signal_length)
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.rand((128, 200))
+        x = F.deframe(x, n_fft=128, hop_length=64, win_length=200)
+        print(x.shape)
+        >> [128, 200]
+
     """
     assert frames.ndim == 2 or frames.ndim == 3, (
         f'The input frame must be a 2-d or 3-d tensor, ' +
@@ -514,6 +697,22 @@ def random_masking(x: Tensor,
             The default value is -1.
     Returns:
         Tensor: the tensor after masking.
+    Examples:
+
+        .. code-block:: python
+
+        x = paddle.rand((64, 100))
+        x = F.random_masking(x, max_mask_count=10, max_mask_width=2, axis=0)
+        print((x[:, 0] == 0).astype('int32').sum())
+        >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
+                [5])
+
+        x = paddle.rand((64, 100))
+        x = F.random_masking(x, max_mask_count=10, max_mask_width=2, axis=1)
+        print((x[0, :] == 0).astype('int32').sum())
+        >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
+                [8])
+
     """
 
     assert x.ndim == 2 or x.ndim, (f'only supports 2d or 3d tensor, ' +
@@ -564,7 +763,22 @@ def random_cropping(x: Tensor, target_size: int, axis=-1) -> Tensor:
     Returns:
         Tensor: the cropped tensor. If target_size >= x.shape[axis], the original input tensor is returned
         without cropping.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.randn((2, 8))
+        y = F.random_cropping(x, target_size=6)
+        print(y.shape)
+        >> [2, 6]
+        y = F.random_cropping(x, target_size=10)
+        print(y.shape)
+        >> [2, 8]  # same as x
+
     """
+
     assert axis < x.ndim, ('axis must be smaller than x.ndim, ' +
                            f'but received aixs={axis},x.ndim={x.ndim}')
 
@@ -592,8 +806,8 @@ def center_padding(x: Tensor,
     The function pads input x with pad_value to target_size along axis, such that output.shape[axis] == target_size
 
     Parameters:
-        x(Tensor): the input tesnor to apply padding in a central way.
-        target_size(int): the target lenght after padding.
+        x(Tensor): the input tensor to apply padding in a central way.
+        target_size(int): the target length after padding.
         axis(int)：the axis along which to apply padding.
             The default value is -1.
         pad_value(int)：the padding value.
@@ -601,6 +815,16 @@ def center_padding(x: Tensor,
     Returns:
         Tensor: the padded tensor. If target_size <= x.shape[axis], the original input tensor is returned
         without padding.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = F.center_padding(paddle.randn(([8, 10])), target_size=12, axis=1)
+        print(x.shape)
+        >> [8, 12]
+
     """
     assert axis < x.ndim, ('axis must be smaller than x.ndim, ' +
                            f'but received aixs={axis},x.ndim={x.ndim}')
@@ -659,18 +883,28 @@ def stft(x: Tensor,
             Otherwise, it will return the full spectrum that have n_fft+1 frequency values.
             The default value is True.
     Shape:
-        - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (batch, signal_length).
-        - output: 2-D tensor with shape [batch_size, freq_dim, frame_number,2],
+        - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
+        - output: 2-D tensor with shape (N, freq_dim, frame_number,2),
         where freq_dim = n_fft+1 if one_sided is False and n_fft//2+1 if True.
-        The batch_size is set to 1 if input singal x is 1D tensor.
+        The batch size N is set to 1 if input singal x is 1D tensor.
     Notes:
         This result of stft function is consistent with librosa.stft() for the default value setting.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = F.istft(paddle.randn(([8, 1025, 32, 2])), signal_length=16000)
+        print(x.shape)
+        >> [8, 16000]
+
     """
     assert x.ndim in [
         1, 2
     ], (f'The input signal x must be a 1-d tensor for ' +
         'non-batched signal or 2-d tensor for batched signal, ' +
-        f'but received ndim={input.ndim} instead')
+        f'but received ndim={x.ndim} instead')
 
     if x.ndim == 1:
         x = x.unsqueeze((0, 1))
@@ -715,7 +949,7 @@ def istft(x: Tensor,
           window: str = 'hann',
           center: bool = True,
           pad_mode: str = 'reflect',
-          signal_length: Optional[int] = None):
+          signal_length: Optional[int] = None) -> Tensor:
     """Compute inverse short-time Fourier transform(ISTFT) of a given spectrum signal x.
     To accurately recover the input signal, the exact value of parameters should match
     those used in stft.
@@ -727,9 +961,26 @@ def istft(x: Tensor,
             and win_length.
             The default value is None.
     Shape:
-        - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (batch, signal_length).
-        - output: the signal represented as a 2-D tensor with shape [batch_size, single_length]
-            The batch_size is set to 1 if input singal x is 1D tensor.
+        - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
+        - output: the signal represented as a 2-D tensor with shape (N, single_length)
+            The batch size N is set to 1 if input singal x is 1D tensor.
+
+    Examples:
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.rand((32, 16000))
+        y = F.stft(x, n_fft=512)
+        print(x.shape)
+        >> [32, 16000]
+        z = F.istft(y, n_fft=512, signal_length=16000)
+        print(z.shape)
+        >> [32, 16000]
+        print((z-x).abs().mean())
+        >> Tensor(shape=[1], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [0.00000707])
+
     """
     assert pad_mode in [
         'constant', 'reflect'
@@ -795,7 +1046,7 @@ def spectrogram(x,
                 window: str = 'hann',
                 center: bool = True,
                 pad_mode: str = 'reflect',
-                power: float = 2.0):
+                power: float = 2.0) -> Tensor:
     """Compute spectrogram of a given signal, typically an audio waveform.
         The spectorgram is defined as the complex norm of the short-time
         Fourier transformation.
@@ -819,6 +1070,20 @@ def spectrogram(x,
                 The default value is 'reflect'.
             power(float): The power of the complex norm.
                 The default value is 2.0
+        Shape:
+            - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
+            - output: 2-D tensor with shape (N, n_fft//2+1, frame_number),
+            The batch size N is set to 1 if input singal x is 1D tensor.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = F.spectrogram(paddle.randn((8, 16000,)))
+        print(x.shape)
+        >> [8, 1025, 32]
 
       """
     fft_signal = stft(x,
@@ -850,7 +1115,7 @@ def melspectrogram(x: Tensor,
                    f_min: float = 0.0,
                    f_max: Optional[float] = None,
                    to_db: bool = False,
-                   **kwargs):
+                   **kwargs) -> Tensor:
     """Compute the melspectrogram of a given signal, typically an audio waveform.
         The melspectrogram is also known as filterbank or fbank feature in audio community.
         It is computed by multiplying spectrogram with Mel filter bank matrix.
@@ -886,14 +1151,30 @@ def melspectrogram(x: Tensor,
                 smaller than half of sample rate.
                 The default value is None.
 
-            to_db(bool): whether to convert the manitude to db scale.
+            to_db(bool): whether to convert the magnitude to db scale.
                 The default value is False.
             kwargs: the key-word arguments that are passed to F.power_to_db if to_db is True
 
+        Shape:
+            - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
+            - output: 2-D tensor with shape (N, n_mels, frame_number),
+            The batch size N is set to 1 if input singal x is 1D tensor.
+
         Notes:
             1. The melspectrogram function relies on F.spectrogram and F.compute_fbank_matrix.
-            2. The melspectrogram function r does not convert magnitude to db by default.
-        """
+            2. The melspectrogram function does not convert magnitude to db by default.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = F.melspectrogram(paddle.randn((8, 16000,)))
+        print(x.shape)
+        >> [8, 128, 32]
+
+    """
 
     x = spectrogram(x, n_fft, hop_length, win_length, window, center, pad_mode,
                     power)

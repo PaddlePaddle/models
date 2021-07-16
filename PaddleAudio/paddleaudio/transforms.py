@@ -30,8 +30,8 @@ __all__ = [
     'CenterPadding',
     'RandomCropping',
     'RandomMuLawCodec',
-    'MuLawDecoding',
     'MuLawEncoding',
+    'MuLawDecoding',
 ]
 
 
@@ -69,6 +69,19 @@ class STFT(nn.Layer):
         The batch_size is set to 1 if input singal x is 1D tensor.
     Notes:
         This result of stft transform is consistent with librosa.stft() for the default value setting.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        stft = T.STFT(n_fft=512)
+        x = paddle.randn((8, 16000,))
+        y = stft(x)
+        print(y.shape)
+        >> [8, 257, 126, 2]
+
     """
     def __init__(self,
                  n_fft: int = 2048,
@@ -186,8 +199,19 @@ class Spectrogram(nn.Layer):
             The Spectrogram transform relies on STFT transform to compute the spectrogram.
             By default, the weights are not learnable. To fine-tune the Fourier coefficients,
             set stop_gradient=False before training.
+            For more information, see STFT().
 
-        For more information, see STFT().
+        Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        spectrogram = T.Spectrogram(n_fft=512)
+        x = paddle.randn((8, 16000))
+        y = spectrogram(x)
+        print(y.shape)
+        >> [8, 257, 126]
 
         """
         super(Spectrogram, self).__init__()
@@ -259,6 +283,17 @@ class MelSpectrogram(nn.Layer):
             By default, the Fourier coefficients are not learnable. To fine-tune the Fourier coefficients,
             set stop_gradient=False before training. The fbank matrix is handcrafted and not learnable
             regardless of the setting of stop_gradient.
+        Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        melspectrogram = T.MelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
+        y = melspectrogram(x)
+        print(y.shape)
+        >> [8, 64, 126]
 
         """
         super(MelSpectrogram, self).__init__()
@@ -339,6 +374,18 @@ class LogMelSpectrogram(nn.Layer):
             By default, the weights are not learnable. To fine-tune the Fourier coefficients,
             set stop_gradient=False before training.
 
+        Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        melspectrogram = T.LogMelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
+        y = melspectrogram(x)
+        print(y.shape)
+        >> [8, 64, 126]
+
         """
         super(LogMelSpectrogram, self).__init__()
         self._melspectrogram = MelSpectrogram(sr, n_fft, hop_length, win_length,
@@ -388,6 +435,17 @@ class ISTFT(nn.Layer):
         - output: the signal represented as a 2-D tensor with shape [batch_size, single_length]
         The batch_size is set to 1 if input singal x is 1D tensor.
 
+     Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        melspectrogram = T.LogMelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
+        y = melspectrogram(x)
+        print(y.shape)
+        >> [8, 64, 126]
     """
     def __init__(self,
                  n_fft: int = 2048,
@@ -479,6 +537,18 @@ class RandomMasking(nn.Layer):
     Notes:
         Please refer to paddleaudio.functional.random_masking() for more details.
 
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        transform = T.RandomMasking(max_mask_count=10, max_mask_width=2, axis=1)
+        x = paddle.rand((64, 100))
+        x = transform(x)
+        print((x[0, :] == 0).astype('int32').sum())
+        >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
+                [8])
     """
     def __init__(self,
                  max_mask_count: int = 3,
@@ -508,6 +578,21 @@ class Compose():
 
     Parameters:
         transforms: a list of transforms.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 18000))
+        transform = T.Compose([
+            T.RandomCropping(target_size=16000),
+            T.MelSpectrogram(sr=16000, n_fft=256, n_mels=64),
+            T.RandomMasking()
+        ])
+        y = transform(x)
+        print(y.shape)
+        >> [2, 64, 251]
 
     """
     def __init__(self, transforms: List[Any]):
@@ -537,6 +622,21 @@ class RandomCropping(nn.Layer):
     Notes:
         Please refer to paddleaudio.functional.RandomCropping() for more details.
 
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        transform = T.RandomCropping(target_size=8, axis=1)
+        y = transform(x)
+        print(y.shape)
+        >> [64, 8]
+        transform = T.RandomCropping(target_size=100, axis=1)
+        y = transform(x)
+        print(y.shape)
+        >> [64, 100]
+
     """
     def __init__(self, target_size: int, axis: int = -1):
         super(RandomCropping, self).__init__()
@@ -561,6 +661,18 @@ class CenterPadding(nn.Layer):
         axis(int)：the axis along which to apply padding.
     Notes:
         Please refer to paddleaudio.functional.center_padding() for more details.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.rand((8, 10))
+        transform = T.CenterPadding(target_size=12, axis=1)
+        y = transform(x)
+        print(y.shape)
+        >> [8, 12]
 
     """
     def __init__(self, target_size: int, axis: int = -1):
@@ -588,7 +700,21 @@ class MuLawEncoding(nn.Layer):
             the result will be converted to integer in range [0,mu-1]. Otherwise, the
             resulting signal is in range [-1,1]
     Notes:
-        Please refer to paddleaudio.functional.mu_encode() for more details.
+        Please refer to paddleaudio.functional.mu_law_encode() for more details.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2,8))
+        transform = T.MuLawEncoding()
+        y = transform(x)
+        print(y)
+        >> Tensor(shape=[2, 8], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
+        [[0  , 252, 77 , 250, 221, 34 , 51 , 0  ],
+            [227, 33 , 0  , 255, 11 , 213, 255, 10 ]])
 
     """
     def __init__(self, mu: int = 256):
@@ -597,7 +723,7 @@ class MuLawEncoding(nn.Layer):
         self.mu = mu
 
     def forward(self, x: Tensor) -> Tensor:
-        return F.mu_encode(x, mu=self.mu)
+        return F.mu_law_encode(x, mu=self.mu)
 
     def __repr__(self, ):
         return self.__class__.__name__ + f'(mu={self.mu})'
@@ -613,7 +739,20 @@ class MuLawDecoding(nn.Layer):
         quantized(bool): indicate whether the signal has been quantized. The value of quantized parameter should be
         consistent with that used in MuLawEncoding.
     Notes:
-        Please refer to paddleaudio.functional.mu_decode() for more details.
+        Please refer to paddleaudio.functional.mu_law_decode() for more details.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randint(0, 255, shape=(2, 8))
+        transform = T.MuLawDecoding()
+        y = transform(x)
+        print(y)
+        >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [[-0.01151094, -0.02702747,  0.00796641, -0.91636580,  0.45497340,  0.49667698,  0.01151095, -0.24569811],
+                [0.21516445, -0.30633399,  0.01291343, -0.01991909, -0.00904676,  0.00105976,  0.03990653, -0.20584014]])
 
     """
     def __init__(self, mu: int = 256):
@@ -622,7 +761,7 @@ class MuLawDecoding(nn.Layer):
         self.mu = mu
 
     def forward(self, x: Tensor) -> Tensor:
-        return F.mu_decode(x, mu=self.mu)
+        return F.mu_law_decode(x, mu=self.mu)
 
     def __repr__(self, ):
         return self.__class__.__name__ + f'(mu={self.mu})'
@@ -639,6 +778,20 @@ class RandomMuLawCodec(nn.Layer):
             the exact mu will be randomly chosen from uniform ~ [min_mu, max_mu].
     Notes:
         Please refer to MuLawDecoding() and MuLawEncoding() for more details.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 8))
+        transform = T.RandomMuLawCodec()
+        y = transform(x)
+        print(y)
+        >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [[0.61542195, -0.35218054,  0.30605811, -0.12115669, -0.75794631,  0.03876950, -0.23082513, -0.49945647],
+                [-0.35218054, -0.87066686, -0.53548712,  1., -1.,  0.49945661,  1., -0.93311179]])
 
     """
     def __init__(self, min_mu: int = 63, max_mu: int = 255):
