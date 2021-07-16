@@ -607,7 +607,7 @@ class AddReverb(nn.Layer):
         self.rir_dataloader = paddle.io.DataLoader(
             self.rir_dataset,
             collate_fn=rir_collate_fn,
-            num_workers=self.num_workers,
+            num_workers=num_workers,
             shuffle=True,
             return_list=True,
         )
@@ -653,9 +653,14 @@ class AddReverb(nn.Layer):
                 align_corners=False,
                 data_format='NCW',
             )
+            # (N, C, L) -> (N, L, C)
             rir_waveform = rir_waveform.transpose([0, 2, 1])
 
-        rev_waveform = reverberate(waveforms, rir_waveform, rescale_amp="avg")
+        rev_waveform = reverberate(
+            waveforms,
+            rir_waveform,
+            self.rir_dataset.sample_rate,
+            rescale_amp="avg")
 
         # Remove channels dimension if added
         if channel_added:

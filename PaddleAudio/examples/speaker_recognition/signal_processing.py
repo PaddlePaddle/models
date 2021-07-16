@@ -65,30 +65,30 @@ def convolve1d(
         pad_type="constant",
         stride=1,
         groups=1,
-        use_fft=False,  # Useless in paddle version.
-        rotation_index=0,
 ):
     if len(waveform.shape) != 3:
         raise ValueError("Convolve1D expects a 3-dimensional tensor")
 
-    # Move time dimension last, which pad and fft and conv expect.
-    waveform = waveform.transpose([0, 2, 1])
-    kernel = kernel.transpose([0, 2, 1])
-
     # Padding can be a tuple (left_pad, right_pad) or an int
-    if isinstance(padding, tuple):
+    if isinstance(padding, list):
         waveform = paddle.nn.functional.pad(
             x=waveform,
             pad=padding,
             mode=pad_type,
+            data_format='NLC',
         )
+
+    # Move time dimension last, which pad and fft and conv expect.
+    # (N, L, C) -> (N, C, L)
+    waveform = waveform.transpose([0, 2, 1])
+    kernel = kernel.transpose([0, 2, 1])
 
     convolved = paddle.nn.functional.conv1d(
         x=waveform,
         weight=kernel,
         stride=stride,
         groups=groups,
-        padding=padding if not isinstance(padding, tuple) else 0,
+        padding=padding if not isinstance(padding, list) else 0,
     )
 
     # Return time dimension to the second dimension.
@@ -135,7 +135,11 @@ def notch_filter(notch_freq, filter_width=101, notch_width=0.05):
     return (hlpf + hhpf).reshape([1, -1, 1])
 
 
-def reverberate(waveforms, rir_waveform, rescale_amp="avg"):
+def reverberate(waveforms,
+                rir_waveform,
+                sample_rate,
+                impulse_duration=0.3,
+                rescale_amp="avg"):
     orig_shape = waveforms.shape
 
     if len(waveforms.shape) > 3 or len(rir_waveform.shape) > 3:
@@ -157,14 +161,18 @@ def reverberate(waveforms, rir_waveform, rescale_amp="avg"):
                                        rescale_amp)
 
     # Compute index of the direct signal, so we can preserve alignment
-    value_max = rir_waveform.abs().max(axis=1, keepdim=True)
-    direct_index = rir_waveform.abs().argmax(axis=1, keepdim=True)
+    impulse_index_start = rir_waveform.abs().argmax(axis=1).item()
+    impulse_index_end = min(
+        impulse_index_start + int(sample_rate * impulse_duration),
+        rir_waveform.shape[1])
+    rir_waveform = rir_waveform[:, impulse_index_start:impulse_index_end, :]
+    rir_waveform = rir_waveform / paddle.norm(rir_waveform, p=2)
+    rir_waveform = paddle.flip(rir_waveform, [1])
 
     waveforms = convolve1d(
         waveform=waveforms,
         kernel=rir_waveform,
-        use_fft=False,
-        rotation_index=direct_index,
+        padding=[rir_waveform.shape[1] - 1, 0],
     )
 
     # Rescale to the peak amplitude of the clean waveform

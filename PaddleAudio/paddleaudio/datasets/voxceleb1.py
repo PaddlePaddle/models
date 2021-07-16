@@ -66,6 +66,7 @@ class VoxCeleb1(Dataset):
     ]
 
     num_speakers = 1211  # For speaker verification task
+    sample_rate = 16000
     meta_info = collections.namedtuple(
         'META_INFO', ('id', 'duration', 'wav', 'start', 'stop', 'spk_id'))
     base_path = os.path.join(DATA_HOME, 'vox1')

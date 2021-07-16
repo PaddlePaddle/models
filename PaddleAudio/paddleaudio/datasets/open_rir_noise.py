@@ -40,6 +40,7 @@ class OpenRIRNoise(Dataset):
         },
     ]
 
+    sample_rate = 16000
     meta_info = collections.namedtuple('META_INFO', ('id', 'duration', 'wav'))
     base_path = os.path.join(DATA_HOME, 'open_rir_noise')
     wav_path = os.path.join(base_path, 'RIRS_NOISES')

@@ -15,6 +15,7 @@
 import argparse
 import ast
 import os
+from typing import List
 
 import numpy as np
 import paddle
@@ -36,12 +37,70 @@ parser.add_argument("--epochs", type=int, default=50, help="Number of epoches fo
 parser.add_argument("--learning_rate", type=float, default=5e-5, help="Learning rate used to train with warmup.")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number in batch for training.")
 parser.add_argument("--num_workers", type=int, default=0, help="Number of workers in dataloader.")
+parser.add_argument("--augment", type=ast.literal_eval, default=True, help="Apply audio augments.")
 parser.add_argument("--checkpoint_dir", type=str, default='./checkpoint', help="Directory to save model checkpoints.")
 parser.add_argument("--load_checkpoint", type=str, default='', help="Directory to load model checkpoint to contiune trainning.")
 parser.add_argument("--save_freq", type=int, default=10, help="Save checkpoint every n epoch.")
 parser.add_argument("--log_freq", type=int, default=10, help="Log the training infomation every n steps.")
 args = parser.parse_args()
 # yapf: enable
+
+
+def build_augment_pipeline() -> List[paddle.nn.Layer]:
+    noise_dataset = OpenRIRNoise('noise')
+    rir_dataset = OpenRIRNoise('rir')
+
+    wavedrop = TimeDomainSpecAugment(
+        sample_rate=16000,
+        speeds=[100],
+    )
+    speed_perturb = TimeDomainSpecAugment(
+        sample_rate=16000,
+        speeds=[95, 100, 105],
+    )
+    add_noise = EnvCorrupt(
+        noise_dataset=noise_dataset,
+        reverb_prob=0.0,
+        noise_prob=1.0,
+        noise_snr_low=0,
+        noise_snr_high=15,
+        rir_scale_factor=1.0,
+    )
+    add_rev = EnvCorrupt(
+        rir_dataset=rir_dataset,
+        reverb_prob=1.0,
+        noise_prob=0.0,
+        rir_scale_factor=1.0,
+    )
+    add_rev_noise = EnvCorrupt(
+        noise_dataset=noise_dataset,
+        rir_dataset=rir_dataset,
+        reverb_prob=1.0,
+        noise_prob=1.0,
+        noise_snr_low=0,
+        noise_snr_high=15,
+        rir_scale_factor=1.0,
+    )
+    return [wavedrop, speed_perturb, add_noise, add_rev, add_rev_noise]
+
+
+def waveform_augment(waveforms: paddle.Tensor,
+                     augment_pipeline: List[paddle.nn.Layer]) -> paddle.Tensor:
+    waveforms_aug_list = [waveforms]
+    for aug in augment_pipeline:
+        waveforms_aug = aug(waveforms)  # (N, L)
+        if waveforms_aug.shape[1] >= waveforms.shape[1]:
+            # Trunc
+            waveforms_aug = waveforms_aug[:, :waveforms.shape[1]]
+        else:
+            # Pad
+            lengths_to_pad = waveforms.shape[1] - waveforms_aug.shape[1]
+            waveforms_aug = F.pad(
+                waveforms_aug.unsqueeze(-1), [0, lengths_to_pad],
+                data_format='NLC').squeeze(-1)
+        waveforms_aug_list.append(waveforms_aug)
+
+    return paddle.concat(waveforms_aug_list, axis=0)
 
 
 def waveform_collate_fn(batch):
@@ -69,6 +128,14 @@ if __name__ == "__main__":
     nranks = paddle.distributed.get_world_size()
     local_rank = paddle.distributed.get_rank()
 
+    if args.augment:
+        augment_pipeline = build_augment_pipeline()
+    else:
+        augment_pipeline = []
+
+    feature_extractor = MelSpectrogram(
+        sr=16000, n_fft=400, hop_length=160, n_mels=80, f_min=50)
+
     model_conf = {
         "input_size": 80,
         "channels": [1024, 1024, 1024, 1024, 3072],
@@ -78,16 +145,6 @@ if __name__ == "__main__":
         "lin_neurons": 192,
     }
     ecapa_tdnn = ECAPA_TDNN(**model_conf)
-    add_noise = EnvCorrupt(
-        reverb_prob=0.0,
-        noise_prob=1.0,
-        noise_snr_low=0,
-        noise_snr_high=15,
-        rir_scale_factor=1.0,
-        noise_dataset=OpenRIRNoise('noise'),
-    )
-    feature_extractor = MelSpectrogram(
-        sr=16000, n_fft=400, hop_length=160, n_mels=80, f_min=50)
     model = SpeakerClassifier(
         backbone=ecapa_tdnn, num_class=VoxCeleb1.num_speakers)
     optimizer = paddle.optimizer.AdamW(
@@ -140,7 +197,12 @@ if __name__ == "__main__":
         num_samples = 0
         for batch_idx, batch in enumerate(train_loader):
             waveforms, labels = batch['waveforms'], batch['labels']
-            waveforms = add_noise(waveforms)  # Waveforms augment
+
+            if len(augment_pipeline) > 0:  # Waveforms augment
+                waveforms = waveform_augment(waveforms, augment_pipeline)
+                labels = paddle.concat(
+                    [labels for i in range(len(augment_pipeline) + 1)])
+
             feats = feature_extractor(waveforms)  # Features extraction
             feats = feature_normalize(
                 feats, mean_norm=True, std_norm=False)  # Features normalization
