@@ -30,8 +30,8 @@ __all__ = [
     'CenterPadding',
     'RandomCropping',
     'RandomMuLawCodec',
-    'MuLawDecoding',
     'MuLawEncoding',
+    'MuLawDecoding',
 ]
 
 
@@ -77,7 +77,7 @@ class STFT(nn.Layer):
         import paddle
         import paddleaudio.transforms as T
         stft = T.STFT(n_fft=512)
-        x = paddle.randn((8,16000,))
+        x = paddle.randn((8, 16000,))
         y = stft(x)
         print(y.shape)
         >> [8, 257, 126, 2]
@@ -208,11 +208,10 @@ class Spectrogram(nn.Layer):
         import paddle
         import paddleaudio.transforms as T
         spectrogram = T.Spectrogram(n_fft=512)
-        x = paddle.randn((8,16000,))
+        x = paddle.randn((8, 16000))
         y = spectrogram(x)
         print(y.shape)
         >> [8, 257, 126]
-
 
         """
         super(Spectrogram, self).__init__()
@@ -290,8 +289,8 @@ class MelSpectrogram(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        melspectrogram = T.MelSpectrogram(n_fft=512,n_mels=64)
-        x = paddle.randn((8,16000,))
+        melspectrogram = T.MelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
         y = melspectrogram(x)
         print(y.shape)
         >> [8, 64, 126]
@@ -381,8 +380,8 @@ class LogMelSpectrogram(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        melspectrogram = T.LogMelSpectrogram(n_fft=512,n_mels=64)
-        x = paddle.randn((8,16000,))
+        melspectrogram = T.LogMelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
         y = melspectrogram(x)
         print(y.shape)
         >> [8, 64, 126]
@@ -442,12 +441,11 @@ class ISTFT(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        melspectrogram = T.LogMelSpectrogram(n_fft=512,n_mels=64)
-        x = paddle.randn((8,16000,))
+        melspectrogram = T.LogMelSpectrogram(n_fft=512, n_mels=64)
+        x = paddle.randn((8, 16000,))
         y = melspectrogram(x)
         print(y.shape)
         >> [8, 64, 126]
-
     """
     def __init__(self,
                  n_fft: int = 2048,
@@ -545,12 +543,12 @@ class RandomMasking(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        transform = T.RandomMasking(max_mask_count=10,max_mask_width=2,axis=1)
-        x = paddle.rand((64,100))
+        transform = T.RandomMasking(max_mask_count=10, max_mask_width=2, axis=1)
+        x = paddle.rand((64, 100))
         x = transform(x)
-        print((x[0,:]==0).astype('int32').sum())
+        print((x[0, :] == 0).astype('int32').sum())
         >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
-            [8])
+                [8])
     """
     def __init__(self,
                  max_mask_count: int = 3,
@@ -630,11 +628,11 @@ class RandomCropping(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        transform = T.RandomCropping(target_size=8,axis=1)
+        transform = T.RandomCropping(target_size=8, axis=1)
         y = transform(x)
         print(y.shape)
         >> [64, 8]
-        transform = T.RandomCropping(target_size=100,axis=1)
+        transform = T.RandomCropping(target_size=100, axis=1)
         y = transform(x)
         print(y.shape)
         >> [64, 100]
@@ -670,8 +668,8 @@ class CenterPadding(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        x = paddle.rand((8,10))
-        transform = T.CenterPadding(target_size=12,axis=1)
+        x = paddle.rand((8, 10))
+        transform = T.CenterPadding(target_size=12, axis=1)
         y = transform(x)
         print(y.shape)
         >> [8, 12]
@@ -717,6 +715,7 @@ class MuLawEncoding(nn.Layer):
         >> Tensor(shape=[2, 8], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
         [[0  , 252, 77 , 250, 221, 34 , 51 , 0  ],
             [227, 33 , 0  , 255, 11 , 213, 255, 10 ]])
+
     """
     def __init__(self, mu: int = 256):
         super(MuLawEncoding, self).__init__()
@@ -747,13 +746,13 @@ class MuLawDecoding(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        x = paddle.randint(0,255,shape=(2,8))
+        x = paddle.randint(0, 255, shape=(2, 8))
         transform = T.MuLawDecoding()
         y = transform(x)
         print(y)
         >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-            [[-0.01151094, -0.02702747,  0.00796641, -0.91636580,  0.45497340,  0.49667698,  0.01151095, -0.24569811],
-                [ 0.21516445, -0.30633399,  0.01291343, -0.01991909, -0.00904676,  0.00105976,  0.03990653, -0.20584014]])
+                [[-0.01151094, -0.02702747,  0.00796641, -0.91636580,  0.45497340,  0.49667698,  0.01151095, -0.24569811],
+                [0.21516445, -0.30633399,  0.01291343, -0.01991909, -0.00904676,  0.00105976,  0.03990653, -0.20584014]])
 
     """
     def __init__(self, mu: int = 256):
@@ -786,13 +785,13 @@ class RandomMuLawCodec(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        x = paddle.randn((2,8))
+        x = paddle.randn((2, 8))
         transform = T.RandomMuLawCodec()
         y = transform(x)
         print(y)
         >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-        [[ 0.61542195, -0.35218054,  0.30605811, -0.12115669, -0.75794631,  0.03876950, -0.23082513, -0.49945647],
-            [-0.35218054, -0.87066686, -0.53548712,  1.        , -1.        ,  0.49945661,  1.        , -0.93311179]])
+                [[0.61542195, -0.35218054,  0.30605811, -0.12115669, -0.75794631,  0.03876950, -0.23082513, -0.49945647],
+                [-0.35218054, -0.87066686, -0.53548712,  1., -1.,  0.49945661,  1., -0.93311179]])
 
     """
     def __init__(self, min_mu: int = 63, max_mu: int = 255):

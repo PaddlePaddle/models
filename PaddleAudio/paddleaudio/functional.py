@@ -67,8 +67,8 @@ def complex_norm(x: Tensor) -> Tensor:
 
         .. code-block:: python
 
-        x = paddle.rand((32,16000))
-        y = F.stft(x,n_fft=512)
+        x = paddle.rand((32, 16000))
+        y = F.stft(x, n_fft=512)
         z = F.complex_norm(y)
         print(z.shape)
         >> [32, 257, 126]
@@ -99,8 +99,8 @@ def magphase(x: Tensor) -> Tuple[Tensor, Tensor]:
 
         import paddle
         import paddleaudio.functional as F
-        x = paddle.randn((10,10,2))
-        angle,phase = F.magphase(x)
+        x = paddle.randn((10, 10, 2))
+        angle, phase = F.magphase(x)
 
     """
     if x.shape[-1] != 2:
@@ -136,9 +136,9 @@ def hz_to_mel(freq: Union[Tensor, float],
         import paddleaudio.functional as F
         print(F.hz_to_mel(10))
         >> 10
-        print(F.hz_to_mel(paddle.to_tensor([0,100,1600])))
+        print(F.hz_to_mel(paddle.to_tensor([0, 100, 1600])))
         >> Tensor(shape=[3], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-        [0.         , 1.50000000 , 21.83624077])
+                [0., 1.50000000, 21.83624077])
 
     """
 
@@ -193,9 +193,9 @@ def mel_to_hz(mel: Union[float, Tensor],
         import paddleaudio.functional as F
         print(F.mel_to_hz(10))
         >> 666.6666666666667
-        print(F.mel_to_hz(paddle.to_tensor([0,1.0,10.0])))
+        print(F.mel_to_hz(paddle.to_tensor([0, 1.0, 10.0])))
         >> Tensor(shape=[3], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-       [0.          , 66.66666412 , 666.66662598])
+                [0., 66.66666412, 666.66662598])
 
     """
     if htk:
@@ -245,8 +245,8 @@ def mel_frequencies(n_mels: int = 128,
         import paddleaudio.functional as F
         print(F.mel_frequencies(8))
         >> Tensor(shape=[8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-        [0.            , 475.33898926  , 950.67797852  , 1551.68481445 , 2533.36230469 ,
-        4136.09960938 , 6752.81396484 , 11024.99902344])
+                [0., 475.33898926, 950.67797852, 1551.68481445, 2533.36230469,
+                4136.09960938, 6752.81396484, 11024.99902344])
 
     """
     # 'Center freqs' of mel bands - uniformly spaced between limits
@@ -273,9 +273,9 @@ def fft_frequencies(sr: int, n_fft: int) -> Tensor:
 
         import paddle
         import paddleaudio.functional as F
-        print(F.fft_frequencies(16000,512))
+        print(F.fft_frequencies(16000, 512))
         >> Tensor(shape=[257], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-        [0.           , 31.25000000  , 62.50000000  , ...]
+                [0., 31.25000000, 62.50000000, ...]
 
     """
     return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2))
@@ -312,7 +312,7 @@ def compute_fbank_matrix(sr: int,
 
         import paddle
         import paddleaudio.functional as F
-        m = F.compute_fbank_matrix(16000,512)
+        m = F.compute_fbank_matrix(16000, 512)
         print(m.shape)
         >>[128, 257]
 
@@ -373,7 +373,7 @@ def dft_matrix(n: int, return_complex: bool = False) -> Tensor:
         m = F.dft_matrix(512)
         print(m.shape)
         >> [512, 512, 2]
-        m = F.dft_matrix(512,return_complex=True)
+        m = F.dft_matrix(512, return_complex=True)
         print(m.shape)
         >> [512, 512]
 
@@ -408,7 +408,7 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
         m = F.dft_matrix(512)
         print(m.shape)
         >> [512, 512, 2]
-        m = F.dft_matrix(512,return_complex=True)
+        m = F.dft_matrix(512, return_complex=True)
         print(m.shape)
         >> [512, 512]
 
@@ -444,7 +444,7 @@ def get_window(window: Union[str, Tuple[str, float]],
 
         import paddle
         import paddleaudio.functional as F
-        w=F.get_window('hann',win_length=128)
+        w = F.get_window('hann', win_length=128)
         print(w.shape)
         >> [128]
 
@@ -506,10 +506,10 @@ def power_to_db(magnitude: Tensor,
 
         import paddle
         import paddleaudio.functional as F
-        F.power_to_db(paddle.rand((10,10)))
+        F.power_to_db(paddle.rand((10, 10)))
         >> Tensor(shape=[2, 2], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-        [[-6.22858429, -3.51512218],
-            [-0.38168561, -1.44466150]])
+                [[-6.22858429, -3.51512218],
+                [-0.38168561, -1.44466150]])
 
     """
     if amin <= 0:
@@ -543,18 +543,18 @@ def mu_law_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
         clip to be in range [0,mu-1].
         quantized(bool): indicate whether the signal will quantized to integers.
 
-    Reference:
-        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
     Examples:
         .. code-block:: python
 
         import paddle
         import paddleaudio.functional as F
-        F.mu_law_encode(paddle.randn((2,8)))
+        F.mu_law_encode(paddle.randn((2, 8)))
         >> Tensor(shape=[2, 8], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
-        [[0  , 5  , 30 , 255, 255, 255, 12 , 13 ],
-            [0  , 241, 8  , 243, 7  , 35 , 84 , 228]])
+                [[0, 5, 30, 255, 255, 255, 12, 13],
+                [0, 241, 8, 243, 7, 35, 84, 228]])
 
+    Reference:
+        https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
     """
     mu = mu - 1
     y = paddle.sign(x) * paddle.log1p(mu * paddle.abs(x)) / math.log1p(mu)
@@ -581,16 +581,23 @@ def mu_law_decode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
 
     Notes:
         This function assumes that the input x is in the
-    range [0,mu-1] when quantize is True and [-1,1] otherwise.
+        range [0,mu-1] when quantize is True and [-1,1] otherwise.
 
-    F.mu_law_decode(paddle.randint(0,255,shape=(2,8)))
-    >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-       [[ 0.00796641, -0.28048742, -0.13789690,  0.67482352, -0.05550348, -0.00377374,  0.64593655,  0.03134083],
-        [ 0.45497340, -0.29312974,  0.29312995, -0.70499402,  0.51892924, -0.15078513,  0.07322186,  0.70499456]])
+
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        F.mu_law_decode(paddle.randint(0, 255, shape=(2, 8)))
+        >> Tensor(shape=[2, 8], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
+                [[0.00796641, -0.28048742, -0.13789690,  0.67482352, -0.05550348, -0.00377374,  0.64593655,  0.03134083],
+                [0.45497340, -0.29312974,  0.29312995, -0.70499402,  0.51892924, -0.15078513,  0.07322186,  0.70499456]])
 
     Reference:
         https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-
     """
     if mu < 1:
         raise ParameterError('mu is typically set as 2**k-1, k=1, 2, 3,...')
@@ -627,20 +634,21 @@ def deframe(frames: Tensor,
         Tensor: the unpacked signal.
     Notes:
         This function is implemented by transposing and reshaping.
+
+     Shape:
+        - input:  (N,n_fft,frame_number] or (n_fft,frame_number)
+        - output: ( N, signal_length)
+
     Examples:
 
         .. code-block:: python
 
         import paddle
         import paddleaudio.functional as F
-        x = paddle.rand((128,200))
-        x = F.deframe(x,n_fft=128,hop_length=64,win_length=200)
+        x = paddle.rand((128, 200))
+        x = F.deframe(x, n_fft=128, hop_length=64, win_length=200)
         print(x.shape)
         >> [128, 200]
-
-     Shape:
-        - input:  (N,n_fft,frame_number] or (n_fft,frame_number)
-        - output: (N, signal_length)
 
     """
     assert frames.ndim == 2 or frames.ndim == 3, (
@@ -693,17 +701,17 @@ def random_masking(x: Tensor,
 
         .. code-block:: python
 
-        x = paddle.rand((64,100))
-        x = F.random_masking(x,max_mask_count=10,max_mask_width=2,axis=0)
-        print((x[:,0]==0).astype('int32').sum())
+        x = paddle.rand((64, 100))
+        x = F.random_masking(x, max_mask_count=10, max_mask_width=2, axis=0)
+        print((x[:, 0] == 0).astype('int32').sum())
         >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
-        [5])
+                [5])
 
-        x = paddle.rand((64,100))
-        x = F.random_masking(x,max_mask_count=10,max_mask_width=2,axis=1)
-        print((x[0,:]==0).astype('int32').sum())
+        x = paddle.rand((64, 100))
+        x = F.random_masking(x, max_mask_count=10, max_mask_width=2, axis=1)
+        print((x[0, :] == 0).astype('int32').sum())
         >> Tensor(shape=[1], dtype=int32, place=CUDAPlace(0), stop_gradient=True,
-        [8])
+                [8])
 
     """
 
@@ -761,15 +769,16 @@ def random_cropping(x: Tensor, target_size: int, axis=-1) -> Tensor:
 
         import paddle
         import paddleaudio.functional as F
-        x = paddle.randn((2,8))
-        y = F.random_cropping(x,target_size=6)
+        x = paddle.randn((2, 8))
+        y = F.random_cropping(x, target_size=6)
         print(y.shape)
         >> [2, 6]
-        y = F.random_cropping(x,target_size=10)
+        y = F.random_cropping(x, target_size=10)
         print(y.shape)
-        >> [2, 8] # same as x
+        >> [2, 8]  # same as x
 
     """
+
     assert axis < x.ndim, ('axis must be smaller than x.ndim, ' +
                            f'but received aixs={axis},x.ndim={x.ndim}')
 
@@ -812,7 +821,7 @@ def center_padding(x: Tensor,
 
         import paddle
         import paddleaudio.functional as F
-        x = F.center_padding(paddle.randn(([8, 10])),target_size=12,axis=1)
+        x = F.center_padding(paddle.randn(([8, 10])), target_size=12, axis=1)
         print(x.shape)
         >> [8, 12]
 
@@ -886,9 +895,10 @@ def stft(x: Tensor,
 
         import paddle
         import paddleaudio.functional as F
-        x = F.istft(paddle.randn(([8, 1025, 32, 2])),signal_length=16000)
+        x = F.istft(paddle.randn(([8, 1025, 32, 2])), signal_length=16000)
         print(x.shape)
         >> [8, 16000]
+
     """
     assert x.ndim in [
         1, 2
@@ -960,16 +970,16 @@ def istft(x: Tensor,
 
         import paddle
         import paddleaudio.functional as F
-        x = paddle.rand((32,16000))
-        y = F.stft(x,n_fft=512)
+        x = paddle.rand((32, 16000))
+        y = F.stft(x, n_fft=512)
         print(x.shape)
         >> [32, 16000]
-        z = F.istft(y,n_fft=512,signal_length=16000)
+        z = F.istft(y, n_fft=512, signal_length=16000)
         print(z.shape)
         >> [32, 16000]
         print((z-x).abs().mean())
         >> Tensor(shape=[1], dtype=float32, place=CUDAPlace(0), stop_gradient=True,
-            [0.00000707])
+                [0.00000707])
 
     """
     assert pad_mode in [
@@ -1071,7 +1081,7 @@ def spectrogram(x,
 
         import paddle
         import paddleaudio.functional as F
-        x = F.spectrogram(paddle.randn((8,16000,)))
+        x = F.spectrogram(paddle.randn((8, 16000,)))
         print(x.shape)
         >> [8, 1025, 32]
 
@@ -1160,7 +1170,7 @@ def melspectrogram(x: Tensor,
 
         import paddle
         import paddleaudio.functional as F
-        x = F.melspectrogram(paddle.randn((8,16000,)))
+        x = F.melspectrogram(paddle.randn((8, 16000,)))
         print(x.shape)
         >> [8, 128, 32]
 
