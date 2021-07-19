@@ -492,7 +492,7 @@ def power_to_db(magnitude: Tensor,
         amin(float): the minimum value of input magnitude, below which the input
             magnitude is clipped(to amin).
         top_db(float): the maximum db value of resulting spectrum, above which the
-            spectrum is clipped(to to_db).
+            spectrum is clipped(to top_db).
     Returns:
         The spectrogram in log-scale.
     shape:
