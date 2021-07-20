@@ -152,6 +152,7 @@ if __name__ == "__main__":
     criterion = LogSoftmaxWrapper(
         loss_fn=AdditiveAngularMargin(margin=0.2, scale=30))
 
+    start_epoch = 0
     if args.load_checkpoint:
         args.load_checkpoint = os.path.abspath(
             os.path.expanduser(args.load_checkpoint))
@@ -171,6 +172,12 @@ if __name__ == "__main__":
             if local_rank == 0:
                 logger.warning('Train from scratch.')
 
+        try:
+            start_epoch = int(args.load_checkpoint[-1])
+            logger.info(f'Restore training from epoch {start_epoch}.')
+        except ValueError:
+            pass
+
     train_ds = VoxCeleb1('train')
     dev_ds = VoxCeleb1('dev')
 
@@ -189,7 +196,7 @@ if __name__ == "__main__":
     timer = Timer(steps_per_epoch * args.epochs)
     timer.start()
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch + 1, args.epochs + 1):
         model.train()
 
         avg_loss = 0
@@ -292,4 +299,5 @@ if __name__ == "__main__":
             paddle.save(optimizer.state_dict(),
                         os.path.join(save_dir, 'model.pdopt'))
 
-            paddle.distributed.barrier()  # Main process
+            if paddle.distributed.get_world_size() > 1:
+                paddle.distributed.barrier()  # Main process
