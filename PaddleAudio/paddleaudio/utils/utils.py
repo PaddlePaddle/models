@@ -51,6 +51,9 @@ def get_logger(name: Optional[str] = None,
     if name is None:
         name = __file__
 
+    def list_handlers(logger):
+        return {str(h) for h in logger.handlers}
+
     logger = logging.getLogger(name)
     logging_level = getattr(logging, 'INFO')
     logger.setLevel(logging_level)
@@ -60,8 +63,8 @@ def get_logger(name: Optional[str] = None,
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging_level)
     stdout_handler.setFormatter(formatter)
-    logger.addHandler(stdout_handler)
-
+    if str(stdout_handler) not in list_handlers(logger):
+        logger.addHandler(stdout_handler)
     if log_dir:  #logging to file
         if log_file_name is None:
             log_file_name = 'log'
@@ -69,15 +72,17 @@ def get_logger(name: Optional[str] = None,
         fh = logging.FileHandler(log_file)
         fh.setLevel(logging_level)
         fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        if str(fh) not in list_handlers(logger):
+            logger.addHandler(fh)
 
     if use_error_log:
         stderr_handler = logging.StreamHandler(sys.stderr)
         stderr_handler.setLevel(logging.WARNING)
         stderr_handler.setFormatter(formatter)
-        logger.addHandler(stderr_handler)
+        if str(stderr_handler) not in list_handlers(logger):
+            logger.addHandler(stderr_handler)
 
-    logger.propagate = False
+    logger.propagate = 0
     return logger
 
 

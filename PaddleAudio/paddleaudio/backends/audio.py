@@ -13,6 +13,8 @@
 # limitations under the License.
 
 __all__ = [
+    'set_backend',
+    'get_backends',
     'resample',
     'to_mono',
     'depth_convert',
@@ -36,7 +38,32 @@ from ._ffmpeg import DecodingError, FFmpegAudioFile
 NORMALMIZE_TYPES = ['linear', 'gaussian']
 MERGE_TYPES = ['ch0', 'ch1', 'random', 'average']
 RESAMPLE_MODES = ['kaiser_best', 'kaiser_fast']
+SUPPORT_BACKENDS = ['ffmpeg', 'soundfile']
+
 EPS = 1e-8
+
+BACK_END = None
+
+
+def set_backend(backend: Union[str, None] = 'ffmpeg'):
+    """Set audio decoding backend.
+    Parameters:
+        backend(str|None): The name of the backend to use. If None, paddleaudio will
+            choose the optimal backend automatically.
+
+    Notes:
+        Use get_backends() to get available backends.
+
+    """
+    global BACK_END
+    if backend and backend not in SUPPORT_BACKENDS:
+        raise ParameterError(f'Unsupported backend {backend} ,' +
+                             f'supported backends are {SUPPORT_BACKENDS}')
+    BACK_END = backend
+
+
+def get_backends():
+    return SUPPORT_BACKENDS
 
 
 def _safe_cast(y: array, dtype: Union[type, str]) -> array:
@@ -44,8 +71,6 @@ def _safe_cast(y: array, dtype: Union[type, str]) -> array:
     Notes:
         This function is used internally.
     """
-    import pdb
-    pdb.set_trace()
     return np.clip(y, np.iinfo(dtype).min, np.iinfo(dtype).max).astype(dtype)
 
 
@@ -80,8 +105,8 @@ def _sound_file_load(file: os.PathLike,
                      offset: Optional[float] = None,
                      dtype: str = 'int16',
                      duration: Optional[int] = None) -> Tuple[array, int]:
-    """Load audio using soundfile library
-    This function load audio file using libsndfile.
+    """Load audio using soundfile library.
+    This function loads audio file using libsndfile.
 
     Reference:
         http://www.mega-nerd.com/libsndfile/#Features
@@ -102,8 +127,8 @@ def _sound_file_load(file: os.PathLike,
 
 
 def _sox_file_load():
-    """Load audio using sox library
-    This function load audio file using sox.
+    """Load audio using sox library.
+    This function loads audio file using sox.
 
     Reference:
         http://sox.sourceforge.net/
@@ -127,13 +152,13 @@ def depth_convert(y: array, dtype: Union[type, str]) -> array:
     SUPPORT_DTYPE = ['int16', 'int8', 'float32', 'float64']
     if y.dtype not in SUPPORT_DTYPE:
         raise ParameterError(
-            f'Unsupported audio dtype, '
-            'y.dtype is {y.dtype}, supported dtypes are {SUPPORT_DTYPE}')
+            f'Unsupported audio dtype, ' +
+            f'y.dtype is {y.dtype}, supported dtypes are {SUPPORT_DTYPE}')
 
     if dtype not in SUPPORT_DTYPE:
         raise ParameterError(
-            f'Unsupported audio dtype, '
-            'target dtype  is {dtype}, supported dtypes are {SUPPORT_DTYPE}')
+            f'Unsupported audio dtype, ' +
+            f'target dtype  is {dtype}, supported dtypes are {SUPPORT_DTYPE}')
 
     if dtype == y.dtype:
         return y
@@ -171,21 +196,22 @@ def resample(y: array,
              src_sr: int,
              target_sr: int,
              mode: str = 'kaiser_fast') -> array:
-    """Apply resampling to the input audio array.
+    """Apply audio resampling to the input audio array.
 
      Notes:
         1. This function uses resampy.resample to do the resampling.
         2. The default mode is kaiser_fast.  For better audio quality,
-            use mode = 'kaiser_fast'
+            use mode = 'kaiser_best'
      """
     if mode == 'kaiser_best':
         warnings.warn(
-            f'Using resampy in kaiser_best to {src_sr}=>{target_sr}. This function is pretty slow, \
-        we recommend the mode kaiser_fast in large scale audio trainning')
+            f'Using resampy in kaiser_best to {src_sr}=>{target_sr}.' +
+            f'This function is pretty slow, ' +
+            f'we recommend the mode kaiser_fast in large scale audio training')
 
     if not isinstance(y, np.ndarray):
-        raise ParameterError(
-            'Only support numpy array, but received y in {type(y)}')
+        raise TypeError(
+            f'Only support numpy array, but received y in {type(y)}')
 
     if mode not in RESAMPLE_MODES:
         raise ParameterError(f'resample mode must in {RESAMPLE_MODES}')
@@ -193,7 +219,7 @@ def resample(y: array,
     return resampy.resample(y, src_sr, target_sr, filter=mode)
 
 
-def to_mono(y: array, merge_type: str = 'average') -> array:
+def to_mono(y: array, merge_type: str = 'ch0') -> array:
     """Convert stereo audio to mono audio.
     Parameters:
         y(array): the input audio array of shape [2,n], where n is the number of audio samples.
@@ -229,17 +255,14 @@ def to_mono(y: array, merge_type: str = 'average') -> array:
     # need to do averaging according to dtype
 
     if y.dtype == 'float32':
-        y_out = (y[0] + y[1]) * 0.5
+        y_out = y.mean(0)
     elif y.dtype == 'int16':
-        y_out = y.astype('int32')
-        y_out = (y_out[0] + y_out[1]) // 2
+        y_out = y.mean(0)
         y_out = np.clip(y_out,
                         np.iinfo(y.dtype).min,
                         np.iinfo(y.dtype).max).astype(y.dtype)
-
     elif y.dtype == 'int8':
-        y_out = y.astype('int16')
-        y_out = (y_out[0] + y_out[1]) // 2
+        y_out = y.mean(0)
         y_out = np.clip(y_out,
                         np.iinfo(y.dtype).min,
                         np.iinfo(y.dtype).max).astype(y.dtype)
@@ -293,6 +316,11 @@ def save_wav(y: array, sr: int, file: os.PathLike) -> None:
     Notes:
         The function only supports raw wav format.
     """
+    if y.ndim == 2 and y.shape[0] > y.shape[1]:
+        warnings.warn(
+            f'The audio array tried to saved has {y.shape[0]} channels ' +
+            f'and the wave length is {y.shape[1]}. It\'s that what you mean?' +
+            f'If not, try to tranpose the array before saving.')
     if not file.endswith('.wav'):
         raise ParameterError(
             f'only .wav file supported, but dst file name is: {file}')
@@ -309,7 +337,7 @@ def save_wav(y: array, sr: int, file: os.PathLike) -> None:
     else:
         y_out = y
 
-    wavfile.write(file, sr, y_out)
+    wavfile.write(file, sr, y_out.T)
 
 
 def load(
@@ -337,7 +365,7 @@ def load(
             if it is originally steore. See to_mono() for more details.
             The default value is True.
         merge_type(str): the merging algorithm. See to_mono() for more details.
-            The default value is 'average'.
+            The default value is 'ch0'.
         normal(bool): whether to normalize the audio waveform. If True, the audio will be normalized using algorithm
             specified in norm_type. See normalize() for more details.
             The default value is True.
@@ -360,19 +388,27 @@ def load(
         DecodingError, if audio file is not supported
 
     """
-    try:
+    if BACK_END == 'ffmpeg':
+        y, r = _ffmpeg_load(file, offset=offset, duration=duration)
+    elif BACK_END == 'soundfile':
         y, r = _sound_file_load(file,
                                 offset=offset,
                                 dtype=dtype,
                                 duration=duration)
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f'Trying to load a file that doesnot exist {file}')
-    except:
+    else:
         try:
-            y, r = _ffmpeg_load(file, offset=offset, duration=duration)
-        except DecodingError:
-            raise DecodingError(f'Failed to load and decode file {file}')
+            y, r = _sound_file_load(file,
+                                    offset=offset,
+                                    dtype=dtype,
+                                    duration=duration)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f'Trying to load a file that doesnot exist {file}')
+        except:
+            try:
+                y, r = _ffmpeg_load(file, offset=offset, duration=duration)
+            except DecodingError:
+                raise DecodingError(f'Failed to load and decode file {file}')
 
     if not ((y.ndim == 1 and len(y) > 0) or (y.ndim == 2 and len(y[0]) > 0)):
         return np.array([], dtype=dtype)  # return empty audio
