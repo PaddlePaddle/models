@@ -338,7 +338,10 @@ class LogMelSpectrogram(nn.Layer):
                  power: float = 2.0,
                  n_mels: int = 64,
                  f_min: float = 0.0,
-                 f_max: Optional[float] = None):
+                 f_max: Optional[float] = None,
+                 ref_value: float = 1.0,
+                 amin: float = 1e-10,
+                 top_db: Optional[float] = 80.0):
         """Compute log-mel-spectrogram(also known as LogFBank) feature of a given signal,
         typically an audio waveform.
 
@@ -366,6 +369,13 @@ class LogMelSpectrogram(nn.Layer):
             n_mels(int): the mel bins.
             f_min(float): the lower cut-off frequency, below which the filter response is zero.
             f_max(float): the upper cut-off frequency, above which the filter response is zeros.
+            ref_value(float): the reference value. If smaller than 1.0, the db level
+                of the signal will be pulled up accordingly. Otherwise, the db level is pushed down.
+            amin(float): the minimum value of input magnitude, below which the input
+                magnitude is clipped(to amin). For numerical stability, set amin to a larger value,
+                e.g., 1e-3.
+            top_db(float): the maximum db value of resulting spectrum, above which the
+                spectrum is clipped(to top_db).
 
         Notes:
             The LogMelSpectrogram transform relies on MelSpectrogram transform to compute
@@ -388,13 +398,29 @@ class LogMelSpectrogram(nn.Layer):
 
         """
         super(LogMelSpectrogram, self).__init__()
-        self._melspectrogram = MelSpectrogram(sr, n_fft, hop_length, win_length,
-                                              window, center, pad_mode, power,
-                                              n_mels, f_min, f_max)
+
+        self._melspectrogram = MelSpectrogram(sr=sr,
+                                              n_fft=n_fft,
+                                              hop_length=hop_length,
+                                              win_length=win_length,
+                                              window=window,
+                                              center=center,
+                                              pad_mode=pad_mode,
+                                              power=power,
+                                              n_mels=n_mels,
+                                              f_min=f_min,
+                                              f_max=f_max)
+
+        self.ref_value = ref_value
+        self.amin = amin
+        self.top_db = top_db
 
     def forward(self, x: Tensor) -> Tensor:
         mel_feature = self._melspectrogram(x)
-        log_mel_feature = F.power_to_db(mel_feature)
+        log_mel_feature = F.power_to_db(mel_feature,
+                                        ref_value=self.ref_value,
+                                        amin=self.amin,
+                                        top_db=self.top_db)
         return log_mel_feature
 
     def __repr__(self):

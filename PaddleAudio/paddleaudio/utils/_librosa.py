@@ -443,7 +443,7 @@ def melspectrogram(x: array,
                    center: bool = True,
                    pad_mode: str = 'reflect',
                    power: float = 2.0,
-                   to_db: bool = True,
+                   to_db: bool = False,
                    ref: float = 1.0,
                    amin: float = 1e-10,
                    top_db: Optional[float] = None) -> array:
@@ -454,12 +454,12 @@ def melspectrogram(x: array,
         window_size: int, typically 512, 1024, 2048, etc.
         The window size for framing, also used as n_fft for stft
     Returns:
-        The mel-spectrogram in power scale or db scale(default)
+        The mel-spectrogram in amplitude scale(default) or db scale
 
     Notes:
     1. sr is default to 16000, which is commonly used in speech/speaker processing.
     2. when fmax is None, it is set to sr//2.
-    3. this function will convert mel-spectrogram to db scale by default, which is different
+    3. this function will convert mel-spectrogram to db scale by default, which is different from
     that of librosa.
     """
     _check_audio(x, mono=True)
