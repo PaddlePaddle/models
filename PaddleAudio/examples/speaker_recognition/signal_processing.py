@@ -119,14 +119,11 @@ def notch_filter(notch_freq, filter_width=101, notch_width=0.05):
 
     # Compute a low-pass filter with cutoff frequency notch_freq.
     hlpf = sinc(3 * (notch_freq - notch_width) * inputs)
-    # import torch
-    # hlpf *= paddle.to_tensor(torch.blackman_window(filter_width).detach().numpy())
     hlpf *= blackman_window(filter_width)
     hlpf /= paddle.sum(hlpf)
 
     # Compute a high-pass filter with cutoff frequency notch_freq.
     hhpf = sinc(3 * (notch_freq + notch_width) * inputs)
-    # hhpf *= paddle.to_tensor(torch.blackman_window(filter_width).detach().numpy())
     hhpf *= blackman_window(filter_width)
     hhpf /= -paddle.sum(hhpf)
     hhpf[pad] += 1
