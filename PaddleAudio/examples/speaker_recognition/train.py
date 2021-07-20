@@ -25,7 +25,7 @@ from loss import AdditiveAngularMargin, LogSoftmaxWrapper
 from model import SpeakerClassifier
 from paddleaudio.datasets import OpenRIRNoise, VoxCeleb1
 from paddleaudio.models.ecapa_tdnn import ECAPA_TDNN
-from paddleaudio.transforms import MelSpectrogram
+from paddleaudio.transforms import LogMelSpectrogram
 from paddleaudio.utils import Timer, get_logger
 
 logger = get_logger()
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     else:
         augment_pipeline = []
 
-    feature_extractor = MelSpectrogram(
+    feature_extractor = LogMelSpectrogram(
         sr=16000, n_fft=400, hop_length=160, n_mels=80, f_min=50)
 
     model_conf = {
@@ -266,15 +266,17 @@ if __name__ == "__main__":
             num_corrects = 0
             num_samples = 0
             logger.info('Evaluation on validation dataset')
-            for batch_idx, batch in enumerate(dev_loader):
-                waveforms, labels = batch['waveforms'], batch['labels']
-                feats = feature_extractor(waveforms)
-                feats = feature_normalize(feats, mean_norm=True, std_norm=False)
-                logits = model(feats)
+            with paddle.no_grad():
+                for batch_idx, batch in enumerate(dev_loader):
+                    waveforms, labels = batch['waveforms'], batch['labels']
+                    feats = feature_extractor(waveforms)
+                    feats = feature_normalize(
+                        feats, mean_norm=True, std_norm=False)
+                    logits = model(feats)
 
-                preds = paddle.argmax(logits, axis=1)
-                num_corrects += (preds == labels).numpy().sum()
-                num_samples += feats.shape[0]
+                    preds = paddle.argmax(logits, axis=1)
+                    num_corrects += (preds == labels).numpy().sum()
+                    num_samples += feats.shape[0]
 
             print_msg = '[Evaluation result]'
             print_msg += ' dev_acc={:.4f}'.format(num_corrects / num_samples)

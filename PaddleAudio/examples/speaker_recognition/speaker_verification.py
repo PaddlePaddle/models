@@ -159,31 +159,33 @@ if __name__ == "__main__":
             logger.info(
                 f'Loop {[i+1]}: Computing embeddings on {dl.dataset.subset} dataset'
             )
-            for batch_idx, batch in enumerate(tqdm(dl)):
-                ids, feats, lengths = batch['ids'], batch['feats'], batch[
-                    'lengths']
-                embeddings = model.backbone(feats, lengths).squeeze(
-                    -1).numpy()  # (N, emb_size, 1) -> (N, emb_size)
+            with paddle.no_grad():
+                for batch_idx, batch in enumerate(tqdm(dl)):
+                    ids, feats, lengths = batch['ids'], batch['feats'], batch[
+                        'lengths']
+                    embeddings = model.backbone(feats, lengths).squeeze(
+                        -1).numpy()  # (N, emb_size, 1) -> (N, emb_size)
 
-                # Global embedding normalization.
-                if args.global_embedding_norm:
-                    batch_count += 1
-                    mean = embeddings.mean(axis=0) if mean_norm else 0
-                    std = embeddings.std(axis=0) if std_norm else 1
-                    # Update global mean and std.
-                    if embedding_mean is None and embedding_std is None:
-                        embedding_mean, embedding_std = mean, std
-                    else:
-                        weight = 1 / batch_count  # Weight decay by batches.
-                        embedding_mean = (
-                            1 - weight) * embedding_mean + weight * mean
-                        embedding_std = (
-                            1 - weight) * embedding_std + weight * std
-                    # Apply global embedding normalization.
-                    embeddings = (embeddings - embedding_mean) / embedding_std
+                    # Global embedding normalization.
+                    if args.global_embedding_norm:
+                        batch_count += 1
+                        mean = embeddings.mean(axis=0) if mean_norm else 0
+                        std = embeddings.std(axis=0) if std_norm else 1
+                        # Update global mean and std.
+                        if embedding_mean is None and embedding_std is None:
+                            embedding_mean, embedding_std = mean, std
+                        else:
+                            weight = 1 / batch_count  # Weight decay by batches.
+                            embedding_mean = (
+                                1 - weight) * embedding_mean + weight * mean
+                            embedding_std = (
+                                1 - weight) * embedding_std + weight * std
+                        # Apply global embedding normalization.
+                        embeddings = (
+                            embeddings - embedding_mean) / embedding_std
 
-                # Update embedding dict.
-                id2embedding.update(dict(zip(ids, embeddings)))
+                    # Update embedding dict.
+                    id2embedding.update(dict(zip(ids, embeddings)))
 
     # Compute cosine scores.
     labels = []
