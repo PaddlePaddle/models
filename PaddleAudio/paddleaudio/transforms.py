@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, List, Optional
+import glob
+import os
+import random
+from typing import Any, List, Optional, Union
 
 import paddle
 import paddle.nn as nn
+import paddleaudio
 import paddleaudio.functional as F
 from paddle import Tensor
 
@@ -26,12 +30,18 @@ __all__ = [
     'MelSpectrogram',
     'LogMelSpectrogram',
     'Compose',
+    'RandomChoice',
+    'RandomApply',
     'RandomMasking',
     'CenterPadding',
     'RandomCropping',
     'RandomMuLawCodec',
     'MuLawEncoding',
     'MuLawDecoding',
+    'RandomRIRReader',
+    'Noisify',
+    'BatchAudioReader',
+    'Reverberate',
 ]
 
 
@@ -840,3 +850,364 @@ class RandomMuLawCodec(nn.Layer):
     def __repr__(self, ):
         return (self.__class__.__name__ +
                 f'(min_mu={self.min_mu}, max_mu={self.max_mu})')
+
+
+class RandomRIRReader(nn.Layer):
+    """Apply reverberation to input audio tensor.
+
+    Parameters:
+        rir_path_or_files(os.PathLike|List[os.PathLike]): the directory that contains rir files directly
+        (without subfolders) or the list of rir files.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        reader = T.RandomRIRReader(<rir_folder>, sample_rate=16000, random=True)
+        weight = reader()
+
+    """
+    def __init__(self,
+                 rir_path_or_files: Union[os.PathLike, List[os.PathLike]],
+                 sample_rate: int,
+                 random: bool = True):
+        super(RandomRIRReader, self).__init__()
+        if isinstance(rir_path_or_files, list):
+            self.rir_files = rir_path_or_files
+        elif os.path.isdir(rir_path_or_files):
+            self.rir_files = glob.glob(rir_path_or_files + '/*.wav',
+                                       recursive=True)
+            if len(self.rir_files) == 0:
+                raise FileNotFoundError(
+                    f'no files were found in {rir_path_or_files}')
+        elif os.path.isfile(rir_path_or_files):
+            self.rir_files = [rir_path_or_files]
+        else:
+            raise ValueError(
+                f'rir_path_or_files={rir_path_or_files} is invalid')
+
+        self.n_files = len(self.rir_files)
+        self.idx = 0
+        self.random = random
+        self.sample_rate = sample_rate
+
+    def forward(self) -> Tensor:
+        if self.random:
+            file = random.choice(self.rir_files)
+        else:
+            i = self.idx % self.n_files
+            file = self.rir_files[i]
+            self.idx += 1
+            if self.idx >= self.n_files:
+                self.idx = 0
+
+        rir, _ = paddleaudio.load(file, sr=self.sample_rate, mono=True)
+        rir_weight = paddle.to_tensor(rir[None, None, ::-1])
+        rir_weight = paddle.nn.functional.normalize(rir_weight, p=2, axis=-1)
+        return rir_weight
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__ +
+            f'(n_files={self.n_files}, random={self.random}, sample_rate={self.sample_rate})'
+        )
+
+
+class Reverberate(nn.Layer):
+    """Apply reverberation to input audio tensor.
+
+    Parameters:
+        rir_reader: an object of RandomRIRReader that reads impulse response from rir dataset.
+
+    Shapes:
+        - x: 2-D tensor with shape [batch_size, frames]
+        - output: 2-D tensor with shape [batch_size, frames]
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 48000))
+
+        reader = T.RandomRIRReader(<rir_folder>)
+        transform = T.Reverberate(reader)
+        y = transform(x)
+        print(y.shape)
+        >> [2, 48000]
+
+    """
+    def __init__(self, rir_reader: Any):
+        super(Reverberate, self).__init__()
+        self.rir_reader = rir_reader
+
+    def forward(self, x: Tensor) -> Tensor:
+        assert x.ndim == 2, (f'the input tensor must be 2d tensor, ' +
+                             f'but received x.ndim={x.ndim}')
+
+        weight = self.rir_reader()  #get next weight
+        pad_len = [
+            weight.shape[-1] // 2 - 1, weight.shape[-1] - weight.shape[-1] // 2
+        ]
+        out = paddle.nn.functional.conv1d(x.unsqueeze(1),
+                                          weight,
+                                          padding=pad_len)
+        return out[:, 0, :]
+
+    def __repr__(self):
+        return (self.__class__.__name__)
+
+
+class RandomApply():
+    """Compose a list of transforms and apply them to the input tensor Randomly.
+
+    Parameters:
+        transforms: a list of transforms.
+        p(float): the probability that each transform will be chosen independently.
+        Default: 0.5
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 48000))
+
+        reader1 = T.BatchAudioReader(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        transform1 = T.Noisify(reader1, 20, 15, True)
+        reader2 = T.BatchAudioReader(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        transform2 = T.Noisify(reader2, 10, 5, True)
+        transform = T.RandomApply([
+            transform1,
+            transform2,
+        ],p=0.3)
+        y = transform(x)
+        print(y.shape)
+        >> [2, 48000]
+
+    """
+    def __init__(self, transforms: List[Any], p: float = 0.5):
+        self.transforms = transforms
+        self.p = p
+
+    def __call__(self, x: Tensor) -> Tensor:
+        for t in self.transforms:
+            if random.choices([True, False], weights=[self.p, 1 - self.p])[0]:
+                x = t(x)
+        return x
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += f'\n), p={self.p}'
+        return format_string
+
+
+class RandomChoice():
+    """Compose a list of transforms and choice one randomly according to some weights(if proviced)
+    Parameters:
+        transforms: a list of transforms.
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 48000))
+
+        reader1 = T.BatchAudioReader(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        transform1 = T.Noisify(reader1, 20, 15, True)
+        reader2 = T.BatchAudioReader(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        transform2 = T.Noisify(reader2, 10, 5, True)
+        transform = T.RandomChoice([
+            transform1,
+            transform2,
+        ],weights=[0.3,0.7])
+        y = transform(x)
+        print(y.shape)
+        >> [2, 48000]
+
+    """
+    def __init__(self,
+                 transforms: List[Any],
+                 weights: Optional[List[float]] = None):
+        self.transforms = transforms
+        self.weights = weights
+
+    def __call__(self, x: Tensor) -> Tensor:
+        t = random.choices(self.transforms, weights=self.weights)[0]
+        return t(x)
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += f'\n)'
+        return format_string
+
+
+class Noisify:
+    """Transform the input audio tensor by adding noise.
+
+    Parameters:
+        noise_reader: a BatchAudioReader object that reads audio as noise source.
+        snr_high(float): the upper bound of signal-to-noise ratio in db
+            after applying the transform. Default: 10.0 db.
+        snr_low(None|float): the lower bound of signal-to-noise ratio in db
+            after applying the transform. If None, it is set to snr_high*0.5.
+            Default: None
+        random(bool): whether to sample snr randomly in range [snr_low,snr_high]. If False,
+            the snr_high is used as constant snr value for all transforms. Default: False.
+
+    Shapes:
+        - x: 2-D tensor with shape [batch_size, frames]
+        - output: 2-D tensor with shape [batch_size, frames]
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        x = paddle.randn((2, 48000))
+        noise_reader = BatchAudioReader(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
+        transform = Noisify(noise_reader, 20, 15, True)
+        y = transform(x)
+        print(y.shape)
+        >> [2,48000]
+
+    """
+    def __init__(self,
+                 noise_reader: Any,
+                 snr_high: float = 10.0,
+                 snr_low: Optional[float] = None,
+                 random: bool = False):
+        super(Noisify, self).__init__()
+        self.noise_reader = noise_reader
+        self.random = random
+        self.snr_high = snr_high
+        self.snr_low = snr_low
+        if random and self.snr_low is None:
+            self.snr_low = snr_high * 0.5
+
+    def __call__(self, x: Tensor) -> Tensor:
+        assert x.ndim == 2, (f'the input tensor must be 2d tensor, ' +
+                             f'but received x.ndim={x.ndim}')
+        noise = self.noise_reader()
+        if self.random:
+            snr = paddle.rand(
+                (x.shape[0], )) * (self.snr_high - self.snr_low) + self.snr_low
+        else:
+            snr = paddle.ones((x.shape[0], )) * self.snr_high
+        noise_db = 10 * paddle.log10(paddle.mean(noise**2, axis=1) + 1e-4)
+        sound_db = 10 * paddle.log10(paddle.mean(x**2, axis=1) + 1e-4)
+        scale = paddle.sqrt(10**(sound_db - noise_db - snr) / 10)
+        x = x + noise * scale.unsqueeze(1)
+        return x
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__ +
+            f'(random={self.random}, snr_high={self.snr_high}, snr_low={self.snr_low})'
+        )
+
+
+class BatchAudioReader:
+    """Read audio files randomly or sequentially from disk and pack them as a tensor.
+    Parameters:
+
+        audio_path_or_files(os.PathLike|List[os.PathLike]]): the audio folder or the audio file list.
+        sample_rate(int): the target audio sample rate. If it is different from the native sample rate,
+            resampling method will be invoked.
+        duration(float): the duration after the audio is loaded. Padding or random cropping will take place
+            depending on whether actual audio length is shorter or longer than int(sample_rate*duration).
+            The audio tensor will have shape [batch_size, int(sample_rate*duration)]
+        batch_size(int): the number of audio files contained in the returned tensor.
+        random(bool): whether to read audio file randomly. If False, will read them sequentially.
+            Default: True.
+    Notes:
+        In sequential mode, once the end of audio list is reached, the reader will start over again.
+        The BatchAudioReader object can be called endlessly.
+
+     Shapes:
+        - output: 2-D tensor with shape [batch_size, int(sample_rate*duration)]
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.transforms as T
+        reader = BatchAudioReader(<audio_folder>, sample_rate=16000, duration=3.0, batch_size=2)
+        audio = reader(x)
+        print(audio.shape)
+        >> [2,48000]
+
+    """
+    def __init__(self,
+                 audio_path_or_files: Union[os.PathLike, List[os.PathLike]],
+                 sample_rate: int,
+                 duration: float,
+                 batch_size: int,
+                 random: bool = True):
+        if isinstance(audio_path_or_files, list):
+            self.audio_files = audio_path_or_files
+        elif os.path.isdir(audio_path_or_files):
+            self.audio_files = glob.glob(audio_path_or_files + '/*.wav',
+                                         recursive=True)
+            if len(self.audio_files) == 0:
+                raise FileNotFoundError(
+                    f'no files were found in {audio_path_or_files}')
+        elif os.path.isfile(audio_path_or_files):
+            self.audio_files = [audio_path_or_files]
+        else:
+            raise ValueError(
+                f'rir_path_or_files={audio_path_or_files} is invalid')
+
+        self.n_files = len(self.audio_files)
+        self.idx = 0
+        self.random = random
+        self.batch_size = batch_size
+        self.sample_rate = sample_rate
+        self.duration = int(duration * sample_rate)
+        self._data = paddle.zeros((self.batch_size, self.duration),
+                                  dtype='float32')
+
+    def load_wav(self, file: os.PathLike):
+        s, _ = paddleaudio.load(file, sr=self.sample_rate)
+        s = paddle.to_tensor(s)
+        s = F.random_cropping(s, target_size=self.duration)
+        s = F.center_padding(s, target_size=self.duration)
+
+        return s
+
+    def __call__(self) -> Tensor:
+
+        if self.random:
+            files = [
+                random.choice(self.audio_files) for _ in range(self.batch_size)
+            ]
+        else:
+            files = []
+            for _ in range(self.batch_size):
+                i = self.idx % self.n_files
+                file = self.audio_files[i]
+                self.idx += 1
+                if self.idx >= self.n_files:
+                    self.idx = 0
+                files += [file]
+        for i, f in enumerate(files):
+            self._data[i, :] = self.load_wav(f)
+
+        return self._data
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__ +
+            f'(n_files={self.n_files}, random={self.random}, sample_rate={self.sample_rate})'
+        )
