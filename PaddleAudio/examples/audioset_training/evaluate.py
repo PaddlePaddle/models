@@ -24,9 +24,10 @@ from dataset import get_val_loader
 from model import resnet50
 from paddle.utils import download
 from sklearn.metrics import average_precision_score, roc_auc_score
-from utils import compute_dprime,download_assets
+from utils import compute_dprime, download_assets
 
 checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_averaging_mAP0.416.pdparams'
+
 
 def evaluate(epoch, val_loader, model, loss_fn):
     model.eval()

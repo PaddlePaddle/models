@@ -129,7 +129,7 @@ if __name__ == '__main__':
         model.train()
         model.clear_gradients()
         t0 = time.time()
-        for batch_id, (x,y) in enumerate(train_loader()):
+        for batch_id, (x, y) in enumerate(train_loader()):
             if step < warm_steps:
                 optimizer.set_lr(lrs[step])
             x.stop_gradient = False

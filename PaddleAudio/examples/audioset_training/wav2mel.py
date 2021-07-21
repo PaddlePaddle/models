@@ -4,8 +4,10 @@ import os
 
 import h5py
 import numpy as np
+import paddle
 import paddleaudio as pa
 import tqdm
+from paddleaudio.functional import melspectrogram
 
 parser = argparse.ArgumentParser(description='wave2mel')
 parser.add_argument('--wav_file', type=str, required=False, default='')
@@ -64,20 +66,23 @@ if len(h5_files) > 0:
             s = src_h5[key][:]
             s = pa.depth_convert(s, 'float32')
             # s = pa.resample(s,32000,args.sample_rate)
-            x = pa.features.melspectrogram(s,
-                                           sr=args.sample_rate,
-                                           window_size=args.window_size,
-                                           hop_length=args.hop_length,
-                                           n_mels=args.mel_bins,
-                                           fmin=args.fmin,
-                                           fmax=args.fmax,
-                                           window='hann',
-                                           center=True,
-                                           pad_mode='reflect',
-                                           ref=1.0,
-                                           amin=1e-10,
-                                           top_db=None)
-            dst_h5.create_dataset(key, data=x)
+
+            x = melspectrogram(paddle.to_tensor(s),
+                               sr=args.sample_rate,
+                               win_length=args.window_size,
+                               n_fft=args.window_size,
+                               hop_length=args.hop_length,
+                               n_mels=args.mel_bins,
+                               f_min=args.fmin,
+                               f_max=args.fmax,
+                               window='hann',
+                               center=True,
+                               pad_mode='reflect',
+                               to_db=True,
+                               amin=1e-3,
+                               top_db=None)
+
+            dst_h5.create_dataset(key, data=x[0].numpy())
         src_h5.close()
         dst_h5.close()
 
@@ -91,23 +96,24 @@ if len(wav_files) > 0:
     print(f'{len(wav_files)} wav files listed')
     for f in tqdm.tqdm(wav_files):
         s, _ = pa.load(f, sr=args.sample_rate)
-        x = pa.melspectrogram(s,
-                              sr=args.sample_rate,
-                              window_size=args.window_size,
-                              hop_length=args.hop_length,
-                              n_mels=args.mel_bins,
-                              fmin=args.fmin,
-                              fmax=args.fmax,
-                              window='hann',
-                              center=True,
-                              pad_mode='reflect',
-                              ref=1.0,
-                              amin=1e-10,
-                              top_db=None)
+        x = melspectrogram(paddle.to_tensor(s),
+                           sr=args.sample_rate,
+                           win_length=args.window_size,
+                           n_fft=args.window_size,
+                           hop_length=args.hop_length,
+                           n_mels=args.mel_bins,
+                           f_min=args.fmin,
+                           f_max=args.fmax,
+                           window='hann',
+                           center=True,
+                           pad_mode='reflect',
+                           to_db=True,
+                           amin=1e-3,
+                           top_db=None)
         #         figure(figsize=(8,8))
         #         imshow(x)
         #         show()
         #         print(x.shape)
         key = f.split('/')[-1][:11]
-        dst_h5.create_dataset(key, data=x)
+        dst_h5.create_dataset(key, data=x[0].numpy())
     dst_h5.close()
