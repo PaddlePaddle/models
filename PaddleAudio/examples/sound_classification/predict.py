@@ -22,8 +22,8 @@ import paddle.nn.functional as F
 from model import SoundClassifier
 from paddleaudio.backends import load as load_audio
 from paddleaudio.datasets import ESC50
-from paddleaudio.features import melspectrogram
 from paddleaudio.models.panns import cnn14
+from paddleaudio.transforms import LogMelSpectrogram
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -34,24 +34,19 @@ parser.add_argument("--checkpoint", type=str, required=True, help="Checkpoint of
 args = parser.parse_args()
 # yapf: enable
 
-
-def extract_features(file: str, **kwargs):
-    waveform, sr = load_audio(args.wav, sr=None)
-    feats = melspectrogram(waveform, sr, **kwargs).transpose()
-    return feats
-
-
 if __name__ == '__main__':
     paddle.set_device(args.device)
 
-    model = SoundClassifier(backbone=cnn14(pretrained=False,
-                                           extract_embedding=True),
-                            num_class=len(ESC50.label_list))
+    feature_extractor = LogMelSpectrogram(
+        sr=16000, n_fft=512, hop_length=320, n_mels=64, f_min=50)
+    model = SoundClassifier(
+        backbone=cnn14(pretrained=False, extract_embedding=True),
+        num_class=len(ESC50.label_list))
     model.set_state_dict(paddle.load(args.checkpoint))
     model.eval()
 
-    feats = extract_features(args.wav)
-    feats = paddle.to_tensor(np.expand_dims(feats, 0))
+    waveform, sr = load_audio(args.wav)
+    feats = feature_extractor(paddle.to_tensor(waveform).unsqueeze(0))
     logits = model(feats)
     probs = F.softmax(logits, axis=1).numpy()
 
