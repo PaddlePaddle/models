@@ -114,7 +114,7 @@ def feature_normalize(feats: paddle.Tensor,
                       mean_norm: bool = True,
                       std_norm: bool = True):
     # Features normalization if needed
-    mean = feats.mean(axis=-1, keepdim=True) if mean_norm else 1
+    mean = feats.mean(axis=-1, keepdim=True) if mean_norm else 0
     std = feats.std(axis=-1, keepdim=True) if std_norm else 1
     feats = (feats - mean) / std
 
