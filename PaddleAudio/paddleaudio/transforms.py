@@ -38,9 +38,9 @@ __all__ = [
     'RandomMuLawCodec',
     'MuLawEncoding',
     'MuLawDecoding',
-    'RandomRIRReader',
+    'RIRSource',
     'Noisify',
-    'BatchAudioReader',
+    'AudioSource',
     'Reverberate',
 ]
 
@@ -852,9 +852,8 @@ class RandomMuLawCodec(nn.Layer):
                 f'(min_mu={self.min_mu}, max_mu={self.max_mu})')
 
 
-class RandomRIRReader(nn.Layer):
-    """Apply reverberation to input audio tensor.
-
+class RIRSource(nn.Layer):
+    """Gererate RIR filter coefficients from local file sources.
     Parameters:
         rir_path_or_files(os.PathLike|List[os.PathLike]): the directory that contains rir files directly
         (without subfolders) or the list of rir files.
@@ -864,7 +863,7 @@ class RandomRIRReader(nn.Layer):
 
         import paddle
         import paddleaudio.transforms as T
-        reader = T.RandomRIRReader(<rir_folder>, sample_rate=16000, random=True)
+        reader = T.RIRSource(<rir_folder>, sample_rate=16000, random=True)
         weight = reader()
 
     """
@@ -872,7 +871,7 @@ class RandomRIRReader(nn.Layer):
                  rir_path_or_files: Union[os.PathLike, List[os.PathLike]],
                  sample_rate: int,
                  random: bool = True):
-        super(RandomRIRReader, self).__init__()
+        super(RIRSource, self).__init__()
         if isinstance(rir_path_or_files, list):
             self.rir_files = rir_path_or_files
         elif os.path.isdir(rir_path_or_files):
@@ -918,7 +917,7 @@ class Reverberate(nn.Layer):
     """Apply reverberation to input audio tensor.
 
     Parameters:
-        rir_reader: an object of RandomRIRReader that reads impulse response from rir dataset.
+        rir_reader: an object of RIRSource that reads impulse response from rir dataset.
 
     Shapes:
         - x: 2-D tensor with shape [batch_size, frames]
@@ -932,7 +931,7 @@ class Reverberate(nn.Layer):
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader = T.RandomRIRReader(<rir_folder>)
+        reader = T.RIRSource(<rir_folder>)
         transform = T.Reverberate(reader)
         y = transform(x)
         print(y.shape)
@@ -975,9 +974,9 @@ class RandomApply():
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader1 = T.BatchAudioReader(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader1 = T.AudioSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
         transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.BatchAudioReader(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader2 = T.AudioSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
         transform2 = T.Noisify(reader2, 10, 5, True)
         transform = T.RandomApply([
             transform1,
@@ -1019,9 +1018,9 @@ class RandomChoice():
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader1 = T.BatchAudioReader(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader1 = T.AudioSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
         transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.BatchAudioReader(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader2 = T.AudioSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
         transform2 = T.Noisify(reader2, 10, 5, True)
         transform = T.RandomChoice([
             transform1,
@@ -1055,7 +1054,7 @@ class Noisify:
     """Transform the input audio tensor by adding noise.
 
     Parameters:
-        noise_reader: a BatchAudioReader object that reads audio as noise source.
+        noise_reader: a AudioSource object that reads audio as noise source.
         snr_high(float): the upper bound of signal-to-noise ratio in db
             after applying the transform. Default: 10.0 db.
         snr_low(None|float): the lower bound of signal-to-noise ratio in db
@@ -1075,7 +1074,7 @@ class Noisify:
         import paddle
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
-        noise_reader = BatchAudioReader(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
+        noise_reader = AudioSource(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
         transform = Noisify(noise_reader, 20, 15, True)
         y = transform(x)
         print(y.shape)
@@ -1125,7 +1124,7 @@ class Noisify:
         )
 
 
-class BatchAudioReader:
+class AudioSource:
     """Read audio files randomly or sequentially from disk and pack them as a tensor.
     Parameters:
 
@@ -1140,7 +1139,7 @@ class BatchAudioReader:
             Default: True.
     Notes:
         In sequential mode, once the end of audio list is reached, the reader will start over again.
-        The BatchAudioReader object can be called endlessly.
+        The AudioSource object can be called endlessly.
 
      Shapes:
         - output: 2-D tensor with shape [batch_size, int(sample_rate*duration)]
@@ -1151,7 +1150,7 @@ class BatchAudioReader:
 
         import paddle
         import paddleaudio.transforms as T
-        reader = BatchAudioReader(<audio_folder>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader = AudioSource(<audio_folder>, sample_rate=16000, duration=3.0, batch_size=2)
         audio = reader(x)
         print(audio.shape)
         >> [2,48000]
@@ -1203,8 +1202,7 @@ class BatchAudioReader:
         else:
             files = []
             for _ in range(self.batch_size):
-                i = self.idx % self.n_files
-                file = self.audio_files[i]
+                file = self.audio_files[self.idx]
                 self.idx += 1
                 if self.idx >= self.n_files:
                     self.idx = 0
