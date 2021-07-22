@@ -214,13 +214,13 @@ if __name__ == "__main__":
 
     if args.score_norm:
         n_step = args.norm_size // args.batch_size + 1  # Approximate size
+        norm_data = iter(norm_loader)
         id2embedding_norm = {}
         logger.info(
             f'Computing {args.norm_size} train embeddings for score norm.')
         with paddle.no_grad():
-            for batch_idx, batch in enumerate(tqdm(norm_loader, total=n_step)):
-                if batch_idx == n_step:
-                    break
+            for i in tqdm(range(n_step)):
+                batch = next(norm_data)
                 ids, waveforms, lengths = batch['ids'], batch[
                     'waveforms'], batch['lengths']
                 feats = feature_extractor(waveforms)
@@ -233,7 +233,7 @@ if __name__ == "__main__":
         # Score normalization based on trainning samples.
         norm_embeddings = paddle.stack(list(id2embedding_norm.values()), axis=0)
         logger.info(f'Applying score norm...')
-        for idx in range(tqdm(len(scores))):
+        for idx in tqdm(range(len(scores))):
             enrol_id, test_id = enrol_ids[idx], test_ids[idx]
 
             enrol_embedding, test_embedding = id2embedding[

@@ -272,7 +272,7 @@ if __name__ == "__main__":
             model.eval()
             num_corrects = 0
             num_samples = 0
-            logger.info('Evaluation on validation dataset')
+            logger.info('Evaluate on validation dataset')
             with paddle.no_grad():
                 for batch_idx, batch in enumerate(dev_loader):
                     waveforms, labels = batch['waveforms'], batch['labels']
