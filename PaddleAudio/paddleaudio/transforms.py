@@ -1092,22 +1092,30 @@ class Noisify:
         self.random = random
         self.snr_high = snr_high
         self.snr_low = snr_low
-        if random and self.snr_low is None:
-            self.snr_low = snr_high * 0.5
+        if self.random:
+            if self.snr_low is None:
+                self.snr_low = snr_high - 3.0
+            assert self.snr_high >= self.snr_low, (
+                f'snr_high should be >= snr_low, ' +
+                f'but received snr_high={self.snr_high}, ' +
+                f'snr_low={self.snr_low}')
 
     def __call__(self, x: Tensor) -> Tensor:
         assert x.ndim == 2, (f'the input tensor must be 2d tensor, ' +
                              f'but received x.ndim={x.ndim}')
         noise = self.noise_reader()
         if self.random:
-            snr = paddle.rand(
-                (x.shape[0], )) * (self.snr_high - self.snr_low) + self.snr_low
+            snr = random.uniform(self.snr_low, self.snr_high)
         else:
-            snr = paddle.ones((x.shape[0], )) * self.snr_high
-        noise_db = 10 * paddle.log10(paddle.mean(noise**2, axis=1) + 1e-4)
-        sound_db = 10 * paddle.log10(paddle.mean(x**2, axis=1) + 1e-4)
-        scale = paddle.sqrt(10**(sound_db - noise_db - snr) / 10)
-        x = x + noise * scale.unsqueeze(1)
+            snr = self.snr_high
+        signal_mag = paddle.sum(paddle.square(x), -1)
+        noise_mag = paddle.sum(paddle.square(noise), -1)
+        alpha = 10**(snr / 10) * noise_mag / (signal_mag + 1e-10)
+        beta = 1.0
+        factor = alpha + beta
+        alpha = alpha / factor
+        beta = beta / factor
+        x = alpha.unsqueeze((1, )) * x + beta.unsqueeze((1, )) * noise
         return x
 
     def __repr__(self):
