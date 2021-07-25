@@ -22,6 +22,7 @@ import paddleaudio as pa
 import yaml
 from model import resnet50
 from paddle.utils import download
+from paddleaudio.functional import melspectrogram
 from utils import (download_assets, get_label_name_mapping, get_labels,
                    get_metrics)
 
@@ -32,22 +33,22 @@ checkpoint_url = 'https://bj.bcebos.com/paddleaudio/paddleaudio/resnet50_weight_
 
 def load_and_extract_feature(file, c):
     s, _ = pa.load(file, sr=c['sample_rate'])
-    x = pa.features.melspectrogram(s,
-                                   sr=c['sample_rate'],
-                                   window_size=c['window_size'],
-                                   hop_length=c['hop_size'],
-                                   n_mels=c['mel_bins'],
-                                   fmin=c['fmin'],
-                                   fmax=c['fmax'],
-                                   window='hann',
-                                   center=True,
-                                   pad_mode='reflect',
-                                   ref=1.0,
-                                   amin=1e-10,
-                                   top_db=None)
-
-    x = x.T  # !!
-    x = paddle.Tensor(x).unsqueeze((0, 1))
+    x = melspectrogram(paddle.to_tensor(s),
+                       sr=c['sample_rate'],
+                       win_length=c['window_size'],
+                       n_fft=c['window_size'],
+                       hop_length=c['hop_size'],
+                       n_mels=c['mel_bins'],
+                       f_min=c['fmin'],
+                       f_max=c['fmax'],
+                       window='hann',
+                       center=True,
+                       pad_mode='reflect',
+                       to_db=True,
+                       amin=1e-3,
+                       top_db=None)
+    x = x.transpose((0, 2, 1))
+    x = x.unsqueeze((0, ))
     return x
 
 

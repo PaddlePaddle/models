@@ -26,7 +26,7 @@ import paddle
 import paddleaudio
 import yaml
 from paddle.io import DataLoader, Dataset, IterableDataset
-from paddleaudio import augment
+from paddleaudio.utils import augments
 from utils import get_labels, get_ytid_clsidx_mapping
 
 
@@ -108,12 +108,14 @@ class H5AudioSet(Dataset):
         x = x[:, :target_len]
 
         if self.training and self.augment:
-            x = augment.random_crop2d(x,
-                                      self.config['mel_crop_len'],
-                                      tempo_axis=1)
+            x = augments.random_crop2d(x,
+                                       self.config['mel_crop_len'],
+                                       tempo_axis=1)
             x = spect_permute(x, tempo_axis=1, nblocks=random_choice([0, 2, 3]))
             aug_level = random_choice([0.2, 0.1, 0])
-            x = augment.adaptive_spect_augment(x, tempo_axis=1, level=aug_level)
+            x = augments.adaptive_spect_augment(x,
+                                                tempo_axis=1,
+                                                level=aug_level)
         return x.T
 
     def __getitem__(self, idx):
