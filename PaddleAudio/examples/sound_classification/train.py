@@ -21,7 +21,10 @@ import paddle.nn.functional as F
 from model import SoundClassifier
 from paddleaudio.datasets import ESC50
 from paddleaudio.models.panns import cnn14
-from paddleaudio.utils import Timer, logger
+from paddleaudio.transforms import LogMelSpectrogram
+from paddleaudio.utils import Timer, get_logger
+
+logger = get_logger()
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -41,14 +44,16 @@ if __name__ == "__main__":
     nranks = paddle.distributed.get_world_size()
     local_rank = paddle.distributed.get_rank()
 
+    feature_extractor = LogMelSpectrogram(
+        sr=16000, n_fft=512, hop_length=320, n_mels=64, f_min=50)
     backbone = cnn14(pretrained=True, extract_embedding=True)
     model = SoundClassifier(backbone, num_class=len(ESC50.label_list))
-    optimizer = paddle.optimizer.Adam(learning_rate=args.learning_rate,
-                                      parameters=model.parameters())
+    optimizer = paddle.optimizer.Adam(
+        learning_rate=args.learning_rate, parameters=model.parameters())
     criterion = paddle.nn.loss.CrossEntropyLoss()
 
-    train_ds = ESC50(mode='train', feat_type='melspectrogram')
-    dev_ds = ESC50(mode='dev', feat_type='melspectrogram')
+    train_ds = ESC50(mode='train')
+    dev_ds = ESC50(mode='dev')
 
     train_sampler = paddle.io.DistributedBatchSampler(
         train_ds, batch_size=args.batch_size, shuffle=True, drop_last=False)
@@ -71,7 +76,8 @@ if __name__ == "__main__":
         num_corrects = 0
         num_samples = 0
         for batch_idx, batch in enumerate(train_loader):
-            feats, labels = batch
+            waveforms, labels = batch
+            feats = feature_extractor(waveforms)
             logits = model(feats)
 
             loss = criterion(logits, labels)
@@ -110,10 +116,11 @@ if __name__ == "__main__":
                 num_samples = 0
 
         if epoch % args.save_freq == 0 and batch_idx + 1 == steps_per_epoch and local_rank == 0:
-            dev_sampler = paddle.io.BatchSampler(dev_ds,
-                                                 batch_size=args.batch_size,
-                                                 shuffle=False,
-                                                 drop_last=False)
+            dev_sampler = paddle.io.BatchSampler(
+                dev_ds,
+                batch_size=args.batch_size,
+                shuffle=False,
+                drop_last=False)
             dev_loader = paddle.io.DataLoader(
                 dev_ds,
                 batch_sampler=dev_sampler,
@@ -126,7 +133,8 @@ if __name__ == "__main__":
             num_samples = 0
             with logger.processing('Evaluation on validation dataset'):
                 for batch_idx, batch in enumerate(dev_loader):
-                    feats, labels = batch
+                    waveforms, labels = batch
+                    feats = feature_extractor(waveforms)
                     logits = model(feats)
 
                     preds = paddle.argmax(logits, axis=1)

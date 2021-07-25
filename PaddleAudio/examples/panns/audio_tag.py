@@ -20,9 +20,11 @@ from typing import List
 import numpy as np
 import paddle
 from paddleaudio.backends import load as load_audio
-from paddleaudio.features import melspectrogram
 from paddleaudio.models.panns import cnn14
-from paddleaudio.utils import logger
+from paddleaudio.transforms import LogMelSpectrogram
+from paddleaudio.utils import Timer, get_logger
+
+logger = get_logger()
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -57,10 +59,7 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int,
     """
     Extract features from waveforms and create batches.
     """
-    examples = []
-    for waveform in data:
-        feats = melspectrogram(waveform, sample_rate, **kwargs).transpose()
-        examples.append(feats)
+    examples = data
 
     # Seperates data into some batches.
     one_batch = []
@@ -74,6 +73,7 @@ def batchify(data: List[List[float]], sample_rate: int, batch_size: int,
 
 
 def predict(model,
+            feature_extractor,
             data: List[List[float]],
             sample_rate: int,
             batch_size: int = 1):
@@ -83,10 +83,8 @@ def predict(model,
     batches = batchify(data, sample_rate, batch_size)
     results = None
     model.eval()
-    for batch in batches:
-        feats = paddle.to_tensor(batch).unsqueeze(1)  \
-            # (batch_size, num_frames, num_melbins) -> (batch_size, 1, num_frames, num_melbins)
-
+    for waveforms in batches:
+        feats = feature_extractor(paddle.to_tensor(waveforms))
         audioset_scores = model(feats)
         if results is None:
             results = audioset_scores.numpy()
@@ -98,11 +96,13 @@ def predict(model,
 
 if __name__ == '__main__':
     paddle.set_device(args.device)
+    feature_extractor = LogMelSpectrogram(
+        sr=16000, n_fft=512, hop_length=320, n_mels=64, f_min=50)
     model = cnn14(pretrained=True, extract_embedding=False)
     waveform, sr = load_audio(args.wav, sr=None)
     time, data = split(waveform, int(args.sample_duration * sr),
                        int(args.hop_duration * sr))
-    results = predict(model, data, sr, batch_size=8)
+    results = predict(model, feature_extractor, data, sr, batch_size=8)
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
