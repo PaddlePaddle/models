@@ -38,9 +38,7 @@ __all__ = [
     'RandomMuLawCodec',
     'MuLawEncoding',
     'MuLawDecoding',
-    'RIRSource',
     'Noisify',
-    'AudioSource',
     'Reverberate',
 ]
 
@@ -122,7 +120,7 @@ class STFT(nn.Layer):
         if self.hop_length is None:
             self.hop_length = int(self.win_length // 4)
         fft_window = F.get_window(window, self.win_length, fftbins=True)
-        fft_window = F.center_padding(fft_window, n_fft)
+        fft_window = F.center_padding(fft_window, n_fft).astype('float64')
         # DFT & IDFT matrix.
         dft_mat = F.dft_matrix(n_fft)
         if one_sided:
@@ -137,7 +135,7 @@ class STFT(nn.Layer):
         weight = fft_window.unsqueeze([1, 2]) * dft_mat[:, 0:out_channels, :]
         weight = weight.transpose([1, 2, 0])
         weight = weight.reshape([-1, weight.shape[-1]])
-        self.conv.load_dict({'weight': weight.unsqueeze(1)})
+        self.conv.load_dict({'weight': weight.unsqueeze(1).astype('float32')})
         # by default, the STFT is not learnable
         for param in self.parameters():
             param.stop_gradient = True
@@ -240,6 +238,8 @@ class Spectrogram(nn.Layer):
         spectrogram = paddle.square(fft_signal).sum(-1)
         if self.power == 2.0:
             pass
+        elif self.power == 1.0:
+            spectrogram = paddle.sqrt(spectrogram)
         else:
             spectrogram = spectrogram**(self.power / 2.0)
         return spectrogram
@@ -257,7 +257,10 @@ class MelSpectrogram(nn.Layer):
                  power: float = 2.0,
                  n_mels: int = 128,
                  f_min: float = 0.0,
-                 f_max: Optional[float] = None):
+                 f_max: Optional[float] = None,
+                 htk: bool = False,
+                 norm: Union[str, float] = 'slaney',
+                 dtype: str = 'float64'):
         """Compute the melspectrogram of a given signal, typically an audio waveform.
         The melspectrogram is also known as filterbank or fbank feature in audio community.
         It is computed by multiplying spectrogram with Mel filter bank matrix.
@@ -281,13 +284,16 @@ class MelSpectrogram(nn.Layer):
             pad_mode(str): the mode to pad the signal if necessary. The supported modes are 'reflect'
                 and 'constant'.
                 The default value is 'reflect'.
-            power(float): The power of the complex norm.
+            power(float): the power of the complex norm.
                 The default value is 2.0
             n_mels(int): the mel bins.
             f_min(float): the lower cut-off frequency, below which the filter response is zero.
             f_max(float): the upper cut-off frequency, above which the filter response is zeros.
-
-
+            htk(bool): whether to use HTK formula in computing fbank matrix.
+            norm(str|float): the normalization type in computing fbank matrix.  Slaney-style is used by default.
+                You can specify norm=1.0/2.0 to use customized p-norm normalization.
+            dtype(str): the datatype of fbank matrix used in the transform. Use float64(default) to increase numerical
+                accuracy. Note that the final transform will be conducted in float32 regardless of dtype of fbank matrix.
         Notes:
             The melspectrogram transform relies on Spectrogram transform and F.compute_fbank_matrix.
             By default, the Fourier coefficients are not learnable. To fine-tune the Fourier coefficients,
@@ -313,15 +319,20 @@ class MelSpectrogram(nn.Layer):
         self.n_mels = n_mels
         self.f_min = f_min
         self.f_max = f_max
-
+        self.htk = htk
+        self.norm = norm
         if f_max is None:
             f_max = sr // 2
-        self.fbank_matrix = F.compute_fbank_matrix(sr=sr,
-                                                   n_fft=n_fft,
-                                                   n_mels=n_mels,
-                                                   f_min=f_min,
-                                                   f_max=f_max)
-        self.fbank_matrix = self.fbank_matrix.unsqueeze(0)
+        self.fbank_matrix = F.compute_fbank_matrix(
+            sr=sr,
+            n_fft=n_fft,
+            n_mels=n_mels,
+            f_min=f_min,
+            f_max=f_max,
+            htk=htk,
+            norm=norm,
+            dtype=dtype)  # float64 for better numerical results
+        self.fbank_matrix = self.fbank_matrix.unsqueeze(0).astype('float32')
         self.register_buffer('fbank_matrix', self.fbank_matrix)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -332,7 +343,9 @@ class MelSpectrogram(nn.Layer):
     def __repr__(self):
 
         p_repr = str(self._spectrogram).split('(')[-1].split(')')[0]
-        l_repr = f'n_mels={self.n_mels}, f_min={self.f_min}, f_max={self.f_max}'
+        l_repr = (
+            f'n_mels={self.n_mels}, f_min={self.f_min}, f_max={self.f_max}' +
+            f', htk={self.htk}, norm={self.norm}')
         return (self.__class__.__name__ + '(' + l_repr + ', ' + p_repr + ')')
 
 
@@ -349,6 +362,9 @@ class LogMelSpectrogram(nn.Layer):
                  n_mels: int = 64,
                  f_min: float = 0.0,
                  f_max: Optional[float] = None,
+                 htk: bool = False,
+                 norm: Union[str, float] = 'slaney',
+                 dtype: str = 'float64',
                  ref_value: float = 1.0,
                  amin: float = 1e-10,
                  top_db: Optional[float] = 80.0):
@@ -380,6 +396,11 @@ class LogMelSpectrogram(nn.Layer):
             f_min(float): the lower cut-off frequency, below which the filter response is zero.
             f_max(float): the upper cut-off frequency, above which the filter response is zeros.
             ref_value(float): the reference value. If smaller than 1.0, the db level
+            htk(bool): whether to use HTK formula in computing fbank matrix.
+            norm(str|float): the normalization type in computing fbank matrix.  Slaney-style is used by default.
+                You can specify norm=1.0/2.0 to use customized p-norm normalization.
+            dtype(str): the datatype of fbank matrix used in the transform. Use float64(default) to increase numerical
+                accuracy. Note that the final transform will be conducted in float32 regardless of dtype of fbank matrix.
                 of the signal will be pulled up accordingly. Otherwise, the db level is pushed down.
             amin(float): the minimum value of input magnitude, below which the input
                 magnitude is clipped(to amin). For numerical stability, set amin to a larger value,
@@ -419,7 +440,10 @@ class LogMelSpectrogram(nn.Layer):
                                               power=power,
                                               n_mels=n_mels,
                                               f_min=f_min,
-                                              f_max=f_max)
+                                              f_max=f_max,
+                                              htk=htk,
+                                              norm=norm,
+                                              dtype=dtype)
 
         self.ref_value = ref_value
         self.amin = amin
@@ -852,72 +876,11 @@ class RandomMuLawCodec(nn.Layer):
                 f'(min_mu={self.min_mu}, max_mu={self.max_mu})')
 
 
-class RIRSource(nn.Layer):
-    """Gererate RIR filter coefficients from local file sources.
-    Parameters:
-        rir_path_or_files(os.PathLike|List[os.PathLike]): the directory that contains rir files directly
-        (without subfolders) or the list of rir files.
-    Examples:
-
-        .. code-block:: python
-
-        import paddle
-        import paddleaudio.transforms as T
-        reader = T.RIRSource(<rir_folder>, sample_rate=16000, random=True)
-        weight = reader()
-
-    """
-    def __init__(self,
-                 rir_path_or_files: Union[os.PathLike, List[os.PathLike]],
-                 sample_rate: int,
-                 random: bool = True):
-        super(RIRSource, self).__init__()
-        if isinstance(rir_path_or_files, list):
-            self.rir_files = rir_path_or_files
-        elif os.path.isdir(rir_path_or_files):
-            self.rir_files = glob.glob(rir_path_or_files + '/*.wav',
-                                       recursive=True)
-            if len(self.rir_files) == 0:
-                raise FileNotFoundError(
-                    f'no files were found in {rir_path_or_files}')
-        elif os.path.isfile(rir_path_or_files):
-            self.rir_files = [rir_path_or_files]
-        else:
-            raise ValueError(
-                f'rir_path_or_files={rir_path_or_files} is invalid')
-
-        self.n_files = len(self.rir_files)
-        self.idx = 0
-        self.random = random
-        self.sample_rate = sample_rate
-
-    def forward(self) -> Tensor:
-        if self.random:
-            file = random.choice(self.rir_files)
-        else:
-            i = self.idx % self.n_files
-            file = self.rir_files[i]
-            self.idx += 1
-            if self.idx >= self.n_files:
-                self.idx = 0
-
-        rir, _ = paddleaudio.load(file, sr=self.sample_rate, mono=True)
-        rir_weight = paddle.to_tensor(rir[None, None, ::-1])
-        rir_weight = paddle.nn.functional.normalize(rir_weight, p=2, axis=-1)
-        return rir_weight
-
-    def __repr__(self):
-        return (
-            self.__class__.__name__ +
-            f'(n_files={self.n_files}, random={self.random}, sample_rate={self.sample_rate})'
-        )
-
-
 class Reverberate(nn.Layer):
     """Apply reverberation to input audio tensor.
 
     Parameters:
-        rir_reader: an object of RIRSource that reads impulse response from rir dataset.
+        rir_source: an object of RIRSource that reads impulse response from rir dataset.
 
     Shapes:
         - x: 2-D tensor with shape [batch_size, frames]
@@ -938,15 +901,15 @@ class Reverberate(nn.Layer):
         >> [2, 48000]
 
     """
-    def __init__(self, rir_reader: Any):
+    def __init__(self, rir_source: Any):
         super(Reverberate, self).__init__()
-        self.rir_reader = rir_reader
+        self.rir_source = rir_source
 
     def forward(self, x: Tensor) -> Tensor:
         assert x.ndim == 2, (f'the input tensor must be 2d tensor, ' +
                              f'but received x.ndim={x.ndim}')
 
-        weight = self.rir_reader()  #get next weight
+        weight = self.rir_source()  #get next weight
         pad_len = [
             weight.shape[-1] // 2 - 1, weight.shape[-1] - weight.shape[-1] // 2
         ]
@@ -956,7 +919,7 @@ class Reverberate(nn.Layer):
         return out[:, 0, :]
 
     def __repr__(self):
-        return (self.__class__.__name__)
+        return (self.__class__.__name__ + f'(rir_soruce={self.rir_source})')
 
 
 class RandomApply():
@@ -974,9 +937,9 @@ class RandomApply():
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader1 = T.AudioSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader1 = T.NoiseSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
         transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.AudioSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader2 = T.NoiseSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
         transform2 = T.Noisify(reader2, 10, 5, True)
         transform = T.RandomApply([
             transform1,
@@ -1018,9 +981,9 @@ class RandomChoice():
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader1 = T.AudioSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader1 = T.NoiseSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
         transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.AudioSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
+        reader2 = T.NoiseSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
         transform2 = T.Noisify(reader2, 10, 5, True)
         transform = T.RandomChoice([
             transform1,
@@ -1054,7 +1017,8 @@ class Noisify:
     """Transform the input audio tensor by adding noise.
 
     Parameters:
-        noise_reader: a AudioSource object that reads audio as noise source.
+        noise_reader: a NoiseSource object that reads audio as noise source. It should
+        be a callable object that return a noise tensor after being called.
         snr_high(float): the upper bound of signal-to-noise ratio in db
             after applying the transform. Default: 10.0 db.
         snr_low(None|float): the lower bound of signal-to-noise ratio in db
@@ -1074,7 +1038,7 @@ class Noisify:
         import paddle
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
-        noise_reader = AudioSource(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
+        noise_reader = NoiseSource(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
         transform = Noisify(noise_reader, 20, 15, True)
         y = transform(x)
         print(y.shape)
@@ -1121,99 +1085,4 @@ class Noisify:
         return (
             self.__class__.__name__ +
             f'(random={self.random}, snr_high={self.snr_high}, snr_low={self.snr_low})'
-        )
-
-
-class AudioSource:
-    """Read audio files randomly or sequentially from disk and pack them as a tensor.
-    Parameters:
-
-        audio_path_or_files(os.PathLike|List[os.PathLike]]): the audio folder or the audio file list.
-        sample_rate(int): the target audio sample rate. If it is different from the native sample rate,
-            resampling method will be invoked.
-        duration(float): the duration after the audio is loaded. Padding or random cropping will take place
-            depending on whether actual audio length is shorter or longer than int(sample_rate*duration).
-            The audio tensor will have shape [batch_size, int(sample_rate*duration)]
-        batch_size(int): the number of audio files contained in the returned tensor.
-        random(bool): whether to read audio file randomly. If False, will read them sequentially.
-            Default: True.
-    Notes:
-        In sequential mode, once the end of audio list is reached, the reader will start over again.
-        The AudioSource object can be called endlessly.
-
-     Shapes:
-        - output: 2-D tensor with shape [batch_size, int(sample_rate*duration)]
-
-    Examples:
-
-        .. code-block:: python
-
-        import paddle
-        import paddleaudio.transforms as T
-        reader = AudioSource(<audio_folder>, sample_rate=16000, duration=3.0, batch_size=2)
-        audio = reader(x)
-        print(audio.shape)
-        >> [2,48000]
-
-    """
-    def __init__(self,
-                 audio_path_or_files: Union[os.PathLike, List[os.PathLike]],
-                 sample_rate: int,
-                 duration: float,
-                 batch_size: int,
-                 random: bool = True):
-        if isinstance(audio_path_or_files, list):
-            self.audio_files = audio_path_or_files
-        elif os.path.isdir(audio_path_or_files):
-            self.audio_files = glob.glob(audio_path_or_files + '/*.wav',
-                                         recursive=True)
-            if len(self.audio_files) == 0:
-                raise FileNotFoundError(
-                    f'no files were found in {audio_path_or_files}')
-        elif os.path.isfile(audio_path_or_files):
-            self.audio_files = [audio_path_or_files]
-        else:
-            raise ValueError(
-                f'rir_path_or_files={audio_path_or_files} is invalid')
-
-        self.n_files = len(self.audio_files)
-        self.idx = 0
-        self.random = random
-        self.batch_size = batch_size
-        self.sample_rate = sample_rate
-        self.duration = int(duration * sample_rate)
-        self._data = paddle.zeros((self.batch_size, self.duration),
-                                  dtype='float32')
-
-    def load_wav(self, file: os.PathLike):
-        s, _ = paddleaudio.load(file, sr=self.sample_rate)
-        s = paddle.to_tensor(s)
-        s = F.random_cropping(s, target_size=self.duration)
-        s = F.center_padding(s, target_size=self.duration)
-
-        return s
-
-    def __call__(self) -> Tensor:
-
-        if self.random:
-            files = [
-                random.choice(self.audio_files) for _ in range(self.batch_size)
-            ]
-        else:
-            files = []
-            for _ in range(self.batch_size):
-                file = self.audio_files[self.idx]
-                self.idx += 1
-                if self.idx >= self.n_files:
-                    self.idx = 0
-                files += [file]
-        for i, f in enumerate(files):
-            self._data[i, :] = self.load_wav(f)
-
-        return self._data
-
-    def __repr__(self):
-        return (
-            self.__class__.__name__ +
-            f'(n_files={self.n_files}, random={self.random}, sample_rate={self.sample_rate})'
         )

@@ -30,7 +30,6 @@ __all__ = [
     'tukey',
     'taylor',
 ]
-math.pi = 3.141592653589793
 
 
 def _cat(a: List[Tensor], data_type: str) -> Tensor:
@@ -74,7 +73,7 @@ def general_gaussian(M: int, p, sig, sym: bool = True) -> Tensor:
     This function is consistent with scipy.signal.windows.general_gaussian().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
 
     n = paddle.arange(0, M) - (M - 1.0) / 2.0
@@ -106,7 +105,7 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.taylor().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
     # Original text uses a negative sidelobe level parameter and then negates
     # it in the calculation of B. To keep consistent with other methods we
@@ -114,9 +113,9 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
     B = 10**(sll / 20)
     A = _acosh(B) / math.pi
     s2 = nbar**2 / (A**2 + (nbar - 0.5)**2)
-    ma = paddle.arange(1, nbar, dtype='float32')
+    ma = paddle.arange(1, nbar, dtype='float64')
 
-    Fm = paddle.empty((nbar - 1, ), dtype='float32')
+    Fm = paddle.empty((nbar - 1, ), dtype='float64')
     signs = paddle.empty_like(ma)
     signs[::2] = 1
     signs[1::2] = -1
@@ -139,7 +138,7 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
             Fm.unsqueeze(0),
             paddle.cos(2 * math.pi * ma.unsqueeze(1) * (n - M / 2. + 0.5) / M))
 
-    w = W(paddle.arange(0, M, dtype='float32'))
+    w = W(paddle.arange(0, M, dtype='float64'))
 
     # normalize (Note that this is not described in the original text [1])
     if norm:
@@ -155,10 +154,10 @@ def general_cosine(M: int, a: float, sym: bool = True) -> Tensor:
     This function is consistent with scipy.signal.windows.general_cosine().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
-    fac = paddle.linspace(-math.pi, math.pi, M)
-    w = paddle.zeros((M, ), dtype='float32')
+    fac = paddle.linspace(-math.pi, math.pi, M, dtype='float64')
+    w = paddle.zeros((M, ), dtype='float64')
     for k in range(len(a)):
         w += a[k] * paddle.cos(k * fac)
     return _truncate(w, needs_trunc)
@@ -209,23 +208,23 @@ def tukey(M: int, alpha=0.5, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.tukey().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
 
     if alpha <= 0:
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     elif alpha >= 1.0:
         return hann(M, sym=sym)
 
     M, needs_trunc = _extend(M, sym)
 
-    n = paddle.arange(0, M)
+    n = paddle.arange(0, M, dtype='float64')
     width = int(alpha * (M - 1) / 2.0)
     n1 = n[0:width + 1]
     n2 = n[width + 1:M - width - 1]
     n3 = n[M - width - 1:]
 
     w1 = 0.5 * (1 + paddle.cos(math.pi * (-1 + 2.0 * n1 / alpha / (M - 1))))
-    w2 = paddle.ones(n2.shape, dtype='float32')
+    w2 = paddle.ones(n2.shape, dtype='float64')
     w3 = 0.5 * (1 + paddle.cos(math.pi * (-2.0 / alpha + 1 + 2.0 * n3 / alpha /
                                           (M - 1))))
     w = paddle.concat([w1, w2, w3])
@@ -266,7 +265,7 @@ def gaussian(M: int, std: float, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.gaussian().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
 
     n = paddle.arange(0, M) - (M - 1.0) / 2.0
@@ -291,7 +290,7 @@ def exponential(M: int, center=None, tau=1., sym: bool = True) -> Tensor:
     if sym and center is not None:
         raise ValueError("If sym==True, center must be None.")
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
 
     if center is None:
@@ -315,7 +314,7 @@ def triang(M: int, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.triang().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
 
     n = paddle.arange(1, (M + 1) // 2 + 1)
@@ -342,13 +341,13 @@ def bohman(M: int, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.bohman().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
 
     fac = paddle.abs(paddle.linspace(-1, 1, M)[1:-1])
     w = (1 - fac) * paddle.cos(math.pi * fac) + 1.0 / math.pi * paddle.sin(
         math.pi * fac)
-    w = _cat([0, w, 0], 'float32')
+    w = _cat([0, w, 0], 'float64')
 
     return _truncate(w, needs_trunc)
 
@@ -384,7 +383,7 @@ def cosine(M: int, sym: bool = True) -> Tensor:
         This function is consistent with scipy.signal.windows.cosine().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float32')
+        return paddle.ones((M, ), dtype='float64')
     M, needs_trunc = _extend(M, sym)
     w = paddle.sin(math.pi / M * (paddle.arange(0, M) + .5))
 

@@ -210,7 +210,7 @@ def mel_to_hz(mel: Union[float, Tensor],
     logstep = math.log(6.4) / 27.0  # step size for log region
     if isinstance(mel, Tensor):
         target = min_log_hz * paddle.exp(logstep * (mel - min_log_mel))
-        mask = (mel > min_log_mel).astype('float32')
+        mask = (mel > min_log_mel).astype(mel.dtype)
         freqs = target * mask + freqs * (
             1 - mask)  # will replace by masked_fill OP in future
     else:
@@ -223,14 +223,17 @@ def mel_to_hz(mel: Union[float, Tensor],
 def mel_frequencies(n_mels: int = 128,
                     f_min: float = 0.0,
                     f_max: float = 11025.0,
-                    htk: bool = False) -> Tensor:
+                    htk: bool = False,
+                    dtype: str = 'float64') -> Tensor:
     """Compute mel frequencies.
 
     Parameters:
         n_mels(int): number of Mel bins.
         f_min(float): the lower cut-off frequency, below which the filter response is zero.
         f_max(float): the upper cut-off frequency, above which the filter response is zero.
-        htk: whether to use htk formula.
+        htk(bool): whether to use htk formula.
+        dtype(str): the datatype of the return frequencies.
+
     Returns:
         The frequencies represented in Mel-scale
 
@@ -252,17 +255,18 @@ def mel_frequencies(n_mels: int = 128,
     # 'Center freqs' of mel bands - uniformly spaced between limits
     min_mel = hz_to_mel(f_min, htk=htk)
     max_mel = hz_to_mel(f_max, htk=htk)
-    mels = paddle.linspace(min_mel, max_mel, n_mels)
+    mels = paddle.linspace(min_mel, max_mel, n_mels, dtype=dtype)
     freqs = mel_to_hz(mels, htk=htk)
     return freqs
 
 
-def fft_frequencies(sr: int, n_fft: int) -> Tensor:
+def fft_frequencies(sr: int, n_fft: int, dtype: str = 'float64') -> Tensor:
     """Compute fourier frequencies.
 
     Parameters:
         sr(int): the audio sample rate.
-        n_fft(float): he number of fft bins.
+        n_fft(float): the number of fft bins.
+        dtype(str): the datatype of the return frequencies.
     Returns:
         The frequencies represented in hz.
     Notes:
@@ -278,7 +282,7 @@ def fft_frequencies(sr: int, n_fft: int) -> Tensor:
                 [0., 31.25000000, 62.50000000, ...]
 
     """
-    return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2))
+    return paddle.linspace(0, float(sr) / 2, int(1 + n_fft // 2), dtype=dtype)
 
 
 def compute_fbank_matrix(sr: int,
@@ -286,7 +290,9 @@ def compute_fbank_matrix(sr: int,
                          n_mels: int = 128,
                          f_min: float = 0.0,
                          f_max: Optional[float] = None,
-                         htk: bool = False) -> Tensor:
+                         htk: bool = False,
+                         norm: Union[str, float] = 'slaney',
+                         dtype: str = 'float64') -> Tensor:
     """Compute fbank matrix.
 
     Parameters:
@@ -297,8 +303,10 @@ def compute_fbank_matrix(sr: int,
         f_max(float): the upper cut-off frequency, above which the filter response is zero.
         htk: whether to use htk formula.
         return_complex(bool): whether to return complex matrix. If True, the matrix will
-        be complex type. Otherwise, the real and image part will be stored in the last
-        axis of returned tensor.
+            be complex type. Otherwise, the real and image part will be stored in the last
+            axis of returned tensor.
+        dtype(str): the datatype of the return matrix.
+
     Returns:
         The fbank matrix of shape (n_mels, int(1+n_fft//2)).
     Shape:
@@ -322,13 +330,17 @@ def compute_fbank_matrix(sr: int,
         f_max = float(sr) / 2
 
     # Initialize the weights
-    weights = paddle.zeros((n_mels, int(1 + n_fft // 2)), dtype='float32')
+    weights = paddle.zeros((n_mels, int(1 + n_fft // 2)), dtype=dtype)
 
     # Center freqs of each FFT bin
-    fftfreqs = fft_frequencies(sr=sr, n_fft=n_fft)
+    fftfreqs = fft_frequencies(sr=sr, n_fft=n_fft, dtype=dtype)
 
     # 'Center freqs' of mel bands - uniformly spaced between limits
-    mel_f = mel_frequencies(n_mels + 2, f_min=f_min, f_max=f_max, htk=htk)
+    mel_f = mel_frequencies(n_mels + 2,
+                            f_min=f_min,
+                            f_max=f_max,
+                            htk=htk,
+                            dtype=dtype)
 
     fdiff = mel_f[1:] - mel_f[:-1]  #np.diff(mel_f)
     ramps = mel_f.unsqueeze(1) - fftfreqs.unsqueeze(0)
@@ -344,13 +356,18 @@ def compute_fbank_matrix(sr: int,
                                     paddle.minimum(lower, upper))
 
     # Slaney-style mel is scaled to be approx constant energy per channel
-    enorm = 2.0 / (mel_f[2:n_mels + 2] - mel_f[:n_mels])
-    weights *= enorm.unsqueeze(1)
+    if norm == 'slaney':
+        enorm = 2.0 / (mel_f[2:n_mels + 2] - mel_f[:n_mels])
+        weights *= enorm.unsqueeze(1)
+    elif isinstance(norm, int) or isinstance(norm, float):
+        weights = paddle.nn.functional.normalize(weights, p=norm, axis=-1)
 
     return weights
 
 
-def dft_matrix(n: int, return_complex: bool = False) -> Tensor:
+def dft_matrix(n: int,
+               return_complex: bool = False,
+               dtype: str = 'float64') -> Tensor:
     """Compute discrete Fourier transform matrix.
 
     Parameters:
@@ -378,10 +395,16 @@ def dft_matrix(n: int, return_complex: bool = False) -> Tensor:
         >> [512, 512]
 
     """
+    # This is due to a bug in paddle in lacking support for complex128, as of paddle 2.1.0
+    if return_complex and dtype == 'float64':
+        raise ValueError('not implemented')
+
     x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
-    z = x * y * (-2 * math.pi / n)
+    z = x.astype(dtype) * y.astype(dtype) * paddle.to_tensor(
+        (-2 * math.pi / n), dtype)
     cos = paddle.cos(z)
     sin = paddle.sin(z)
+
     if return_complex:
         return cos + paddle.to_tensor([1j]) * sin
     cos = cos.unsqueeze(-1)
@@ -414,8 +437,12 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
 
     """
 
+    if return_complex and dtype == 'float64':  # there is a bug in paddle for complex128 datatype
+        raise ValueError('not implemented')
+
     x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
-    z = x * y * (2 * math.pi / n)
+    z = x.astype(dtype) * y.astype(dtype) * paddle.to_tensor(
+        (2 * math.pi / n), dtype)
     cos = paddle.cos(z)
     sin = paddle.sin(z)
     if return_complex:
@@ -1114,6 +1141,9 @@ def melspectrogram(x: Tensor,
                    n_mels: int = 128,
                    f_min: float = 0.0,
                    f_max: Optional[float] = None,
+                   htk: bool = True,
+                   norm: Union[str, float] = 'slaney',
+                   dtype: str = 'float64',
                    to_db: bool = False,
                    **kwargs) -> Tensor:
     """Compute the melspectrogram of a given signal, typically an audio waveform.
@@ -1145,11 +1175,15 @@ def melspectrogram(x: Tensor,
             f_min(float): the lower cut-off frequency, below which the filter response is zero. Tips:
                 set f_min to slightly higher than 0.
                 The default value is 0.
-
             f_max(float): the upper cut-off frequency, above which the filter response is zero.
                 If None, it is set to half of the sample rate, i.e., sr//2. Tips: set it a slightly
                 smaller than half of sample rate.
                 The default value is None.
+            htk(bool): whether to use HTK formula in computing fbank matrix.
+            norm(str|float): the normalization type in computing fbank matrix.  Slaney-style is used by default.
+                You can specify norm=1.0/2.0 to use customized p-norm normalization.
+            dtype(str): the datatype of fbank matrix used in the transform. Use float64(default) to increase numerical
+                accuracy. Note that the final transform will be conducted in float32 regardless of dtype of fbank matrix.
 
             to_db(bool): whether to convert the magnitude to db scale.
                 The default value is False.
@@ -1184,9 +1218,12 @@ def melspectrogram(x: Tensor,
                                         n_fft=n_fft,
                                         n_mels=n_mels,
                                         f_min=f_min,
-                                        f_max=f_max)
+                                        f_max=f_max,
+                                        htk=htk,
+                                        norm=norm,
+                                        dtype=dtype)
     fbank_matrix = fbank_matrix.unsqueeze(0)
-    mel_feature = paddle.matmul(fbank_matrix, x)
+    mel_feature = paddle.matmul(fbank_matrix.astype('float32'), x)
     if to_db:
         mel_feature = power_to_db(mel_feature, **kwargs)
 
