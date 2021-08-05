@@ -937,11 +937,9 @@ class RandomApply():
         import paddle
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
-
-        reader1 = T.NoiseSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
-        transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.NoiseSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
-        transform2 = T.Noisify(reader2, 10, 5, True)
+        transform1 = T.Reverberate(<rir_reader>)
+        transform2 = T.Noisify(<noise_reader>)
+        # Apply Reverberation and/or Noisify independently.
         transform = T.RandomApply([
             transform1,
             transform2,
