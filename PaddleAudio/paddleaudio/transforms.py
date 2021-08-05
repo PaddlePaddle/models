@@ -880,7 +880,7 @@ class Reverberate(nn.Layer):
     """Apply reverberation to input audio tensor.
 
     Parameters:
-        rir_source: an object of RIRSource that reads impulse response from rir dataset.
+        rir_source: a callable object that reads impulse response from rir dataset.
 
     Shapes:
         - x: 2-D tensor with shape [batch_size, frames]
@@ -893,8 +893,9 @@ class Reverberate(nn.Layer):
         import paddle
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
-
-        reader = T.RIRSource(<rir_folder>)
+        # Define RIR source object that read rir weight from folder.
+        # See the speaker example for how to define RIR source object.
+        reader = RIRSource(<rir_folder>)
         transform = T.Reverberate(reader)
         y = transform(x)
         print(y.shape)
@@ -919,7 +920,7 @@ class Reverberate(nn.Layer):
         return out[:, 0, :]
 
     def __repr__(self):
-        return (self.__class__.__name__ + f'(rir_soruce={self.rir_source})')
+        return (self.__class__.__name__ + f'(rir_source={self.rir_source})')
 
 
 class RandomApply():
@@ -981,17 +982,15 @@ class RandomChoice():
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
 
-        reader1 = T.NoiseSource(<noise_folder1>, sample_rate=16000, duration=3.0, batch_size=2)
-        transform1 = T.Noisify(reader1, 20, 15, True)
-        reader2 = T.NoiseSource(<noise_folder2>, sample_rate=16000, duration=3.0, batch_size=2)
-        transform2 = T.Noisify(reader2, 10, 5, True)
+        transform1 = T.RandomCropping(target_size=16000)
+        transform2 = T.RandomMuLawCodec()
         transform = T.RandomChoice([
             transform1,
             transform2,
         ],weights=[0.3,0.7])
         y = transform(x)
         print(y.shape)
-        >> [2, 48000]
+        >> [2, 16000]
 
     """
     def __init__(self,
@@ -1013,7 +1012,7 @@ class RandomChoice():
         return format_string
 
 
-class Noisify:
+class Noisify(nn.Layer):
     """Transform the input audio tensor by adding noise.
 
     Parameters:
@@ -1038,8 +1037,8 @@ class Noisify:
         import paddle
         import paddleaudio.transforms as T
         x = paddle.randn((2, 48000))
-        noise_reader = NoiseSource(<noise_folder>, sample_rate=16000, duration=3.0, batch_size=2)
-        transform = Noisify(noise_reader, 20, 15, True)
+        # A noise reader should be provided, see speaker example for how to define a noise reader
+        transform = Noisify(<noise_reader>, 20, 15, True)
         y = transform(x)
         print(y.shape)
         >> [2,48000]
@@ -1063,7 +1062,7 @@ class Noisify:
                 f'but received snr_high={self.snr_high}, ' +
                 f'snr_low={self.snr_low}')
 
-    def __call__(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         assert x.ndim == 2, (f'the input tensor must be 2d tensor, ' +
                              f'but received x.ndim={x.ndim}')
         noise = self.noise_reader()
