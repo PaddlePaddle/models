@@ -46,6 +46,8 @@ __all_ = [
     'random_masking',
     'random_cropping',
     'center_padding',
+    'dct_matrx',
+    'mfcc',
 ]
 
 
@@ -450,6 +452,47 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
     cos = cos.unsqueeze(-1)
     sin = sin.unsqueeze(-1)
     return paddle.concat([cos, sin], -1)
+
+
+def dct_matrix(n_mfcc: int,
+               n_mels: int,
+               dct_norm: Optional[str] = 'ortho') -> Tensor:
+    """Compute discrete cosine transform (DCT) matrix used in MFCC computation.
+
+    Parameters:
+        n_mfcc(int): the number of coefficients in MFCC.
+        n_mels(int): the number of mel bins in the melspectrogram tranform preceding MFCC.
+        dct_norm(None|str): the normalization of the dct transform. If 'ortho', use the orthogonal normalization.
+        If None, not normalization is applied. Default: 'ortho'.
+    Shape:
+        output: [n_mels,n_mfcc]
+
+    Returns:
+        The dct matrix of shape [n_mels,n_mfcc]
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        m = F.dct_matrix(n_mfcc=20,n_mels=64)
+        print(m.shape)
+        >> [64, 20]
+
+    """
+    # http://en.wikipedia.org/wiki/Discrete_cosine_transform#DCT-II
+    n = paddle.arange(float(n_mels), dtype='float64')
+    k = paddle.arange(float(n_mfcc), dtype='float64').unsqueeze(1)
+    dct = paddle.cos(math.pi / float(n_mels) * (n + 0.5) *
+                     k)  # size (n_mfcc, n_mels)
+    if dct_norm is None:
+        dct *= 2.0
+    else:
+        assert dct_norm == "ortho"
+        dct[0] *= 1.0 / math.sqrt(2.0)
+        dct *= math.sqrt(2.0 / float(n_mels))
+    return dct.t()
 
 
 def get_window(window: Union[str, Tuple[str, float]],
@@ -960,7 +1003,9 @@ def stft(x: Tensor,
                                      pad=[n_fft // 2, n_fft // 2],
                                      mode=pad_mode,
                                      data_format="NCL")
-    signal = paddle.nn.functional.conv1d(x, weight, stride=hop_length)
+    signal = paddle.nn.functional.conv1d(x,
+                                         weight.astype('float32'),
+                                         stride=hop_length)
 
     signal = signal.transpose([0, 2, 1])
     signal = signal.reshape(
@@ -1078,7 +1123,7 @@ def spectrogram(x,
         The spectorgram is defined as the complex norm of the short-time
         Fourier transformation.
 
-        Parameters:
+    Parameters:
             n_fft(int): the number of frequency components of the discrete Fourier transform.
                 The default value is 2048,
             hop_length(int|None): the hop length of the short time FFT. If None, it is set to win_length//4.
@@ -1097,7 +1142,7 @@ def spectrogram(x,
                 The default value is 'reflect'.
             power(float): The power of the complex norm.
                 The default value is 2.0
-        Shape:
+    Shape:
             - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
             - output: 2-D tensor with shape (N, n_fft//2+1, frame_number),
             The batch size N is set to 1 if input singal x is 1D tensor.
@@ -1198,20 +1243,26 @@ def melspectrogram(x: Tensor,
             1. The melspectrogram function relies on F.spectrogram and F.compute_fbank_matrix.
             2. The melspectrogram function does not convert magnitude to db by default.
 
-    Examples:
+        Examples:
 
-        .. code-block:: python
+            .. code-block:: python
 
-        import paddle
-        import paddleaudio.functional as F
-        x = F.melspectrogram(paddle.randn((8, 16000,)))
-        print(x.shape)
-        >> [8, 128, 32]
+            import paddle
+            import paddleaudio.functional as F
+            x = F.melspectrogram(paddle.randn((8, 16000,)))
+            print(x.shape)
+            >> [8, 128, 32]
 
     """
 
-    x = spectrogram(x, n_fft, hop_length, win_length, window, center, pad_mode,
-                    power)
+    x = spectrogram(x,
+                    n_fft=n_fft,
+                    hop_length=hop_length,
+                    win_length=win_length,
+                    window=window,
+                    center=center,
+                    pad_mode=pad_mode,
+                    power=power)
     if f_max is None:
         f_max = sr // 2
     fbank_matrix = compute_fbank_matrix(sr=sr,
@@ -1228,3 +1279,64 @@ def melspectrogram(x: Tensor,
         mel_feature = power_to_db(mel_feature, **kwargs)
 
     return mel_feature
+
+
+def mfcc(x,
+         sr: int = 22050,
+         spect: Optional[Tensor] = None,
+         n_mfcc: int = 20,
+         dct_norm: str = 'ortho',
+         lifter: int = 0,
+         **kwargs) -> Tensor:
+    """Compute Mel-frequency cepstral coefficients (MFCCs) give an input waveform.
+
+     Parameters:
+            sr(int): the audio sample rate.
+                The default value is 22050.
+            spect(None|Tensor): the melspectrogram tranform result(in db scale). If None, the melspectrogram will be
+                computed using `MelSpectrogram` functional and further converted to db scale using `F.power_to_db`
+                The default value is None.
+            n_mfcc(int): the number of coefficients.
+                The default value is 20.
+            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details
+                The default value is 'ortho'.
+            lifter(int): if lifter > 0, apply liftering(cepstral filtering) to the MFCCs.
+                If lifter = 0, no liftering is applied.
+                Setting lifter >= 2 * n_mfcc emphasizes the higher-order coefficients.
+                As lifter increases, the coefficient weighting becomes approximately linear.
+                The default value is 0.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.randn((8, 16000))  # the waveform
+        y = F.mfcc(x,
+                sr=16000,
+                n_mfcc=20,
+                n_mels=64,
+                n_fft=512,
+                win_length=512,
+                hop_length=160)
+
+        print(y.shape)
+        >> [8, 20, 101]
+    """
+    if spect is None:
+        spect = melspectrogram(x, sr=sr, **kwargs)  #[batch,n_mels,frames]
+        spect = power_to_db(spect)
+    n_mels = spect.shape[1]
+    M = dct_matrix(n_mfcc, n_mels, dct_norm=dct_norm)
+
+    out = M.transpose([1, 0]).unsqueeze_(0) @ spect
+
+    if lifter > 0:
+        factor = paddle.sin(
+            math.pi * paddle.arange(1, 1 + n_mfcc, dtype='float64') / lifter)
+        return out @ factor.unsqueeze([0, 2])
+    elif lifter == 0:
+        return out
+    else:
+        raise ValueError(f"MFCC lifter={lifter} must be a non-negative number")

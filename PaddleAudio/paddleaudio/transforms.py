@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import glob
+import math
 import os
 import random
 from typing import Any, List, Optional, Union
@@ -40,6 +41,7 @@ __all__ = [
     'MuLawDecoding',
     'Noisify',
     'Reverberate',
+    'MFCC',
 ]
 
 
@@ -1083,3 +1085,84 @@ class Noisify(nn.Layer):
             self.__class__.__name__ +
             f'(random={self.random}, snr_high={self.snr_high}, snr_low={self.snr_low})'
         )
+
+
+class MFCC(nn.Layer):
+    def __init__(self,
+                 sr: int = 22050,
+                 n_mfcc: int = 20,
+                 dct_norm: str = "ortho",
+                 lifter: int = 0,
+                 **kwargs):
+        """Compute log-mel-spectrogram(also known as LogFBank) feature of a given signal, typically an audio waveform.
+
+        Parameters:
+            sr(int): the audio sample rate.
+                    The default value is 22050.
+            spect(None|Tensor): the melspectrogram tranform result(in db scale). If None, the melspectrogram will be
+                computed using `MelSpectrogram` functional and further converted to db scale using `F.power_to_db`
+                The default value is None.
+            n_mfcc(int): the number of coefficients.
+                The default value is 20.
+            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details
+                The default value is 'ortho'.
+            lifter(int): if lifter > 0, apply liftering(cepstral filtering) to the MFCCs.
+                If lifter = 0, no liftering is applied.
+                Setting lifter >= 2 * n_mfcc emphasizes the higher-order coefficients.
+                As lifter increases, the coefficient weighting becomes approximately linear.
+                The default value is 0.
+            kwargs: additional keyword arguments that will be passed to MelSpectrogram. See ```MelSpectrogram```
+                for more details. If not provided, the default values are used.
+
+        Examples:
+
+            .. code-block:: python
+
+            import paddle
+            import paddleaudio.transforms as T
+            mfcc = paddleaudio.transforms.MFCC(sr=16000,
+                                            n_mfcc=20,
+                                            n_mels=64,
+                                            n_fft=512,
+                                            win_length=512,
+                                            hop_length=160)
+
+            x = paddle.randn((8, 16000)) # the waveform
+            y = mfcc(x)
+            print(y.shape)
+            >> [8, 20, 101]
+            """
+        super(MFCC, self).__init__()
+        self.sr = sr
+        self.n_mfcc = n_mfcc
+        self.dct_norm = dct_norm
+        self.lifter = lifter
+        self._melspectrogram = MelSpectrogram(sr=sr, **kwargs)
+
+    def forward(self, x: Tensor) -> Tensor:
+
+        spect = self._melspectrogram(x)  #[batch,n_mels,frames]
+        spect = F.power_to_db(spect)
+        n_mels = spect.shape[1]
+        #import pdb;pdb.set_trace()
+        M = F.dct_matrix(self.n_mfcc, n_mels, dct_norm=self.dct_norm)
+
+        mfcc = M.transpose([1, 0]).unsqueeze_(0) @ spect
+
+        if self.lifter > 0:
+            factor = paddle.sin(
+                math.pi * paddle.arange(1, 1 + self.n_mfcc, dtype='float32') /
+                self.lifter)
+            return mfcc @ factor.unsqueeze([0, 2])
+        elif self.lifter == 0:
+            return mfcc
+        else:
+            raise ValueError(
+                f"MFCC lifter={self.lifter} must be a non-negative number")
+        return mfcc
+
+    def __repr__(self):
+        p_repr = str(self._melspectrogram).split('(')[-1].split(')')[0]
+        return (self.__class__.__name__ + f'(sr={self.sr}, ' +
+                f'n_mfcc={self.n_mfcc}, dct_norm={self.dct_norm}, ' +
+                f'lifter={self.lifter}, ' + p_repr + ')')
