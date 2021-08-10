@@ -307,7 +307,7 @@ def compute_fbank_matrix(sr: int,
         return_complex(bool): whether to return complex matrix. If True, the matrix will
             be complex type. Otherwise, the real and image part will be stored in the last
             axis of returned tensor.
-        dtype(str): the datatype of the return matrix.
+        dtype(str): the datatype of the returned fbank matrix.
 
     Returns:
         The fbank matrix of shape (n_mels, int(1+n_fft//2)).
@@ -377,6 +377,8 @@ def dft_matrix(n: int,
         return_complex(bool): whether to return complex matrix. If True, the matrix will
             be complex type. Otherwise, the real and image part will be stored in the last
             axis of returned tensor.
+        dtype(str): the datatype of the returned dft matrix.
+
     Shape:
         output: [n, n] or [n,n,2]
 
@@ -414,7 +416,9 @@ def dft_matrix(n: int,
     return paddle.concat([cos, sin], -1)
 
 
-def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
+def idft_matrix(n: int,
+                return_complex: bool = False,
+                dtype: str = 'float64') -> Tensor:
     """Compute inverse discrete Fourier transform matrix
 
     Parameters:
@@ -422,6 +426,7 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
         return_complex(bool): whether to return complex matrix. If True, the matrix will
             be complex type. Otherwise, the real and image part will be stored in the last
             axis of returned tensor.
+        dtype(str): the data type of returned idft matrix.
     Returns:
         Complex tensor of shape (n,n) if return_complex=True, and of shape (n,n,2) otherwise.
     Examples:
@@ -442,7 +447,8 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
     if return_complex and dtype == 'float64':  # there is a bug in paddle for complex128 datatype
         raise ValueError('not implemented')
 
-    x, y = paddle.meshgrid(paddle.arange(0, n), paddle.arange(0, n))
+    x, y = paddle.meshgrid(paddle.arange(0, n, dtype=dtype),
+                           paddle.arange(0, n, dtype=dtype))
     z = x.astype(dtype) * y.astype(dtype) * paddle.to_tensor(
         (2 * math.pi / n), dtype)
     cos = paddle.cos(z)
@@ -456,14 +462,17 @@ def idft_matrix(n: int, return_complex: bool = False) -> Tensor:
 
 def dct_matrix(n_mfcc: int,
                n_mels: int,
-               dct_norm: Optional[str] = 'ortho') -> Tensor:
+               dct_norm: Optional[str] = 'ortho',
+               dtype: str = 'float64') -> Tensor:
     """Compute discrete cosine transform (DCT) matrix used in MFCC computation.
 
     Parameters:
         n_mfcc(int): the number of coefficients in MFCC.
         n_mels(int): the number of mel bins in the melspectrogram tranform preceding MFCC.
         dct_norm(None|str): the normalization of the dct transform. If 'ortho', use the orthogonal normalization.
-        If None, not normalization is applied. Default: 'ortho'.
+            If None, not normalization is applied. Default: 'ortho'.
+        dtype(str): the data type of returned dct matrix.
+
     Shape:
         output: [n_mels,n_mfcc]
 
@@ -482,8 +491,8 @@ def dct_matrix(n_mfcc: int,
 
     """
     # http://en.wikipedia.org/wiki/Discrete_cosine_transform#DCT-II
-    n = paddle.arange(float(n_mels), dtype='float64')
-    k = paddle.arange(float(n_mfcc), dtype='float64').unsqueeze(1)
+    n = paddle.arange(float(n_mels), dtype=dtype)
+    k = paddle.arange(float(n_mfcc), dtype=dtype).unsqueeze(1)
     dct = paddle.cos(math.pi / float(n_mels) * (n + 0.5) *
                      k)  # size (n_mfcc, n_mels)
     if dct_norm is None:
@@ -497,7 +506,8 @@ def dct_matrix(n_mfcc: int,
 
 def get_window(window: Union[str, Tuple[str, float]],
                win_length: int,
-               fftbins: bool = True) -> Tensor:
+               fftbins: bool = True,
+               dtype: str = 'float64') -> Tensor:
     """Return a window of a given length and type.
     Parameters:
         window(str|(str,float)): the type of window to create.
@@ -543,7 +553,7 @@ def get_window(window: Union[str, Tuple[str, float]],
 
     params = (win_length, ) + args
     kwargs = {'sym': sym}
-    return winfunc(*params, **kwargs)
+    return winfunc(*params, dtype=dtype, **kwargs)
 
 
 def power_to_db(magnitude: Tensor,
@@ -927,7 +937,8 @@ def stft(x: Tensor,
          window: str = 'hann',
          center: bool = True,
          pad_mode: str = 'reflect',
-         one_sided: bool = True):
+         one_sided: bool = True,
+         dtype: str = 'float64'):
     """Compute short-time Fourier transformation(STFT) of a given signal,
     typically an audio waveform.
     The STFT is implemented with strided 1d convolution. The convluational weights are
@@ -952,6 +963,8 @@ def stft(x: Tensor,
         one_sided(bool): If True, the output spectrum will have n_fft//2+1 frequency components.
             Otherwise, it will return the full spectrum that have n_fft+1 frequency values.
             The default value is True.
+        dtype(str): the datatype used internally for computing fft transform coefficients. 'float64' is
+            recommended for higher numerical accuracy.
     Shape:
         - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
         - output: 2-D tensor with shape (N, freq_dim, frame_number,2),
@@ -987,9 +1000,9 @@ def stft(x: Tensor,
     # Set the default hop, if it's not already specified.
     if hop_length is None:
         hop_length = int(win_length // 4)
-    fft_window = get_window(window, win_length, fftbins=True)
+    fft_window = get_window(window, win_length, fftbins=True, dtype=dtype)
     fft_window = center_padding(fft_window, n_fft)
-    dft_mat = dft_matrix(n_fft)
+    dft_mat = dft_matrix(n_fft, dtype=dtype)
     if one_sided:
         out_channels = n_fft // 2 + 1
     else:
@@ -1021,7 +1034,8 @@ def istft(x: Tensor,
           window: str = 'hann',
           center: bool = True,
           pad_mode: str = 'reflect',
-          signal_length: Optional[int] = None) -> Tensor:
+          signal_length: Optional[int] = None,
+          dtype: str = 'float64') -> Tensor:
     """Compute inverse short-time Fourier transform(ISTFT) of a given spectrum signal x.
     To accurately recover the input signal, the exact value of parameters should match
     those used in stft.
@@ -1032,6 +1046,8 @@ def istft(x: Tensor,
             with original signal. If set to None, the length is solely determined by hop_length
             and win_length.
             The default value is None.
+        dtype(str): the datatype used internally for computing fft transform coefficients. 'float64' is
+            recommended for higher numerical accuracy.
     Shape:
         - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
         - output: the signal represented as a 2-D tensor with shape (N, single_length)
@@ -1088,11 +1104,11 @@ def istft(x: Tensor,
         f'hop_length must be smaller than win_length, ' +
         f'but {hop_length}>={win_length}')
 
-    fft_window = get_window(window, win_length)
+    fft_window = get_window(window, win_length, dtype=dtype)
     fft_window = 1.0 / fft_window
     fft_window = center_padding(fft_window, n_fft)
     fft_window = fft_window.unsqueeze((1, 2))
-    idft_mat = fft_window * idft_matrix(n_fft) / n_fft
+    idft_mat = fft_window * idft_matrix(n_fft, dtype=dtype) / n_fft
     idft_mat = idft_mat.unsqueeze((0, 1))
 
     #let's do the inverse transformation
@@ -1118,7 +1134,8 @@ def spectrogram(x,
                 window: str = 'hann',
                 center: bool = True,
                 pad_mode: str = 'reflect',
-                power: float = 2.0) -> Tensor:
+                power: float = 2.0,
+                dtype: str = 'float64') -> Tensor:
     """Compute spectrogram of a given signal, typically an audio waveform.
         The spectorgram is defined as the complex norm of the short-time
         Fourier transformation.
@@ -1142,6 +1159,8 @@ def spectrogram(x,
                 The default value is 'reflect'.
             power(float): The power of the complex norm.
                 The default value is 2.0
+            dtype(str): the datatype used internally for computing fft transform coefficients. 'float64' is
+                recommended for higher numerical accuracy.
     Shape:
             - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (N, signal_length).
             - output: 2-D tensor with shape (N, n_fft//2+1, frame_number),
@@ -1165,7 +1184,8 @@ def spectrogram(x,
                       window=window,
                       center=center,
                       pad_mode=pad_mode,
-                      one_sided=True)
+                      one_sided=True,
+                      dtype=dtype)
     spectrogram = paddle.square(fft_signal).sum(-1)
     if power == 2.0:
         pass
@@ -1229,7 +1249,6 @@ def melspectrogram(x: Tensor,
                 You can specify norm=1.0/2.0 to use customized p-norm normalization.
             dtype(str): the datatype of fbank matrix used in the transform. Use float64(default) to increase numerical
                 accuracy. Note that the final transform will be conducted in float32 regardless of dtype of fbank matrix.
-
             to_db(bool): whether to convert the magnitude to db scale.
                 The default value is False.
             kwargs: the key-word arguments that are passed to F.power_to_db if to_db is True
@@ -1262,7 +1281,8 @@ def melspectrogram(x: Tensor,
                     window=window,
                     center=center,
                     pad_mode=pad_mode,
-                    power=power)
+                    power=power,
+                    dtype=dtype)
     if f_max is None:
         f_max = sr // 2
     fbank_matrix = compute_fbank_matrix(sr=sr,
@@ -1274,7 +1294,7 @@ def melspectrogram(x: Tensor,
                                         norm=norm,
                                         dtype=dtype)
     fbank_matrix = fbank_matrix.unsqueeze(0)
-    mel_feature = paddle.matmul(fbank_matrix.astype('float32'), x)
+    mel_feature = paddle.matmul(fbank_matrix, x.astype(fbank_matrix.dtype))
     if to_db:
         mel_feature = power_to_db(mel_feature, **kwargs)
 
@@ -1287,6 +1307,7 @@ def mfcc(x,
          n_mfcc: int = 20,
          dct_norm: str = 'ortho',
          lifter: int = 0,
+         dtype: str = 'float64',
          **kwargs) -> Tensor:
     """Compute Mel-frequency cepstral coefficients (MFCCs) give an input waveform.
 
@@ -1298,13 +1319,15 @@ def mfcc(x,
                 The default value is None.
             n_mfcc(int): the number of coefficients.
                 The default value is 20.
-            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details
+            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details.
                 The default value is 'ortho'.
             lifter(int): if lifter > 0, apply liftering(cepstral filtering) to the MFCCs.
                 If lifter = 0, no liftering is applied.
                 Setting lifter >= 2 * n_mfcc emphasizes the higher-order coefficients.
                 As lifter increases, the coefficient weighting becomes approximately linear.
                 The default value is 0.
+            dtype(str): the datatype used internally in computing MFCC.
+
 
     Examples:
 
@@ -1324,17 +1347,21 @@ def mfcc(x,
         print(y.shape)
         >> [8, 20, 101]
     """
+
     if spect is None:
-        spect = melspectrogram(x, sr=sr, **kwargs)  #[batch,n_mels,frames]
-        spect = power_to_db(spect)
+        spect = melspectrogram(x, sr=sr, dtype=dtype,
+                               **kwargs)  #[batch,n_mels,frames]
+        spect = power_to_db(spect)  # default top_db is 80
+
     n_mels = spect.shape[1]
-    M = dct_matrix(n_mfcc, n_mels, dct_norm=dct_norm)
+    if n_mfcc > n_mels:
+        raise ValueError('Value of n_mfcc cannot be larger than n_mels')
 
+    M = dct_matrix(n_mfcc, n_mels, dct_norm=dct_norm, dtype=dtype)
     out = M.transpose([1, 0]).unsqueeze_(0) @ spect
-
     if lifter > 0:
-        factor = paddle.sin(
-            math.pi * paddle.arange(1, 1 + n_mfcc, dtype='float64') / lifter)
+        factor = paddle.sin(math.pi *
+                            paddle.arange(1, 1 + n_mfcc, dtype=dtype) / lifter)
         return out @ factor.unsqueeze([0, 2])
     elif lifter == 0:
         return out
