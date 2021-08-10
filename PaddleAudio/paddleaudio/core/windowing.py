@@ -67,30 +67,42 @@ def _truncate(w: Tensor, needed: bool) -> Tensor:
         return w
 
 
-def general_gaussian(M: int, p, sig, sym: bool = True) -> Tensor:
+def general_gaussian(M: int,
+                     p,
+                     sig,
+                     sym: bool = True,
+                     dtype: str = 'float64') -> Tensor:
     """Compute a window with a generalized Gaussian shape.
 
     This function is consistent with scipy.signal.windows.general_gaussian().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
 
-    n = paddle.arange(0, M) - (M - 1.0) / 2.0
+    n = paddle.arange(0, M, dtype=dtype) - (M - 1.0) / 2.0
     w = paddle.exp(-0.5 * paddle.abs(n / sig)**(2 * p))
 
     return _truncate(w, needs_trunc)
 
 
-def general_hamming(M: int, alpha: float, sym: bool = True) -> Tensor:
+def general_hamming(M: int,
+                    alpha: float,
+                    sym: bool = True,
+                    dtype: str = 'float64') -> Tensor:
     """Compute a generalized Hamming window.
 
     This function is consistent with scipy.signal.windows.general_hamming()
     """
-    return general_cosine(M, [alpha, 1. - alpha], sym)
+    return general_cosine(M, [alpha, 1. - alpha], sym, dtype=dtype)
 
 
-def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
+def taylor(M: int,
+           nbar=4,
+           sll=30,
+           norm=True,
+           sym: bool = True,
+           dtype: str = 'float64') -> Tensor:
     """Compute a Taylor window.
     The Taylor window taper function approximates the Dolph-Chebyshev window's
     constant sidelobe level for a parameterized number of near-in sidelobes.
@@ -99,13 +111,14 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
         nbar, sil, norm: the window-specific parameter.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.taylor().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
     # Original text uses a negative sidelobe level parameter and then negates
     # it in the calculation of B. To keep consistent with other methods we
@@ -113,9 +126,9 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
     B = 10**(sll / 20)
     A = _acosh(B) / math.pi
     s2 = nbar**2 / (A**2 + (nbar - 0.5)**2)
-    ma = paddle.arange(1, nbar, dtype='float64')
+    ma = paddle.arange(1, nbar, dtype=dtype)
 
-    Fm = paddle.empty((nbar - 1, ), dtype='float64')
+    Fm = paddle.empty((nbar - 1, ), dtype=dtype)
     signs = paddle.empty_like(ma)
     signs[::2] = 1
     signs[1::2] = -1
@@ -138,7 +151,7 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
             Fm.unsqueeze(0),
             paddle.cos(2 * math.pi * ma.unsqueeze(1) * (n - M / 2. + 0.5) / M))
 
-    w = W(paddle.arange(0, M, dtype='float64'))
+    w = W(paddle.arange(0, M, dtype=dtype))
 
     # normalize (Note that this is not described in the original text [1])
     if norm:
@@ -148,22 +161,25 @@ def taylor(M: int, nbar=4, sll=30, norm=True, sym: bool = True) -> Tensor:
     return _truncate(w, needs_trunc)
 
 
-def general_cosine(M: int, a: float, sym: bool = True) -> Tensor:
+def general_cosine(M: int,
+                   a: float,
+                   sym: bool = True,
+                   dtype: str = 'float64') -> Tensor:
     """Compute a generic weighted sum of cosine terms window.
 
     This function is consistent with scipy.signal.windows.general_cosine().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
-    fac = paddle.linspace(-math.pi, math.pi, M, dtype='float64')
-    w = paddle.zeros((M, ), dtype='float64')
+    fac = paddle.linspace(-math.pi, math.pi, M, dtype=dtype)
+    w = paddle.zeros((M, ), dtype=dtype)
     for k in range(len(a)):
         w += a[k] * paddle.cos(k * fac)
     return _truncate(w, needs_trunc)
 
 
-def hamming(M: int, sym: bool = True) -> Tensor:
+def hamming(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a Hamming window.
     The Hamming window is a taper formed by using a raised cosine with
     non-zero endpoints, optimized to minimize the nearest side lobe.
@@ -171,15 +187,16 @@ def hamming(M: int, sym: bool = True) -> Tensor:
         M(int): window size
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.hamming().
     """
-    return general_hamming(M, 0.54, sym)
+    return general_hamming(M, 0.54, sym, dtype=dtype)
 
 
-def hann(M: int, sym: bool = True) -> Tensor:
+def hann(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a Hann window.
     The Hann window is a taper formed by using a raised cosine or sine-squared
     with ends that touch zero.
@@ -187,44 +204,49 @@ def hann(M: int, sym: bool = True) -> Tensor:
         M(int): window size
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.hann().
     """
-    return general_hamming(M, 0.5, sym)
+    return general_hamming(M, 0.5, sym, dtype=dtype)
 
 
-def tukey(M: int, alpha=0.5, sym: bool = True) -> Tensor:
+def tukey(M: int,
+          alpha=0.5,
+          sym: bool = True,
+          dtype: str = 'float64') -> Tensor:
     """Compute a Tukey window.
     The Tukey window is also known as a tapered cosine window.
     Parameters:
         M(int): window size
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.tukey().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
 
     if alpha <= 0:
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     elif alpha >= 1.0:
         return hann(M, sym=sym)
 
     M, needs_trunc = _extend(M, sym)
 
-    n = paddle.arange(0, M, dtype='float64')
+    n = paddle.arange(0, M, dtype=dtype)
     width = int(alpha * (M - 1) / 2.0)
     n1 = n[0:width + 1]
     n2 = n[width + 1:M - width - 1]
     n3 = n[M - width - 1:]
 
     w1 = 0.5 * (1 + paddle.cos(math.pi * (-1 + 2.0 * n1 / alpha / (M - 1))))
-    w2 = paddle.ones(n2.shape, dtype='float64')
+    w2 = paddle.ones(n2.shape, dtype=dtype)
     w3 = 0.5 * (1 + paddle.cos(math.pi * (-2.0 / alpha + 1 + 2.0 * n3 / alpha /
                                           (M - 1))))
     w = paddle.concat([w1, w2, w3])
@@ -232,7 +254,10 @@ def tukey(M: int, alpha=0.5, sym: bool = True) -> Tensor:
     return _truncate(w, needs_trunc)
 
 
-def kaiser(M: int, beta: float, sym: bool = True) -> Tensor:
+def kaiser(M: int,
+           beta: float,
+           sym: bool = True,
+           dtype: str = 'float64') -> Tensor:
     """Compute a Kaiser window.
     The Kaiser window is a taper formed by using a Bessel function.
     Parameters:
@@ -250,7 +275,10 @@ def kaiser(M: int, beta: float, sym: bool = True) -> Tensor:
     raise NotImplementedError()
 
 
-def gaussian(M: int, std: float, sym: bool = True) -> Tensor:
+def gaussian(M: int,
+             std: float,
+             sym: bool = True,
+             dtype: str = 'float64') -> Tensor:
     """Compute a Gaussian window.
     The Gaussian widows has a Gaussian shape defined by the standard deviation(std).
 
@@ -259,29 +287,35 @@ def gaussian(M: int, std: float, sym: bool = True) -> Tensor:
         std(float): the window-specific parameter.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.gaussian().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
 
-    n = paddle.arange(0, M) - (M - 1.0) / 2.0
+    n = paddle.arange(0, M, dtype=dtype) - (M - 1.0) / 2.0
     sig2 = 2 * std * std
     w = paddle.exp(-n**2 / sig2)
 
     return _truncate(w, needs_trunc)
 
 
-def exponential(M: int, center=None, tau=1., sym: bool = True) -> Tensor:
+def exponential(M: int,
+                center=None,
+                tau=1.,
+                sym: bool = True,
+                dtype: str = 'float64') -> Tensor:
     """Compute an exponential (or Poisson) window.
     Parameters:
         M(int): window size.
         tau(float): the window-specific parameter.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
@@ -290,34 +324,35 @@ def exponential(M: int, center=None, tau=1., sym: bool = True) -> Tensor:
     if sym and center is not None:
         raise ValueError("If sym==True, center must be None.")
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
 
     if center is None:
         center = (M - 1) / 2
 
-    n = paddle.arange(0, M)
+    n = paddle.arange(0, M, dtype=dtype)
     w = paddle.exp(-paddle.abs(n - center) / tau)
 
     return _truncate(w, needs_trunc)
 
 
-def triang(M: int, sym: bool = True) -> Tensor:
+def triang(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a triangular window.
     Parameters:
         M(int): window size.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.triang().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
 
-    n = paddle.arange(1, (M + 1) // 2 + 1)
+    n = paddle.arange(1, (M + 1) // 2 + 1, dtype=dtype)
     if M % 2 == 0:
         w = (2 * n - 1.0) / M
         w = paddle.concat([w, w[::-1]])
@@ -328,31 +363,32 @@ def triang(M: int, sym: bool = True) -> Tensor:
     return _truncate(w, needs_trunc)
 
 
-def bohman(M: int, sym: bool = True) -> Tensor:
+def bohman(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a Bohman window.
     The Bohman window is the autocorrelation of a cosine window.
     Parameters:
         M(int): window size.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.bohman().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
 
-    fac = paddle.abs(paddle.linspace(-1, 1, M)[1:-1])
+    fac = paddle.abs(paddle.linspace(-1, 1, M, dtype=dtype)[1:-1])
     w = (1 - fac) * paddle.cos(math.pi * fac) + 1.0 / math.pi * paddle.sin(
         math.pi * fac)
-    w = _cat([0, w, 0], 'float64')
+    w = _cat([0, w, 0], dtype)
 
     return _truncate(w, needs_trunc)
 
 
-def blackman(M: int, sym: bool = True) -> Tensor:
+def blackman(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a Blackman window.
     The Blackman window is a taper formed by using the first three terms of
     a summation of cosines. It was designed to have close to the minimal
@@ -363,28 +399,30 @@ def blackman(M: int, sym: bool = True) -> Tensor:
         M(int): window size.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.blackman().
     """
-    return general_cosine(M, [0.42, 0.50, 0.08], sym)
+    return general_cosine(M, [0.42, 0.50, 0.08], sym, dtype=dtype)
 
 
-def cosine(M: int, sym: bool = True) -> Tensor:
+def cosine(M: int, sym: bool = True, dtype: str = 'float64') -> Tensor:
     """Compute a window with a simple cosine shape.
     Parameters:
         M(int): window size.
         sym(bool)：whether to return symmetric window.
             The default value is True
+        dtype(str): the datatype of returned tensor.
     Returns:
         Tensor: the window tensor
     Notes:
         This function is consistent with scipy.signal.windows.cosine().
     """
     if _len_guards(M):
-        return paddle.ones((M, ), dtype='float64')
+        return paddle.ones((M, ), dtype=dtype)
     M, needs_trunc = _extend(M, sym)
-    w = paddle.sin(math.pi / M * (paddle.arange(0, M) + .5))
+    w = paddle.sin(math.pi / M * (paddle.arange(0, M, dtype=dtype) + .5))
 
     return _truncate(w, needs_trunc)
