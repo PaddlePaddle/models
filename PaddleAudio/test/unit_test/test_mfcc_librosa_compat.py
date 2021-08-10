@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import itertools
+
 import librosa
 import numpy as np
 import paddle
@@ -18,38 +20,54 @@ import paddleaudio
 import pytest
 from utils import load_example_audio1
 
-mfcc_test_data = [
-    (512, 80, 40, True, 7600, 'gpu'),
-    (512, 64, 20, False, 8000, 'gpu'),
-    (512, 80, 40, True, 8000, 'gpu'),
-    (512, 64, 20, False, 8000, 'gpu'),
-    (512, 64, 20, False, 8000, 'gpu'),
-    (512, 40, 20, True, 8000, 'gpu'),
-    (512, 80, 40, True, 7600, 'cpu'),
-    (512, 64, 20, False, 8000, 'cpu'),
-    (512, 80, 40, True, 8000, 'cpu'),
-    (512, 64, 20, False, 8000, 'cpu'),
-    (512, 64, 20, False, 8000, 'cpu'),
-    (512, 40, 20, True, 8000, 'cpu'),
-]
+eps_float32 = 1e-3
+eps_float64 = 2.2e-5
+# Pre-loading to speed up the test
+signal, _ = load_example_audio1()
+signal_tensor = paddle.to_tensor(signal)
 
 
-@pytest.mark.parametrize('n_fft,n_mels,n_mfcc,htk,f_max,device', mfcc_test_data)
-def test_mfcc_case(n_fft, n_mels, n_mfcc, htk, f_max, device):
-    paddle.set_device(device)
-    hop_length = 160
-    win_length = 512
-    window = 'hann'
-    pad_mode = 'constant'
-    power = 2.0
-    sample_rate = 16000
-    center = True
-    f_min = 0.0
-    signal, _ = load_example_audio1()
-    signal_tensor = paddle.to_tensor(signal)
+def generate_mfcc_test():
+    sr = [16000]
+    n_fft = [512]  #, 1024]
+    hop_length = [160]  #, 400]
+    win_length = [512]
+    window = ['hann']  # 'hamming', ('gaussian', 50)]
+    center = [True]  #, False]
+    pad_mode = ['reflect', 'constant']
+    power = [2.0]
+    n_mels = [64]  #32]
+    fmin = [0, 10]
+    fmax = [8000, None]
+    dtype = ['float32', 'float64']
+    device = ['gpu', 'cpu']
+    n_mfcc = [40, 20]
+    htk = [True]
+    args = [
+        sr, n_fft, hop_length, win_length, window, center, pad_mode, power,
+        n_mels, fmin, fmax, dtype, device, n_mfcc, htk
+    ]
+    return itertools.product(*args)
+
+
+@pytest.mark.parametrize(
+    'sr, n_fft, hop_length, win_length, window, center, pad_mode, power,\
+        n_mels, fmin, fmax,dtype,device,n_mfcc,htk', generate_mfcc_test())
+def test_mfcc_case(sr, n_fft, hop_length, win_length, window, center, pad_mode, power,\
+        n_mels, fmin, fmax,dtype,device,n_mfcc,htk):
+    # paddle.set_device(device)
+    # hop_length = 160
+    # win_length = 512
+    # window = 'hann'
+    # pad_mode = 'constant'
+    # power = 2.0
+    # sample_rate = 16000
+    # center = True
+    # f_min = 0.0
+
     # for librosa, the norm is default to 'slaney'
     expected = librosa.feature.mfcc(signal,
-                                    sr=sample_rate,
+                                    sr=sr,
                                     n_mfcc=n_mfcc,
                                     n_fft=win_length,
                                     hop_length=hop_length,
@@ -58,13 +76,13 @@ def test_mfcc_case(n_fft, n_mels, n_mfcc, htk, f_max, device):
                                     center=center,
                                     n_mels=n_mels,
                                     pad_mode=pad_mode,
-                                    fmin=f_min,
-                                    fmax=f_max,
+                                    fmin=fmin,
+                                    fmax=fmax,
                                     htk=htk,
                                     power=2.0)
 
     paddle_mfcc = paddleaudio.functional.mfcc(signal_tensor,
-                                              sr=sample_rate,
+                                              sr=sr,
                                               n_mfcc=n_mfcc,
                                               n_fft=win_length,
                                               hop_length=hop_length,
@@ -73,13 +91,17 @@ def test_mfcc_case(n_fft, n_mels, n_mfcc, htk, f_max, device):
                                               center=center,
                                               n_mels=n_mels,
                                               pad_mode=pad_mode,
-                                              f_min=f_min,
-                                              f_max=f_max,
+                                              f_min=fmin,
+                                              f_max=fmax,
                                               htk=htk,
-                                              norm='slaney')
+                                              norm='slaney',
+                                              dtype=dtype)
 
     paddle_librosa_diff = np.mean(np.abs(expected - paddle_mfcc.numpy()))
-    assert paddle_librosa_diff < 2.5e-5
+    if dtype == 'float64':
+        assert paddle_librosa_diff < eps_float64
+    else:
+        assert paddle_librosa_diff < eps_float32
 
     try:  # if we have torchaudio installed
         import torch
@@ -92,8 +114,8 @@ def test_mfcc_case(n_fft, n_mels, n_mfcc, htk, f_max, device):
             'center': center,
             'n_mels': n_mels,
             'pad_mode': pad_mode,
-            'f_min': f_min,
-            'f_max': f_max,
+            'f_min': fmin,
+            'f_max': fmax,
             'mel_scale': 'htk',
             'norm': 'slaney',
             'power': 2.0
@@ -109,3 +131,6 @@ def test_mfcc_case(n_fft, n_mels, n_mfcc, htk, f_max, device):
         assert torch_librosa_mfcc_diff < 5e-5
     except:
         pass
+
+
+#test_mfcc_case(512, 40, 20, True, 8000, 'cpu','float64',eps_float64)
