@@ -72,6 +72,8 @@ class STFT(nn.Layer):
         one_sided(bool): If True, the output spectrum will have n_fft//2+1 frequency components.
             Otherwise, it will return the full spectrum that have n_fft+1 frequency values.
             The default value is True.
+        dtype(str): the datatype of used internally in computing STFT transform.
+
     Shape:
         - x: 1-D tensor with shape: (signal_length,) or 2-D tensor with shape (batch, signal_length).
         - output: 2-D tensor with shape [batch_size, freq_dim, frame_number,2],
@@ -100,7 +102,8 @@ class STFT(nn.Layer):
                  window: str = 'hann',
                  center: bool = True,
                  pad_mode: str = 'reflect',
-                 one_sided: bool = True):
+                 one_sided: bool = True,
+                 dtype: str = 'float64'):
 
         super(STFT, self).__init__()
 
@@ -121,10 +124,13 @@ class STFT(nn.Layer):
         # Set the default hop, if it's not already specified.
         if self.hop_length is None:
             self.hop_length = int(self.win_length // 4)
-        fft_window = F.get_window(window, self.win_length, fftbins=True)
-        fft_window = F.center_padding(fft_window, n_fft).astype('float64')
+        fft_window = F.get_window(window,
+                                  self.win_length,
+                                  fftbins=True,
+                                  dtype=dtype)
+        fft_window = F.center_padding(fft_window, n_fft)
         # DFT & IDFT matrix.
-        dft_mat = F.dft_matrix(n_fft)
+        dft_mat = F.dft_matrix(n_fft, dtype=dtype)
         if one_sided:
             out_channels = n_fft // 2 + 1
         else:
@@ -180,7 +186,8 @@ class Spectrogram(nn.Layer):
                  window: str = 'hann',
                  center: bool = True,
                  pad_mode: str = 'reflect',
-                 power: float = 2.0):
+                 power: float = 2.0,
+                 dtype: str = 'float64'):
         """Compute spectrogram of a given signal, typically an audio waveform.
         The spectorgram is defined as the complex norm of the short-time
         Fourier transformation.
@@ -204,6 +211,8 @@ class Spectrogram(nn.Layer):
             The default value is 'reflect'.
             power(float): The power of the complex norm.
                 The default value is 2.0
+            dtype(str): the datatype of used internally in computing ISTFT transform.'float64' is
+                recommended for higher numerical accuracy.
 
         Notes:
             The Spectrogram transform relies on STFT transform to compute the spectrogram.
@@ -227,8 +236,13 @@ class Spectrogram(nn.Layer):
         super(Spectrogram, self).__init__()
 
         self.power = power
-        self._stft = STFT(n_fft, hop_length, win_length, window, center,
-                          pad_mode)
+        self._stft = STFT(n_fft=n_fft,
+                          hop_length=hop_length,
+                          win_length=win_length,
+                          window=window,
+                          center=center,
+                          pad_mode=pad_mode,
+                          dtype=dtype)
 
     def __repr__(self, ):
         p_repr = str(self._stft).split('(')[-1].split(')')[0]
@@ -316,8 +330,14 @@ class MelSpectrogram(nn.Layer):
         """
         super(MelSpectrogram, self).__init__()
 
-        self._spectrogram = Spectrogram(n_fft, hop_length, win_length, window,
-                                        center, pad_mode, power)
+        self._spectrogram = Spectrogram(n_fft=n_fft,
+                                        hop_length=hop_length,
+                                        win_length=win_length,
+                                        window=window,
+                                        center=center,
+                                        pad_mode=pad_mode,
+                                        power=power,
+                                        dtype=dtype)
         self.n_mels = n_mels
         self.f_min = f_min
         self.f_max = f_max
@@ -366,10 +386,10 @@ class LogMelSpectrogram(nn.Layer):
                  f_max: Optional[float] = None,
                  htk: bool = False,
                  norm: Union[str, float] = 'slaney',
-                 dtype: str = 'float64',
                  ref_value: float = 1.0,
                  amin: float = 1e-10,
-                 top_db: Optional[float] = 80.0):
+                 top_db: Optional[float] = 80.0,
+                 dtype: str = 'float64'):
         """Compute log-mel-spectrogram(also known as LogFBank) feature of a given signal,
         typically an audio waveform.
 
@@ -399,17 +419,16 @@ class LogMelSpectrogram(nn.Layer):
             f_max(float): the upper cut-off frequency, above which the filter response is zeros.
             ref_value(float): the reference value. If smaller than 1.0, the db level
             htk(bool): whether to use HTK formula in computing fbank matrix.
-            norm(str|float): the normalization type in computing fbank matrix.  Slaney-style is used by default.
+            norm(str|float): the normalization type in computing fbank matrix. Slaney-style is used by default.
                 You can specify norm=1.0/2.0 to use customized p-norm normalization.
-            dtype(str): the datatype of fbank matrix used in the transform. Use float64(default) to increase numerical
+            dtype(str): the datatype of fbank matrix used in the transform. Use float64 to increase numerical
                 accuracy. Note that the final transform will be conducted in float32 regardless of dtype of fbank matrix.
-                of the signal will be pulled up accordingly. Otherwise, the db level is pushed down.
-            amin(float): the minimum value of input magnitude, below which the input
+            amin(float): the minimum value of input magnitude, below which the input of the signal will be pulled up accordingly.
+                Otherwise, the db level is pushed down.
                 magnitude is clipped(to amin). For numerical stability, set amin to a larger value,
                 e.g., 1e-3.
             top_db(float): the maximum db value of resulting spectrum, above which the
                 spectrum is clipped(to top_db).
-
         Notes:
             The LogMelSpectrogram transform relies on MelSpectrogram transform to compute
             spectrogram in mel-scale, and then use paddleaudio.functional.power_to_db to
@@ -487,7 +506,8 @@ class ISTFT(nn.Layer):
         pad_mode(str): the mode to pad the signal if necessary. The supported modes are 'reflect'
             and 'constant'.
             The default value is 'reflect'.
-
+        dtype(str): the datatype of used internally in computing ISTFT transform.'float64' is
+            recommended for higher numerical accuracy.
         signal_length(int): the origin signal length for exactly aligning recovered signal
         with original signal. If set to None, the length is solely determined by hop_length
         and win_length.
@@ -515,7 +535,8 @@ class ISTFT(nn.Layer):
                  win_length: Optional[int] = None,
                  window: str = 'hann',
                  center: bool = True,
-                 pad_mode: str = 'reflect'):
+                 pad_mode: str = 'reflect',
+                 dtype: str = 'float64'):
         super(ISTFT, self).__init__()
 
         assert pad_mode in [
@@ -1093,24 +1114,23 @@ class MFCC(nn.Layer):
                  n_mfcc: int = 20,
                  dct_norm: str = "ortho",
                  lifter: int = 0,
+                 dtype: str = 'float64',
                  **kwargs):
-        """Compute log-mel-spectrogram(also known as LogFBank) feature of a given signal, typically an audio waveform.
+        """"Compute Mel-frequency cepstral coefficients (MFCCs) give an input waveform.
 
         Parameters:
             sr(int): the audio sample rate.
                     The default value is 22050.
-            spect(None|Tensor): the melspectrogram tranform result(in db scale). If None, the melspectrogram will be
-                computed using `MelSpectrogram` functional and further converted to db scale using `F.power_to_db`
-                The default value is None.
             n_mfcc(int): the number of coefficients.
                 The default value is 20.
-            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details
+            dct_norm: the normalization type of dct matrix. See `dct_matrix` for more details.
                 The default value is 'ortho'.
             lifter(int): if lifter > 0, apply liftering(cepstral filtering) to the MFCCs.
                 If lifter = 0, no liftering is applied.
                 Setting lifter >= 2 * n_mfcc emphasizes the higher-order coefficients.
                 As lifter increases, the coefficient weighting becomes approximately linear.
                 The default value is 0.
+            dtype(str): the datatype of used internally in computing MFCC.
             kwargs: additional keyword arguments that will be passed to MelSpectrogram. See ```MelSpectrogram```
                 for more details. If not provided, the default values are used.
 
@@ -1137,7 +1157,8 @@ class MFCC(nn.Layer):
         self.n_mfcc = n_mfcc
         self.dct_norm = dct_norm
         self.lifter = lifter
-        self._melspectrogram = MelSpectrogram(sr=sr, **kwargs)
+        self.dtype = dtype
+        self._melspectrogram = MelSpectrogram(sr=sr, dtype=dtype, **kwargs)
 
     def forward(self, x: Tensor) -> Tensor:
 
@@ -1145,13 +1166,16 @@ class MFCC(nn.Layer):
         spect = F.power_to_db(spect)
         n_mels = spect.shape[1]
         #import pdb;pdb.set_trace()
-        M = F.dct_matrix(self.n_mfcc, n_mels, dct_norm=self.dct_norm)
+        M = F.dct_matrix(self.n_mfcc,
+                         n_mels,
+                         dct_norm=self.dct_norm,
+                         dtype=self.dtype)
 
         mfcc = M.transpose([1, 0]).unsqueeze_(0) @ spect
 
         if self.lifter > 0:
             factor = paddle.sin(
-                math.pi * paddle.arange(1, 1 + self.n_mfcc, dtype='float32') /
+                math.pi * paddle.arange(1, 1 + self.n_mfcc, dtype=self.dtype) /
                 self.lifter)
             return mfcc @ factor.unsqueeze([0, 2])
         elif self.lifter == 0:
@@ -1165,4 +1189,5 @@ class MFCC(nn.Layer):
         p_repr = str(self._melspectrogram).split('(')[-1].split(')')[0]
         return (self.__class__.__name__ + f'(sr={self.sr}, ' +
                 f'n_mfcc={self.n_mfcc}, dct_norm={self.dct_norm}, ' +
-                f'lifter={self.lifter}, ' + p_repr + ')')
+                f'dtype={self.dtype}, ' + f'lifter={self.lifter}, ' + p_repr +
+                ')')
