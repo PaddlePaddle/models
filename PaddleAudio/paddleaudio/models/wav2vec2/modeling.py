@@ -278,13 +278,14 @@ class Wav2Vec2GroupNormConvLayer(nn.Layer):
             bias_attr=config.conv_bias,
         )
         self.activation = ACT2FN[config.feat_extract_activation]
-        # , affine=True ??
         self.layer_norm = nn.GroupNorm(num_groups=self.out_conv_dim,
                                        num_channels=self.out_conv_dim)
 
     def forward(self, hidden_states):
         hidden_states = self.conv(hidden_states)
-        hidden_states = self.layer_norm(hidden_states)
+        # paddle's groupnorm only supports 4D tensor as of 2.1.1. We need to unsqueeze and squeeze.
+        hidden_states = self.layer_norm(hidden_states.unsqueeze([-1]))
+        hidden_states = hidden_states[:, :, :, 0]
         hidden_states = self.activation(hidden_states)
         return hidden_states
 
