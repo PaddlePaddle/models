@@ -48,6 +48,7 @@ __all_ = [
     'center_padding',
     'dct_matrx',
     'mfcc',
+    'compute_deltas',
 ]
 
 
@@ -608,6 +609,20 @@ def power_to_db(magnitude: Tensor,
         log_spec = paddle.maximum(log_spec, ones * (log_spec.max() - top_db))
 
     return log_spec
+
+
+def db_to_power(x: Tensor,
+                ref_value: float = 1.0,
+                power: float = 1.0) -> Tensor:
+    r"""Turn a tensor from the decibel scale to the power/amplitude scale.
+    Args:
+        x(Tensor): Input tensor before being converted to power/amplitude scale.
+        ref(float): Reference which the output will be scaled by.
+        power(float): If power equals 1, will compute DB to power. If 0.5, will compute DB to amplitude.
+    Returns:
+        Tensor: Output tensor in power/amplitude scale.
+    """
+    return ref_value * paddle.pow(paddle.pow(10.0, 0.1 * x), power)
 
 
 def mu_law_encode(x: Tensor, mu: int = 256, quantized: bool = True) -> Tensor:
@@ -1367,3 +1382,102 @@ def mfcc(x,
         return out
     else:
         raise ValueError(f"MFCC lifter={lifter} must be a non-negative number")
+
+
+def spectral_centroid(
+    waveform: Tensor,
+    sr: int = 22050,
+    n_fft: int = 2048,
+    hop_length: Optional[int] = None,
+    win_length: Optional[int] = None,
+    window: str = 'hann',
+    pad_mode: str = 'reflect',
+    dtype='float64',
+) -> Tensor:
+    """Compute Mel-frequency cepstral coefficients (MFCCs) give an input waveform.
+
+    Parameters:
+        waveform(Tensor): the input waveform.
+        sr(int): the audio sample rate.
+            The default value is 22050.
+        n_fft(int): the number of frequency components of the discrete Fourier transform.
+            The default value is 2048.
+        hop_length(int|None): the hop length of the short time FFT. If None, it is set to win_length//4.
+            The default value is None.
+        win_length: the window length of the short time FFt. If None, it is set to same as n_fft.
+            The default value is None.
+        window(str): the name of the window function applied to the single before the Fourier transform.
+            The folllowing window names are supported: 'hamming','hann','kaiser','gaussian',
+            'exponential','triang','bohman','blackman','cosine','tukey','taylor'.
+            The default value is 'hann'
+        pad_mode(str): the mode to pad the signal if necessary. The supported modes are 'reflect' and 'constant'.
+            The default value is 'reflect'.
+        dtype(str): the datatype used internally.
+    Returns:
+        The spectral centroid of the shape [batch_size x num_frames].
+    Notes:
+        This funciton is consistent with torchaudio.
+    """
+
+    specgram = spectrogram(waveform,
+                           pad_mode=pad_mode,
+                           n_fft=n_fft,
+                           hop_length=hop_length,
+                           win_length=win_length,
+                           window=window,
+                           power=1.0,
+                           dtype=dtype)
+    freqs = paddle.linspace(0, sr // 2, 1 + n_fft // 2, dtype=dtype).reshape(
+        (-1, 1))
+    freq_dim = -2
+    return (freqs * specgram).sum(axis=freq_dim) / specgram.sum(axis=freq_dim)
+
+
+def compute_deltas(specgram: Tensor,
+                   win_length: int = 5,
+                   mode: str = "replicate") -> Tensor:
+    """Compute delta features of input tensor, usually the spectrogram or MFCC.
+    The delta feature is the local estimate of the derivative of the input data.
+    Note that in this function that derivative is along the last axis.
+
+    Parameters:
+        specgram(Tensor): the input waveform.
+        win_length(int): the size of window in which that filtering is applied.
+            The default value is 5.
+        mode(int): the mode for padding in order to keep retain the same size as of output as input.
+            The default value is 'replicate'. See `paddle.nn.functional.pad` for more details.
+
+    Returns:
+        The delta feature tensor of the same shape as input.
+
+    Examples:
+
+        .. code-block:: python
+
+        data = np.random.randn(32,100).astype('float32')
+        delta_feat = compute_deltas(paddle.to_tensor(data))
+        print(delta_feat.shape)
+        >> [32,100]
+
+    Notes:
+        This function is consistent with torchaudio.
+        It is a special case of librosa.feature.delta().
+    """
+
+    assert win_length >= 3, (f'win_length must >=3, but received ' +
+                             f'win_length={win_length}')
+
+    shape = specgram.shape
+    specgram = specgram.reshape((1, -1, shape[-1]))
+    n = (win_length - 1) // 2
+    denom = n * (n + 1) * (2 * n + 1) / 3
+    specgram = paddle.nn.functional.pad(specgram, [n, n],
+                                        mode=mode,
+                                        data_format='NCL')
+    kernel = paddle.arange(-n, n + 1, 1, dtype='float32')
+    output = paddle.nn.functional.conv1d(specgram,
+                                         kernel.unsqueeze((0, 1)).tile(
+                                             (specgram.shape[1], 1, 1)),
+                                         groups=specgram.shape[1]) / denom
+    output = output.reshape(shape)
+    return output

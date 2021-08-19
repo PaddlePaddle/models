@@ -117,3 +117,14 @@ def test_fbank_matrix():
                                                              n_fft=512,
                                                              n_mels=128)
     assert np.allclose(src.numpy(), target, atol=1e-7)  # cannot reach 1e-8
+
+
+def test_compute_delta():
+    # smoke test
+    data = np.random.randn(32, 100).astype('float32')
+    delta_feat = F.compute_deltas(paddle.to_tensor(data))
+    assert delta_feat.shape == [32, 100]
+
+    data = np.random.randn(1, 40, 100).astype('float32')
+    delta_feat = F.compute_deltas(paddle.to_tensor(data))
+    assert delta_feat.shape == [1, 40, 100]
