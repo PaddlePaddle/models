@@ -1,8 +1,8 @@
-# Speaker verification using and ResnetSE EcapaTDNN
+# Speaker verification using and ResnetSE ECAPA-TDNN
 
 ## Introduction
 In this example, we demonstrate how to use PaddleAudio to train two types of networks for speaker verification.
-The networks we support here are
+The networks supported here are
 - Resnet34 with Squeeze-and-excite block \[1\] to adaptively re-weight the feature maps.
 - ECAPA-TDNN  \[2\]
 
@@ -14,15 +14,13 @@ git clone https://github.com/PaddlePaddle/models.git
 cd models/PaddleAudio
 pip install -e .
 ```
-Then clone this project,
+Then install additional requirements by
 ```
-git clone https://github.com/ranchlai/speaker-verification.git
-cd speaker-verification
+cd examples/speaker
 pip install -r requirements.txt
 ```
 
-
-## Datasets
+## Training
 ### Training datasets
 Following from this example and this example, we use the dev split [VoxCeleb 1](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html) which consists aof `1,211` speakers and the dev split of [VoxCeleb 2](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html) consisting of `5,994` speakers for training. Thus there are `7,502` speakers totally in our training set.
 
@@ -33,7 +31,7 @@ Finally, create a txt file that contains the list of audios for training by
 cd ./data/voxceleb/
 find `pwd`/ --type f > vox_files.txt
 ```
-### Datasets for augmentation
+### Augmentation datasets
 The following datasets are required for dataset augmentation
 - [Room Impulse Response and Noise Database](https://openslr.org/28/)
 - [MUSAN](https://openslr.org/17/)
@@ -53,14 +51,7 @@ muse_noise_srn_high: 15
 muse_noise_srn_low: 5.0
 ```
 
-## <a name="test_dataset"></a>Testing datasets
-The testing split of VoxCeleb 1 is used for measuring the performance of speaker verification duration training and after the training completes.  You will need to download the data and unzip into a folder, e.g, `./data/voxceleb/test/`.
-
-Then download the text files which list utterance  pairs to compare and the true labels indicating whether the utterances come from the same speaker. There are multiple trials and we will use [veri_test2](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt).
-
-## Training
 To train your model from scratch, first create a folder(workspace) by
-
 ``` bash
 cd egs
 mkdir <your_example>
@@ -74,8 +65,14 @@ Finally start your training by
 ``` bash
 python ../../train.py -c config.yaml  -d gpu:0
 ```
+
 ## Testing
-First download the checkpoints for resnet or ecapa-tdnn,
+## <a name="test_dataset"></a>Testing datasets
+The testing split of VoxCeleb 1 is used for measuring the performance of speaker verification duration training and after the training completes.  You will need to download the data and unzip into a folder, e.g, `./data/voxceleb/test/`.
+
+Then download the text files which list utterance  pairs to compare and the true labels indicating whether the utterances come from the same speaker. There are multiple trials and we will use [veri_test2](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt).
+
+To start testing, first download the checkpoints for resnet or ecapa-tdnn,
 
 | checkpoint |size| eer |
 | --------------- | --------------- | --------------- |
@@ -104,14 +101,10 @@ python ../../test.py -w <checkpoint path> -c config.yaml  -d gpu:0
 ```
 which gives you eer 0.0105.
 
-
-
 ## Results
-
 We compare our results  with [voxceleb_trainer](https://github.com/clovaai/voxceleb_trainer).
 
 ### Pretrained model of voxceleb_trainer
-
 The test list is veri_test2.txt, which can be download from here [VoxCeleb1 (cleaned)](https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt)
 
 | model |config|checkpoint |eval frames| eer |
@@ -119,14 +112,13 @@ The test list is veri_test2.txt, which can be download from here [VoxCeleb1 (cle
 | ResnetSE34 + ASP + softmaxproto| - | [baseline_v2_ap](http://www.robots.ox.ac.uk/~joon/data/baseline_v2_ap.model)|400|1.06%|
 | ResnetSE34 + ASP + softmaxproto| - | [baseline_v2_ap](http://www.robots.ox.ac.uk/~joon/data/baseline_v2_ap.model)|all|1.18%|
 
-### This repo
+### This example
 | model |config|checkpoint |eval frames| eer |
 | --------------- | --------------- | --------------- |--------------- |--------------- |
 | ResnetSE34 + SAP + CMSoftmax| [config.yaml](./egs/resent/config.yaml) |[checkpoint](https://bj.bcebos.com/paddleaudio/models/speaker/resnetse34_epoch92_eer0.00931.pdparams) | all|0.93%|
 | ECAPA-TDNN + AAMSoftmax | [config.yaml](./egs/ecapa-tdnn/config.yaml) | [checkpoint](https://bj.bcebos.com/paddleaudio/models/speaker/tdnn_amsoftmax_epoch51_eer0.011.pdparams) | all|1.10%|
 
-## Reference
-
+## References
 [1] Hu J, Shen L, Sun G. Squeeze-and-excitation networks[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2018: 7132-7141
 
 [2] Desplanques B, Thienpondt J, Demuynck K. Ecapa-tdnn: Emphasized channel attention, propagation and aggregation in tdnn based speaker verification[J]. arXiv preprint arXiv:2005.07143, 2020.
