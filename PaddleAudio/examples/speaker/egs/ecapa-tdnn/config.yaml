@@ -1,0 +1,97 @@
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIaONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+fbank:
+  sr: 16000 # sample rate
+  n_fft: 512
+  win_length: 400 #25ms
+  hop_length: 160 #10ms
+  n_mels: 80
+  f_min: 20
+  f_max: 7600
+  window: hann
+  amin: !!float 1e-5
+  top_db: 75
+
+augment_with_sox: False
+augment_mel: False
+augment_wav: True
+rir_path: ../../data/RIRS_NOISES/rir.list
+muse_speech: ../../data/musan_split/speech.list
+muse_speech_srn_high: 15.0
+muse_speech_srn_low: 12.0
+muse_music: ../../data/musan_split/music.list
+muse_music_srn_high: 10.0
+muse_music_srn_low: 5.0
+muse_noise: ../../data/musan_split/noise.list
+muse_noise_srn_high: 10
+muse_noise_srn_low: 5.0
+batch_size:  64
+val_batch_size: 16
+num_workers:  16
+num_classes: 7205
+duration: 5
+balanced_sampling: False
+epoch_num: 500
+max_lr: !!float 1e-05
+base_lr: !!float 1e-04
+reverse_lr: True
+half_cycle: 10 # epoch
+
+# set the data path accordingly
+spk_scp: ../../data/voxceleb1and2_list.txt
+mean_std_file: ../../data/stat.pd
+
+#for testing
+test_list: ../../data/veri_test2.txt
+test_folder: ../../data/voxceleb1/
+
+speaker_set: ../../data/speaker_set_vox12.txt
+train_keys: ~
+
+model_dir :  ./checkpoints/
+model_prefix: 'tdnn'
+log_dir :  ./log/
+log_file :  ./log.txt
+
+log_step: 10
+checkpoint_step :  5000
+eval_step: 10000
+
+max_time_mask: 2
+max_freq_mask: 1
+max_time_mask_width: 20
+max_freq_mask_width: 10
+
+model:
+  name: EcapaTDNN
+  params:
+    input_size: 80 # should be the same as in the fbank config
+normalize: True
+loss:
+  name: AdditiveAngularMargin
+  params:
+    margin: 0.3
+    scale: 30.0
+    easy_margin: False
+    feature_dim: 192
+    n_classes: 22506
+
+# loss:
+#   name: CMSoftmax
+#   params:
+#     margin: 0.10
+#     margin2: 0.10
+#     scale: 30.0
+#     feature_dim: 256
+#     n_classes: 22506
