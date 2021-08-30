@@ -1385,7 +1385,7 @@ def mfcc(x,
 
 
 def spectral_centroid(
-    waveform: Tensor,
+    x: Tensor,
     sr: int = 22050,
     n_fft: int = 2048,
     hop_length: Optional[int] = None,
@@ -1397,7 +1397,7 @@ def spectral_centroid(
     """Compute Mel-frequency cepstral coefficients (MFCCs) give an input waveform.
 
     Parameters:
-        waveform(Tensor): the input waveform.
+        x(Tensor): the input waveform.
         sr(int): the audio sample rate.
             The default value is 22050.
         n_fft(int): the number of frequency components of the discrete Fourier transform.
@@ -1417,23 +1417,37 @@ def spectral_centroid(
         The spectral centroid of the shape [batch_size x num_frames].
     Notes:
         This funciton is consistent with torchaudio.
+
+    Examples:
+
+        .. code-block:: python
+
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.randn((8, 16000))  # the waveform
+        feature = F.spectral_centroid(x，sr=16000, n_fft=512)
+        print(feature.shape)
+        >> [8, 126]
     """
 
-    specgram = spectrogram(waveform,
-                           pad_mode=pad_mode,
-                           n_fft=n_fft,
-                           hop_length=hop_length,
-                           win_length=win_length,
-                           window=window,
-                           power=1.0,
-                           dtype=dtype)
+    x = spectrogram(x,
+                    pad_mode=pad_mode,
+                    n_fft=n_fft,
+                    hop_length=hop_length,
+                    win_length=win_length,
+                    window=window,
+                    power=1.0,
+                    dtype=dtype)
     freqs = paddle.linspace(0, sr // 2, 1 + n_fft // 2, dtype=dtype).reshape(
         (-1, 1))
     freq_dim = -2
-    return (freqs * specgram).sum(axis=freq_dim) / specgram.sum(axis=freq_dim)
+
+    x = x.astype(dtype)
+    out = (freqs * x).sum(axis=freq_dim) / x.sum(axis=freq_dim)
+    return out
 
 
-def compute_deltas(specgram: Tensor,
+def compute_deltas(x: Tensor,
                    win_length: int = 5,
                    mode: str = "replicate") -> Tensor:
     """Compute delta features of input tensor, usually the spectrogram or MFCC.
@@ -1441,7 +1455,7 @@ def compute_deltas(specgram: Tensor,
     Note that in this function that derivative is along the last axis.
 
     Parameters:
-        specgram(Tensor): the input waveform.
+        x(Tensor): the input spectrogram.
         win_length(int): the size of window in which that filtering is applied.
             The default value is 5.
         mode(int): the mode for padding in order to keep retain the same size as of output as input.
@@ -1454,8 +1468,10 @@ def compute_deltas(specgram: Tensor,
 
         .. code-block:: python
 
-        data = np.random.randn(32,100).astype('float32')
-        delta_feat = compute_deltas(paddle.to_tensor(data))
+        import paddle
+        import paddleaudio.functional as F
+        x = paddle.randn((32, 100))  # the waveform
+        delta_feat = F.compute_deltas(x)
         print(delta_feat.shape)
         >> [32,100]
 
@@ -1467,17 +1483,14 @@ def compute_deltas(specgram: Tensor,
     assert win_length >= 3, (f'win_length must >=3, but received ' +
                              f'win_length={win_length}')
 
-    shape = specgram.shape
-    specgram = specgram.reshape((1, -1, shape[-1]))
+    shape = x.shape
+    x = x.reshape((1, -1, shape[-1]))
     n = (win_length - 1) // 2
     denom = n * (n + 1) * (2 * n + 1) / 3
-    specgram = paddle.nn.functional.pad(specgram, [n, n],
-                                        mode=mode,
-                                        data_format='NCL')
+    x = paddle.nn.functional.pad(x, [n, n], mode=mode, data_format='NCL')
     kernel = paddle.arange(-n, n + 1, 1, dtype='float32')
-    output = paddle.nn.functional.conv1d(specgram,
-                                         kernel.unsqueeze((0, 1)).tile(
-                                             (specgram.shape[1], 1, 1)),
-                                         groups=specgram.shape[1]) / denom
+    output = paddle.nn.functional.conv1d(
+        x, kernel.unsqueeze((0, 1)).tile(
+            (x.shape[1], 1, 1)), groups=x.shape[1]) / denom
     output = output.reshape(shape)
     return output
