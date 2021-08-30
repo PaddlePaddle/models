@@ -128,3 +128,10 @@ def test_compute_delta():
     data = np.random.randn(1, 40, 100).astype('float32')
     delta_feat = F.compute_deltas(paddle.to_tensor(data))
     assert delta_feat.shape == [1, 40, 100]
+
+
+def test_spectroid_centroid():
+
+    x = paddle.randn((8, 16000))  # the waveform
+    feature = F.spectral_centroid(x, sr=16000, n_fft=512)
+    assert feature.shape == [8, 126]
