@@ -49,6 +49,7 @@ __all_ = [
     'dct_matrx',
     'mfcc',
     'compute_deltas',
+    'spectral_centroid',
 ]
 
 
