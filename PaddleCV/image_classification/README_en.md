@@ -42,20 +42,39 @@ Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and la
 ### Data preparation
 
 An example for ImageNet classification is as follows.
-For Linux system, preparation of imagenet data can be done as:
 
-```bash
-cd data/ILSVRC2012/
-sh download_imagenet2012.sh
+**Note**: The ImageNet dataset is no longer publicly accessibile from ImageNet official. You need to download the image data externally and place the training data and validation data into `train` and `val` respectively. In addition, the size of total data is more than 140GB, it will take much time to download. If you have downloaded the ImageNet dataset, only need to organize and place it into `data/ILSVRC2012`. 
+
+We provide the label list files corresponding to the training data and the verification data, that can be downloaded for Linux users by command as follows: 
+
+```
+wget https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_train_list.txt -O data/ILSVRC2012/train_list.txt
+wget https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_val_list.txt -O data/ILSVRC2012/val_list.txt
 ```
 
-In the shell script ```download_imagenet2012.sh```,  there are three steps to prepare data:
+And for Windows, users can download, rename and place these files into `data/ILSVRC2012` manually: [train_list.txt](https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_train_list.txt) and [val_list.txt](https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_val_list.txt).
 
-**step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
+The tree of dataset directory is as follows:
 
-**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively. Please note that the size of data is more than 40 GB, it will take much time to download. Users who have downloaded the ImageNet data can organize it into ```data/ILSVRC2012``` directly.
+```
+ data/ILSVRC2012
+ ├── train             # training images
+ │   ├── n01440764
+ │   ...
+ │   ├── n13054560
+ │   ├── n13133613
+ │   └── n15075141
+ ├── val               # validation images
+ │   ├── ILSVRC2012_val_00000001.JPEG
+ │   ...
+ │   ├── ILSVRC2012_val_00049998.JPEG
+ │   ├── ILSVRC2012_val_00049999.JPEG
+ │   └── ILSVRC2012_val_00050000.JPEG
+ ├── train_list.txt    # training data label list file
+ └── val_list.txt      # validation data label list file
+```
 
-**step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
+There are two label files which contain train and validation image labels respectively:
 
 * train_list.txt: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
@@ -67,7 +86,6 @@ val/ILSVRC2012_val_00000001.jpeg 65
 ```
 
 Note: You may need to modify the data path in reader.py to load data correctly.
-**For windows system, Users should download ImageNet data by themselves. and the label list can be downloaded in [Here](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### Training
 
