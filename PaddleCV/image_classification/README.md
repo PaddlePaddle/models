@@ -50,19 +50,38 @@ pip install numpy
 
 ### 数据准备
 
-下面给出了ImageNet分类任务的样例，
-在Linux系统下通过如下的方式进行数据的准备：
+**注意**: 由于ImageNet数据集官方不再提供公开下载链接，请用户自行下载ImageNet-2012图像数据，训练集与验证集数据需要分别放在 `train` 和 `val` 目录中。另外，ImageNet数据大小超过140GB，下载非常耗时，已经下载ImageNet的用户可以直接将数据组织放置到 `data/ILSVRC2012` 下面。
+
+我们提供了训练集与验证集对应的标签文件，Linux 用户可通过以下命令下载：
+
 ```
-cd data/ILSVRC2012/
-sh download_imagenet2012.sh
+wget https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_train_list.txt -O data/ILSVRC2012/train_list.txt
+wget https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_val_list.txt -O data/ILSVRC2012/val_list.txt
 ```
-在```download_imagenet2012.sh```脚本中，通过下面三步来准备数据：
 
-**步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
+Windows 用户可自行下载：[train_list.txt](https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_train_list.txt)、[val_list.txt](https://paddle-imagenet-models-name.bj.bcebos.com/data/ImageNet1k/ImageNet1k_val_list.txt)，并分别重命名为 `train_list.txt` 和 `val_list.txt`，然后放置在 `data/ILSVRC2012` 目录下。
 
-**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。注意，ImageNet数据的大小超过140GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
+整理好的数据集目录应为如下格式：
 
-**步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
+```
+ data/ILSVRC2012
+ ├── train             # 训练集图像数据
+ │   ├── n01440764
+ │   ...
+ │   ├── n13054560
+ │   ├── n13133613
+ │   └── n15075141
+ ├── val               # 验证集图像数据
+ │   ├── ILSVRC2012_val_00000001.JPEG
+ │   ...
+ │   ├── ILSVRC2012_val_00049998.JPEG
+ │   ├── ILSVRC2012_val_00049999.JPEG
+ │   └── ILSVRC2012_val_00050000.JPEG
+ ├── train_list.txt    # 训练集数据标注文件
+ └── val_list.txt      # 验证集数据标注文件
+```
+
+其中，`train_list.txt` 与 `val_list.txt` 两个文件分别包含了训练集与验证集中图像的标签信息：
 
 * train_list.txt: ImageNet-2012训练集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
@@ -73,8 +92,6 @@ train/n02483708/n02483708_2436.jpeg 369
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
 注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
-
-**Windows系统下请用户自行下载ImageNet数据，[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### 模型训练
 
