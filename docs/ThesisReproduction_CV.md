@@ -826,7 +826,7 @@ python3.7 -m paddle.distributed.launch \
 * 对于`nn.Linear`层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置
 * paddle.nn.BatchNorm2D包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
     * `weight` -> `weight`
-    * `weight` -> `weight`
+    * `bias` -> `bias`
     * `_variance` -> `running_var`
     * `_mean` -> `running_mean`
 
