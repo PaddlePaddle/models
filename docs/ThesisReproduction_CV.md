@@ -1,5 +1,10 @@
 # 论文复现指南
 
+## 目录
+
+- [1. 总览](#1)
+
+<a name="1"></a>
 ## 1. 总览
 
 ### 1.1 背景
@@ -33,9 +38,8 @@
 
 总共包含11个步骤。为了高效复现论文，设置了5个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
 
-* 第3章：介绍11个复现步骤的理论知识以及实战
-* 第4章：介绍5个验收节点的自查与验收方法
-* 第5章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
+* 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
+* 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 
 ### 2.2 reprod_log whl包
@@ -389,7 +393,30 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 **【注意事项】**
 
 * 如果第一轮loss就没有对齐，则需要仔细排查一下模型前向部分。
-* 如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`model.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证并反馈。
+* 如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`loss.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证并反馈。
+
+梯度的打印方法示例代码如下所示，注释掉的内容即为打印网络中所有参数的梯度shape。
+
+```python
+    # 代码地址：https://github.com/littletomatodonkey/AlexNet-Prod/blob/63184b258eda650e7a8b7f2610b55f4337246630/pipeline/Step4/AlexNet_paddle/train.py#L93
+    loss_list = []
+    for idx in range(max_iter):
+        image = paddle.to_tensor(fake_data)
+        target = paddle.to_tensor(fake_label)
+
+        output = model(image)
+        loss = criterion(output, target)
+        loss.backward()
+        # for name, tensor in model.named_parameters():
+        #     grad = tensor.grad
+        #     print(name, tensor.grad.shape)
+        #     break
+        optimizer.step()
+        optimizer.clear_grad()
+        loss_list.append(loss)
+```
+
+
 
 
 **【实战】**
