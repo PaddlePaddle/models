@@ -133,7 +133,7 @@ AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，
 
 **【实战】**
 
-对于AlexNet网络结构的PyTorch实现 [alexnet-pytorch](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_torch/torchvision/models/alexnet.py)，[alexnet-paddle](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_paddle/paddlevision/models/alexnet.py) 提供了网络结构代码转换为PaddlePaddle的实现。
+对于AlexNet网络结构的PyTorch实现：[链接](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_torch/torchvision/models/alexnet.py)，[这里](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_paddle/paddlevision/models/alexnet.py) 提供了网络结构代码转换为PaddlePaddle的实现。
 
 #### 3.1.2 权重转换
 
