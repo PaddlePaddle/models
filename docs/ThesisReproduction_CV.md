@@ -35,7 +35,7 @@
 
 * 第3章：介绍11个复现步骤的理论知识以及实战
 * 第4章：介绍5个验收节点的自查与验收方法
-* 第5章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE或进交流群讨论
+* 第5章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 
 ### 2.2 reprod_log whl包
@@ -48,53 +48,7 @@
 * 2个字典的对比验证
 * 对比结果的输出与记录
 
-在论文复现赛中，主要用到的reprod_log类如下所示。
-
-* ReprodLogger
-    * 功能：记录和保存复现过程中的中间变量，用于后续的diff排查
-    * 初始化参数：无
-    * 方法
-        * add(key, val)
-            * 功能：向logger中添加key-val pair
-            * 输入
-                * key (str) : PaddlePaddle中的key与参考代码中保存的key应该完全相同，否则会提示报错
-                * value (numpy.ndarray) : key对应的值
-            * 返回: None
-        * remove(key)
-            * 功能：移除logger中的关键字段key及其value
-            * 输入
-                * key (str) : 关键字段
-                * value (numpy.ndarray) : key对应的值
-            * 返回: None
-        * clear()
-            * 功能：清空logger中的关键字段key及其value
-            * 输入: None
-            * 返回: None
-        * save(path)
-            * 功能：将logger中的所有的key-value信息保存到文件中
-            * 输入:
-                * path (str): 路径
-            * 返回: None
-* ReprodDiffHelper
-    * 功能：对`ReprodLogger`保存的日志文件进行解析，打印与记录diff
-    * 初始化参数：无
-    * 方法
-        * load_info(path)
-            * 功能：加载
-            * 输入:
-                * path (str): 日志文件路径
-            * 返回: dict信息，key为str，value为numpy.ndarray
-        * compare_info(info1, info2)
-            * 功能：计算两个字典对于相同key的value的diff，具体计算方法为`diff = np.abs(info1[key] - np.abs(info[key]))`
-            * 输入:
-                * info1/info2 (dict): PaddlePaddle与参考代码保存的文件信息
-            * 返回: diff的dict信息
-        * report(diff_method="mean", diff_threshold=1e-6, path="./diff.txt")
-            * 功能：可视化diff，保存到文件或者到屏幕
-            * 参数
-                * diff_method (str): diff计算方法，包括`mean`、`min`、`max`、`all`，默认为`mean`
-                * diff_threshold (float): 阈值，如果diff大于该阈值，则核验失败，默认为`1e-6`
-                * path (str): 日志保存的路径，默认为`./diff.txt`
+更多API与使用方法可以参考：[reprod_log API使用说明](https://github.com/WenmuZhou/reprod_log/blob/master/README.md)。
 
 #### 2.2.2 reprod_log使用demo
 
@@ -179,7 +133,7 @@ AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，
 
 **【实战】**
 
-对于AlexNet网络结构的PyTorch实现 [alexnet-pytorch](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/AlexNet-torch/torchvision/models/alexnet.py)，[alexnet-paddle](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/AlexNet-paddle/paddlevision/models/alexnet.py) 提供了网络结构代码转换为PaddlePaddle的实现。
+对于AlexNet网络结构的PyTorch实现 [alexnet-pytorch](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_torch/torchvision/models/alexnet.py)，[alexnet-paddle](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_paddle/paddlevision/models/alexnet.py) 提供了网络结构代码转换为PaddlePaddle的实现。
 
 #### 3.1.2 权重转换
 
@@ -193,12 +147,12 @@ AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，
 
 **【实战】**
 
-AlexNet的代码转换脚本可以在这里查看：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py)，核心函数如下所示。
+AlexNet的代码转换脚本可以在这里查看：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py)，
 
 注意：运行该代码需要首先下载PyTorch的AlexNet预训练模型到该目录下，下载地址为：[https://download.pytorch.org/models/alexnet-owt-7be5be79.pth](https://download.pytorch.org/models/alexnet-owt-7be5be79.pth)
 
 ```python
-# https://github.com/littletomatodonkey/AlexNet-Prod/blob/d7b1977c2043a346b3fee0039949d5334fb990a3/pipeline/weights/torch2paddle.py#L6
+# https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py
 
 import numpy as np
 import torch
@@ -224,22 +178,22 @@ def transfer():
 transfer()
 ```
 
-运行完成之后，会在这里生成`alexnet_paddle.pdparams`文件，为PaddlePaddle的预训练模型。
+运行完成之后，会在当前目录生成`alexnet_paddle.pdparams`文件，即为转换后的PaddlePaddle预训练模型。
 
 
 #### 3.1.3 模型组网正确性验证
 
 **【基本流程】**
 
-    * 定义PyTorch模型，加载权重，固定seed，基于numpy生成随机数，转换为PyTorch可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
-    * 定义PaddlePaddle模型，加载权重，固定seed，基于numpy生成随机数，转换为PaddlePaddle可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
-    *  使用reprod_log排查diff，小于阈值，即可完成自测。
-    
+* 定义PyTorch模型，加载权重，固定seed，基于numpy生成随机数，转换为PyTorch可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
+* 定义PaddlePaddle模型，加载权重，固定seed，基于numpy生成随机数，转换为PaddlePaddle可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
+*  使用reprod_log排查diff，小于阈值，即可完成自测。
+
 **【注意事项】**
 
-    * 模型在前向对齐验证时，需要调用`model.eval()`方法，保证组网中的随机量被关闭，比如BatchNorm、Dropout等。
-    * 给定相同的输入数据，为保证可复现性，如果有随机数生成，固定相关的随机种子。
-    * 输出diff可以使用`np.mean(np.abs(o1 - o2))`进行计算，一般小于1e-6的话，可以认为前向没有问题。如果最终输出结果diff较大，可以使用二分的方法进行排查，比如说ResNet50，包含1个stem、4个res-stage、global avg-pooling以及最后的fc层，那么完成模型组网和权重转换之后，如果模型输出没有对齐，可以尝试输出中间某一个res-stage的tensor进行对比，如果相同，则向后进行排查；如果不同，则继续向前进行排查，以此类推，直到找到导致没有对齐的操作。
+* 模型在前向对齐验证时，需要调用`model.eval()`方法，保证组网中的随机量被关闭，比如BatchNorm、Dropout等。
+* 给定相同的输入数据，为保证可复现性，如果有随机数生成，固定相关的随机种子。
+* 输出diff可以使用`np.mean(np.abs(o1 - o2))`进行计算，一般小于1e-6的话，可以认为前向没有问题。如果最终输出结果diff较大，可以使用二分的方法进行排查，比如说ResNet50，包含1个stem、4个res-stage、global avg-pooling以及最后的fc层，那么完成模型组网和权重转换之后，如果模型输出没有对齐，可以尝试输出中间某一个res-stage的tensor进行对比，如果相同，则向后进行排查；如果不同，则继续向前进行排查，以此类推，直到找到导致没有对齐的操作。
 
 **【实战】**
 
@@ -247,8 +201,6 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 [https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1](https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1)
 
 ### 3.2 验证/测试集数据读取对齐
-
-#### 3.2.1 数据集类Dataset复现方法
 
 **【基本流程】**
 
@@ -261,199 +213,53 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 
 PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，PyTorch中对应为`torch.utils.data.Dataset`，二者功能一致，在绝大多数情况下，可以使用该类构建数据集。它是描述Dataset方法和行为的抽象类，在具体实现的时候，需要继承这个基类，实现其中的`__getitem__`和`__len__`方法。除了参考代码中相关实现，也可以参考待复现论文中的说明。
 
+复现完Dataset之后，可以构建Dataloader，对数据进行组batch、批处理，送进网络进行计算。
+
+`paddle.io.DataLoader`可以进行数据加载，将数据分成批数据，并提供加载过程中的采样。PyTorch对应的实现为`torch.utils.data.DataLoader`，二者在功能上一致，只是在参数方面稍有diff：（1）PaddlePaddle缺少对`pin_memory`等参数的支持；（2）PaddlePaddle增加了`use_shared_memory`参数来选择是否使用共享内存加速数据加载过程。
+
 **【注意事项】**
 
-此外，论文中一般会提供数据集的名称以及基本信息。复现过程中，我们在下载完数据之后，建议先检查下是否和论文中描述一致，否则可能存在的问题有：
+论文中一般会提供数据集的名称以及基本信息。复现过程中，我们在下载完数据之后，建议先检查下是否和论文中描述一致，否则可能存在的问题有：
 
 * 数据集年份不同，比如论文中使用了MS-COCO2014数据集，但是我们下载的是MS-COCO2017数据集，如果不对其进行检查，可能会导致我们最终训练的数据量等与论文中有diff
-* 数据集使用方式不同，有些论文中，可能只是抽取了该数据集的子集进行方法验证，此时需要注意抽取方法，需要保证抽取出的子集完全相同
+* 数据集使用方式不同，有些论文中，可能只是抽取了该数据集的子集进行方法验证，此时需要注意抽取方法，需要保证抽取出的子集完全相同。
+* 在评估指标对齐时，我们可以固定batch size，关闭Dataloader的shuffle操作。
 
 构建数据集时，也会涉及到一些预处理方法，以CV领域为例，PaddlePaddle提供了一些现成的视觉类操作api，具体可以参考：[paddle.vision类API](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)。对应地，PyTorch中的数据处理api可以参考：[torchvision.transforms类API](https://pytorch.org/vision/stable/transforms.html)。对于其中之一，可以找到另一个平台的实现。
 
-在这里也需要注意：
+此外，
 * 有些自定义的数据处理方法，如果不涉及到深度学习框架的部分，可以直接复用。
 * 对于特定任务中的数据预处理方法，比如说图像分类、检测、分割等，如果没有现成的API可以调用，可以参考官方模型套件中的一些实现方法，比如PaddleClas、PaddleDetection、PaddleSeg等。
 
 **【实战】**
 
+AlexNet模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考该文件：
+[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py)
 
-#### 3.2.2 数据加载器Dataloader复现方法
 
-复现完Dataset之后，可以构建Dataloader，对数据进行组batch、批处理，送进网络进行计算。
+使用方法可以参考[数据检查文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)。
 
-`paddle.io.DataLoader`可以进行数据加载，将数据分成批数据，并提供加载过程中的采样。PyTorch对应的实现为`torch.utils.data.DataLoader`，二者在功能上一致，只是在参数方面稍有diff：（1）PaddlePaddle缺少对`pin_memory`等参数的支持；（2）PaddlePaddle增加了`use_shared_memory`参数来选择是否使用共享内存加速数据加载过程。
-
-在评估指标对齐时，我们可以固定batch size，关闭Dataloader的shuffle操作。
-
-#### 3.2.3 demo
-
-关于dataset与dataloader的检查demo可以参考代码: [https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py)
-
-核心代码如下，构建dataset与dataloader，并使用reprod_log工具进行检查。
-
-```python
-def test_data_pipeline():
-    diff_helper = ReprodDiffHelper()
-    paddle_dataset, paddle_dataloader = build_paddle_data_pipeline()
-    torch_dataset, torch_dataloader = build_torch_data_pipeline()
-
-    logger_paddle_data = ReprodLogger()
-    logger_torch_data = ReprodLogger()
-
-    logger_paddle_data.add("length", np.array(len(paddle_dataset)))
-    logger_torch_data.add("length", np.array(len(torch_dataset)))
-
-    # random choose 5 images and check
-    for idx in range(5):
-        rnd_idx = np.random.randint(0, len(paddle_dataset))
-        logger_paddle_data.add(f"dataset_{idx}",
-                               paddle_dataset[rnd_idx][0].numpy())
-        logger_torch_data.add(f"dataset_{idx}",
-                              torch_dataset[rnd_idx][0].detach().cpu().numpy())
-
-    for idx, (paddle_batch, torch_batch
-              ) in enumerate(zip(paddle_dataloader, torch_dataloader)):
-        if idx >= 5:
-            break
-        logger_paddle_data.add(f"dataloader_{idx}", paddle_batch[0].numpy())
-        logger_torch_data.add(f"dataloader_{idx}",
-                              torch_batch[0].detach().cpu().numpy())
-
-    diff_helper.compare_info(logger_paddle_data.data, logger_torch_data.data)
-    diff_helper.report()
-```
-
-最后产出日志如下，检查成功。
-
-```
-INFO:reprod_log.utils:length:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataset_0:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataset_1:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataset_2:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataset_3:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataset_4:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataloader_0:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataloader_1:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataloader_2:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataloader_3:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:dataloader_4:
-INFO:reprod_log.utils:  mean diff: check passed: True, value: 0.0
-INFO:reprod_log.utils:diff check passed
-```
 
 ### 3.3 评估指标对齐
 
-#### 3.3.1 复现方法
+**【基本流程】**
 
 PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Precision`, `Recall`等，而PyTorch中，目前可以通过组合的方式实现metric计算，或者调用[torchmetrics](https://torchmetrics.readthedocs.io/en/latest/)，在论文复现的过程中，需要注意保证对于该模块，给定相同的输入，二者输出完全一致。
 
 * 操作流程
     * 定义PyTorch模型，加载训练好的权重（需要是官网repo提供好的），获取评估结果，使用reprod_log保存结果。
     * 定义PaddlePaddle模型，加载训练好的权重（需要是从PyTorch转换得到），获取评估结果，使用reprod_log保存结果。
-    *  使用reprod_log排查diff，小于阈值，即可完成自测。
+    * 使用reprod_log排查diff，小于阈值，即可完成自测。
 
-#### 3.3.2 准确率评估指标代码
+**【注意事项】**
 
-Pytorch准确率评估指标代码如下。
+在评估指标对齐之前，需要注意保证对于该模块，给定相同的输入，二者输出完全一致。
 
-```python
-# https://github.com/littletomatodonkey/AlexNet-Prod/blob/ea49142949e891e2523d5c44e01539900d5b6e70/pipeline/Step2/AlexNet_torch/utils.py#L162
-def accuracy(output, target, topk=(1, )):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
-    with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
 
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target[None])
+**【实战】**
 
-        res = []
-        for k in topk:
-            correct_k = correct[:k].flatten().sum(dtype=torch.float32)
-            res.append(correct_k * (100.0 / batch_size))
-        return res
-```
+评估指标对齐检查方法可以参考文档：[评估指标对齐检查方法文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md#%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4)
 
-对应地，PaddlePaddle评估指标代码如下
-
-```python
-# https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/AlexNet_paddle/utils.py#L145
-def accuracy(output, target, topk=(1, )):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
-    with paddle.no_grad():
-        maxk = max(topk)
-        batch_size = target.shape[0]
-
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.equal(target)
-
-        res = []
-        for k in topk:
-            correct_k = correct.astype(paddle.int32)[:k].flatten().sum(
-                dtype='float32')
-            res.append(correct_k * (100.0 / batch_size))
-        return res
-```
-
-#### 3.3.3  demo
-
-* 测试demo地址：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)
-
-具体地，对于AlexNet复现，找到其中的预测评估逻辑，在评估完成之后获取返回值，记录在`metric_paddle.npy`文件中。
-
-```python
-...
-def main(args):
-    if args.test_only:
-        top1 = evaluate(model, criterion, data_loader_test, device=device)
-        return top1
-...
-# 打开main test-only选项，仅测试评估流程
-if __name__ == "__main__":
-    args = get_args_parser().parse_args()
-    top1 = main(args)
-    reprod_logger = ReprodLogger()
-    reprod_logger.add("top1", np.array([top1]))
-    reprod_logger.save("metric_paddle.npy")
-```
-
-PyTorch操作同理。获取评估指标之后，使用`reprod_log`工具进行diff自查。本部分检查方法可以参考文档：[评估指标对齐检查方法文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)
-
-```python
-# https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/check_step2.py
-from reprod_log import ReprodDiffHelper
-
-if __name__ == "__main__":
-    diff_helper = ReprodDiffHelper()
-    torch_info = diff_helper.load_info("AlexNet_torch/metric_torch.npy")
-    paddle_info = diff_helper.load_info("AlexNet_paddle/metric_paddle.npy")
-
-    diff_helper.compare_info(torch_info, paddle_info)
-
-    diff_helper.report(path="metric_diff.log")
-```
-
-输出如下
-
-```
-2021-09-27 11:19:48,955 - reprod_log.utils - INFO - top1:
-2021-09-27 11:19:48,955 - reprod_log.utils - INFO -     mean diff: check passed: True, value: 0.0
-2021-09-27 11:19:48,955 - reprod_log.utils - INFO - diff check passed
-```
-
-check通过。
 
 ### 3.4 损失函数对齐
 
