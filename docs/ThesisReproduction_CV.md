@@ -3,10 +3,41 @@
 ## 目录
 
 - [1. 总览](#1)
+    - [1.1 背景](#1.1)
+    - [1.2 前序工作](#1.2)
+- [2. 整体框图](#2)
+    - [2.1 流程概览](#2.1)
+    - [2.2 reprod_log whl包](#2.2)
+- [3. 论文复现理论知识及实战](#3)
+    - [3.1 模型结构对齐](#3.1)
+    - [3.1 模型结构对齐](3.1)
+    - [3.2 验证/测试集数据读取对齐](3.2)
+    - [3.3 评估指标对齐](3.3)
+    - [3.4 损失函数对齐](3.4)
+    - [3.5 优化器对齐](3.5)
+    - [3.6 学习率对齐](3.6)
+    - [3.7 正则化策略对齐](3.7)
+    - [3.8 反向对齐](3.8)
+    - [3.9 训练集数据读取对齐](3.9)
+    - [3.10 网络初始化对齐](3.10)
+    - [3.11 模型训练对齐](3.11)
+- [4. 论文复现注意事项与FAQ](4)
+    - [4.1 模型结构对齐](4.1)
+    - [4.2 验证/测试集数据读取对齐](4.2)
+    - [4.3 评估指标对齐](4.3)
+    - [4.4 损失函数对齐](4.4)
+    - [4.5 优化器对齐](4.5)
+    - [4.6 学习率对齐](4.6)
+    - [4.7 正则化策略对齐](4.7)
+    - [4.8 反向对齐](4.8)
+    - [4.9 训练集数据读取对齐](4.9)
+    - [4.10 网络初始化对齐](4.10)
+    - [4.11 模型训练对齐](4.11)
 
 <a name="1"></a>
 ## 1. 总览
 
+<a name="1.1"></a>
 ### 1.1 背景
 
 * 以深度学习为核心的人工智能技术仍在高速发展，通过论文复现，开发者可以获得
@@ -14,6 +45,7 @@
     * 技术积累：对科研或工作有所帮助和启发
     * 社区荣誉：成果被开发者广泛使用
 
+<a name="1.2"></a>
 ### 1.2 前序工作
 
 基于本指南复现论文过程中，建议开发者准备以下内容。
@@ -27,9 +59,10 @@
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
 
-
+<a name="2"></a>
 ## 2. 整体框图
 
+<a name="2.1"></a>
 ### 2.1 流程概览
 
 面对一篇计算机视觉论文，复现该论文的整体流程如下图所示。
@@ -41,7 +74,7 @@
 * 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
-
+<a name="2.2"></a>
 ### 2.2 reprod_log whl包
 
 #### 2.2.1 reprod_log工具简介
@@ -112,8 +145,10 @@ log_reprod
 AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，具体代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，
 每个文件夹中的README.md文档提供了使用说明。
 
+<a name="3"></a>
 ## 3. 论文复现理论知识以及实战
 
+<a name="3.1"></a>
 ### 3.1 模型结构对齐
 
 对齐模型结构时，一般有3个主要步骤：
@@ -223,6 +258,7 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
     * PaddlePaddle与PyTorch保存的dict的key需要保持相同，否则report过程可能会提示key无法对应，从而导致report失败，之后的`【验收】`环节也是如此。
     * 如果是固定随机数种子，建议将fake data保存到dict中，方便check参考代码和PaddlePaddle的输入是否一致。
 
+<a name="3.2"></a>
 ### 3.2 验证/测试集数据读取对齐
 
 **【基本流程】**
@@ -262,7 +298,7 @@ AlexNet模型复现过程中，数据预处理和Dataset、Dataloader的检查�
 
 使用方法可以参考[数据检查文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)。
 
-
+<a name="3.3"></a>
 ### 3.3 评估指标对齐
 
 **【基本流程】**
@@ -297,6 +333,7 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
     * 需要检查论文是否只是抽取了验证集/测试集中的部分文件，如果是的话，则需要保证PaddlePaddle和参考代码中dataset使用的数据集一致。
 
 
+<a name="3.4"></a>
 ### 3.4 损失函数对齐
 
 **【基本流程】**
@@ -330,6 +367,7 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`loss_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
 4. 提交内容：将`loss_paddle.npy`、`loss_pytorch.npy`与`loss_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 
+<a name="3.5"></a>
 ### 3.5 优化器对齐
 
 **【基本流程】**
@@ -348,6 +386,7 @@ PaddlePaddle中的optimizer有`paddle.optimizer`等一系列实现，PyTorch中�
 本部分对齐建议对照[PaddlePaddle优化器API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/Overview_cn.html)与参考代码的优化器实现进行对齐，用之后的反向对齐统一验证该模块的正确性。
 
 
+<a name="3.6"></a>
 ### 3.6 学习率对齐
 
 **【基本流程】**
@@ -362,6 +401,7 @@ PaddlePaddle中，需要首先构建学习率策略，再传入优化器对象�
 
 学习率复现对齐，可以参考代码：[学习率对齐验证文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step4/README.md#%E5%AD%A6%E4%B9%A0%E7%8E%87%E5%AF%B9%E9%BD%90%E9%AA%8C%E8%AF%81)。
 
+<a name="3.7"></a>
 ### 3.7 正则化策略对齐
 
 **【基本流程】**
@@ -377,7 +417,7 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 
 本部分对齐建议对照[PaddlePaddle正则化API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/regularizer/L2Decay_cn.html)与参考代码的优化器实现进行对齐，用之后的反向对齐统一验证该模块的正确性。
 
-
+<a name="3.8"></a>
 ### 3.8 反向对齐
 
 **【基本流程】**
@@ -437,7 +477,7 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
     * 在迭代的过程中，需要保证模型的batch size等超参数完全相同
     * 在迭代的过程中，需要设置`model.eval()`，使用固定的假数据，同时加载相同权重的预训练模型。
 
-
+<a name="3.9"></a>
 ### 3.9 训练集数据读取对齐
 
 **【基本流程】**
@@ -469,6 +509,7 @@ random.seed(config.SEED)
 
 本部分对齐建议对照[PaddlePaddle vision高层API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)与参考代码的数据预处理实现进行对齐，用之后的训练对齐统一验证该模块的正确性。
 
+<a name="3.10"></a>
 ### 3.10 网络初始化对齐
 
 **【基本流程】**
@@ -490,7 +531,7 @@ random.seed(config.SEED)
 
 本部分对齐建议对照[PaddlePaddle 初始化API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/Overview_cn.html#chushihuaxiangguan)与参考代码的初始化实现对齐。
 
-
+<a name="3.11"></a>
 ### 3.11 模型训练对齐
 
 **【基本流程】**
@@ -527,6 +568,7 @@ random.seed(config.SEED)
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`train_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
 4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，最终一并打包上传即可。
 
+<a name="3.12"></a>
 ### 3.12 单机多卡训练
 
 如果希望使用单机多卡提升训练效率，可以从以下几个过程对代码进行修改。
@@ -610,11 +652,12 @@ python3.7 -m paddle.distributed.launch \
 注意：这里8卡训练时，虽然单卡的batch size没有变化(32)，但是总卡的batch size相当于是单卡的8倍，因此学习率也设置为了单卡时的8倍。
 
 
-
+<a name="4"></a>
 ## 4. 论文复现注意事项与FAQ
 
 本部分主要总结大家在论文复现赛过程中遇到的问题，如果本章内容没有能够解决你的问题，欢迎在群里提问讨论。
 
+<a name="4.1"></a>
 ### 4.1 模型结构对齐
 
 * 对于`nn.Linear`层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置
@@ -624,33 +667,40 @@ python3.7 -m paddle.distributed.launch \
     * `_variance` -> `running_var`
     * `_mean` -> `running_mean`
 
-
+<a name="4.2"></a>
 ### 4.2 验证/测试集数据读取对齐
 
 * 如果使用PaddlePaddle提供的数据集API，比如说`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，但是这些数据集的实现都是经过广泛验证的，可以使用。此时对数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
 
+<a name="4.3"></a>
 ### 4.3 评估指标对齐
 
-
+<a name="4.4"></a>
 ### 4.4 损失函数对齐
 
-
+<a name="4.5"></a>
 ### 4.5 优化器对齐
 
 * 在某些任务中，比如说深度学习可视化、可解释性等任务中，一般只要求模型前向过程，不需要训练，此时优化器、学习率等用于模型训练的模块对于该类论文复现是不需要的。
 
+<a name="4.6"></a>
 ### 4.6 学习率对齐
 
+<a name="4.7"></a>
 ### 4.7 正则化策略对齐
 
+<a name="4.8"></a>
 ### 4.8 反向对齐
 
+<a name="4.9"></a>
 ### 4.9 训练集数据读取对齐
 
+<a name="4.10"></a>
 ### 4.10 网络初始化对齐
 
 * 对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。
 * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；而transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查。
 
+<a name="4.11"></a>
 ### 4.11 模型训练对齐
 * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
