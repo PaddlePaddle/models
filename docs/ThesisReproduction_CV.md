@@ -665,7 +665,7 @@ python3.7 -m paddle.distributed.launch \
 <a name="4.0"></a>
 ### 4.1 通用注意事项
 
-* 需要仔细对照PaddlePaddle与参考代码的优化器参数实现，确保优化器参数严格对齐。
+* 需要仔细对照PaddlePaddle与参考代码的优化器参数实现，确保优化器参数严格对齐。
 * 如果遇到一些Paddle不支持的API操作，可以尝试使用替代实现进行复现。如下面的PyTorch代码，PaddlePaddle中可以通过slice + concat API的组合形式进行功能实现。同时，对于这个问题，建议优先给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，开发人员会根据优先级进行开发。
 
 ```python
