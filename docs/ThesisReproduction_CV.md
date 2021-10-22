@@ -22,17 +22,18 @@
     - [3.11 模型训练对齐](#3.11)
     - [3.12 单机多卡训练](#3.12)
 - [4. 论文复现注意事项与FAQ](#4)
-    - [4.1 模型结构对齐](#4.1)
-    - [4.2 验证/测试集数据读取对齐](#4.2)
-    - [4.3 评估指标对齐](#4.3)
-    - [4.4 损失函数对齐](#4.4)
-    - [4.5 优化器对齐](#4.5)
+    - [4.1 通用注意事项](#4.0)
+    - [4.2 模型结构对齐](#4.1)
+    - [4.3 验证/测试集数据读取对齐](#4.2)
+    - [4.4 评估指标对齐](#4.3)
+    - [4.5 损失函数对齐](#4.4)
+    - [4.6 优化器对齐](#4.5)
     - [4.6 学习率对齐](#4.6)
-    - [4.7 正则化策略对齐](#4.7)
-    - [4.8 反向对齐](#4.8)
-    - [4.9 训练集数据读取对齐](#4.9)
-    - [4.10 网络初始化对齐](#4.10)
-    - [4.11 模型训练对齐](#4.11)
+    - [4.8 正则化策略对齐](#4.7)
+    - [4.9 反向对齐](#4.8)
+    - [4.10 训练集数据读取对齐](#4.9)
+    - [4.11 网络初始化对齐](#4.10)
+    - [4.12 模型训练对齐](#4.11)
 
 <a name="1"></a>
 ## 1. 总览
@@ -652,55 +653,184 @@ python3.7 -m paddle.distributed.launch \
 注意：这里8卡训练时，虽然单卡的batch size没有变化(32)，但是总卡的batch size相当于是单卡的8倍，因此学习率也设置为了单卡时的8倍。
 
 
+**【实战】**
+
+本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
+
 <a name="4"></a>
 ## 4. 论文复现注意事项与FAQ
 
-本部分主要总结大家在论文复现赛过程中遇到的问题，如果本章内容没有能够解决你的问题，欢迎在群里提问讨论。
+本部分主要总结大家在论文复现赛过程中遇到的问题，如果本章内容没有能够解决你的问题，欢迎给该文档提出优化建议或者给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)。
+
+<a name="4.0"></a>
+### 4.1 通用注意事项
+
+* 需要仔细对照PaddlePaddle与参考代码的优化器参数实现，确保优化器参数严格对齐。
+* 如果遇到一些Paddle不支持的API操作，可以尝试使用替代实现进行复现。如下面的PyTorch代码，PaddlePaddle中可以通过slice + concat API的组合形式进行功能实现。同时，对于这个问题，建议优先给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，开发人员会根据优先级进行开发。
+
+```python
+torch.stack([
+    per_locations[:, 0] - per_box_regression[:, 0],
+    per_locations[:, 1] - per_box_regression[:, 1],
+    per_locations[:, 0] + per_box_regression[:, 2],
+    per_locations[:, 1] + per_box_regression[:, 3],
+], dim=1)
+```
+* 如果遇到Paddle不包含的OP或者API，比如(1) 如果是某些算法实现存在调用了外部OP，而且Paddle也不包含该OP实现；(2) 其他框架存在的API或者OP，但是Paddle中没有这些OP。此时：
+    * 对于Paddle资深用户来说，可以尝试使用Paddle的自定义算子功能，存在一定的代码开发量。
+    * 对于初学者来说，可以给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，Paddle开发人员会根据优先级进行实现。
+* PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) 。
+
 
 <a name="4.1"></a>
-### 4.1 模型结构对齐
+### 4.2 模型结构对齐
 
-* 对于`nn.Linear`层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置
-* paddle.nn.BatchNorm2D包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
+#### 4.2.1 API
+* 对于 `paddle.nn.Linear` 层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置，示例代码可以参考[AlexNet权重转换脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/e3855e0b1992332c2765ccf627d0c5f5f68232fe/pipeline/weights/torch2paddle.py#L19)。
+* `paddle.nn.BatchNorm2D` 包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
     * `weight` -> `weight`
     * `bias` -> `bias`
     * `_variance` -> `running_var`
     * `_mean` -> `running_mean`
+* [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
+
+#### 4.2.2 权重转换
+
+* 在权重转换的时候，不能只关注参数的名称，比如说有些`paddle.nn.Linear`层，但是定义的变量名称为`conv`，这种也是需要进行权重转置的。
+* 权重转换时，建议同时打印 Paddle 和 PyTorch 对应权重的shape，以防止名称相似但是shape不同的参数权重转换报错。
+
+#### 4.2.3 模型组网正确性验证
+
+* 在论文复现的过程中，可能会遇到一些经典的模型结构，比如ResNet等，Paddle官方也提供了ResNet的实现，但是这里建议自己根据PyTorch代码重新实现一遍，一方面是对整体的模型结构更加熟悉，另一方面也保证模型结构和权重完全对齐。
+* 在复杂的网络结构中，如果前向结果对不齐，可以按照模块排查问题，比如依次获取backbone、neck、head输出等，看下问题具体出现在哪个子模块，再进到子模块详细排查。
+* 网络结构对齐后，尽量使用训练好的预训练模型和真实的图片进行前向diff计算，这样更准确。
 
 <a name="4.2"></a>
-### 4.2 验证/测试集数据读取对齐
+### 4.3 验证/测试集数据读取对齐
 
-* 如果使用PaddlePaddle提供的数据集API，比如说`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，但是这些数据集的实现都是经过广泛验证的，可以使用。此时对数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
+* 如果使用 PaddlePaddle 提供的数据集API，比如 `paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，但是这些数据集的实现都是经过广泛验证的，可以使用。此时对数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
+* 需要仔细排查数据预处理，不仅包含的预处理方法相同，也需要保证预处理的流程相同，比如先padding再做归一化与先做归一化再padding，得到的结果是不同的。
 
 <a name="4.3"></a>
-### 4.3 评估指标对齐
+### 4.4 评估指标对齐
+
+* 真实数据评估时，需要注意评估时 `paddle.io.DataLoader` 的 ``drop_last`` 参数是否打开(文档[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/io/DataLoader_cn.html#dataloader))，复现代码需要与参考代码保持一致，否则最后不够batch-size的数据的评估会有diff。
+* 在识别或者检索过程中，为了加速评估过程，往往会将评估函数由CPU实现改为GPU实现，由此会带来评估函数输出的不一致。这是由于sort函数对于相同值的排序结果不同带来的。在复现的过程中，如果可以接受轻微的指标不稳定，可以使用PaddlePaddle的sort函数，如果对于指标非常敏感，同时对速度性能要求很高，可以给PaddlePaddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，由研发人员高优开发。
+* 在检测任务中，评估流程往往和训练流程有一定差异，例如RPN阶段NMS的参数等，这里需要仔细检查评估时的超参数，不要将训练超参和评估超参弄混淆。
+* 在OCR等任务中，需要注意评估过程也会对gt信息进行修正，比如大小写等，也会过滤掉一些样本，这里需要注意过滤规则，确保有效评估数据集一致。
+
 
 <a name="4.4"></a>
-### 4.4 损失函数对齐
+### 4.5 损失函数对齐
+
+* 部分算法的损失函数中会用到 bool 索引，这时候可以使用[paddle.where](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/where_cn.html#where) 代替。
+* `paddle.nn.CrossEntropyLoss` 默认是在最后一维(axis=-1)计算损失函数，而 `torch.nn.CrossEntropyLoss` 是在axis=1的地方计算损失函数，因此如果输入的维度大于2，这里需要保证计算的维(axis)相同，否则可能会出错。
+* 在生成模型中会遇到梯度损失，需要对模型中的算子求二次梯度，目前`MaxPooling`暂时不支持二次梯度，如果复现的过程中遇到了需要对`MaxPooling`求二次梯度的情况，可以和Paddle官方开发同学反馈，进一步确认解决方案。
+* 在保存损失函数值的时候，注意要使用`paddle.no_grad`，或者仅仅保存转换成 numpy 的数组，避免损失没有析构导致内存泄漏问题。
+
+```python
+# 错误示范
+loss = celoss(pred, label)
+avg_loss += loss
+# 正确示范1
+loss = celoss(pred, label)
+avg_loss += loss.numpy()
+# 正确示范2
+loss = celoss(pred, label)
+with paddle.no_grad()
+    avg_loss += loss
+```
 
 <a name="4.5"></a>
-### 4.5 优化器对齐
+### 4.6 优化器对齐
 
+* Paddle目前支持在 ``optimizer`` 中通过设置 ``params_groups`` 的方式设置不同参数的更新方式，可以参考[代码示例](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/optimizer/optimizer.py#L107) 。
+* 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
 * 在某些任务中，比如说深度学习可视化、可解释性等任务中，一般只要求模型前向过程，不需要训练，此时优化器、学习率等用于模型训练的模块对于该类论文复现是不需要的。
+* 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。
 
 <a name="4.6"></a>
-### 4.6 学习率对齐
+### 4.7 学习率对齐
+
+* PaddlePaddle 中参数的学习率受到优化器学习率和`ParamAttr`中设置的学习率影响，因此跟踪学习率需要将二者结合进行跟踪。
+* 对于复现代码和参考代码，学习率在整个训练过程中在相同的轮数相同的iter下应该保持一致，可以通过`reprod_log`工具、打印学习率值或者可视化二者学习率的log来查看diff。
+* 有些网络的学习率策略比较细致，比如带warmup的学习率策略，这里需要保证起始学习率等参数都完全一致。
+
 
 <a name="4.7"></a>
-### 4.7 正则化策略对齐
+### 4.8 正则化策略对齐
+
+* 在如Transformer或者少部分CNN模型中，存在一些参数不做正则化(正则化系数为0)的情况。这里需要找到这些参数并对齐取消实施正则化策略，可以参考[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)，对特定参数进行修改。
 
 <a name="4.8"></a>
-### 4.8 反向对齐
+### 4.9 反向对齐
+
+* Paddle打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/PaddleDetection/blob/debug_gfl/ppdet/modeling/backbones/resnet.py#L581)；PyTorch打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/mmdetection/blob/debug_gfl/mmdet/models/backbones/resnet.py#L630)。
+* 反向对齐时，如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`loss.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证。第3章中给出了获取所有参数的梯度方法，如果只希望打印特定参数的梯度，可以用下面的方式。
+
+
+```python
+import paddle
+
+def print_hook_fn(grad):
+    print(grad)
+
+x = paddle.to_tensor([0., 1., 2., 3.], stop_gradient=False)
+h = x.register_hook(print_hook_fn)
+w = x * 4
+w.backward()
+# backward之后会输出下面的内容
+#     Tensor(shape=[4], dtype=float32, place=CPUPlace, stop_gradient=False,
+#            [4., 4., 4., 4.])
+```
+
 
 <a name="4.9"></a>
-### 4.9 训练集数据读取对齐
+### 4.10 训练集数据读取对齐
+
+#### 4.10.1 API
+
+* 在前向过程中，如果数据预处理过程运行出错，请先将 ``paddle.io.DataLoader`` 的 ``num_workers`` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。
+* 如果使用PaddlePaddle提供的数据集API，比如`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，如果是全量数据使用，对结果不会有影响，如果是按照比例选取子集进行训练，则建议重新根据参考代码实现数据读取部分，保证子集完全一致。
+
+#### 4.10.2 数据预处理
+
+* 数据读取需要注意图片读取方式是opencv还是PIL.Image，图片格式是RGB还是BGR，复现时，需要保证复现代码和参考代码完全一致。
+* 如果数据处理过程中涉及到随机数生成，建议固定seed (`np.random.seed(0)`, `random.seed(0)`)，查看复现代码和参考代码处理后的数据是否有diff。
+* 不同的图像预处理库，使用相同的插值方式可能会有diff，建议使用相同的库对图像进行resize。
+* 视频解码时，不同库解码出来的图像数据会有diff，注意区分解码库是opencv、decord还是pyAV，需要保证复现代码和参考代码完全一致。
 
 <a name="4.10"></a>
-### 4.10 网络初始化对齐
+### 4.11 网络初始化对齐
 
-* 对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。
+* 对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。如果十分怀疑初始化导致的问题，建议将参考的初始化权重转成paddle模型，加载该初始化模型训练，看下收敛精度。
 * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；而transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查。
+* 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查。
+* 领域自适应算法由于需要基于初始模型生成伪标签，因此对初始网络敏感，建议加载预训练的模型进行训练。
+
 
 <a name="4.11"></a>
-### 4.11 模型训练对齐
+### 4.12 模型训练对齐
+
+#### 4.12.1 训练对齐通用问题
+
+* 有条件的话，复现工作之前最好先基于官方代码完成训练，保证与官方指标能够对齐，并且将训练策略和训练过程中的关键指标记录保存下来，比如每个epoch的学习率、Train Loss、Eval Loss、Eval Acc等，在复现网络的训练过程中，将关键指标保存下来，这样可以将两次训练中关键指标的变化曲线绘制出来，能够很方便的进行对比。
+* 训练过程中可以对loss或者acc进行可视化，和竞品loss或者acc进行直观的对比；如果训练较大的数据集，1次完整训练的成本比较高，此时可以隔一段时间查看一下，如果精度差异比较大，建议先停掉实验，排查原因。
+* 如果训练的过程中出nan，一般是因为除0或者log0的情况， 可以着重看下几个部分：
+    * 如果有预训练模型的话，可以确认下是否加载正确
+    * 确认下reader的预处理中是否会出现box（或mask）为空的情况
+    * 模型结构中计算loss的部分是否有考虑到正样本为0的情况
+    * 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
+* 如果训练过程中如果出现不收敛的情况，可以
+    * 简化网络和数据，实验是否收敛；
+    * 如果是基于原有实现进行改动，可以尝试控制变量法，每次做一个改动，逐个排查；
+    * 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
+    * 保存不同step之间的模型参数，观察模型参数是否更新。
+
+#### 4.12.2 细分场景特定问题
+
 * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
+* transformer 系列模型对于数据增广与模型初始化非常敏感，因此在保证前反向对齐后，如果训练仍无法对齐，可以考虑使用官方的PyTorch模型训练代码，结合复现的Paddle组网代码进行训练，这样可以验证是否是数据预处理/数据增强策略存在问题。
+* 检测、分割等任务中，训练通常需要加载backbone的权重作为预训练模型，注意在完成模型对齐后，将转换的权重修改为backbone权重。
+* 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
+* 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
