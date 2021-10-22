@@ -186,7 +186,7 @@ AlexNet网络结构的PyTorch实现: [alexnet-pytorch](https://github.com/little
 
 **【注意事项】**
 
-在权重转换的时候，需要注意`paddle.nn.Linear`以及`paddle.nn.BatchNorm2D`等API的权重保存格式和名称等与PyTorch稍有diff，具体内容可以参考`5.1章节`。
+在权重转换的时候，需要注意`paddle.nn.Linear`以及`paddle.nn.BatchNorm2D`等API的权重保存格式和名称等与PyTorch稍有diff，具体内容可以参考`4.1章节`。
 
 **【实战】**
 
