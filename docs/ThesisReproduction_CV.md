@@ -681,6 +681,7 @@ torch.stack([
     * 对于Paddle资深用户来说，可以尝试使用Paddle的自定义算子功能，存在一定的代码开发量。
     * 对于初学者来说，可以给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，Paddle开发人员会根据优先级进行实现。
 * PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) 。
+* 对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，是通过`model.to("device")` （局部）来确定模型结构的运行设备，这块在复现的时候需要注意。
 
 
 <a name="4.1"></a>
