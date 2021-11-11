@@ -59,6 +59,7 @@
     * 在该步骤中，以AlexNet为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/fake_data/gen_fake_data.py)。
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
+* 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加参考代码的实现，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将复现代码与参考代码分成2个文件夹进行管理。
 
 <a name="2"></a>
 ## 2. 整体框图
@@ -680,6 +681,7 @@ torch.stack([
     * 对于Paddle资深用户来说，可以尝试使用Paddle的自定义算子功能，存在一定的代码开发量。
     * 对于初学者来说，可以给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，Paddle开发人员会根据优先级进行实现。
 * PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) 。
+* 对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，是通过`model.to("device")` （局部）来确定模型结构的运行设备，这块在复现的时候需要注意。
 
 
 <a name="4.1"></a>
@@ -693,6 +695,9 @@ torch.stack([
     * `_variance` -> `running_var`
     * `_mean` -> `running_mean`
 * [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
+* `torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考：[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
+* `pack_padded_sequence`和`pad_packed_sequence`这两个API目前PaddlePaddle中没有实现，可以直接在RNN或者LSTM的输入中传入`sequence_length`来实现等价的功能。
+
 
 #### 4.2.2 权重转换
 
@@ -741,6 +746,8 @@ with paddle.no_grad()
     avg_loss += loss
 ```
 
+* 目前PaddlePaddle中没有HingeEmbeddingLoss API，可以使用组合的方式进行实现，参考实现：[链接](https://github.com/ImportPaddle/DiscoGAN-Paddle/blob/main/discogan/loss_fn.py)。
+
 <a name="4.5"></a>
 ### 4.6 优化器对齐
 
@@ -748,6 +755,8 @@ with paddle.no_grad()
 * 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
 * 在某些任务中，比如说深度学习可视化、可解释性等任务中，一般只要求模型前向过程，不需要训练，此时优化器、学习率等用于模型训练的模块对于该类论文复现是不需要的。
 * 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。
+* 在OCR识别等任务中，`Adadelta`优化器常常被使用，该优化器与PyTorch实现目前稍有不同，但是不影响模型训练精度对齐，在做前反向对齐时，需要注意可以将该优化器替换为Adam等优化器（PaddlePaddle与参考代码均需要替换）；对齐完成之后，再使用`Adadelta`优化器进行训练对齐。
+
 
 <a name="4.6"></a>
 ### 4.7 学习率对齐
@@ -755,6 +764,7 @@ with paddle.no_grad()
 * PaddlePaddle 中参数的学习率受到优化器学习率和`ParamAttr`中设置的学习率影响，因此跟踪学习率需要将二者结合进行跟踪。
 * 对于复现代码和参考代码，学习率在整个训练过程中在相同的轮数相同的iter下应该保持一致，可以通过`reprod_log`工具、打印学习率值或者可视化二者学习率的log来查看diff。
 * 有些网络的学习率策略比较细致，比如带warmup的学习率策略，这里需要保证起始学习率等参数都完全一致。
+* `torch.optim.lr_scheduler.MultiplicativeLR` API目前PaddlePaddle中没有实现，可以使用`paddle.optimizer.lr.LambdaDecay`替换实现，参考代码：[链接](https://github.com/Paddle-Team-7/PixelCNN-Paddle/blob/607ef1d1ca6a489cecdcd2182d3acc5b2df7c779/src/pixel_cnn.py#L161)。
 
 
 <a name="4.7"></a>
@@ -827,6 +837,7 @@ w.backward()
     * 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
     * 保存不同step之间的模型参数，观察模型参数是否更新。
 
+
 #### 4.12.2 细分场景特定问题
 
 * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
@@ -834,3 +845,4 @@ w.backward()
 * 检测、分割等任务中，训练通常需要加载backbone的权重作为预训练模型，注意在完成模型对齐后，将转换的权重修改为backbone权重。
 * 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
 * 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
+* 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
