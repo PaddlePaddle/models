@@ -1,1 +1,0 @@
-# ASD:  anormaly sound detection

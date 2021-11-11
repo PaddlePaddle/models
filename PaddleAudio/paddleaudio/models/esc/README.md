@@ -1,2 +1,0 @@
-# ESC:  Environmental Sound Classification
-
