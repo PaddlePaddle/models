@@ -259,15 +259,14 @@ Jeston产品是Nvidia推出的开发者套件，用于部署AI模型。Jeston系
 
 Jeston的CPU性能远差于笔记本或者台式机，因此在Jeston上，只需要测试GPU上预测相关的链条即可，包括GPU预测，GPU+TensorRT(fp32)，GPU+TensorRT(fp16)预测。
 
-Jeston上无需测试TIPC训练部分，仅需要测试预测推理部分即可，因此，仅需要测试。
-
-`test_train_inference_python.sh`的whole_infer模式：
+Jeston上无需测试TIPC训练部分，仅需要测试预测推理部分即可，因此，仅需要测试inferenc部分。
+jeston 的测试脚本为`test_inference_jeston.sh`，测试方法如下：
 
 - 模式3：whole_infer，不训练，全量数据预测，走通开源模型评估、动转静，检查inference model预测时间和精度;
 ```shell
 bash test_tipc/prepare.sh ./test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_infer_python_jetson.txt 'whole_infer'
 # 用法1:
-bash test_tipc/test_train_inference_python.sh ./test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_infer_python_jetson.txt 'whole_infer'
+bash test_tipc/test_inference_jeston.sh ./test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_infer_python_jetson.txt 'whole_infer'
 ```
 
 
