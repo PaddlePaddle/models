@@ -7,13 +7,13 @@
 
 <a name="背景"></a>
 # 1. 背景
-各模型套件接入全链条工具后，同时需要提供**全链条用户使用文档**，方便用户查阅每种模型的推理部署打通情况，并可以按照教程进行一键测试。
+各模型套件完成TIPC训推一体认证工具开发后，同时需要提供相应的**TIPC测试文档**，方便用户查阅每种模型的推理部署打通情况，并可以按照教程进行一键测试。
 
-本文将**全链条用户使用文档**的书写格式进行规范化，分为`目录规范`和`文档规范`两部分。
+本文将**TIPC测试文档**的书写格式进行规范化，分为`目录规范`和`文档规范`两部分。
 
 <a name="目录与命名规范"></a>
 # 2. 目录与命名规范
-**全链条工具目录统一命名为`test_tipc`，对应飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) **，位于套件根目录下，下面以[PaddleOCR样板间](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc)为例说明目录结构规范。
+**训推一体认证(Training and Inference Pipeline Certification(TIPC))工具目录统一命名为`test_tipc`**，位于套件根目录下，下面以[PaddleOCR样板间](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc)为例说明目录结构规范。
 ```
 test_tipc/
 ├── configs/  # 配置文件目录
@@ -68,7 +68,7 @@ test_tipc/
 **1. 简介**
 
 - 内容：主要说明背景，各套件应该差异不大。
-- 示例：![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-0219d43e86646e2d89dbf479b1b3096ff6863f80)
+- 示例：![](images/tipc_guide.png)
 
 **2. 汇总信息**
 
@@ -80,18 +80,18 @@ test_tipc/
 	- 模型压缩：包括裁剪、离线/在线量化、蒸馏。
 	- 其他预测部署：补充功能的支持情况，包括Paddle Inference C++预测、Paddle Serving部署、Paddle-Lite部署等，是各套件可选支持的功能。填入已支持的功能，尚未支持的不填即可。支持的功能后注明硬件(lite相关)、语言等信息。
 
-- 示例：![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-8dd4093dd06d78dd1c8a687d52b906c28e41864c)
+- 示例：![](images/tipc_table.png)
 - **注意**：表格内填“支持“或填入了信息均表示可以使用本工具进行一键测试，套件已支持但尚未接入测试的，都算还不支持，不应填写。
 
 **3. 一键测试工具使用**
 目录介绍：测试工具树状图，介绍各目录/文件的功能，示例：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-1ad3c9c95bdba92e9d05324b06a4c179f5f0547a)
+![图片](images/tipc_dir_tree.png)
 
 测试流程：测试流程整体说明，可参考[PaddleOCR样板间](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc#%E6%B5%8B%E8%AF%95%E6%B5%81%E7%A8%8B)
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-8cd3812099f4fbd3a02aa11755e667dce0b4ff5e)
+![图片](images/tipc_test_pipeline.png)
 
 **最后需给出跳转链接，到每个test_*.sh的子文档**，如：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-30f7d56b63e3fd2509fe0021816c321a8b62c85a)
+![图片](images/tipc_more_tutorial.png)
 
 <a name="子文档规范"></a>
 ## 3.2 子文档规范

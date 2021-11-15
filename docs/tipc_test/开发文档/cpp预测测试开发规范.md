@@ -35,7 +35,7 @@
 ### 1.1 全链条自动化测试
 
 本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据套件需要，适当删减链条。
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-45e2d9b6f23c7f060095246284e53fbefe7afda7)
+![](images/tipc_cpp_infer.png)
 
 上图各模块具体测试点如下：
 
@@ -149,7 +149,7 @@ include_directories(${FETCHCONTENT_BASE_DIR}/extern_autolog-src)
 
 3.打印输出信息：
 按照上述两步添加预测耗时打点和日志打印工具后，运行程序可打印出如下格式日志：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-6575d9d6e8ffc24e87353944132348e492a8afee)
+![](images/tipc_cpp_infer_log.png)
 
 
 4.预测结果格式规范化：  
@@ -159,10 +159,10 @@ cpp_ppocr_det_mobile_results_fp32.txt
 cpp_ppocr_det_mobile_results_fp16.txt
 ```
 里面按行存储每张测试图片的预测结果，格式如下：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-d5b3f254274cc5fb2b59cbc232c5c810e6c5cc75)
+![](images/tipc_cpp_infer_gt.png)
 
 （2）在运行日志中打印预测结果，或者保存在txt文件中，确保可以用python加载到输出并和预先保存的预测的结果进行对比。以PP-OCR检测为例，日志中的预测结果打印格式如下：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-6ca101d5d6a74b973939efbb49bead736c57b85a)
+![](images/tipc_cpp_infer_res.png)
 
 （3）预测精度比对。分别读取预测日志文件中的预测结果和预先保存在txt文件中的预测结果，验证两个结果是否是一致的。【验证是否一致的步骤可以在QA测试时完成，但是线下需要自测通过】
 
@@ -171,7 +171,7 @@ cpp_ppocr_det_mobile_results_fp16.txt
 <a name="准备测试模型和数据"></a>
 ### 2.2 准备测试模型和数据
 与python训练预测等基础测试方式类似，使用脚本`prepare.sh`可以下载测试所需推理模型和数据（可以直接使用python预测所准备的数据集）。`prepare.sh` 根据不同的运行模式，配合从配置文件中解析得到的模型区别性名称，下载不同的数据和训练模型用于完成后续测试。
-![](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-c9fdb701bf94a97edf3c1d3134fe0500babea5c1)
+![](images/tipc_cpp_infer_prepare.png)
 
 <a name="编写自动化测试代码"></a>
 ### 2.3 编写自动化测试代码
@@ -185,11 +185,12 @@ bash test_tipc/test_inference_cpp.sh test_tipc/configs/ppocr_det_mobile/model_li
 理论上只需要修改配置文件和`prepare.sh`就可以完成自动化测试，本节将详细介绍如何修改配置文件，完成C++预测测试。运行脚本`test_inference_cpp.sh`将会在附录中详细介绍。
 
 按如下方式在参数文件`model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt`中添加C++预测部分参数：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-f7d599b8b49b2c023978f29cbb6a357f768b8827)
+![](images/tipc_cpp_infer_params.png)
 
 参数说明：
+
 |行号 | 参数 | 参数介绍 | 
-|---|---|---|---|
+|---|---|---|
 |2 | model_name: ocr_det | 模型名称，该参数会在prepare.sh脚本中用到|
 |3 | use_opencv: True/False | 表示是否使用use_opencv，如果套件没有这个参数，可以设置为null。不需要opencv时，会跳过编译opencv的步骤|
 |4 | infer_model: ./inference/ch_ppocr_mobile_v2.0_det_infer/ | 模型路径 |

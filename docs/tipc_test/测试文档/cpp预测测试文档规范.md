@@ -18,23 +18,25 @@
 - cpu多线程：支持时填`支持`，不支持时留空即可，当device为GPU时，本字段填`-`。
 
 示例：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-48e7e3cb16bdd77c03b4ca46a331d241006c967c)
+![](images/tipc_cpp_infer_table.png)
 
 
 ### 2.测试流程
 #### 2.1 功能测试
 内容1：给出C++预测具体测试命令。
 示例：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-069c154a365c77427f0374141d3e644541bbb0dd)
+![](images/tipc_cpp_infer_shell.png)
 
 内容2：给出预测log的解读指引
 示例：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-6edb2434e865ed2154bfdebab16d0cbddb039733)
+![](images/tipc_cpp_infer_output.png)
 
 #### 2.2 精度测试
 内容：给出精度测试的具体命令和运行结果示例。
+示例：
+![](images/tipc_infer_compare_results.png)
 
 ### 3.更多教程
 内容：给出套件中基础训练预测的具体教程链接。
 示例：
-![图片](http://bos.bj.bce-internal.sdns.baidu.com/agroup-bos-bj/bj-146a9205b88230b816b5858a681e58871a51acfa)
+![](images/tipc_cpp_infer_more.png)
