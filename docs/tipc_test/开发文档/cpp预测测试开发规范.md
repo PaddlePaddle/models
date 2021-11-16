@@ -17,10 +17,10 @@
 
 主要监控的内容有：
 
-- 飞桨框架更新后，套件模型的C++预测是否能正常走通；（比如API的不兼容升级）
-- 飞桨框架更新后，套件模型的C++预测速度是否合理；
+- 飞桨框架更新后，代码仓库模型的C++预测是否能正常走通；（比如API的不兼容升级）
+- 飞桨框架更新后，代码仓库模型的C++预测速度是否合理；
 
-为了能监控上述问题，希望把套件模型的C++预测测试加到飞桨框架的CI和CE中，提升PR合入的质量。因此，需要在套件中加入运行脚本（不影响套件正常运行），完成模型的自动化测试。
+为了能监控上述问题，希望把代码仓库模型的C++预测测试加到飞桨框架的CI和CE中，提升PR合入的质量。因此，需要在代码仓库中加入运行脚本（不影响代码仓库正常运行），完成模型的自动化测试。
 
 可以建立的CI/CE机制包括：
 
@@ -34,18 +34,18 @@
 
 ### 1.1 全链条自动化测试
 
-本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据套件需要，适当删减链条。
+本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据代码仓库需要，适当删减链条。
 ![](images/tipc_cpp_infer.png)
 
 上图各模块具体测试点如下：
 
 - slim模型选型方面：
-	- 非量化模型（必选）
+	- **非量化模型（必选）**
 	- 量化模型（可选）
 - Paddle C++ inference 预测部署方面：
-	- Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（必选）
-	- Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（必选）
-	- Win GPU，macOS CPU和Win CPU（样板间更新中）（可选）
+	- **Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（必选）**
+	- **Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（必选）**
+	- Win GPU，macOS CPU和Win CPU（可选）
 
 ### 1.2 文本检测样板间概览
 
@@ -67,7 +67,7 @@ test_tipc/
 └── readme.md                         # 使用文档
 ```
 
-不同套件的`configs`和`results`目录下的内容可根据实际情况进行调整。
+不同代码仓库的`configs`和`results`目录下的内容可根据实际情况进行调整。
 
 配置文件`model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt`需满足[TIPC配置文件命名规范](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83)。
 
@@ -82,7 +82,7 @@ C++预测接入TIPC包含如下三个步骤，接下来将依次介绍这三个�
 
 <a name="规范化输出预测日志"></a>
 ### 2.1 规范化输出预测日志
-类似于python预测等基础测试，C++预测测试也需要规范不同套件中Paddle Inference预测输出的格式，方便QA统一自动化测试。针对C++的预测log规范输出工具也已集成到[AutoLog工具包](https://github.com/LDOUBLEV/AutoLog)。
+类似于python预测等基础测试，C++预测测试也需要规范不同代码仓库中Paddle Inference预测输出的格式，方便QA统一自动化测试。针对C++的预测log规范输出工具也已集成到[AutoLog工具包](https://github.com/LDOUBLEV/AutoLog)。
 
 C++测试要求规范输出预测结果及以下信息：
 
@@ -192,11 +192,11 @@ bash test_tipc/test_inference_cpp.sh test_tipc/configs/ppocr_det_mobile/model_li
 |行号 | 参数 | 参数介绍 | 
 |---|---|---|
 |2 | model_name: ocr_det | 模型名称，该参数会在prepare.sh脚本中用到|
-|3 | use_opencv: True/False | 表示是否使用use_opencv，如果套件没有这个参数，可以设置为null。不需要opencv时，会跳过编译opencv的步骤|
+|3 | use_opencv: True/False | 表示是否使用use_opencv，如果代码仓库没有这个参数，可以设置为null。不需要opencv时，会跳过编译opencv的步骤|
 |4 | infer_model: ./inference/ch_ppocr_mobile_v2.0_det_infer/ | 模型路径 |
 |5 | infer_quant: True/False | 54行设置的模型路径是否是量化模型 |
 |6 | inference: ./deploy/cpp_infer/build/ppocr det| C++预测命令|
-|7 | --use_gpu:True｜False | 设置GPU的参数，其他套件可能是device参数，用于设置不同硬件的参数，作用类似。设置多个配置时，中间用｜隔开，会分别运行不同配置下的预测 | --device:cpu｜gpu| 
+|7 | --use_gpu:True｜False | 设置GPU的参数，其他代码仓库可能是device参数，用于设置不同硬件的参数，作用类似。设置多个配置时，中间用｜隔开，会分别运行不同配置下的预测 | --device:cpu｜gpu| 
 |8 | --enable_mkldnn:True｜False | 设置是否开启mkldnn | 
 |9 | --cpu_threads:1｜6 | 设置CPU线程数，如果要测试CPU上不同线程下的预测速度和精度，可以设置多个值，不同值用｜隔开 |
 |10 | --rec_batch_num:1 | 设置batch_size 的参数 |

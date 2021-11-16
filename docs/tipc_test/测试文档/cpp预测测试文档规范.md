@@ -10,7 +10,7 @@
 
 内容：基于训练是否使用量化，可以将训练产出的模型可以分为`正常模型`和`量化模型`，表格形式给出这两类模型对应的预测功能汇总情况，包含`模型类型`、`device`、`batchsize`、`tensorrt`、`mkldnn`、`cpu多线程`这6个字段。
 	
-- 算法名称：该模型对应的算法，可以是算法简称；
+- 模型类型：“正常模型”或“量化模型”；
 - device：CPU或GPU，其他字段取值对应本字段指定的环境；
 - batchsize：一般包括1、6两种batchsize，根据实际支持情况填写。
 - tensorrt：开启tensorrt支持的精度，包括`fp32`、`fp16`、`int8`三种，当device为CPU时，本字段填`-`。
@@ -37,6 +37,6 @@
 ![](images/tipc_infer_compare_results.png)
 
 ### 3.更多教程
-内容：给出套件中基础训练预测的具体教程链接。
+内容：给出代码仓库中基础训练预测的具体教程链接。
 示例：
 ![](images/tipc_cpp_infer_more.png)
