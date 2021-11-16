@@ -23,20 +23,20 @@
 
 ### 2.测试流程
 #### 2.1 功能测试
-内容1：给出C++预测具体测试命令。
+内容1：给出C++预测具体测试命令。  
 示例：
 ![](images/tipc_cpp_infer_shell.png)
 
-内容2：给出预测log的解读指引
+内容2：给出预测log的解读指引。  
 示例：
 ![](images/tipc_cpp_infer_output.png)
 
 #### 2.2 精度测试
-内容：给出精度测试的具体命令和运行结果示例。
+内容：给出精度测试的具体命令和运行结果示例。  
 示例：
 ![](images/tipc_infer_compare_results.png)
 
 ### 3.更多教程
-内容：给出代码仓库中基础训练预测的具体教程链接。
+内容：给出代码仓库中基础训练预测的具体教程链接。  
 示例：
 ![](images/tipc_cpp_infer_more.png)

@@ -218,7 +218,7 @@ bash test_tipc/test_inference_cpp.sh test_tipc/configs/ppocr_det_mobile/model_li
 - 如果不需要opencv，如语音或nlp任务，删除本段代码即可。
 - 需要编译opencv时，首先检查是否已经存在指定版本的opencv，比较md5，如果已有，则跳过编译，避免多次测试时重复下载和编译。
 
-[编译PaddleOCR demo](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/test_inference_cpp.sh#L158)：
+[编译可执行文件](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/test_inference_cpp.sh#L158)：
 
 - 可根据实际任务调整编译选项。
 
