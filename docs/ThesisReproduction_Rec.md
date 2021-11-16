@@ -411,3 +411,5 @@ random.seed(config.SEED)
     * 不要主动调参，目的是复现而不是提升精度
     * 不要加论文中没提到的模型结构
     * 数据和指标先行对齐
+* 数据集获取
+    * PaddleRec提供了大量推荐数据集，可优先从[这里查找](https://github.com/PaddlePaddle/PaddleRec/tree/master/datasets)
