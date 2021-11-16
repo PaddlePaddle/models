@@ -8,7 +8,7 @@
 - [2. 整体框图](#2)
     - [2.1 流程概览](#2.1)
     - [2.2 reprod_log whl包](#2.2)
-- [3. 论文复现理论知识及实战](#3)
+- [3. 论文复现理论知识](#3)
     - [3.1 模型结构对齐](#3.1)
     - [3.2 验证/测试集数据读取对齐](#3.2)
     - [3.3 评估指标对齐](#3.3)
@@ -68,7 +68,7 @@
 
 我们会依照打卡点进行验收，当选手未一次性对齐时，可按流程图分析问题出现在1-11哪个环节，具体内容安排如下：
 
-* 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
+* 第3章：介绍11个复现步骤的具体内容。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 <a name="2.2"></a>
@@ -138,12 +138,10 @@ log_reprod
 ├── train_align_diff.log # train_align_paddle.npy与train_align_benchmark.npy生成的diff结果文件
 ```
 
-上述文件的生成代码都需要开发者进行开发，验收时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
-AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，具体代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，
 每个文件夹中的README.md文档提供了使用说明。
 
 <a name="3"></a>
-## 3. 论文复现理论知识及实战
+## 3. 论文复现理论知识
 
 <a name="3.1"></a>
 ### 3.1 模型结构对齐
