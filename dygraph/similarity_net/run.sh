@@ -48,7 +48,7 @@ train() {
 evaluate() {
 	python run_classifier.py \
 		--task_name ${TASK_NAME} \
-		--use_cuda false \
+		--use_cuda False \
 		--do_test True \
 		--verbose_result True \
 		--batch_size 128 \
@@ -65,7 +65,7 @@ evaluate() {
 infer() {
 	python run_classifier.py \
 		--task_name ${TASK_NAME} \
-		--use_cuda false \
+		--use_cuda False \
 		--do_infer True \
 		--batch_size 128 \
 		--infer_data_dir ${INFER_DATA_PATH} \
