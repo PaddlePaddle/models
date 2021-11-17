@@ -99,9 +99,8 @@ def random_crop(img, size, settings, scale=None, ratio=None,
     return resized
 
 
-#NOTE:(2019/08/08) distort color func is not implemented
 def distort_color(img):
-    """distort image color
+    """distort image color, include hue, saturation, contrast, brightness
 
     Args:
         img: image data
@@ -109,6 +108,28 @@ def distort_color(img):
     Returns:
         distorted color image data
     """
+    contrast=0.5
+    brightness=0.5
+    def contrast_brightness(img):
+        return cv2.addWeighted(img, contrast, img, 0, brightness)
+
+    def saturation(img):
+        (h, s, v) = cv2.split(imghsv)
+        s = s*satadj
+        s = np.clip(s,0,255)
+        imghsv = cv2.merge([h,s,v])
+        return imghsv
+    def hue(img):
+        pass 
+
+    ops = [contrast_brightness, saturation]
+    np.random.shuffle(ops)
+
+    img = ops[0](img)
+    img = ops[1](img)
+    img = ops[2](img)
+
+
     return img
 
 
