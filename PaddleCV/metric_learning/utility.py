@@ -18,14 +18,16 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import re
 import six
 import time
+import shutil
+import tempfile
 import subprocess
 import distutils.util
 import numpy as np
 import sys
 import paddle.fluid as fluid
-from paddle.fluid import core
 import multiprocessing as mp
 import tempfile
 import shutil
@@ -173,10 +175,11 @@ def check_cuda(use_cuda, err = \
     Please: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_cuda = False to run models on CPU.\n"
                                                                                                                      ):
     try:
-        if use_cuda == True and fluid.is_compiled_with_cuda() == False:
+        if use_cuda is True and fluid.is_compiled_with_cuda() is False:
             print(err)
             sys.exit(1)
     except Exception as e:
+        print(e)
         pass
 
 

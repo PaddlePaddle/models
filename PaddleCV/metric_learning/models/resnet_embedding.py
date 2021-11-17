@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import paddle
 import paddle.fluid as fluid
-import math
 from paddle.fluid.param_attr import ParamAttr
 
 __all__ = ["ResNet", "ResNet50", "ResNet101", "ResNet152"]
