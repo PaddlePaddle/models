@@ -47,9 +47,9 @@ Loss at epoch 0 step 400: [0.03940877]
 ```
 
 ## 参数保存
-调用`fluid.dygraph.save_persistables()`接口可以把模型的参数进行保存。
+调用`fluid.save_dygraph()`接口可以把模型的参数进行保存。
 ```python
-fluid.dygraph.save_persistables(mnist.state_dict(), "save_dir")
+fluid.save_dygraph(mnist.state_dict(), "save_dir")
 ```
 
 ## 测试
@@ -59,14 +59,18 @@ mnist.eval()
 ```
 
 ## 模型评估
-我们使用手写数据集中的一张图片来进行评估。为了区别训练模型，我们使用`with fluid.dygraph.guard()`来切换到一个新的参数空间，然后构建一个用于评估的网络`mnist_infer`，并通过`mnist_infer.load_dict()`来加载使用`fluid.dygraph.load_persistables`读取的参数。然后用`mnist_infer.eval()`切换到评估。
+我们使用手写数据集中的一张图片来进行评估。
+为了区别训练模型，我们使用`with fluid.dygraph.guard()`来切换到一个新的参数空间，
+然后构建一个用于评估的网络`mnist_infer`，
+并通过`mnist_infer.set_dict()`来加载使用`fluid.load_dygraph`读取的参数。
+然后用`mnist_infer.eval()`切换到评估。
 ```python
 with fluid.dygraph.guard():
 
     mnist_infer = MNIST("mnist")
     # load checkpoint
-    mnist_infer.load_dict(
-        fluid.dygraph.load_persistables("save_dir"))
+    mnist_infer.set_dict(
+        fluid.load_dygraph("save_dir"))
 
     # start evaluate mode
     mnist_infer.eval()
