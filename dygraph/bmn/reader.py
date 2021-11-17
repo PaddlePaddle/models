@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -14,37 +14,50 @@
 
 import paddle
 import numpy as np
-import random
 import json
-import multiprocessing
-import functools
 import logging
-import platform
 import os
+import sys
+
+from paddle.io import Dataset, DataLoader, DistributedBatchSampler
 
 logger = logging.getLogger(__name__)
 
+from config_utils import *
 from bmn_utils import iou_with_anchors, ioa_with_anchors
 
+DATATYPE = "float32"
 
-class BMNReader():
-    def __init__(self, mode, cfg):
+
+class BmnDataset(Dataset):
+    def __init__(self, cfg, mode):
         self.mode = mode
         self.tscale = cfg.MODEL.tscale  # 100
         self.dscale = cfg.MODEL.dscale  # 100
         self.anno_file = cfg.MODEL.anno_file
+        self.feat_path = cfg.MODEL.feat_path
         self.file_list = cfg.INFER.filelist
         self.subset = cfg[mode.upper()]['subset']
         self.tgap = 1. / self.tscale
-        self.feat_path = cfg.MODEL.feat_path
 
         self.get_dataset_dict()
         self.get_match_map()
 
-        self.batch_size = cfg[mode.upper()]['batch_size']
-        self.num_threads = cfg[mode.upper()]['num_threads']
-        if (mode == 'test') or (mode == 'infer'):
-            self.num_threads = 1  # set num_threads as 1 for test and infer
+    def __getitem__(self, index):
+        video_name = self.video_list[index]
+        video_idx = np.array(self.video_list.index(video_name)).astype('int64')
+        video_feat = self.load_file(video_name)
+        if self.mode == 'infer':
+            return video_feat, video_idx
+        else:
+            gt_iou_map, gt_start, gt_end = self.get_video_label(video_name)
+            if self.mode == 'train' or self.mode == 'valid':
+                return video_feat, gt_iou_map, gt_start, gt_end
+            elif self.mode == 'test':
+                return video_feat, gt_iou_map, gt_start, gt_end, video_idx
+
+    def __len__(self):
+        return len(self.video_list)
 
     def get_dataset_dict(self):
         assert (os.path.exists(self.feat_path)), "Input feature path not exists"
@@ -128,7 +141,8 @@ class BMNReader():
 
         gt_start = np.array(match_score_start)
         gt_end = np.array(match_score_end)
-        return gt_iou_map, gt_start, gt_end
+        return gt_iou_map.astype(DATATYPE), gt_start.astype(
+            DATATYPE), gt_end.astype(DATATYPE)
 
     def load_file(self, video_name):
         file_name = video_name + ".npy"
@@ -137,158 +151,3 @@ class BMNReader():
         video_feat = video_feat.T
         video_feat = video_feat.astype("float32")
         return video_feat
-
-    def create_reader(self):
-        """reader creator for bmn model"""
-        if self.mode == 'infer':
-            return self.make_infer_reader()
-        if self.num_threads == 1:
-            return self.make_reader()
-        else:
-            sysstr = platform.system()
-            if sysstr == 'Windows':
-                return self.make_multithread_reader()
-            else:
-                return self.make_multiprocess_reader()
-
-    def make_infer_reader(self):
-        """reader for inference"""
-
-        def reader():
-            batch_out = []
-            for video_name in self.video_list:
-                video_idx = self.video_list.index(video_name)
-                video_feat = self.load_file(video_name)
-                batch_out.append((video_feat, video_idx))
-
-                if len(batch_out) == self.batch_size:
-                    yield batch_out
-                    batch_out = []
-
-        return reader
-
-    def make_reader(self):
-        """single process reader"""
-
-        def reader():
-            video_list = self.video_list
-            if self.mode == 'train':
-                random.shuffle(video_list)
-
-            batch_out = []
-            for video_name in video_list:
-                video_idx = video_list.index(video_name)
-                video_feat = self.load_file(video_name)
-                gt_iou_map, gt_start, gt_end = self.get_video_label(video_name)
-
-                if self.mode == 'train' or self.mode == 'valid':
-                    batch_out.append((video_feat, gt_iou_map, gt_start, gt_end))
-                elif self.mode == 'test':
-                    batch_out.append(
-                        (video_feat, gt_iou_map, gt_start, gt_end, video_idx))
-                else:
-                    raise NotImplementedError('mode {} not implemented'.format(
-                        self.mode))
-                if len(batch_out) == self.batch_size:
-                    yield batch_out
-                    batch_out = []
-
-        return reader
-
-    def make_multithread_reader(self):
-        def reader():
-            if self.mode == 'train':
-                random.shuffle(self.video_list)
-            for video_name in self.video_list:
-                video_idx = self.video_list.index(video_name)
-                yield [video_name, video_idx]
-
-        def process_data(sample, mode):
-            video_name = sample[0]
-            video_idx = sample[1]
-            video_feat = self.load_file(video_name)
-            gt_iou_map, gt_start, gt_end = self.get_video_label(video_name)
-            if mode == 'train' or mode == 'valid':
-                return (video_feat, gt_iou_map, gt_start, gt_end)
-            elif mode == 'test':
-                return (video_feat, gt_iou_map, gt_start, gt_end, video_idx)
-            else:
-                raise NotImplementedError('mode {} not implemented'.format(
-                    mode))
-
-        mapper = functools.partial(process_data, mode=self.mode)
-
-        def batch_reader():
-            xreader = paddle.reader.xmap_readers(mapper, reader,
-                                                 self.num_threads, 1024)
-            batch = []
-            for item in xreader():
-                batch.append(item)
-                if len(batch) == self.batch_size:
-                    yield batch
-                    batch = []
-
-        return batch_reader
-
-    def make_multiprocess_reader(self):
-        """multiprocess reader"""
-
-        def read_into_queue(video_list, queue):
-
-            batch_out = []
-            for video_name in video_list:
-                video_idx = video_list.index(video_name)
-                video_feat = self.load_file(video_name)
-                gt_iou_map, gt_start, gt_end = self.get_video_label(video_name)
-
-                if self.mode == 'train' or self.mode == 'valid':
-                    batch_out.append((video_feat, gt_iou_map, gt_start, gt_end))
-                elif self.mode == 'test':
-                    batch_out.append(
-                        (video_feat, gt_iou_map, gt_start, gt_end, video_idx))
-                else:
-                    raise NotImplementedError('mode {} not implemented'.format(
-                        self.mode))
-
-                if len(batch_out) == self.batch_size:
-                    queue.put(batch_out)
-                    batch_out = []
-            queue.put(None)
-
-        def queue_reader():
-            video_list = self.video_list
-            if self.mode == 'train':
-                random.shuffle(video_list)
-
-            n = self.num_threads
-            queue_size = 20
-            reader_lists = [None] * n
-            file_num = int(len(video_list) // n)
-            for i in range(n):
-                if i < len(reader_lists) - 1:
-                    tmp_list = video_list[i * file_num:(i + 1) * file_num]
-                else:
-                    tmp_list = video_list[i * file_num:]
-                reader_lists[i] = tmp_list
-
-            manager = multiprocessing.Manager()
-            queue = manager.Queue(queue_size)
-            p_list = [None] * len(reader_lists)
-            for i in range(len(reader_lists)):
-                reader_list = reader_lists[i]
-                p_list[i] = multiprocessing.Process(
-                    target=read_into_queue, args=(reader_list, queue))
-                p_list[i].start()
-            reader_num = len(reader_lists)
-            finish_num = 0
-            while finish_num < reader_num:
-                sample = queue.get()
-                if sample is None:
-                    finish_num += 1
-                else:
-                    yield sample
-            for i in range(len(p_list)):
-                if p_list[i].is_alive():
-                    p_list[i].join()
-
-        return queue_reader

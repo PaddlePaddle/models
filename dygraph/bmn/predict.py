@@ -13,7 +13,7 @@
 #limitations under the License.
 
 import paddle
-import paddle.fluid as fluid
+from paddle.io import DataLoader, DistributedBatchSampler
 import numpy as np
 import argparse
 import sys
@@ -23,7 +23,7 @@ import json
 
 from model import BMN
 from eval import gen_props
-from reader import BMNReader
+from reader import BmnDataset
 from bmn_utils import bmn_post_processing
 from config_utils import *
 
@@ -55,7 +55,7 @@ def parse_args():
     parser.add_argument(
         '--weights',
         type=str,
-        default="checkpoint/bmn_paddle_dy_final",
+        default="checkpoint/bmn_paddle_dy_final.pdparams",
         help='weight path, None to automatically download weights provided by Paddle.'
     )
     parser.add_argument(
@@ -93,53 +93,59 @@ def infer_bmn(args):
         os.makedirs(infer_config.INFER.output_path)
     if not os.path.isdir(infer_config.INFER.result_path):
         os.makedirs(infer_config.INFER.result_path)
-    place = fluid.CUDAPlace(0)
-    with fluid.dygraph.guard(place):
-        bmn = BMN(infer_config)
-        # load checkpoint
-        if args.weights:
-            assert os.path.exists(args.weights + ".pdparams"
-                                  ), "Given weight dir {} not exist.".format(
-                                      args.weights)
+
+    place = 'gpu:0' if args.use_gpu else 'cpu'
+    place = paddle.set_device(place)
+
+    bmn = BMN(infer_config)
+    # load checkpoint
+    if args.weights:
+        assert os.path.exists(
+            args.weights), "Given weight dir {} not exist.".format(args.weights)
 
         logger.info('load test weights from {}'.format(args.weights))
-        model_dict, _ = fluid.load_dygraph(args.weights)
+        model_dict = paddle.load(args.weights)
         bmn.set_dict(model_dict)
 
-        reader = BMNReader(mode="infer", cfg=infer_config)
-        infer_reader = reader.create_reader()
+    infer_dataset = BmnDataset(infer_config, 'infer')
+    infer_sampler = DistributedBatchSampler(
+        infer_dataset, batch_size=infer_config.INFER.batch_size)
+    infer_loader = DataLoader(
+        infer_dataset,
+        batch_sampler=infer_sampler,
+        places=place,
+        num_workers=infer_config.INFER.num_workers,
+        return_list=True)
 
-        video_dict, video_list = get_dataset_dict(infer_config)
+    video_dict, video_list = get_dataset_dict(infer_config)
 
-        bmn.eval()
-        for batch_id, data in enumerate(infer_reader()):
-            video_feat = np.array([item[0] for item in data]).astype(DATATYPE)
-            video_idx = [item[1] for item in data][0]  #batch_size=1 by default
+    bmn.eval()
+    for batch_id, data in enumerate(infer_loader):
+        x_data = paddle.to_tensor(data[0])
+        video_idx = data[1]  #batch_size=1 by default
 
-            x_data = fluid.dygraph.base.to_variable(video_feat)
+        pred_bm, pred_start, pred_end = bmn(x_data)
 
-            pred_bm, pred_start, pred_end = bmn(x_data)
+        pred_bm = pred_bm.numpy()
+        pred_start = pred_start[0].numpy()
+        pred_end = pred_end[0].numpy()
 
-            pred_bm = pred_bm.numpy()
-            pred_start = pred_start[0].numpy()
-            pred_end = pred_end[0].numpy()
+        logger.info("Processing................ batch {}".format(batch_id))
+        gen_props(
+            pred_bm,
+            pred_start,
+            pred_end,
+            video_idx,
+            video_list,
+            infer_config,
+            mode='infer')
 
-            logger.info("Processing................ batch {}".format(batch_id))
-            gen_props(
-                pred_bm,
-                pred_start,
-                pred_end,
-                video_idx,
-                video_list,
-                infer_config,
-                mode='infer')
-
-        logger.info("Post_processing....This may take a while")
-        bmn_post_processing(video_dict, infer_config.INFER.subset,
-                            infer_config.INFER.output_path,
-                            infer_config.INFER.result_path)
-        logger.info("[INFER] infer finished. Results saved in {}".format(
-            args.save_dir) + "bmn_results_test.json")
+    logger.info("Post_processing....This may take a while")
+    bmn_post_processing(video_dict, infer_config.INFER.subset,
+                        infer_config.INFER.output_path,
+                        infer_config.INFER.result_path)
+    logger.info("[INFER] infer finished. Results saved in {}".format(
+        args.save_dir) + "bmn_results_test.json")
 
 
 if __name__ == '__main__':

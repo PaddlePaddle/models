@@ -13,7 +13,7 @@
 #limitations under the License.
 
 import paddle
-import paddle.fluid as fluid
+from paddle.io import DataLoader, DistributedBatchSampler
 import numpy as np
 import argparse
 import pandas as pd
@@ -23,7 +23,7 @@ import ast
 import json
 import logging
 
-from reader import BMNReader
+from reader import BmnDataset
 from model import BMN, bmn_loss_func
 from bmn_utils import boundary_choose, bmn_post_processing
 from config_utils import *
@@ -53,9 +53,8 @@ def parse_args():
     parser.add_argument(
         '--weights',
         type=str,
-        default="checkpoint/bmn_paddle_dy_final",
-        help='weight path, None to automatically download weights provided by Paddle.'
-    )
+        default="./checkpoint/bmn_paddle_dy_final.pdparams",
+        help='weight path')
     parser.add_argument(
         '--log_interval',
         type=int,
@@ -128,91 +127,88 @@ def test_bmn(args):
     if not os.path.isdir(test_config.TEST.result_path):
         os.makedirs(test_config.TEST.result_path)
 
-    if not args.use_gpu:
-        place = fluid.CPUPlace()
-    else:
-        place = fluid.CUDAPlace(0)
+    place = 'gpu:0' if args.use_gpu else 'cpu'
+    place = paddle.set_device(place)
 
-    with fluid.dygraph.guard(place):
-        bmn = BMN(test_config)
+    bmn = BMN(test_config)
 
-        # load checkpoint
-        if args.weights:
-            assert os.path.exists(args.weights + '.pdparams'
-                                  ), "Given weight dir {} not exist.".format(
-                                      args.weights)
+    # load checkpoint
+    if args.weights:
+        assert os.path.exists(
+            args.weights), "Given weight dir {} not exist.".format(args.weights)
 
         logger.info('load test weights from {}'.format(args.weights))
-        model_dict, _ = fluid.load_dygraph(args.weights)
+        model_dict = paddle.load(args.weights)
         bmn.set_dict(model_dict)
 
-        reader = BMNReader(mode="test", cfg=test_config)
-        test_reader = reader.create_reader()
+    eval_dataset = BmnDataset(test_config, 'test')
+    eval_sampler = DistributedBatchSampler(
+        eval_dataset, batch_size=test_config.TEST.batch_size)
+    eval_loader = DataLoader(
+        eval_dataset,
+        batch_sampler=eval_sampler,
+        places=place,
+        num_workers=test_config.TEST.num_workers,
+        return_list=True)
 
-        aggr_loss = 0.0
-        aggr_tem_loss = 0.0
-        aggr_pem_reg_loss = 0.0
-        aggr_pem_cls_loss = 0.0
-        aggr_batch_size = 0
-        video_dict, video_list = get_dataset_dict(test_config)
+    aggr_loss = 0.0
+    aggr_tem_loss = 0.0
+    aggr_pem_reg_loss = 0.0
+    aggr_pem_cls_loss = 0.0
+    aggr_batch_size = 0
+    video_dict, video_list = get_dataset_dict(test_config)
 
-        bmn.eval()
-        for batch_id, data in enumerate(test_reader()):
-            video_feat = np.array([item[0] for item in data]).astype(DATATYPE)
-            gt_iou_map = np.array([item[1] for item in data]).astype(DATATYPE)
-            gt_start = np.array([item[2] for item in data]).astype(DATATYPE)
-            gt_end = np.array([item[3] for item in data]).astype(DATATYPE)
-            video_idx = [item[4] for item in data][0]  #batch_size=1 by default
+    bmn.eval()
+    for batch_id, data in enumerate(eval_loader):
+        x_data = paddle.to_tensor(data[0])
+        gt_iou_map = paddle.to_tensor(data[1])
+        gt_start = paddle.to_tensor(data[2])
+        gt_end = paddle.to_tensor(data[3])
+        video_idx = data[4]  #batch_size=1 by default
+        gt_iou_map.stop_gradient = True
+        gt_start.stop_gradient = True
+        gt_end.stop_gradient = True
 
-            x_data = fluid.dygraph.base.to_variable(video_feat)
-            gt_iou_map = fluid.dygraph.base.to_variable(gt_iou_map)
-            gt_start = fluid.dygraph.base.to_variable(gt_start)
-            gt_end = fluid.dygraph.base.to_variable(gt_end)
-            gt_iou_map.stop_gradient = True
-            gt_start.stop_gradient = True
-            gt_end.stop_gradient = True
+        pred_bm, pred_start, pred_end = bmn(x_data)
+        loss, tem_loss, pem_reg_loss, pem_cls_loss = bmn_loss_func(
+            pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
+            test_config)
 
-            pred_bm, pred_start, pred_end = bmn(x_data)
-            loss, tem_loss, pem_reg_loss, pem_cls_loss = bmn_loss_func(
-                pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
-                test_config)
+        pred_bm = pred_bm.numpy()
+        pred_start = pred_start[0].numpy()
+        pred_end = pred_end[0].numpy()
+        aggr_loss += np.mean(loss.numpy())
+        aggr_tem_loss += np.mean(tem_loss.numpy())
+        aggr_pem_reg_loss += np.mean(pem_reg_loss.numpy())
+        aggr_pem_cls_loss += np.mean(pem_cls_loss.numpy())
+        aggr_batch_size += 1
 
-            pred_bm = pred_bm.numpy()
-            pred_start = pred_start[0].numpy()
-            pred_end = pred_end[0].numpy()
-            aggr_loss += np.mean(loss.numpy())
-            aggr_tem_loss += np.mean(tem_loss.numpy())
-            aggr_pem_reg_loss += np.mean(pem_reg_loss.numpy())
-            aggr_pem_cls_loss += np.mean(pem_cls_loss.numpy())
-            aggr_batch_size += 1
+        if batch_id % args.log_interval == 0:
+            logger.info("Processing................ batch {}".format(batch_id))
 
-            if batch_id % args.log_interval == 0:
-                logger.info("Processing................ batch {}".format(
-                    batch_id))
+        gen_props(
+            pred_bm,
+            pred_start,
+            pred_end,
+            video_idx,
+            video_list,
+            test_config,
+            mode='test')
 
-            gen_props(
-                pred_bm,
-                pred_start,
-                pred_end,
-                video_idx,
-                video_list,
-                test_config,
-                mode='test')
+    avg_loss = aggr_loss / aggr_batch_size
+    avg_tem_loss = aggr_tem_loss / aggr_batch_size
+    avg_pem_reg_loss = aggr_pem_reg_loss / aggr_batch_size
+    avg_pem_cls_loss = aggr_pem_cls_loss / aggr_batch_size
 
-        avg_loss = aggr_loss / aggr_batch_size
-        avg_tem_loss = aggr_tem_loss / aggr_batch_size
-        avg_pem_reg_loss = aggr_pem_reg_loss / aggr_batch_size
-        avg_pem_cls_loss = aggr_pem_cls_loss / aggr_batch_size
+    logger.info('[EVAL] \tAvg_oss = {}, \tAvg_tem_loss = {}, \tAvg_pem_reg_loss = {}, \tAvg_pem_cls_loss = {}'.format(
+        '%.04f' % avg_loss, '%.04f' % avg_tem_loss, \
+        '%.04f' % avg_pem_reg_loss, '%.04f' % avg_pem_cls_loss))
 
-        logger.info('[EVAL] \tAvg_oss = {}, \tAvg_tem_loss = {}, \tAvg_pem_reg_loss = {}, \tAvg_pem_cls_loss = {}'.format(
-            '%.04f' % avg_loss, '%.04f' % avg_tem_loss, \
-            '%.04f' % avg_pem_reg_loss, '%.04f' % avg_pem_cls_loss))
-
-        logger.info("Post_processing....This may take a while")
-        bmn_post_processing(video_dict, test_config.TEST.subset,
-                            test_config.TEST.output_path,
-                            test_config.TEST.result_path)
-        logger.info("[EVAL] eval finished")
+    logger.info("Post_processing....This may take a while")
+    bmn_post_processing(video_dict, test_config.TEST.subset,
+                        test_config.TEST.output_path,
+                        test_config.TEST.result_path)
+    logger.info("[EVAL] eval finished")
 
 
 if __name__ == '__main__':

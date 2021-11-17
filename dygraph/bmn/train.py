@@ -13,7 +13,8 @@
 #limitations under the License.
 
 import paddle
-import paddle.fluid as fluid
+from paddle.io import DataLoader, DistributedBatchSampler
+import paddle.distributed as dist
 import numpy as np
 import argparse
 import ast
@@ -22,7 +23,7 @@ import sys
 import os
 
 from model import BMN, bmn_loss_func
-from reader import BMNReader
+from reader import BmnDataset
 from config_utils import *
 
 DATATYPE = 'float32'
@@ -98,29 +99,21 @@ def optimizer(cfg, parameter_list):
     lr_decay = cfg.TRAIN.learning_rate_decay
     l2_weight_decay = cfg.TRAIN.l2_weight_decay
     lr = [base_lr, base_lr * lr_decay]
-    optimizer = fluid.optimizer.Adam(
-        fluid.layers.piecewise_decay(
-            boundaries=bd, values=lr),
-        parameter_list=parameter_list,
-        regularization=fluid.regularizer.L2DecayRegularizer(
-            regularization_coeff=l2_weight_decay))
+    scheduler = paddle.optimizer.lr.PiecewiseDecay(boundaries=bd, values=lr)
+    optimizer = paddle.optimizer.Adam(
+        learning_rate=scheduler,
+        parameters=parameter_list,
+        weight_decay=l2_weight_decay)
     return optimizer
 
 
 # Validation
-def val_bmn(model, config, args):
-    reader = BMNReader(mode="valid", cfg=config)
-    val_reader = reader.create_reader()
-    for batch_id, data in enumerate(val_reader()):
-        video_feat = np.array([item[0] for item in data]).astype(DATATYPE)
-        gt_iou_map = np.array([item[1] for item in data]).astype(DATATYPE)
-        gt_start = np.array([item[2] for item in data]).astype(DATATYPE)
-        gt_end = np.array([item[3] for item in data]).astype(DATATYPE)
-
-        x_data = fluid.dygraph.base.to_variable(video_feat)
-        gt_iou_map = fluid.dygraph.base.to_variable(gt_iou_map)
-        gt_start = fluid.dygraph.base.to_variable(gt_start)
-        gt_end = fluid.dygraph.base.to_variable(gt_end)
+def val_bmn(model, val_loader, config, args):
+    for batch_id, data in enumerate(val_loader):
+        x_data = paddle.to_tensor(data[0])
+        gt_iou_map = paddle.to_tensor(data[1])
+        gt_start = paddle.to_tensor(data[2])
+        gt_end = paddle.to_tensor(data[3])
         gt_iou_map.stop_gradient = True
         gt_start.stop_gradient = True
         gt_end.stop_gradient = True
@@ -129,7 +122,7 @@ def val_bmn(model, config, args):
 
         loss, tem_loss, pem_reg_loss, pem_cls_loss = bmn_loss_func(
             pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end, config)
-        avg_loss = fluid.layers.mean(loss)
+        avg_loss = paddle.mean(loss)
 
         if args.log_interval > 0 and (batch_id % args.log_interval == 0):
             logger.info('[VALID] iter {} '.format(batch_id)
@@ -144,100 +137,125 @@ def train_bmn(args):
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
 
-    if not args.use_gpu:
-        place = fluid.CPUPlace()
-    elif not args.use_data_parallel:
-        place = fluid.CUDAPlace(0)
-    else:
-        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+    place = 'gpu:{}'.format(dist.ParallelEnv()
+                            .dev_id) if args.use_gpu else 'cpu'
+    place = paddle.set_device(place)
 
-    with fluid.dygraph.guard(place):
-        if args.use_data_parallel:
-            strategy = fluid.dygraph.parallel.prepare_context()
-        bmn = BMN(train_config)
-        adam = optimizer(train_config, parameter_list=bmn.parameters())
+    if args.use_data_parallel:
+        dist.init_parallel_env()
 
-        if args.use_data_parallel:
-            bmn = fluid.dygraph.parallel.DataParallel(bmn, strategy)
+    bmn = BMN(train_config)
+    adam = optimizer(train_config, parameter_list=bmn.parameters())
 
-        if args.resume:
-            # if resume weights is given, load resume weights directly
-            assert os.path.exists(args.resume + ".pdparams"), \
-                "Given resume weight dir {} not exist.".format(args.resume)
+    if args.use_data_parallel:
+        bmn = paddle.DataParallel(bmn)
 
-            model, _ = fluid.dygraph.load_dygraph(args.resume)
-            bmn.set_dict(model)
+    if args.resume:
+        # if resume weights is given, load resume weights directly
+        assert os.path.exists(args.resume + ".pdparams"), \
+            "Given resume weight dir {}.pdparams not exist.".format(args.resume)
+        assert os.path.exists(args.resume + ".pdopt"), \
+            "Given resume weight dir {}.pdopt not exist.".format(args.resume)
 
-        reader = BMNReader(mode="train", cfg=train_config)
-        train_reader = reader.create_reader()
-        if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
+        model_dict = paddle.load(args.resume + ".pdparams")
+        opt_dict = paddle.load(args.resum + ".pdopt")
+        bmn.set_dict(model_dict)
+        adam.set_state_dict(opt_dict)
 
-        for epoch in range(args.epoch):
-            for batch_id, data in enumerate(train_reader()):
-                video_feat = np.array(
-                    [item[0] for item in data]).astype(DATATYPE)
-                gt_iou_map = np.array(
-                    [item[1] for item in data]).astype(DATATYPE)
-                gt_start = np.array([item[2] for item in data]).astype(DATATYPE)
-                gt_end = np.array([item[3] for item in data]).astype(DATATYPE)
+    #Reader
+    bs_denominator = 1
+    if args.use_gpu:
+        gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
+        if gpus == "":
+            pass
+        else:
+            gpus = gpus.split(",")
+            num_gpus = len(gpus)
+            assert num_gpus == train_config.TRAIN.num_gpus, \
+                "num_gpus({}) set by CUDA_VISIBLE_DEVICES" \
+                "shoud be the same as that" \
+                "set in {}({})".format(
+                    num_gpus, args.config_file, train_config.TRAIN.num_gpus)
+        bs_denominator = train_config.TRAIN.num_gpus
 
-                x_data = fluid.dygraph.base.to_variable(video_feat)
-                gt_iou_map = fluid.dygraph.base.to_variable(gt_iou_map)
-                gt_start = fluid.dygraph.base.to_variable(gt_start)
-                gt_end = fluid.dygraph.base.to_variable(gt_end)
-                gt_iou_map.stop_gradient = True
-                gt_start.stop_gradient = True
-                gt_end.stop_gradient = True
+    bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
+    bs_val_single = int(valid_config.VALID.batch_size / bs_denominator)
 
-                pred_bm, pred_start, pred_end = bmn(x_data)
+    train_dataset = BmnDataset(train_config, 'train')
+    val_dataset = BmnDataset(valid_config, 'valid')
+    train_sampler = DistributedBatchSampler(
+        train_dataset,
+        batch_size=bs_train_single,
+        shuffle=train_config.TRAIN.use_shuffle,
+        drop_last=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_sampler=train_sampler,
+        places=place,
+        num_workers=train_config.TRAIN.num_workers,
+        return_list=True)
+    val_sampler = DistributedBatchSampler(val_dataset, batch_size=bs_val_single)
+    val_loader = DataLoader(
+        val_dataset,
+        batch_sampler=val_sampler,
+        places=place,
+        num_workers=valid_config.VALID.num_workers,
+        return_list=True)
 
-                loss, tem_loss, pem_reg_loss, pem_cls_loss = bmn_loss_func(
-                    pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
-                    train_config)
-                avg_loss = fluid.layers.mean(loss)
+    for epoch in range(args.epoch):
+        for batch_id, data in enumerate(train_loader):
+            x_data = paddle.to_tensor(data[0])
+            gt_iou_map = paddle.to_tensor(data[1])
+            gt_start = paddle.to_tensor(data[2])
+            gt_end = paddle.to_tensor(data[3])
+            gt_iou_map.stop_gradient = True
+            gt_start.stop_gradient = True
+            gt_end.stop_gradient = True
 
-                if args.use_data_parallel:
-                    avg_loss = bmn.scale_loss(avg_loss)
-                    avg_loss.backward()
-                    bmn.apply_collective_grads()
-                else:
-                    avg_loss.backward()
+            pred_bm, pred_start, pred_end = bmn(x_data)
 
-                adam.minimize(avg_loss)
+            loss, tem_loss, pem_reg_loss, pem_cls_loss = bmn_loss_func(
+                pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
+                train_config)
+            avg_loss = paddle.mean(loss)
 
-                bmn.clear_gradients()
+            avg_loss.backward()
+            adam.step()
+            adam.clear_grad()
 
-                if args.log_interval > 0 and (
-                        batch_id % args.log_interval == 0):
-                    logger.info('[TRAIN] Epoch {}, iter {} '.format(epoch, batch_id)
-                         + '\tLoss = {}, \ttem_loss = {}, \tpem_reg_loss = {}, \tpem_cls_loss = {}'.format(
-                            '%.04f' % avg_loss.numpy()[0], '%.04f' % tem_loss.numpy()[0], \
-                            '%.04f' % pem_reg_loss.numpy()[0], '%.04f' % pem_cls_loss.numpy()[0]))
+            if args.log_interval > 0 and (batch_id % args.log_interval == 0):
+                logger.info('[TRAIN] Epoch {}, iter {} '.format(epoch, batch_id)
+                     + '\tLoss = {}, \ttem_loss = {}, \tpem_reg_loss = {}, \tpem_cls_loss = {}'.format(
+                        '%.04f' % avg_loss.numpy()[0], '%.04f' % tem_loss.numpy()[0], \
+                        '%.04f' % pem_reg_loss.numpy()[0], '%.04f' % pem_cls_loss.numpy()[0]))
 
-            logger.info('[TRAIN] Epoch {} training finished'.format(epoch))
-            if not os.path.isdir(args.save_dir):
-                os.makedirs(args.save_dir)
+        logger.info('[TRAIN] Epoch {} training finished'.format(epoch))
+
+        #save
+        if not os.path.isdir(args.save_dir):
+            os.makedirs(args.save_dir)
+
+        if dist.get_rank() == 0:
             save_model_name = os.path.join(
                 args.save_dir, "bmn_paddle_dy" + "_epoch{}".format(epoch))
-            fluid.dygraph.save_dygraph(bmn.state_dict(), save_model_name)
+            paddle.save(bmn.state_dict(), save_model_name + '.pdparams')
+            paddle.save(adam.state_dict(), save_model_name + '.pdopt')
 
-            # validation
-            if args.valid_interval > 0 and (epoch + 1
-                                            ) % args.valid_interval == 0:
-                bmn.eval()
-                val_bmn(bmn, valid_config, args)
-                bmn.train()
+        # validation
+        if args.valid_interval > 0 and (epoch + 1) % args.valid_interval == 0:
+            bmn.eval()
+            val_bmn(bmn, val_loader, valid_config, args)
+            bmn.train()
 
-        #save final results
-        if fluid.dygraph.parallel.Env().local_rank == 0:
-            save_model_name = os.path.join(args.save_dir,
-                                           "bmn_paddle_dy" + "_final")
-            fluid.dygraph.save_dygraph(bmn.state_dict(), save_model_name)
-        logger.info('[TRAIN] training finished')
+    #save final results
+    if dist.get_rank() == 0:
+        save_model_name = os.path.join(args.save_dir,
+                                       "bmn_paddle_dy" + "_final")
+        paddle.save(bmn.state_dict(), save_model_name + '.pdparams')
+        paddle.save(adam.state_dict(), save_model_name + '.pdopt')
+    logger.info('[TRAIN] training finished')
 
 
 if __name__ == "__main__":
     args = parse_args()
-    train_bmn(args)
+    dist.spawn(train_bmn, args=(args, ), nprocs=4)  #nprocs=1 when single card
