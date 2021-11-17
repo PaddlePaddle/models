@@ -22,10 +22,10 @@ from paddle.io import Dataset
 from tqdm import tqdm
 
 from ..backends import load as load_audio
-from ..utils.download import decompress, download_and_decompress
-from ..utils.env import DATA_HOME
-from ..utils.log import logger
+from ..utils import DATA_HOME, decompress, download_and_decompress, get_logger
 from .dataset import feat_funcs
+
+logger = get_logger()
 
 __all__ = ['AISHELL1']
 
@@ -55,14 +55,17 @@ class AISHELL1(Dataset):
             'md5': '2f494334227864a8a8fec932999db9d8',
         },
     ]
-    text_meta = os.path.join('data_aishell', 'transcript', 'aishell_transcript_v0.8.txt')
-    utt_info = collections.namedtuple('META_INFO', ('file_path', 'utt_id', 'text'))
+    text_meta = os.path.join('data_aishell', 'transcript',
+                             'aishell_transcript_v0.8.txt')
+    utt_info = collections.namedtuple('META_INFO',
+                                      ('file_path', 'utt_id', 'text'))
     audio_path = os.path.join('data_aishell', 'wav')
     manifest_path = os.path.join('data_aishell', 'manifest')
     subset = ['train', 'dev', 'test']
 
     def __init__(self, subset: str = 'train', feat_type: str = 'raw', **kwargs):
-        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(self.subset, subset)
+        assert subset in self.subset, 'Dataset subset must be one in {}, but got {}'.format(
+            self.subset, subset)
         self.subset = subset
         self.feat_type = feat_type
         self.feat_config = kwargs
@@ -73,7 +76,8 @@ class AISHELL1(Dataset):
         ret = {}
         with open(os.path.join(DATA_HOME, self.text_meta), 'r') as rf:
             for line in rf.readlines()[1:]:
-                utt_id, text = map(str.strip, line.split(' ', 1))  # utt_id, text
+                utt_id, text = map(str.strip, line.split(' ',
+                                                         1))  # utt_id, text
                 ret.update({utt_id: ''.join(text.split())})
         return ret
 
@@ -82,7 +86,8 @@ class AISHELL1(Dataset):
             not os.path.isfile(os.path.join(DATA_HOME, self.text_meta)):
             download_and_decompress(self.archieves, DATA_HOME)
             # Extract *wav from *.tar.gz.
-            for root, _, files in os.walk(os.path.join(DATA_HOME, self.audio_path)):
+            for root, _, files in os.walk(
+                    os.path.join(DATA_HOME, self.audio_path)):
                 for file in files:
                     if file.endswith('.tar.gz'):
                         decompress(os.path.join(root, file))
@@ -91,7 +96,8 @@ class AISHELL1(Dataset):
         text_info = self._get_text_info()
 
         data = []
-        for root, _, files in os.walk(os.path.join(DATA_HOME, self.audio_path, self.subset)):
+        for root, _, files in os.walk(
+                os.path.join(DATA_HOME, self.audio_path, self.subset)):
             for file in files:
                 if file.endswith('.wav'):
                     utt_id = os.path.splitext(file)[0]
@@ -111,9 +117,12 @@ class AISHELL1(Dataset):
         for field in type(sample)._fields:
             record[field] = getattr(sample, field)
 
-        waveform, sr = load_audio(sample[0])  # The first element of sample is file path
+        waveform, sr = load_audio(
+            sample[0])  # The first element of sample is file path
         feat_func = feat_funcs[self.feat_type]
-        feat = feat_func(waveform, sample_rate=sr, **self.feat_config) if feat_func else waveform
+        feat = feat_func(
+            waveform, sample_rate=sr, **
+            self.feat_config) if feat_func else waveform
         record.update({'feat': feat, 'duration': len(waveform) / sr})
         return record
 
@@ -121,18 +130,18 @@ class AISHELL1(Dataset):
         if not os.path.isdir(os.path.join(DATA_HOME, self.manifest_path)):
             os.makedirs(os.path.join(DATA_HOME, self.manifest_path))
 
-        manifest_file = os.path.join(DATA_HOME, self.manifest_path, f'{prefix}.{self.subset}')
+        manifest_file = os.path.join(DATA_HOME, self.manifest_path,
+                                     f'{prefix}.{self.subset}')
         with codecs.open(manifest_file, 'w', 'utf-8') as f:
             for idx in tqdm(range(len(self))):
                 record = self._convert_to_record(idx)
-                record_line = json.dumps(
-                    {
-                        'utt': record['utt_id'],
-                        'feat': record['file_path'],
-                        'feat_shape': (record['duration'], ),
-                        'text': record['text']
-                    },
-                    ensure_ascii=False)
+                record_line = json.dumps({
+                    'utt': record['utt_id'],
+                    'feat': record['file_path'],
+                    'feat_shape': (record['duration'], ),
+                    'text': record['text']
+                },
+                                         ensure_ascii=False)
                 f.write(record_line + '\n')
         logger.info(f'Manifest file {manifest_file} created.')
 

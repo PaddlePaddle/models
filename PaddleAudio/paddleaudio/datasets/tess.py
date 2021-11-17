@@ -17,9 +17,7 @@ import os
 import random
 from typing import List, Tuple
 
-from ..utils.download import download_and_decompress
-from ..utils.env import DATA_HOME
-from ..utils.log import logger
+from ..utils import DATA_HOME, download_and_decompress
 from .dataset import AudioClassificationDataset
 
 __all__ = ['TESS']
@@ -40,7 +38,8 @@ class TESS(AudioClassificationDataset):
 
     archieves = [
         {
-            'url': 'https://bj.bcebos.com/paddleaudio/datasets/TESS_Toronto_emotional_speech_set.zip',
+            'url':
+            'https://bj.bcebos.com/paddleaudio/datasets/TESS_Toronto_emotional_speech_set.zip',
             'md5': '1465311b24d1de704c4c63e4ccc470c7',
         },
     ]
@@ -53,10 +52,17 @@ class TESS(AudioClassificationDataset):
         'ps',  # pleasant surprise
         'sad',
     ]
-    meta_info = collections.namedtuple('META_INFO', ('speaker', 'word', 'emotion'))
+    meta_info = collections.namedtuple('META_INFO',
+                                       ('speaker', 'word', 'emotion'))
     audio_path = 'TESS_Toronto_emotional_speech_set'
 
-    def __init__(self, mode='train', seed=0, n_folds=5, split=1, feat_type='raw', **kwargs):
+    def __init__(self,
+                 mode='train',
+                 seed=0,
+                 n_folds=5,
+                 split=1,
+                 feat_type='raw',
+                 **kwargs):
         """
         Ags:
             mode (:obj:`str`, `optional`, defaults to `train`):
@@ -72,7 +78,8 @@ class TESS(AudioClassificationDataset):
         """
         assert split <= n_folds, f'The selected split should not be larger than n_fold, but got {split} > {n_folds}'
         files, labels = self._get_data(mode, seed, n_folds, split)
-        super(TESS, self).__init__(files=files, labels=labels, feat_type=feat_type, **kwargs)
+        super(TESS, self).__init__(
+            files=files, labels=labels, feat_type=feat_type, **kwargs)
 
     def _get_meta_info(self, files) -> List[collections.namedtuple]:
         ret = []
@@ -81,7 +88,8 @@ class TESS(AudioClassificationDataset):
             ret.append(self.meta_info(*basename_without_extend.split('_')))
         return ret
 
-    def _get_data(self, mode, seed, n_folds, split) -> Tuple[List[str], List[int]]:
+    def _get_data(self, mode, seed, n_folds,
+                  split) -> Tuple[List[str], List[int]]:
         if not os.path.isdir(os.path.join(DATA_HOME, self.audio_path)):
             download_and_decompress(self.archieves, DATA_HOME)
 
@@ -92,7 +100,9 @@ class TESS(AudioClassificationDataset):
                     wav_files.append(os.path.join(root, file))
 
         random.seed(seed)  # shuffle samples to split data
-        random.shuffle(wav_files)  # make sure using the same seed to create train and dev dataset
+        random.shuffle(
+            wav_files
+        )  # make sure using the same seed to create train and dev dataset
         meta_info = self._get_meta_info(wav_files)
 
         files = []

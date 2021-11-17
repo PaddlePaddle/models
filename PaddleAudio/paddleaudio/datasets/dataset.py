@@ -21,7 +21,7 @@ import paddle
 from tqdm import tqdm
 
 from ..backends import load as load_audio
-from ..features import melspectrogram, mfcc
+from ..utils._librosa import melspectrogram, mfcc
 
 feat_funcs = {
     'raw': None,
@@ -34,6 +34,7 @@ class AudioClassificationDataset(paddle.io.Dataset):
     """
     Base class of audio classification dataset.
     """
+
     def __init__(self,
                  files: List[str],
                  labels: List[int],
@@ -75,8 +76,8 @@ class AudioClassificationDataset(paddle.io.Dataset):
 
     def __getitem__(self, idx):
         record = self._convert_to_record(idx)
-        return np.array(record['feat']).transpose(), np.array(record['label'],
-                                                              dtype=np.int64)
+        return np.array(record['feat']).transpose(), np.array(
+            record['label'], dtype=np.int64)
 
     def __len__(self):
         return len(self.files)
