@@ -180,10 +180,15 @@ def train(args):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print("\n[%s] - Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" %
-                      (time.asctime(time.localtime(time.time())), iter_num,
-                       total_loss / (args.log_period * args.batch_size),
-                       total_seq_error / (args.log_period * args.batch_size)))
+                avg_loss = total_loss / (args.log_period * args.batch_size)
+                print("\n[%s] - Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f"
+                         % (time.asctime(time.localtime(time.time())), iter_num,
+                            avg_loss,
+                            total_seq_error / (args.log_period * args.batch_size)))
+                if str(avg_loss) == 'nan':
+                    print('the loss is approaching infinity and stop the program')
+                    stop = True
+                    break
                 if 'ce_mode' in os.environ:
                     print("kpis	train_cost	%f" %
                           (total_loss / (args.log_period * args.batch_size)))
