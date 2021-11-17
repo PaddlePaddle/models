@@ -203,12 +203,12 @@ idx: 16 shape [1, 160, 20, 20]
 
     |骨干网络 | 模型指标 | 模型训练超参(有变化时需要说明) |
     |:---:|:---:|:---:|
-    | 原始论文 | 37.4 | xx |
-    | GhostNet_x1_3 | 28.9 | batchsize->32 |
-    | PP-LCNet_x1_0 | 26.9 | batchsize->32 |
-    | MobileNetV1_x1_0 | 28.2 | batchsize->32 |
-    | MobileNetV3_large_x1_0 | 27.1 | batchsize->32 |
-    | ShuffleNetV2_x1_0 | 22.2| batchsize->32 |
+    | 原始论文 | 37.4 | - |
+    | GhostNet_x1_3 | 28.9 | batchsize=32 |
+    | PP-LCNet_x1_0 | 26.9 | batchsize=32 |
+    | MobileNetV1_x1_0 | 28.2 | batchsize=32 |
+    | MobileNetV3_large_x1_0 | 27.1 | batchsize=32 |
+    | ShuffleNetV2_x1_0 | 22.2| batchsize=32 |
 
     * 文件夹`test_tipc`目录中的骨干网络验证脚本可以按照文档跑通并验证通过。
 
