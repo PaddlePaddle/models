@@ -77,6 +77,7 @@
 | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) | [如何新增算法](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/add_new_algorithm.md) | [PseNet PR](https://github.com/PaddlePaddle/PaddleOCR/pull/3376/files) |
 | [PaddleVideo](https://github.com/PaddlePaddle/PaddleVideo) | -  |  [PP-TSN PR](https://github.com/PaddlePaddle/PaddleVideo/pull/162) |
 | [PaddleGAN](https://github.com/PaddlePaddle/PaddleGAN) | [贡献指南](https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/en_US/contribute.md)  |  [PAN PR](https://github.com/PaddlePaddle/PaddleGAN/pull/426) |
+| [PaddleRec](https://github.com/PaddlePaddle/PaddleRec) | [贡献指南](https://github.com/PaddlePaddle/PaddleRec/blob/master/doc/contribute.md)  |  [DeepFM PR](https://github.com/PaddlePaddle/PaddleRec/pull/321) |
 
 
 <a name="3.3"></a>
