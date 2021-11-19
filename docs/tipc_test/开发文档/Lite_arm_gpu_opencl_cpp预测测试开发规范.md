@@ -4,31 +4,35 @@
 - [2.总览](#总览)
     - [2.1 训推一体自动化测试](#训推一体自动化测试)
     - [2.2 文本检测样板间概览](#文本检测样板间概览)
-- [3.Lite端预测接入TIPC流程](#Lite端预测接入TIPC流程)
+- [3.Lite端ARM_GPU_OPENCL预测接入TIPC流程](#Lite端ARM_GPU_OPENCL预测接入TIPC流程)
     - [3.1 准备数据和环境](#准备数据和环境)
     - [3.2 规范化输出预测日志](#规范化输出预测日志)
         - [3.2.1 日志规范](#日志规范)
         - [3.2.2 接入步骤](#接入步骤)
     - [3.3 编写自动化测试代码](#编写自动化测试代码)
 - [4.附录](#附录)
-    - [4.1 自动化测试脚本test_arm_cpp.sh 函数介绍](#自动化测试脚本test_arm_cpp.sh 函数介绍)
+    - [4.1 自动化测试脚本test_arm_cpp.sh函数介绍](#自动化测试脚本test_arm_cpp.sh函数介绍)
     - [4.2 其他说明](#其他说明)
 
 <a name="概述"></a>
 # 1、概述
 
-训推一体认证（TIPC）旨在监控框架代码更新可能导致的模型训练、预测报错、性能下降等问题。本文主要介绍TIPC中基于ARM设备的Lite预测cpp测试的接入规范和监测点，是在基础测试上针对Lite测试的补充说明。
+训推一体认证（TIPC）旨在监控框架代码更新可能导致的模型训练、预测报错、性能下降等问题。本文主要介绍TIPC中基于ARM_GPU_OPENCL设备的Lite预测cpp测试的接入规范和监测点，是在基础测试上针对Lite测试的补充说明。
 
 主要监控的内容有：
 
-飞桨框架更新后，代码仓库模型基于ARM的Lite预测cpp测试是否能正常走通；（比如API的不兼容升级）
-飞桨框架更新后，代码仓库模型基于ARM的的Lite预测cpp测试速度是否合理；
+- 飞桨框架更新后，代码仓库模型基于ARM_GPU_OPENCL的Lite预测cpp测试是否能正常走通；（比如API的不兼容升级）
+
+- 飞桨框架更新后，代码仓库模型基于ARM_GPU_OPENCL的的Lite预测cpp测试速度是否合理；
+
 为了能监控上述问题，希望把代码仓库模型的Lite预测测试加到飞桨框架的CI和CE中，提升PR合入的质量。因此，需要在代码仓库中加入运行脚本（不影响套件正常运行），完成模型的自动化测试。
 
 可以建立的CI/CE机制包括：
 
 **全量数据走通开源模型Lite预测，并验证模型预测速度和精度是否符合设定预期；（单模型30分钟内)**
+
     a. 保证预测结果正确，预测速度符合预期（QA添加中）
+
 **注:** 由于CI有时间限制，所以在测试的时候需要限制运行时间，所以需要构建一个很小的数据集完成测试。
 
 <a name="总览"></a>
@@ -39,38 +43,36 @@
 
 本规范最终的测试的链条如下，可以根据模型开发规范和代码仓库需要，适当删减链条。
 ![](images/tipc_lite_infer.png)
-上图所示为Lite端的链条，共288条。其中，本文档主要介绍其中基于ARM\_CPU和ARN\_GPU\_OPENGL的测试链条。
+上图所示为Lite端的链条，共288条。其中，本文档主要介绍其中基于ARM_GPU_OPENCL的cpp测试链条。
 
 <a name="文本检测样板间概览"></a>
 ## 2.2 文本检测样板间概览
 
 在PaddleOCR中，以文本检测为例，提供了本规范的样板间，可以完成概述部分提到的1种CI/CE机制。
 
-Lite预测测试工具位于PaddleOCR dygraph分支下的test_tipc目录，与Lite预测样板间相关的主要文件如下：
+Lite预测测试工具位于PaddleOCR dygraph分支下的test_tipc目录，与Lite预测ARM_GPU_OPENCL样板间相关的主要文件如下：
 
 ```
 test_tipc/
 ├── common_func.sh
 ├── configs # 配置文件目录
-│   ├──ppocr_det_mobile 
-├── configs
 │   ├── ppocr_det_mobile
-│   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
 │   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt
+│   │   ├── ...
 │   ├── ...
 │   ├── ppocr_system_mobile
-│   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
-│   │   └── model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt
-├── prepare_lite_arm_cpp.sh # 完成test_arm_cpu_cxx.sh运行所需要的数据和模型下载
+│   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt
+│   │   └── ...
+├── prepare_lite_cpp.sh # 完成test_arm_cpp.sh运行所需要的数据和模型下载
 ├── test_lite_arm_cpp.sh # lite测试主程序
 ```
 
-不同代码仓库的`configs`目录下的内容可根据实际情况进行调整, 配置文件`model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt`需满足[TIPC配置文件命名规范](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83)。
+不同代码仓库的`configs`目录下的内容可根据实际情况进行调整, 配置文件`model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt`需满足[TIPC配置文件命名规范](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83)。
 
-<a name="Lite端预测接入TIPC流程"></a>
-# 3、Lite端预测接入TIPC流程
+<a name="Lite端ARM_GPU_OPENCL预测接入TIPC流程"></a>
+# 3、Lite端ARM_GPU_OPENCL预测接入TIPC流程
 
-Lite端预测接入TIPC包含如下三个步骤，接下来将依次介绍这三个部分。
+Lite端ARM_GPU_OPENCL预测接入TIPC包含如下三个步骤，接下来将依次介绍这三个部分。
 
 - 准备数据和环境
 - 规范化输出预测日志
@@ -80,17 +82,19 @@ Lite端预测接入TIPC包含如下三个步骤，接下来将依次介绍这三
 ## 3.1 准备数据和环境
 
 同标准TIPC测试流程一样，在`prepare_lite_arm_cpp.sh`中准备好所需数据和环境，包括：
+
 - 少量预测数据
 - inference模型
 - 运行Lite所需要的可执行文件
+
 以PaddleOCR文本检测模型为例，使用方式：
 
 ```               
-bash test_tipc/prepare_lite_arm_cpp.sh test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
+bash test_tipc/prepare_lite_arm_cpp.sh test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt
 ```   
-prepare_lite_arm_cpp.sh具体内容：
+`prepare_lite_arm_cpp.sh`具体内容：
 
-1.解析`model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt`部分用于预测的参数字段，方便后续预测。
+1.解析`model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt`部分用于预测的参数字段，方便后续预测。
 
 ```
 source ./test_tipc/common_func.sh
@@ -170,10 +174,12 @@ cp ${paddlelite_file}/cxx/lib/libpaddle_light_api_shared.so ${paddlelite_file}/d
 cp ${FILENAME} test_tipc/test_lite_arm_cpp.sh test_tipc/common_func.sh ${paddlelite_file}/demo/cxx/ocr/test_lite
 cd ${paddlelite_file}/demo/cxx/ocr/
 git clone https://github.com/cuicheng01/AutoLog.git
-```
-5.交叉编译获得手机上的可执行文件
 
 ```
+5.交叉编译获得在手机上的可以运行的可执行文件
+
+```
+
 make -j
 sleep 1
 make -j
@@ -183,6 +189,7 @@ rm -rf ${paddlelite_file}* && rm -rf ${model_path}
 ```
 
 运行结果会在当前目录上生成test_lite.tar，里边的内容大致如下：
+
 ``` 
 ├── common_func.sh # 通用函数，如解析参数等
 ├── config.txt # 文本检测、识别的配置文件
@@ -192,7 +199,7 @@ rm -rf ${paddlelite_file}* && rm -rf ${model_path}
 │   ├── ch_ppocr_mobile_v2.0_det_opt.nb
 │   └── ch_ppocr_mobile_v2.0_det_slim_opt.nb
 ├── ocr_db_crnn //可执行文件
-├── model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt # 参数配置
+├── model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt # 参数配置
 ├── ppocr_keys_v1.txt # 文本识别对应的字典文件
 ├── test_data # 测试数据
 │   └── icdar2015_lite
@@ -222,7 +229,7 @@ rm -rf ${paddlelite_file}* && rm -rf ${model_path}
 Lite测试要求规范输出预测结果及以下信息：
 
 - 运行的硬件：如ARM_CPU、ARM_GPU_OPENCL
-- 运行的模型名称
+- 运行的模型名称： 如ch_PP-OCRv2_det_infer
 - 进程数量：如1或者4
 - batch_size: 如1或者4
 - 性能信息，基于Lite预测的各阶段平均预测时间（包括前处理时间、inference时间、后处理时间）
@@ -263,9 +270,10 @@ if (strcmp(argv[9], "True") == 0) {
 <a name="编写自动化测试代码"></a>
 ## 3.3 编写自动化测试代码
 
-自动化测试脚本包括三个部分，分别是运行脚本`test_lite_arm_cpu_cpp.sh`，参数文件`params.txt`，在OCR文本检测的Lite样板间中，该参数文件为`model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt`,数据模型准备脚本`prepare_lite.sh`。本节将详细介绍如何修改`params.txt`，完成Lite预测测试。运行脚本test.sh将会在附录中详细介绍。
-按如下方式在参数文件`params.txt`中添加Lite预测部分参数：
-![](images/lite_arm_params.png)
+自动化测试脚本包括三个部分，分别是运行脚本`test_lite_arm_cpp.sh`，参数文件`params.txt`，在OCR文本检测的Lite测试ARM_GPU_OPENCL样板间中，该参数文件为`model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt`,数据模型准备脚本`prepare_lite_cpp.sh`。
+
+按如下方式在参数文件`model_linux_gpu_normal_normal_lite_cpp_arm_gpu_opencl.txt`中添加Lite预测部分参数：
+![](images/lite_arm_gpu_opencl_params.png)
 
 参数说明：
 
@@ -273,7 +281,7 @@ if (strcmp(argv[9], "True") == 0) {
 | :------------------------------------------ | :------------------------------------------------------- |
 | inference: ./ocr_db_crnn det | Lite预测命令 |
 | det_infer_model:ch_PP-OCRv2_det_infer\|ch_PP-OCRv2_det_slim_quant_infer | 模型名称 |
-| runtime_device:ARM_CPU | 运行设备名称 |
+| runtime_device:ARM_GPU_OPENCL | 运行设备名称 |
 | –cpu_threads:1｜4 | 设置ARM线程数，如果要测试ARM上不同线程下的预测速度和精度，可以设置多个值，不同值用｜隔开 |
 | –det_batch_size: 1 | 设置batch_size 的参数，暂时只支持1 |
 | –image_dir:./test_data/icdar2015_lite/text_localization/ch4_test_images/ | 设置预测的数据路径 |
@@ -283,21 +291,25 @@ if (strcmp(argv[9], "True") == 0) {
 <a name="附录"></a>
 # 4、附录
 
-<a name="自动化测试脚本test_arm_cpp.sh函数介绍"></a>
-## 4.1 自动化测试脚本test_arm_cpp.sh函数介绍
+<a name="自动化测试脚本test_lite_arm_cpp.sh函数介绍"></a>
+## 4.1 自动化测试脚本test_lite_arm_cpp.sh函数介绍
 
 Lite预测核心函数：
 
-func_lite() ：执行lite预测的函数，根据不同的输入配置完成相应配置的预测
+func_lite_rec() ：执行文本识别模型的Lite预测函数，根据不同的输入配置完成相应配置的预测
 
-func_parser_value() ：解析params.txt中：后的部分
+func_lite_det() ：执行文本检测模型的Lite预测函数，根据不同的输入配置完成相应配置的预测
 
-status_check() ：状态检查函数，获取上条指令运行的状态，如果是0，则运行成功，如果是其他则运行失败，失败和成功的指令都会存放在results.log文件中
+func_lite_system() ：执行端到端文本识别的Lite预测函数，根据不同的输入配置完成相应配置的预测
+
+func_parser_value() ：解析`params.txt`中`:`后的部分
+
+status_check() ：状态检查函数，获取上条指令运行的状态，如果是0，则运行成功，如果是其他则运行失败，失败和成功的指令都会存放在`results.log`文件中
 
 
 <a name="注意事项"></a>
 ## 4.2 注意事项
 
-所有的Lite环境和模型数据等都是在docker中生成，后将相关的可执行文件、测试图片、模型等上传手机，通过test_arm_cpp.sh来完成多种链条的测试。
+所有的Lite环境和模型数据等都是在docker中生成，后将相关的可执行文件、测试图片、模型等上传手机，通过`test_lite_arm_cpp.sh`来完成多种链条的测试。
 
 
