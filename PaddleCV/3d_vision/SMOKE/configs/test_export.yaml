@@ -1,5 +1,0 @@
-_base_: 'train_val_kitti.yaml'
-
-model:
-  post_process:
-    type: PostProcessorHm

@@ -690,6 +690,7 @@ torch.stack([
 #### 4.2.1 API
 * 对于 `paddle.nn.Linear` 层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置，示例代码可以参考[AlexNet权重转换脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/e3855e0b1992332c2765ccf627d0c5f5f68232fe/pipeline/weights/torch2paddle.py#L19)。
 * `paddle.nn.BatchNorm2D` 包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
+
     * `weight` -> `weight`
     * `bias` -> `bias`
     * `_variance` -> `running_var`
