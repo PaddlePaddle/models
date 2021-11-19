@@ -56,7 +56,7 @@ C++预测测试工具位于PaddleOCR dygraph分支下的[test_tipc目录](https:
 ```
 test_tipc/
 ├── configs/  # 配置文件目录
-    ├── ppocr_det_mobile             # ppocr_det_mobile模型的测试配置文件目录
+    ├── ch_ppocr_mobile_v2.0_det      # ch_ppocr_mobile_v2.0_det模型的测试配置文件目录
         ├── model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt     # 测试Linux上c++预测的配置文件
 ├── results/   # 预先保存的预测结果，用于和实际预测结果进行精读比对
 	├── cpp_ppocr_det_mobile_results_fp32.txt       # 预存的mobile版ppocr检测模型c++预测的fp32精度的结果

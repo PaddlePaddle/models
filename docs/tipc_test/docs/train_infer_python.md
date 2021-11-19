@@ -66,7 +66,7 @@
 ## 1.2 TIPC自动化测试
 
 本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据套件需要，适当删减链条。
-![pipline](./imgs/pipline.png)
+![pipline](./images/pipline.png)
 
 上图各模块具体测试点如下：
 
@@ -295,7 +295,7 @@ pip3 install ./dist/auto_log-1.0.0-py3-none-any.whl
 使用AutoLog 实现自动化日志输出的功能可以参考PR：https://github.com/PaddlePaddle/PaddleOCR/pull/3182
 
 代码修改有四步，分别是：
-![图片](./imgs/autolog_example.png)
+![图片](./images/autolog_example.png)
 1). 初始化auto_log类：如上图代码所示（参考[PR](https://github.com/PaddlePaddle/PaddleOCR/pull/3182)），调用了auto_log 实现，初始化一个AutoLogger类，传入参数有模型名称、模型精度，batch_size, 输入shape，日志保存路径，inference配置（self.config），pid号和进程名字可选或设置为None，GPU号gpuid；
 AutoLogger的初始化参数：
 ```
@@ -314,13 +314,13 @@ logger: # 用于打印日志的logger，如果设置为None，在类中会自动
 ```
 2). 预测耗时打点：在模型预测中，统计前处理，预测，后处理时间，传入AutoLogger的preprocess_time, inference_time, postprocess_time中；
 
-![图片](./imgs/autolog_time.png)
+![图片](./images/autolog_time.png)
 
 
 3). 打印输出信息：在完成循环预测后，调用AutoLogger的report函数输出log信息。report函数是必须要调用的，否则，统计内存和显存占用的子进程不会关闭。
 其中，text_detector.auto_log.report()实际调用了AutoLogger.report()函数，根据输入的model信息和统计的时间、内存占用信息，规范化输出日志，输入日志格式如下：
 
-![图片](./imgs/autolog_results.png)
+![图片](./images/autolog_results.png)
 
 4). 预测结果正确性校验
 
@@ -334,10 +334,10 @@ python_ppocr_det_mobile_results_fp16.txt
 python_ppocr_det_mobile_results_fp32.txt
 ```
 假设在不同配置下可以得到一系列日志文件：
-![图片](./imgs/tipc_log_list.png)
+![图片](./images/tipc_log_list.png)
 
 配置文件中存放的有不同输入的预测结果：
-![图片](./imgs/tipc_log_results.png)
+![图片](./images/tipc_log_results.png)
 
 因此，可以分别读取预测日志文件中的预测结果和保存在txt文件中的预测结果，验证两个结果是否是一致的。
 
@@ -388,7 +388,7 @@ python版本    运行脚本和配置文件    参数1    参数2    参数3    
 实际上，params.txt 中完成以上参数的设置，test_train_inference_python.sh 脚本根据params.txt中的配置组建出一条完整的运行命令。
 
 以文本检测样板间[ppocr_det_mobile/train_infer_python.txt](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile_params.txt)为例，文件中前22行为训练相关的参数，如下图：
-![图片](./imgs/train_infer_params.png)
+![图片](./images/train_infer_params.png)
 
 |行号 | 参数 | 参数介绍 | 对应PaddleSeg参数设置 | 
 |---|---|---|---|
@@ -438,7 +438,7 @@ null:null
 
 ### 3.3 inference预测接入自动化测试
 inference 相关的参数在params.txt中的第27行到51行，如下图：
-![](./imgs/train_infer_params_infer.png)
+![](./images/train_infer_params_infer.png)
 
 
 各行参数介绍和修改方式如下：
@@ -523,7 +523,7 @@ status_check() 状态检查函数，获取上条指令运行的状态，如果�
 ```
 同一个模型要测试的组合可以通过一个txt文件管理，如下，构建了一个test_tipc/configs/ppocr_det_mobile/train_infer_python.txt文件 用于管理训练配置。
 
-![](./imgs/train_infer_params_train.png)
+![](./images/train_infer_params_train.png)
 上述部分是test_train_inference_python.sh运行所需要的参数部分，包含正常训练脚本（第16行），量化训练执行脚本（17行），训练所需配置的参数（第4-10行）
 
 在执行test_train_inference_python.sh脚本执行的时候，会解析对应行的参数，如下：
@@ -575,14 +575,14 @@ echo $set_batchsize
 如果value为空格，或者null，则`func_set_params`返回的结果为空格，在组建命令的时候，这个参数就不会生效，因此，如果不希望设置某个参数，可以把参数设置为null。
 
 最终，所有参数可以组合出一个完整的命令，组合方式：
-![](./imgs/train_infer_params_train_run.png)
+![](./images/train_infer_params_train_run.png)
 上图中273行即是组合出的命令，python对应python3.7,  run_train  可以是`ppocr_det_mobile_params.txt`中的`norm_train`，`quant_train`参数后的执行脚本，即要执行正常训练的脚本还是执行量化训练的脚本等等。
 
 ### 4.2 params.txt参数介绍汇总
 文件链接 https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile_params.txt
-![](./imgs/train_infer_params1.png)
-![](./imgs/train_infer_params2.png)
-![](./imgs/train_infer_params3.png)
+![](./images/train_infer_params1.png)
+![](./images/train_infer_params2.png)
+![](./images/train_infer_params3.png)
 
 
 ### 4.4 Mac端接入TIPC测试
@@ -598,7 +598,7 @@ echo $set_batchsize
 
 训练参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)，如下：
 
-![图片](./imgs/mac_train_params.png)
+![图片](./images/mac_train_params.png)
 
 可以对比[Linux端参数配置](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_infer_python.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)发现二者的区别。
 
