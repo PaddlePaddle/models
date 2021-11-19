@@ -1,9 +1,9 @@
 
 # **目录**
 
-#1、总览
+# 1、总览
 
-##1.1 背景
+## 1.1 背景
 训推一体认证（TIPC），旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍TIPC中**多机多卡训练链条**的接入规范和监测点，是在[基础链条](http://agroup.baidu.com/paddlepaddle/md/article/4273691)上针对多机多卡训练链条的补充说明。
 
 主要监控的内容有：
@@ -177,4 +177,4 @@ elif [ ${MODE} = "whole_train_infer" ];then
 
 ## 3.3 其他说明
 
-test_train_inference_python.sh是兼容性修改，理论上所有套件用一套代码,  test_train_inference_python.sh中也做了很多兼容性的改动，如果还有哪些兼容性的问题需要改进，包括使用问题可以先联系陆彬。
+test_train_inference_python.sh是兼容性修改，理论上所有套件用一套代码,  test_train_inference_python.sh中也做了很多兼容性的改动，如果还有哪些兼容性的问题需要改进，包括使用问题可以提issue。
