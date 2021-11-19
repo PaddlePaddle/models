@@ -19,22 +19,22 @@
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
 	- [基础训练预测](./development_specification_docs/train_infer_python.md)
-	- [多机多卡训练]: 待更新
-	- [混合精度训练]: 待更新
+	- [多机多卡训练]
+	- [混合精度训练]
 	- [c++预测](./development_specification_docs/inference_cpp.md)
 	- [Serving](./development_specification_docs/serving.md)
 	- [Lite ARM CPU](./development_specification_docs/Lite_arm_cpu_cpp_infer.md)
 	- [Lite OpenCL ARM GPU](./development_specification_docs/Lite_arm_gpu_opencl_cpp_infer.md)
-	- [Lite Metal ARM GPU]: 待更新
+	- [Lite Metal ARM GPU]
 	- [Paddle2ONNX](./development_specification_docs/paddle2onnx.md)
-	- [Paddle.js]：待更新
-	- [XPU]：待更新
-	- [XPU2]：待更新
-	- [DCU]：待更新
-	- [NPU]：待更新
-	- [Jetson]：待更新
-	- [Windows]：待更新
-	- [MacOS]：待更新
+	- [Paddle.js]
+	- [XPU]
+	- [XPU2]
+	- [DCU]
+	- [NPU]
+	- [Jetson]
+	- [Windows]
+	- [MacOS]
 
 ### 2.2 撰写测试文档
 
