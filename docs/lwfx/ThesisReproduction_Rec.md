@@ -50,7 +50,6 @@
 ## 3. 论文复现理论知识
 可参考[cv部分](https://github.com/PaddlePaddle/models/blob/tipc/docs/lwfx/ThesisReproduction_CV.md)
 
-
 <a name="4"></a>
 ## 4. 论文复现注意事项与FAQ
 
