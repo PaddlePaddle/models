@@ -87,3 +87,6 @@
 
 * 更多关于TIPC的介绍可以参考：[飞桨训推一体认证（TIPC）文档](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/readme.md)
 * 关于Linux端基础链条测试接入的代码与文档说明可以参考：[基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，[PaddleOCR Linux端基础训练预测功能测试文档](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/docs/test_train_inference_python.md)
+
+
+如果您有兴趣，也欢迎为项目集成更多的TIPC测试链条及相关的代码文档，非常感谢您的贡献。
