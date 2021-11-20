@@ -96,7 +96,7 @@
 
 #### 4.1.1 简介
 
-飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了 Arcface 中所有 PaddlePaddle 模型的飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
+飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档以Arcface为例，展示了 PaddlePaddle 模型的飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
 
 #### 4.1.2 具体内容
 
@@ -195,23 +195,22 @@ idx: 16 shape [1, 160, 20, 20]
 | 1/16|[8,9,10,11,12,13]  |
 |1/32 | [14,15,16] |
 
+示例代码：[PaddleDetection CenterNet文档和配置](https://github.com/PaddlePaddle/PaddleDetection/blob/develop/configs/centernet/README_cn.md)
 
 #### 4.3.4 验收方法
 
-* 样板间代码：[PaddleDetection CenterNet文档和配置](https://github.com/PaddlePaddle/PaddleDetection/blob/develop/configs/centernet/README_cn.md)
-* 验收点为：
-    * 更换骨干网络，填写上表中详细内容，提交训练代码、不同骨干网络下的训练日志以及结果表格。
+* 更换骨干网络，填写上表中详细内容，提交训练代码、不同骨干网络下的训练日志以及结果表格。
 
-    |骨干网络 | 模型指标 | 模型训练超参(有变化时需要说明) |
-    |:---:|:---:|:---:|
-    | 原始论文 | 37.4 | - |
-    | GhostNet_x1_3 | 28.9 | batchsize=32 |
-    | PP-LCNet_x1_0 | 26.9 | batchsize=32 |
-    | MobileNetV1_x1_0 | 28.2 | batchsize=32 |
-    | MobileNetV3_large_x1_0 | 27.1 | batchsize=32 |
-    | ShuffleNetV2_x1_0 | 23.8| batchsize=32 |
+|骨干网络 | 模型指标 | 模型训练超参(有变化时需要说明) |
+|:---:|:---:|:---:|
+| 原始论文 | 37.4 | - |
+| GhostNet_x1_3 | 28.9 | batchsize=32 |
+| PP-LCNet_x1_0 | 26.9 | batchsize=32 |
+| MobileNetV1_x1_0 | 28.2 | batchsize=32 |
+| MobileNetV3_large_x1_0 | 27.1 | batchsize=32 |
+| ShuffleNetV2_x1_0 | 23.8| batchsize=32 |
 
-    * 文件夹`test_tipc`目录中的骨干网络验证脚本可以按照文档跑通并验证通过。
+* 文件夹`test_tipc`目录中，将不同骨干网络对应的模型接入基础链条测试规范并验证通过。
 
 
 <a name="5"></a>
