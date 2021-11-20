@@ -2,25 +2,24 @@
 
 Linux端基础训练预测功能测试的主程序为`test_train_inference_python.sh`，可以测试基于Python的模型训练、评估、推理等基本功能，包括裁剪、量化、蒸馏。
 
+
+其中裁剪、量化、蒸馏非必须。
+
 ## 1. 测试结论汇总
 
 - 训练相关：
 
 | 算法名称 | 模型名称 | 单机单卡 | 单机多卡 | 多机多卡 | 模型压缩（单机多卡） |
 |  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |
-|  -  | - | 正常训练 | 正常训练 | 正常训练 | 正常训练：FPGM裁剪、PACT量化 <br> 离线量化（无需训练） |
-
+|  -  | - | - | - | - | - |
 
 
 - 预测相关：基于训练是否使用量化，可以将训练产出的模型可以分为`正常模型`和`量化模型`，这两类模型对应的预测功能汇总如下，
 
 | 模型类型 | device | batchsize | tensorrt | mkldnn | cpu多线程 |
 |  ----   |  ---- |   ----   |  :----:  |   :----:   |  :----:  |
-| 正常模型 | GPU | 1/6 | - | - | - |
-| 正常模型 | CPU | 1/6 | - | - | - |
-| 量化模型 | GPU | 1/6 | - | - | - |
-| 量化模型 | CPU | 1/6 | - | int8 | - |
-
+| - |  | -/- | - | - | - |
+| - | - | -/- | - | - | - |
 
 ## 2. 测试流程
 
@@ -49,19 +48,21 @@ Linux端基础训练预测功能测试的主程序为`test_train_inference_pytho
 
 
 ### 2.2 功能测试
-先运行`prepare.sh`准备数据和模型，然后运行`test_train_inference_python.sh`进行测试，最终在```test_tipc/output```目录下生成`python_infer_*.log`格式的日志文件。
 
+先运行`prepare.sh`准备数据和模型，然后运行`test_train_inference_python.sh`进行测试，最终在`test_tipc/output`目录下生成`python_infer_*.log`格式的日志文件。
 
-`test_train_inference_python.sh`包含5种运行模式，每种模式的运行数据不同，分别用于测试速度和精度，分别是：
+`test_train_inference_python.sh`包含5种运行模式，每种模式的运行数据不同，分别用于测试速度和精度，这里只需要实现模式：`lite_train_lite_infer`，具体说明如下。
 
-- 模式1：lite_train_lite_infer，使用少量数据训练，用于快速验证训练到预测的走通流程，不验证精度和速度；
+- 模式：lite_train_lite_infer，使用少量数据训练，用于快速验证训练到预测的走通流程，不验证精度和速度；
 
 ```shell
+# 准备环境
 bash test_tipc/prepare.sh ./test_tipc/configs/$model_name/train_infer_python.txt 'lite_train_lite_infer'
-bash test_tipc/test_train_inference_python.sh ./test_tipc/configs/ch_ppocr_mobile_v2.0_det/train_infer_python.txt 'lite_train_lite_infer'
+# 基于准备好的配置文件进行验证
+bash test_tipc/test_train_inference_python.sh ./test_tipc/configs/config.txt 'lite_train_lite_infer'
 ```
 
-运行相应指令后，在`test_tipc/output`文件夹下自动会保存运行日志。如'lite_train_lite_infer'模式下，会运行训练+inference的链条，因此，在`test_tipc/output`文件夹有以下文件：
+运行相应指令后，在`test_tipc/output`文件夹下自动会保存运行日志。如`lite_train_lite_infer`模式下，会运行`训练+inference`的链条，因此，在`test_tipc/output`文件夹有以下文件：
 
 ```
 test_tipc/output/
@@ -73,7 +74,7 @@ test_tipc/output/
 其他模式中其中`results_python.log`中包含了每条指令的运行状态，如果运行成功会输出：
 
 ```
-Run successfully with xxxxxx
+Run successfully with xxxxx
 ......
 ```
 
@@ -88,6 +89,7 @@ Run failed with xxxxx
 
 
 ## 3. 更多教程
-本文档为功能测试用，更丰富的训练预测使用教程请参考：  
-[模型训练](../../README.md)  
-[基于Python预测引擎推理](../../deploy/pdinference/README.md)
+本文档为功能测试用，更丰富的训练预测使用教程请参考：
+
+- [模型训练](../../README.md)  
+- [基于Python预测引擎推理](../../deploy/pdinference/README.md)
