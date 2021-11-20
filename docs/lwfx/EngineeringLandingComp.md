@@ -100,10 +100,10 @@
 
 #### 4.1.2 具体内容
 
-* 完成模型的训练、预测、评估、模型预测、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
+* 完成模型的训练、评估、预测、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
     * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
     * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
-* 基于**`TIPC基础链条测试开发文档`**，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`lite_train_lite_infer`模式即可，用于测试TIPC流程的少量数据需要放在当前repo中，同时明确注明来源。参考链接：
+* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`lite_train_lite_infer`模式即可，用于测试TIPC流程的少量数据需要放在当前repo中，同时明确注明来源。参考链接：
     * [insightface TIPC基础链条测试开发文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)
 
 
@@ -209,7 +209,7 @@ idx: 16 shape [1, 160, 20, 20]
     | PP-LCNet_x1_0 | 26.9 | batchsize=32 |
     | MobileNetV1_x1_0 | 28.2 | batchsize=32 |
     | MobileNetV3_large_x1_0 | 27.1 | batchsize=32 |
-    | ShuffleNetV2_x1_0 | 22.2| batchsize=32 |
+    | ShuffleNetV2_x1_0 | 23.8| batchsize=32 |
 
     * 文件夹`test_tipc`目录中的骨干网络验证脚本可以按照文档跑通并验证通过。
 
