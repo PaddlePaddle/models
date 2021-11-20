@@ -36,6 +36,7 @@
     - [4.10 训练集数据读取对齐](#4.9)
     - [4.11 网络初始化对齐](#4.10)
     - [4.12 模型训练对齐](#4.11)
+    - [4.13 TIPC基础链条测试接入](#4.13)
 
 <a name="1"></a>
 ## 1. 总览
@@ -579,6 +580,7 @@ random.seed(config.SEED)
 4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，最终一并打包上传即可。
 
 <a name="3.12"></a>
+
 ### 3.12 单机多卡训练
 
 如果希望使用单机多卡提升训练效率，可以从以下几个过程对代码进行修改。
@@ -667,22 +669,23 @@ python3.7 -m paddle.distributed.launch \
 本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
 
 
+<a name="3.13"></a>
+
 ### 3.13 TIPC基础链条测试接入
 
 **【基本流程】**
 
-* 完成模型的训练、预测、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
+* 完成模型的训练、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
     * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
     * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
-* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成``少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
+* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
 
 
 
 **【注意事项】**
 
-* 基础链条测试接入时，只需要使用验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
+* 基础链条测试接入时，只需要验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
 * 在文档中需要给出一键测试的脚本与使用说明。
-
 
 **【实战】**
 
@@ -883,3 +886,11 @@ w.backward()
 * 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
 * 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
 * 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
+
+
+<a name="4.13"></a>
+
+### 4.13 TIPC基础链条测试接入
+
+* 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
+* 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
