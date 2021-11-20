@@ -42,7 +42,7 @@
 - **deploy：** 部署相关文件夹，目前包含PaddleInference推理文件夹以及PaddleServing服务部署文件夹
 - **tools：** 工具类文件夹，包含训练、评估、预测、模型导出等代码文件
 - **scripts：** 工具类文件夹，包含训练、评估、预测、模型导出等脚本文件
-- **test_tipc：** 训练一体 (TIPC) 测试文件夹
+- **test_tipc：** 训推一体 (TIPC) 测试文件夹，更多关于TIPC的介绍可以参考：[飞桨训推一体认证（TIPC）开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/README.md)
 - **README_en.md：** 中文版当前模型的使用说明，规范参考 README 内容要求
 - **README.md：** 英文版当前模型的使用说明，规范参考 README 内容要求
 - **LICENSE：** LICENSE文件
