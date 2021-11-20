@@ -76,9 +76,9 @@
 
 ![图片](images/framework_reprodcv.png)
 
-总共包含11个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
+总共包含12个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
 
-* 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
+* 第3章：介绍12个复现步骤的理论知识、实战以及验收流程。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 <a name="2.2"></a>
