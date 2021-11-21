@@ -1,4 +1,4 @@
-# 论文复现指南
+# 论文复现赛指南
 
 ## 目录
 
@@ -8,6 +8,7 @@
 - [2. 整体框图](#2)
     - [2.1 流程概览](#2.1)
     - [2.2 reprod_log whl包](#2.2)
+
 - [3. 论文复现理论知识及实战](#3)
     - [3.1 模型结构对齐](#3.1)
     - [3.2 验证/测试集数据读取对齐](#3.2)
@@ -21,6 +22,7 @@
     - [3.10 网络初始化对齐](#3.10)
     - [3.11 模型训练对齐](#3.11)
     - [3.12 单机多卡训练](#3.12)
+    - [3.13 TIPC基础链条测试接入](#3.13)
 - [4. 论文复现注意事项与FAQ](#4)
     - [4.1 通用注意事项](#4.0)
     - [4.2 模型结构对齐](#4.1)
@@ -34,6 +36,7 @@
     - [4.10 训练集数据读取对齐](#4.9)
     - [4.11 网络初始化对齐](#4.10)
     - [4.12 模型训练对齐](#4.11)
+    - [4.13 TIPC基础链条测试接入](#4.13)
 
 <a name="1"></a>
 ## 1. 总览
@@ -59,7 +62,9 @@
     * 在该步骤中，以AlexNet为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/fake_data/gen_fake_data.py)。
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
-* 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加参考代码的实现，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将复现代码与参考代码分成2个文件夹进行管理。
+* 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加`参考代码的实现`，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将**复现代码与参考代码分成2个文件夹进行管理**。
+* 飞桨训推一体认证 (Training and Inference Pipeline Certification, TIPC) 是一个针对飞桨模型的测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。论文训练对齐之后，需要为代码接入TIPC基础链条测试文档与代码，关于TIPC基础链条测试接入规范的文档可以参考：[链接](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)。更多内容在`3.13`章节部分也会详细说明。
+
 
 <a name="2"></a>
 ## 2. 整体框图
@@ -69,11 +74,11 @@
 
 面对一篇计算机视觉论文，复现该论文的整体流程如下图所示。
 
-![图片](images/framework.png)
+![图片](images/framework_reprodcv.png)
 
-总共包含11个步骤。为了高效复现论文，设置了5个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
+总共包含12个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
 
-* 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
+* 第3章：介绍12个复现步骤的理论知识、实战以及验收流程。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 <a name="2.2"></a>
@@ -144,8 +149,12 @@ log_reprod
 ```
 
 上述文件的生成代码都需要开发者进行开发，验收时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
-AlexNet-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，具体代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，
-每个文件夹中的README.md文档提供了使用说明。
+
+AlexNet-Prod项目提供了基于reprod_log的前5个验收点对齐验收示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
+
+InsightFace项目中提供了`TIPC基础链条验收点`的验收示例，参考代码地址为：[https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)，更多关于TIPC基础链条测试接入规范的代码可以参考：[https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)
+
+
 
 <a name="3"></a>
 ## 3. 论文复现理论知识及实战
@@ -571,6 +580,7 @@ random.seed(config.SEED)
 4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，最终一并打包上传即可。
 
 <a name="3.12"></a>
+
 ### 3.12 单机多卡训练
 
 如果希望使用单机多卡提升训练效率，可以从以下几个过程对代码进行修改。
@@ -658,12 +668,42 @@ python3.7 -m paddle.distributed.launch \
 
 本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
 
+
+<a name="3.13"></a>
+
+### 3.13 TIPC基础链条测试接入
+
+**【基本流程】**
+
+* 完成模型的训练、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
+    * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
+    * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
+* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
+
+
+
+**【注意事项】**
+
+* 基础链条测试接入时，只需要验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
+* 在文档中需要给出一键测试的脚本与使用说明。
+
+**【实战】**
+
+TIPC基础链条测试接入用例可以参考：[InsightFace-paddle TIPC基础链条测试开发文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)。
+
+
+**【验收】**
+
+* TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
+
 <a name="4"></a>
+
 ## 4. 论文复现注意事项与FAQ
 
 本部分主要总结大家在论文复现赛过程中遇到的问题，如果本章内容没有能够解决你的问题，欢迎给该文档提出优化建议或者给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)。
 
 <a name="4.0"></a>
+
 ### 4.1 通用注意事项
 
 * 需要仔细对照PaddlePaddle与参考代码的优化器参数实现，确保优化器参数严格对齐。
@@ -680,7 +720,7 @@ torch.stack([
 * 如果遇到Paddle不包含的OP或者API，比如(1) 如果是某些算法实现存在调用了外部OP，而且Paddle也不包含该OP实现；(2) 其他框架存在的API或者OP，但是Paddle中没有这些OP。此时：
     * 对于Paddle资深用户来说，可以尝试使用Paddle的自定义算子功能，存在一定的代码开发量。
     * 对于初学者来说，可以给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，Paddle开发人员会根据优先级进行实现。
-* PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) 。
+* PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) ，关于PaddlePaddle与PyTorch更多API的映射关系可以参考：[API映射表](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/08_api_mapping/pytorch_api_mapping_cn.html)。
 * 对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，是通过`model.to("device")` （局部）来确定模型结构的运行设备，这块在复现的时候需要注意。
 
 
@@ -689,7 +729,7 @@ torch.stack([
 
 #### 4.2.1 API
 * 对于 `paddle.nn.Linear` 层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置，示例代码可以参考[AlexNet权重转换脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/e3855e0b1992332c2765ccf627d0c5f5f68232fe/pipeline/weights/torch2paddle.py#L19)。
-* `paddle.nn.BatchNorm2D` 包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
+* `paddle.nn.BatchNorm2D` 包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`。 其中，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
     * `weight` -> `weight`
     * `bias` -> `bias`
     * `_variance` -> `running_var`
@@ -831,7 +871,7 @@ w.backward()
     * 确认下reader的预处理中是否会出现box（或mask）为空的情况
     * 模型结构中计算loss的部分是否有考虑到正样本为0的情况
     * 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
-* 如果训练过程中如果出现不收敛的情况，可以
+* 如果训练过程中出现不收敛的情况，可以
     * 简化网络和数据，实验是否收敛；
     * 如果是基于原有实现进行改动，可以尝试控制变量法，每次做一个改动，逐个排查；
     * 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
@@ -846,3 +886,11 @@ w.backward()
 * 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
 * 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
 * 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
+
+
+<a name="4.13"></a>
+
+### 4.13 TIPC基础链条测试接入
+
+* 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
+* 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。

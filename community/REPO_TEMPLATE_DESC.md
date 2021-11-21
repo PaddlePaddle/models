@@ -4,17 +4,15 @@
 
 本文示例项目在文件夹[repo_template](./repo_template)下，您可以将这个文件夹中的内容拷贝出去，放在自己的项目文件夹下，并编写对应的代码与文档。
 
+**注意：** 该模板中仅给出了必要的代码结构，剩余部分，如模型组网、损失函数、数据处理等，与参考repo中的结构尽量保持一致，便于复现即可。
+
 ## 1. 目录结构
 
 建议的目录结构如下：
 
 ```
 ./repo_template          # 项目文件夹名称，可以修改为自己的文件夹名称
-|-- config               # 参数配置文件夹
-|-- dataset              # 数据处理代码文件夹
 |-- images               # 测试图片文件夹
-|-- model                # 模型实现文件夹
-|-- utils                # 功能类API文件夹
 |-- deploy               # 预测部署相关
 |   ├── pdinference      # 基于PaddleInference的python推理代码文件夹
 |   ├── pdserving        # 基于PaddleServing的推理代码文件夹
@@ -22,7 +20,7 @@
 |   ├── train.py         # 训练代码文件
 |   ├── eval.py          # 评估代码文件
 |   ├── infer.py         # 预测代码文件
-|   ├── export.py         # 模型导出代码文件
+|   ├── export.py        # 模型导出代码文件
 |-- scripts              # 脚本类文件夹
 |   ├── train.sh         # 训练脚本，需要包含单机单卡和单机多卡训练的方式，单机多卡的训练方式可以以注释的形式给出
 |   ├── eval.sh          # 评估脚本，提供单机单卡的评估方式即可
@@ -34,17 +32,13 @@
 |-- LICENSE              # LICENSE文件
 ```
 
-- **config：** 存储模型配置相关文件的文件夹，保存模型的配置信息，如 `configs.py、configs.yml` 等
-- **dataset：** 存储数据相关文件的文件夹，包含数据下载、数据处理等，如 `dataset_download.py、dataset_process.py` 等
 - **images：** 存储项目相关的图片，首页以及TIPC文档中需要的图像都可以放在这里，如果需要进一步区分功能，可以在里面建立不同的子文件夹。
-- **model：** 存储模型相关代码文件的文件夹，保存模型的实现，如 `resnet.py、cyclegan.py` 等
-- **utils：** 存储功能类相关文件的文件夹，如可视化，文件夹操作，模型保存与加载等
-- **deploy：** 部署相关文件夹，目前包含PaddleInference推理文件夹以及PaddleServing服务部署文件夹
 - **tools：** 工具类文件夹，包含训练、评估、预测、模型导出等代码文件
-- **scripts：** 工具类文件夹，包含训练、评估、预测、模型导出等脚本文件
-- **test_tipc：** 训练一体 (TIPC) 测试文件夹
-- **README_en.md：** 中文版当前模型的使用说明，规范参考 README 内容要求
-- **README.md：** 英文版当前模型的使用说明，规范参考 README 内容要求
+- **deploy：** 推理部署相关的文件夹，Paddle Inference推理、Paddle Serving服务部署、PaddleLite端侧部署的代码都可以放在这里。
+- **scripts：** 脚本类文件夹，包含训练、评估、预测、模型导出等脚本文件。
+- **test_tipc：** 训推一体 (TIPC) 测试文件夹，更多关于TIPC的介绍可以参考：[飞桨训推一体认证（TIPC）开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/README.md)
+- **README_en.md：** 英文版当前模型的使用说明，规范参考 README 内容要求
+- **README.md：** 中文版当前模型的使用说明，规范参考 README 内容要求
 - **LICENSE：** LICENSE文件
 
 ## 2. 功能实现
@@ -178,6 +172,7 @@ class PetDataset(Dataset):
 
 ## 5. 其他问题
 
+- 在repo文档说明的开始，需要添加复现的论文题目、地址以及参考代码的链接，同时建议对参考代码的作者表示感谢；
 - 使用 Paddle 2.x API开发，不使用 `paddle.fluid.*` 下的API；
 - 代码封装得当，易读性好，不用一些随意的变量/类/函数命名
 - 注释清晰，不仅说明做了什么，也要说明为什么这么做
