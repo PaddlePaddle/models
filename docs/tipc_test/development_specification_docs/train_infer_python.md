@@ -17,11 +17,7 @@
 - [4. 附录](#4---)
   * [4.1 common_func.sh 函数介绍](#41-common-funcsh-----)
     + [4.2 params.txt参数介绍汇总](#42-paramstxt------)
-    + [4.4 Mac端接入TIPC测试](#44-mac---tipc--)
-      - [4.4.1 Mac端训练评估接入自动化测试](#441-mac------------)
-      - [4.4.2 Mac端预测接入自动化测试](#441-mac----------)
-    + [4.5 Windows端接入TIPC测试](#45-windows---tipc--)
-    + [4.6 Jeston端接入TIPC测试](#46-jeston---tipc--)
+
 
 <a name="1---"></a>
 # 1、总览
@@ -578,90 +574,5 @@ echo $set_batchsize
 ![](./images/train_infer_params1.png)
 ![](./images/train_infer_params2.png)
 ![](./images/train_infer_params3.png)
-
-<a name="44-mac---tipc--"></a>
-### 4.4 Mac端接入TIPC测试
-
-在第3节：编写自动化测试章节，介绍了linux端如何完成训练、评估、预测的测试。Mac端的测试方法同Linux端。但是由于Mac端没有GPU，并且CPU芯片不支持Mkldnn，因此在Mac端无需测试GPU训练、TensorRT以及mkldnn相关的功能。本节以PaddleOCR为例，介绍如何在Mac端接入TIPC测试。
-
-<a name="441-mac------------"></a>
-#### 4.4.1 Mac端训练评估接入自动化测试
-
-由于Mac上没有GPU，因此只需要测试CPU训练的链条，包括：
-- CPU上正常训练
-- CPU上量化训练
-- CPU上裁剪训练
-
-训练参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)，如下：
-
-![图片](./images/mac_train_params.png)
-
-可以对比[Linux端参数配置](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_infer_python.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)发现二者的区别。
-
-Mac端需要设置不使用GPU训练，可以通过设置gpu_list:-1实现，-1表示使用CPU训练，同时PaddleOCR通过设置Global.use_gpu参数选择是否在GPU上运行，CPU上运行时需要设置为False。另外，Mac端也无需测试混合精度训练，因此，设置混合精度的参数选项Global.auto_cast为null，表示当前参数不生效。
-```
-gpu_list:-1
-Global.use_gpu:False
-Global.auto_cast:null
-```
-
-<a name="442-mac----------"></a>
-#### 4.4.2 Mac端预测接入自动化测试
-
-Mac端预测无需测试TensorRT和Mkldnn相关的预测链条，仅需要测试CPU上运行情况，PaddleOCR DB检测模型关于Mac端预测参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L27-L51)
-
-在参数文件中，将tensorrt，mkldnn相关的参数--use_tensortt 、--enable_mkldnn均设置为False。
-
-<a name="45-windows---tipc--"></a>
-### 4.5 Windows端接入TIPC测试
-
-Windows接入TIPC测试与Linux端接入方法完全相同，因此Windows端的测试方法可以参考第3节：编写自动化测试章节。
-
-PaddleOCR检测模型在Windows上的TIPC配置文件参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile/train_linux_gpu_normal_normal_infer_python_windows_cpu_gpu.txt)
-
-另外，考虑到Windows上和linux的文件路径方式不同，建议在win上安装gitbash终端，在gitbash中执行指令的方式和在linux端执行指令方式相同，更方便tipc测试。gitbash下载[链接](https://git-scm.com/download/win)。
-
-
-<a name="46-jeston---tipc--"></a>
-### 4.6 Jeston端接入TIPC测试
-
-Jeston产品是Nvidia推出的开发者套件，用于部署AI模型。Jeston系列的产品有Jeston Nano, TX，NX等等。本节以PaddleOCR检测模型和JestonNX为例，介绍如何在Jeston上接入TIPC预测推理的测试。
-
-Jeston的CPU性能远差于笔记本或者台式机，因此在Jeston上，只需要测试GPU上预测相关的链条即可，包括GPU预测，GPU+TensorRT(fp32)，GPU+TensorRT(fp16)预测。
-
-Jeston上预测推理的参数如下：
-```
-===========================infer_params===========================
-model_name:ocr_det
-python:python
-infer_model:./inference/ch_ppocr_mobile_v2.0_det_infer
-infer_export:null
-infer_quant:False
-inference:tools/infer/predict_det.py
---use_gpu:True|False
---enable_mkldnn:False
---cpu_threads:1|6
---rec_batch_num:1
---use_tensorrt:False|True
---precision:fp16|fp32
---det_model_dir:
---image_dir:./inference/ch_det_data_50/all-sum-510/
-null:null
---benchmark:True
-null:null
-```
-
-可以发现上图中第5行参数infer_export参数设置为null，表示不执行动转静的逻辑，同样在执行预测参数的选择上，做如下配置：
-```
---use_gpu:True|False
---enable_mkldnn:False
---cpu_threads:1|6
---rec_batch_num:1
---use_tensorrt:False|True
---precision:fp16|fp32
-```
-在Jeston CPU上执行预测时，仅测试CPU不同线程数的情况，由于jeston机器上的CPU不支持开启mlkdnn，所以设置参数--enable_mkldnn为False。
-在Jeston GPU上，需要测试开启TensorRT在不同精度（fp32, fp16）下的预测情况。所以设置--use_tensorrt:False|True， --precision:fp16|fp32。
-
 
 
