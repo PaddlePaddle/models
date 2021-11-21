@@ -19,15 +19,16 @@
     + [4.2 params.txt参数介绍汇总](#42-paramstxt------)
     + [4.4 Mac端接入TIPC测试](#44-mac---tipc--)
       - [4.4.1 Mac端训练评估接入自动化测试](#441-mac------------)
-      - [4.4.1 Mac端预测接入自动化测试](#441-mac----------)
+      - [4.4.2 Mac端预测接入自动化测试](#441-mac----------)
     + [4.5 Windows端接入TIPC测试](#45-windows---tipc--)
     + [4.6 Jeston端接入TIPC测试](#46-jeston---tipc--)
 
-
+<a name="1---"></a>
 # 1、总览
 
 飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
 
+<a name="11----"></a>
 ## 1.1 背景：
 创建一个自动化测试CI机制，监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。
 
@@ -64,6 +65,7 @@
 
 注：由于CI有时间限制，所以在测试的时候需要限制运行时间，所以需要构建一个很小的数据集完成测试。
 
+<a name="12-tipc-----"></a>
 ## 1.2 TIPC自动化测试
 
 本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据模型需要，适当删减链条。
@@ -85,6 +87,7 @@
 	- Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
 	- Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
 
+<a name="13----------"></a>
 ## 1.3 文本检测样板间概览
 
 以飞桨PaddleOCR模型仓库的文本检测模型为例，提供了本规范的样板间，可以跑通1.2章节提到的**所有测试链条**，完成1.1背景部分提到的4种CI/CE机制。
@@ -108,6 +111,7 @@ test_tipc/
 ｜- readme.md  该代码库测试脚本运行说明
 ```
 
+<a name="2-tipc------"></a>
 # 2. TIPC规范接入流程
 TIPC规范接入包含如下三个步骤，接下来将依次介绍这三个部分。
 
@@ -115,6 +119,7 @@ TIPC规范接入包含如下三个步骤，接下来将依次介绍这三个部�
  - 规范化输出日志
  - 编写自动化测试代码
 
+<a name="21-----"></a>
 ## 2.1 准备数据
 由于不同模型所需要的训练、预测数据、预训练模型不同，所以需要一个自动化下载训练数据、预训练模型的脚本，即是prepare.sh 。
 prepare.sh完成命令运行前准备工作，根据不同的运行模式和测试的模型，完成以下功能：
@@ -193,8 +198,10 @@ elif [ ${MODE} = "whole_infer" ];then
         cd ./inference && tar xf ${eval_model_name}.tar && tar xf ch_det_data_50.tar && tar xf ch_ppocr_mobile_v2.0_det_infer.tar && cd ../
 ```
 
+<a name="22--------"></a>
 ## 2.2 规范化输出日志
 
+<a name="221-------"></a>
 ### 2.2.1 训练日志规范
 
 训练日志中，除了打印loss、精度等信息，还需要有以下信息：
@@ -250,6 +257,7 @@ for epoch in range(epochs):
 		reader_start = time.time()
 ```
 
+<a name="222-inference----"></a>
 ### 2.2.2 inference日志规范
 （1）背景
 不同飞桨模型中paddle inference预测输出的格式均不相同，并且inference输出的信息不够完善，在自动化测试的时候，希望有一套规范且完善的信息格式输出。
@@ -329,7 +337,7 @@ python_ppocr_det_mobile_results_fp32.txt
 
 注：如果是fp32精度的预测结果，无论是CPU还是GPU，都不允许有太大的误差。但是如果是fp16精度预测，CPU开mkldnn+fp16精度预测的结果和GPU+tensorrt+fp16预测的结果可能不同。原因是，半精度会导致预测结果的不稳定，甚至导致预测精度下降，在测试半精度的误差时，可以预留更合理的误差范围。
 
-
+<a name="3----------"></a>
 ## 3 编写自动化测试代码
 
 上文提到，自动化测试脚本包括三个部分，分别是运行脚本test_train_inference_python.sh，参数文件txt文件，数据模型准备脚本prepare.sh。
@@ -345,6 +353,7 @@ test_train_inference_python.sh则是自动化测试的运行脚本，根据param
 
 本节将详细介绍如何修改txt参数文件，完成模型训练、评估和测试。运行脚本test_train_inference_python.sh将会在附录中详细介绍。
 
+<a name="31----------"></a>
 ### 3.1 训练接入自动化测试
 test_train_inference_python.sh在运行的时候，会依次解析ppocr_det_mobile_params.txt中的参数，根据ppocr_det_mobile_params.txt参数配置完成命令组合，举例如下：
 
@@ -405,7 +414,7 @@ params.txt中的参数都是可以修改的，可以修改的内容包括：
 
 注：其他模型接入TIPC时，注意:前后不要随意加空格，如果params.txt中的训练参数行数不足以组建运行命令，可以考虑一些参数放在默认训练的配置文件中。如果仍需要添加新的参数，可以考虑扩展null:null的参数行成为新的参数行，或者自行修改test_train_inference_python.sh的代码完成训练配置。
 
-
+<a name="32----------"></a>
 ### 3.2 评估接入自动化测试
 该部分用于评估模型的训练精度。模型训练后可以执行模型评估，如果要评估模型，可以在txt参数文件的第23-26行设置，
 
@@ -419,6 +428,7 @@ null:null
 ##
 ```
 
+<a name="33-inference---------"></a>
 ### 3.3 inference预测接入自动化测试
 inference 相关的参数在params.txt中的第27行到51行，如下图：
 ![](./images/train_infer_params_infer.png)
@@ -488,8 +498,9 @@ python3.7 tools/infer/predict_det.py --use_gpu=True --use_tensorrt=True --precis
  
  - shell中对空格的使用非常严格，= 前后不要加空格
 
-
+<a name="4---"></a>
 # 4. 附录
+<a name="41-common-funcsh-----"></a>
 ## 4.1 common_func.sh 函数介绍
 
 common_func.sh 中包含了5个函数，会被test_train_inference_python.sh 等执行脚本调用，分别是：
@@ -561,17 +572,19 @@ echo $set_batchsize
 ![](./images/train_infer_params_train_run.png)
 上图中273行即是组合出的命令，python对应python3.7,  run_train  可以是`ppocr_det_mobile_params.txt`中的`norm_train`，`quant_train`参数后的执行脚本，即要执行正常训练的脚本还是执行量化训练的脚本等等。
 
+<a name="42-paramstxt------"></a>
 ### 4.2 params.txt参数介绍汇总
 文件链接 https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile_params.txt
 ![](./images/train_infer_params1.png)
 ![](./images/train_infer_params2.png)
 ![](./images/train_infer_params3.png)
 
-
+<a name="44-mac---tipc--"></a>
 ### 4.4 Mac端接入TIPC测试
 
 在第3节：编写自动化测试章节，介绍了linux端如何完成训练、评估、预测的测试。Mac端的测试方法同Linux端。但是由于Mac端没有GPU，并且CPU芯片不支持Mkldnn，因此在Mac端无需测试GPU训练、TensorRT以及mkldnn相关的功能。本节以PaddleOCR为例，介绍如何在Mac端接入TIPC测试。
 
+<a name="441-mac------------"></a>
 #### 4.4.1 Mac端训练评估接入自动化测试
 
 由于Mac上没有GPU，因此只需要测试CPU训练的链条，包括：
@@ -592,12 +605,14 @@ Global.use_gpu:False
 Global.auto_cast:null
 ```
 
-#### 4.4.1 Mac端预测接入自动化测试
+<a name="442-mac----------"></a>
+#### 4.4.2 Mac端预测接入自动化测试
 
 Mac端预测无需测试TensorRT和Mkldnn相关的预测链条，仅需要测试CPU上运行情况，PaddleOCR DB检测模型关于Mac端预测参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L27-L51)
 
 在参数文件中，将tensorrt，mkldnn相关的参数--use_tensortt 、--enable_mkldnn均设置为False。
 
+<a name="45-windows---tipc--"></a>
 ### 4.5 Windows端接入TIPC测试
 
 Windows接入TIPC测试与Linux端接入方法完全相同，因此Windows端的测试方法可以参考第3节：编写自动化测试章节。
@@ -607,7 +622,7 @@ PaddleOCR检测模型在Windows上的TIPC配置文件参考[链接](https://gith
 另外，考虑到Windows上和linux的文件路径方式不同，建议在win上安装gitbash终端，在gitbash中执行指令的方式和在linux端执行指令方式相同，更方便tipc测试。gitbash下载[链接](https://git-scm.com/download/win)。
 
 
-
+<a name="46-jeston---tipc--"></a>
 ### 4.6 Jeston端接入TIPC测试
 
 Jeston产品是Nvidia推出的开发者套件，用于部署AI模型。Jeston系列的产品有Jeston Nano, TX，NX等等。本节以PaddleOCR检测模型和JestonNX为例，介绍如何在Jeston上接入TIPC预测推理的测试。
