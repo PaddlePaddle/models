@@ -32,9 +32,9 @@
 	- [XPU2]
 	- [DCU]
 	- [NPU]
-	- [Jetson]
-	- [Windows]
-	- [MacOS]
+	- [Jetson](./development_specification_docs/Jeston_infer_python.md)
+	- [Windows](./development_specification_docs/Windows_train_infer_python.md)
+	- [MacOS](./development_specification_docs/Mac_train_infer_python.md)
 
 ### 2.2 撰写测试文档
 

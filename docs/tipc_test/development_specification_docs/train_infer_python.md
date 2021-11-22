@@ -1,42 +1,40 @@
 # 基础链条测试接入规范
 
 # 目录
-- 总览
-	- 1.背景
-	- 2.TIPC自动化测试
-	- 3.样本检测样板间概览
-- TIPC规范接入流程
-	- 1.准备数据
-	- 2.规范化输出日志
-		- 2.1 训练日志
-		- 2.2 预测日志
-	- 3.编写自动化测试代码
-		- 3.1 训练接入自动化测试
-		- 3.2 评估接入自动化测试
-		- 3.3 inference预测接入自动化测试
-	- 4.附录
-		- 4.1 自动化测试脚本test_train_inference_python.sh 函数介绍
-		- 4.2 params.txt参数介绍汇总
-		- 4.3 其他说明
-		- 4.4 Mac端接入TIPC测试
-		- 4.5 Windows端接入TIPC测试
-		- 4.6 Jeston端接入TIPC测试
+- [1. 总览](#1---)
+  * [1.1 背景](#11----)
+  * [1.2 TIPC自动化测试](#12-tipc-----)
+  * [1.3 文本检测样板间概览](#13----------)
+- [2. TIPC规范接入流程](#2-tipc------)
+  * [2.1 准备数据](#21-----)
+  * [2.2 规范化输出日志](#22--------)
+    + [2.2.1 训练日志规范](#221-------)
+    + [2.2.2 inference日志规范](#222-inference----)
+  * [3 编写自动化测试代码](#3----------)
+    + [3.1 训练接入自动化测试](#31----------)
+    + [3.2 评估接入自动化测试](#32----------)
+    + [3.3 inference预测接入自动化测试](#33-inference---------)
+- [4. 附录](#4---)
+  * [4.1 common_func.sh 函数介绍](#41-common-funcsh-----)
+  * [4.2 params.txt参数介绍汇总](#42-paramstxt------)
 
 
-# 1、总览
+<a name="1---"></a>
+# 1. 总览
 
-飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了PaddleOCR中所有模型的飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
+飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
 
-## 1.1 背景：
+<a name="11----"></a>
+## 1.1 背景
 创建一个自动化测试CI机制，监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。
 
 主要监控的内容有：
 
- - 框架更新后，套件模型的正常训练，量化训练、裁剪训练、评估、动转静、推理预测是否能正常走通；（比如API的不兼容升级）
- - 框架更新后，套件模型的预测速度是否合理；
- - 框架更新后，套件模型训练的精度是否达标，或训练的loss出现nan等。
+ - 框架更新后，飞桨模型仓库的正常训练，量化训练、裁剪训练、评估、动转静、推理预测是否能正常走通；（比如API的不兼容升级）
+ - 框架更新后，飞桨模型仓库的预测速度是否合理；
+ - 框架更新后，飞桨模型仓库训练的精度是否达标，或训练的loss出现nan等。
  - 其他
-为了能监控上述问题，希望把套件模型的训练、预测TIPC加到框架的CI和CE中，提升PR合入的质量。因此，需要在套件中加入运行脚本（不影响套件正常运行），完成模型的自动化测试。
+为了能监控上述问题，希望把飞桨模型仓库中模型的训练、预测TIPC加到框架的CI和CE中，提升PR合入的质量。因此，需要在模型中加入运行脚本（不影响模型正常运行），完成模型的自动化测试。
 
 可以建立的CI/CE机制包括：
 
@@ -55,38 +53,40 @@
 	 a. 保证训练跑通；训练速度正常（监控batch_cost），训练精度达到既定值
 	 b. 训练资源占用合理（显存）
 	 c. 保证训练可复现，loss曲线收敛正常（固定seed后loss一致）
-	 d. 保证训练后模型动转静→inference预测跑通，预测结果正确，预测速度符合预期，预测资源占用合理（监控显存内存）
+	 d. 保证训练后模型动转静 → inference预测跑通，预测结果正确，预测速度符合预期，预测资源占用合理（监控显存内存）
  
  4. **不训练，全量数据走通开源模型评估、预测，并验证模型预测速度和精度是否符合设定预期；(whole_infer)（单模型30分钟内)**
-	 a. 保证训练后模型动转静→inference预测跑通，预测结果正确，预测速度符合预期，预测资源占用合理（监控显存内存）
+	 a. 保证训练后模型动转静 → inference预测跑通，预测结果正确，预测速度符合预期，预测资源占用合理（监控显存内存）
 
 
 注：由于CI有时间限制，所以在测试的时候需要限制运行时间，所以需要构建一个很小的数据集完成测试。
 
+<a name="12-tipc-----"></a>
 ## 1.2 TIPC自动化测试
 
-本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据套件需要，适当删减链条。
+本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据模型需要，适当删减链条。
 ![pipline](./images/pipline.png)
 
 上图各模块具体测试点如下：
 
 - 模型训练方面（Linux GPU 和 Linux CPU都需要验证）：
-	- 单机单卡**（必选）**
-	- 单机多卡**（必选）**
+	- 单机单卡（**必选**）
+	- 单机多卡（**必选**）
 
 - 模型压缩方面（Linux GPU 和 Linux CPU都需要验证）：
 	- 裁剪训练（可选）
 	- 在线量化训练（可选）
 	- 离线量化（可选）
 	
-- 飞桨模型转换，即动转静功能**（必选）**
+- 飞桨模型转换，即动转静功能（必选）
 - Paddle inference 预测部署方面：
-	- Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
-	- Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
+	- Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
+	- Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
 
+<a name="13----------"></a>
 ## 1.3 文本检测样板间概览
 
-在PaddleOCR中，以文本检测为例，提供了本规范的样板间，可以跑通1.2章节提到的**所有测试链条**，完成1.1背景部分提到的4种CI/CE机制。
+以飞桨PaddleOCR模型仓库的文本检测模型为例，提供了本规范的样板间，可以跑通1.2章节提到的**所有测试链条**，完成1.1背景部分提到的4种CI/CE机制。
 
 脚本位于PaddleOCR dygraph分支下的test_tipc文件夹：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 
@@ -107,6 +107,7 @@ test_tipc/
 ｜- readme.md  该代码库测试脚本运行说明
 ```
 
+<a name="2-tipc------"></a>
 # 2. TIPC规范接入流程
 TIPC规范接入包含如下三个步骤，接下来将依次介绍这三个部分。
 
@@ -114,6 +115,7 @@ TIPC规范接入包含如下三个步骤，接下来将依次介绍这三个部�
  - 规范化输出日志
  - 编写自动化测试代码
 
+<a name="21-----"></a>
 ## 2.1 准备数据
 由于不同模型所需要的训练、预测数据、预训练模型不同，所以需要一个自动化下载训练数据、预训练模型的脚本，即是prepare.sh 。
 prepare.sh完成命令运行前准备工作，根据不同的运行模式和测试的模型，完成以下功能：
@@ -177,7 +179,7 @@ klquant_infer： 测试测试离线量化功能和量化inference model的预测
 
 （2）由于测试某个模型CI CE有多种模式，不同模式的区别在于训练和测试数据不同，所以在自动下载某个模式的数据时，如果不同数据文件名字不一致，可以通过ln -s 创建软链，确保训练时可以通过配置文件里的默认数据路径加载到数据。例如文本检测样板间中，在whole_train_infer模式下，先删除本地数据集，然后重新下载新的数据集icdar2015.tar 并完成解压。
 
-（3）各套件同学在接入时，prepare.sh中的model_name 判断条件以及下载内容的代码需要自行修改，以便在自己的套件中测试。在文本检测样板间中，在infer 模式下，会从配置文件中解析到模型名称，根据不同的模型名称选择下载不同的数据，比如，model_name为ocr_det时，选择下载ch_det_data_50.tar 和 ch_ppocr_mobile_v2.0_det_infer.tar 。
+（3）在接入TIPC时，prepare.sh中的model_name 判断条件以及下载内容的代码需要自行修改，以便在自己的模型代码中测试。在文本检测样板间中，在infer 模式下，会从配置文件中解析到模型名称，根据不同的模型名称选择下载不同的数据，比如，model_name为ocr_det时，选择下载ch_det_data_50.tar 和 ch_ppocr_mobile_v2.0_det_infer.tar 。
 
 下图是文本检测样本间部分片段代码。
 ```
@@ -192,26 +194,10 @@ elif [ ${MODE} = "whole_infer" ];then
         cd ./inference && tar xf ${eval_model_name}.tar && tar xf ch_det_data_50.tar && tar xf ch_ppocr_mobile_v2.0_det_infer.tar && cd ../
 ```
 
+<a name="22--------"></a>
 ## 2.2 规范化输出日志
 
-目前，Paddle各模型对性能统计，方法各异，没有统一规范，甚至有统计不准问题存在：
-
-1. 计算不准确
-  - reader时间未算入耗时统计。
-  - 未连续统计，每N个Step打印第N个Step的batch_cost。
-  - 将耗时逻辑算入耗时统计内，耗时逻辑如中途模型保存、中途eval。
-2. 打印格式不统一
-  - 打印单位各异，如：steps/s, s/step,samples/s等
-  - 打印描述各异，如：time、batch_cost、speed等等
-
-这导致：
-1. 性能数据无可信度
-2. Paddle模型间性能数据不具备可对比性（统计方法不一致）
-3. 模型与竞品性能数据不具备可对比性
-
-因此，需要对训练和预测的日志给出一个统一的性能统计规范。
-
-
+<a name="221-------"></a>
 ### 2.2.1 训练日志规范
 
 训练日志中，除了打印loss、精度等信息，还需要有以下信息：
@@ -237,7 +223,7 @@ elif [ ${MODE} = "whole_infer" ];then
 `avg_batch_cost = avg_reader_cost + sum(T1, T2,...Tn) / N`
 `avg_samples = sum(S1, S2,...Sn) / N`
 `avg_ips = samples / batch_cost `
-ips 单位如：images/sec、sequences/sec、tokens/sec、words/sec、frames/sec等，单位与竞品保持一致。
+ips 单位如：images/sec、sequences/sec、tokens/sec、words/sec、frames/sec等。
 
 - 训练日志规范代码示例，或可参考[PaddleOCR代码示例](https://github.com/PaddlePaddle/PaddleOCR/blob/790b5b0b22c2389f10e4f0f6bc828a207be95209/tools/program.py?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L286)
 ```
@@ -267,9 +253,10 @@ for epoch in range(epochs):
 		reader_start = time.time()
 ```
 
+<a name="222-inference----"></a>
 ### 2.2.2 inference日志规范
 （1）背景
-不同套件中paddle inference预测输出的格式均不相同，并且inference输出的信息不够完善，在自动化测试的时候，希望有一套规范且完善的信息格式输出。
+不同飞桨模型中paddle inference预测输出的格式均不相同，并且inference输出的信息不够完善，在自动化测试的时候，希望有一套规范且完善的信息格式输出。
 
 要求规范输出的信息中除了预测结果输出，还包括以下信息：
 
@@ -283,7 +270,7 @@ for epoch in range(epochs):
 
 （2）预测格式化输出
 
-为了方便格式化输出inference预测log、统计预测过程中内存显存等信息，并且统一标准和减少对套件代码的改动，开发了AutoLog工具包，用于统计以上信息和格式化输出。
+为了方便格式化输出inference预测log、统计预测过程中内存显存等信息，并且统一标准和减少对代码的改动，开发了AutoLog工具包，用于统计以上信息和格式化输出。
 auto_log安装方式参考https://github.com/LDOUBLEV/AutoLog
 ```
 git clone https://github.com/LDOUBLEV/AutoLog
@@ -346,7 +333,7 @@ python_ppocr_det_mobile_results_fp32.txt
 
 注：如果是fp32精度的预测结果，无论是CPU还是GPU，都不允许有太大的误差。但是如果是fp16精度预测，CPU开mkldnn+fp16精度预测的结果和GPU+tensorrt+fp16预测的结果可能不同。原因是，半精度会导致预测结果的不稳定，甚至导致预测精度下降，在测试半精度的误差时，可以预留更合理的误差范围。
 
-
+<a name="3----------"></a>
 ## 3 编写自动化测试代码
 
 上文提到，自动化测试脚本包括三个部分，分别是运行脚本test_train_inference_python.sh，参数文件txt文件，数据模型准备脚本prepare.sh。
@@ -362,6 +349,7 @@ test_train_inference_python.sh则是自动化测试的运行脚本，根据param
 
 本节将详细介绍如何修改txt参数文件，完成模型训练、评估和测试。运行脚本test_train_inference_python.sh将会在附录中详细介绍。
 
+<a name="31----------"></a>
 ### 3.1 训练接入自动化测试
 test_train_inference_python.sh在运行的时候，会依次解析ppocr_det_mobile_params.txt中的参数，根据ppocr_det_mobile_params.txt参数配置完成命令组合，举例如下：
 
@@ -370,7 +358,7 @@ PaddleOCR 文本检测模型的训练运行命令是：
 ```
 python3.7 tools/train.py -c configs/det/det_mv3_db.yml -o Global.pretrained_model=./pretrain_models/  Global.use_gpu=True Global.auto_cast=False Global.epoch_num=10 Global.save_model_dir=./test/output/
 ```
-虽然不同套件的训练运行方式差异较大，但是都可以拆分为三个部分：
+虽然不同模型的训练运行方式差异较大，但是都可以拆分为三个部分：
 ```
 python   run_script    set_configs
 ```
@@ -383,7 +371,7 @@ set_configs 即是 Global.pretrained_model=./pretrain_models/  Global.use_gpu=Tr
 ```
 python版本    运行脚本和配置文件    参数1    参数2    参数3    参数4   参数5 
 ```
-所有套件的运行方式都可以按照上述格式组建出一条完整的运行命令。完成命令组建后，在shell脚本中通过eval $cmd 指令即可完成指令的运行。
+所有模型的运行方式都可以按照上述格式组建出一条完整的运行命令。完成命令组建后，在shell脚本中通过eval $cmd 指令即可完成指令的运行。
 
 实际上，params.txt 中完成以上参数的设置，test_train_inference_python.sh 脚本根据params.txt中的配置组建出一条完整的运行命令。
 
@@ -395,13 +383,13 @@ python版本    运行脚本和配置文件    参数1    参数2    参数3    
 |2 | model_name:ocr_det | 定义了model_name: ocr_det ，ocr_det也是prepare.sh中用于区分其他模型的名称 | model_name:hrnetw18_small_v1 | 
 |3 | python:python3.7 | 定义了python版本： 默认使用python3.7，也可以改为python3, python3.6等等 | python:python3.7 | 
 |4 | gpu_list:0｜0,1 | 第4行定义了GPU列表：0表示用0号GPU，0，1表示用0卡和1卡分布式训练，不同配置中间用｜分割开；如果在3，4卡运行，可以设置为 gpu_list:3，4 | gpu_list:0｜0,1 | 
-|5 | Global.use_gpu:True｜True | 定义了参数设置：根据gpu_list的配置设置是否使用GPU，如果套件没有这个参数，可以设置为null，当前行的null数量和第四行的配置数量相同，比如null｜null; | Global.use_gpu:null|null | 
+|5 | Global.use_gpu:True｜True | 定义了参数设置：根据gpu_list的配置设置是否使用GPU，如果模型没有这个参数，可以设置为null，当前行的null数量和第四行的配置数量相同，比如null｜null; | Global.use_gpu:null|null | 
 |6 | Global.auto_cast:null | 定义了混合精度训练参数设置：如果测试混合精度训练和非混合精度训练，可以设置为True｜False，如果没有这个参数，可以设置为null，让该参数不生效； |  Global.auto_cast:null| 
-|7 | Global.epoch_num:lite_train_lite_infer=1｜whole_train_whole_infer=300 | 定义了epoch 设置参数：设置epoch数量，有的套件可能是设置iter数量，都是一个意思，由于不同模式需要的epoch或iter数量不一致，需要设置不同模式下的epoch数；量，:lite_train_lite_infer=2｜whole_train_whole_infer=300表示lite_train_lite_infer模式下是2，whole_train_whole_infer模式下设置为300，不设置的话，默认用配置文件里的参数； | --iters:lite_train_lite_infer=50|lite_train_whole_infer=50|whole_train_whole_infer=1000 | 
+|7 | Global.epoch_num:lite_train_lite_infer=1｜whole_train_whole_infer=300 | 定义了epoch 设置参数：设置epoch数量，有的模型可能是设置iter数量，都是一个意思，由于不同模式需要的epoch或iter数量不一致，需要设置不同模式下的epoch数；量，:lite_train_lite_infer=2｜whole_train_whole_infer=300表示lite_train_lite_infer模式下是2，whole_train_whole_infer模式下设置为300，不设置的话，默认用配置文件里的参数； | --iters:lite_train_lite_infer=50|lite_train_whole_infer=50|whole_train_whole_infer=1000 | 
 |8 | Global.save_model_dir:./output/ | 定义了保存模型设置参数：需要修改:之前的关键字 | --save_dir: | 
 |9 | Train.loader.batch_size_per_card:lite_train_lite_infer=2｜whole_train_whole_infer=4 | 定义batch_size设置参数：同第7行使用方式相同； | --batch_size:lite_train_lite_infer=2｜whole_train_whole_infer=8 | 
 |10 | Global.pretrained_model:null | 定义了加载预训练模型 设置参数：如果不需要加载预训练模型，可以不用修改，：后可以设置为null | Global.pretrained_model:null | 
-|11 | train_model_name:latest | 定义了保存模型的名字，目前不同套件保存的模型名字五花八门，为了保证能正确加载到模型，需要这个参数指定到具体的参数名称 | train_model_name:best_model/model.pdparams | 
+|11 | train_model_name:latest | 定义了保存模型的名字，目前不同模型保存的模型名字五花八门，为了保证能正确加载到模型，需要这个参数指定到具体的参数名称 | train_model_name:best_model/model.pdparams | 
 |12 | train_infer_img_dir:./train_data/icdar2015/text_localization/ch4_test_images/ | 定义了训练后执行预测的数据路径，不需要设置数据路径的话，value部分设置为null； | train_infer_img_dir:test_tipc/data/mini_supervisely/test.txt | 
 |13 | null:null | 为预留的参数位置，如果需要设置其他参数，可以按照格式 params_key:params_value 修改为想要的参数； | null:null | 
 | 14| ## | 占位符 | ## | 
@@ -422,7 +410,7 @@ params.txt中的参数都是可以修改的，可以修改的内容包括：
 
 注：其他模型接入TIPC时，注意:前后不要随意加空格，如果params.txt中的训练参数行数不足以组建运行命令，可以考虑一些参数放在默认训练的配置文件中。如果仍需要添加新的参数，可以考虑扩展null:null的参数行成为新的参数行，或者自行修改test_train_inference_python.sh的代码完成训练配置。
 
-
+<a name="32----------"></a>
 ### 3.2 评估接入自动化测试
 该部分用于评估模型的训练精度。模型训练后可以执行模型评估，如果要评估模型，可以在txt参数文件的第23-26行设置，
 
@@ -436,6 +424,7 @@ null:null
 ##
 ```
 
+<a name="33-inference---------"></a>
 ### 3.3 inference预测接入自动化测试
 inference 相关的参数在params.txt中的第27行到51行，如下图：
 ![](./images/train_infer_params_infer.png)
@@ -457,7 +446,7 @@ inference 相关的参数在params.txt中的第27行到51行，如下图：
 |38 | infer_export:null | 是否执行37行设置的模型执行动转静，null表示不执行 | infer_export:export.py --config test_tipc/fcn_hrnetw18_small_v1_humanseg_192x192_mini_supervisely.yml | 
 |39 | infer_quant:False | 37行设置的模型路径是否是量化模型 | infer_quant:False | 
 |40 | inference:tools/infer/predict_det.py | inference执行的脚本 | inference:deploy/python/infer.py | 
-| 41| --use_gpu:True｜False | 设置GPU的参数，其他套件可能是device参数，用于设置不同硬件的参数，作用类似。设置多个配置时，中间用｜隔开，会分别运行不同配置下的预测 | --device:cpu｜gpu| 
+| 41| --use_gpu:True｜False | 设置GPU的参数，其他模型可能是device参数，用于设置不同硬件的参数，作用类似。设置多个配置时，中间用｜隔开，会分别运行不同配置下的预测 | --device:cpu｜gpu| 
 |42|--enable_mkldnn:True｜False | 设置是否开启mkldnn，使用方式同41行 | --enable_mkldnn:True｜False |  
 |43|--cpu_threads:1｜6 | 设置CPU线程数，如果要测试CPU上不同线程下的预测速度和精度，可以设置多个值，不同值用｜隔开 | --cpu_threads:1｜6 |  
 | 44| --rec_batch_num:1 | 设置batch_size 的参数，使用方法同43行 | --batch_size:1 | 
@@ -472,7 +461,7 @@ inference 相关的参数在params.txt中的第27行到51行，如下图：
 **注意：上表中由于格式原因，参数名字前的`—` 实际上应该是`--`。`｜`是英文输入下的	`|`.** 
 
 
-inference预测大多都是通过arg parse传入参数的方式，并且不同套件预测的超参数命名也不尽相同。
+inference预测大多都是通过arg parse传入参数的方式，并且不模型预测的超参数命名也不尽相同。
 
 文本检测样板间执行预测的命令格式是：
 ```
@@ -505,8 +494,9 @@ python3.7 tools/infer/predict_det.py --use_gpu=True --use_tensorrt=True --precis
  
  - shell中对空格的使用非常严格，= 前后不要加空格
 
-
+<a name="4---"></a>
 # 4. 附录
+<a name="41-common-funcsh-----"></a>
 ## 4.1 common_func.sh 函数介绍
 
 common_func.sh 中包含了5个函数，会被test_train_inference_python.sh 等执行脚本调用，分别是：
@@ -578,92 +568,11 @@ echo $set_batchsize
 ![](./images/train_infer_params_train_run.png)
 上图中273行即是组合出的命令，python对应python3.7,  run_train  可以是`ppocr_det_mobile_params.txt`中的`norm_train`，`quant_train`参数后的执行脚本，即要执行正常训练的脚本还是执行量化训练的脚本等等。
 
-### 4.2 params.txt参数介绍汇总
+<a name="42-paramstxt------"></a>
+## 4.2 params.txt参数介绍汇总
 文件链接 https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile_params.txt
 ![](./images/train_infer_params1.png)
 ![](./images/train_infer_params2.png)
 ![](./images/train_infer_params3.png)
-
-
-### 4.4 Mac端接入TIPC测试
-
-在第3节：编写自动化测试章节，介绍了linux端如何完成训练、评估、预测的测试。Mac端的测试方法同Linux端。但是由于Mac端没有GPU，并且CPU芯片不支持Mkldnn，因此在Mac端无需测试GPU训练、TensorRT以及mkldnn相关的功能。本节以PaddleOCR为例，介绍如何在Mac端接入TIPC测试。
-
-#### 4.4.1 Mac端训练评估接入自动化测试
-
-由于Mac上没有GPU，因此只需要测试CPU训练的链条，包括：
-- CPU上正常训练
-- CPU上量化训练
-- CPU上裁剪训练
-
-训练参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)，如下：
-
-![图片](./images/mac_train_params.png)
-
-可以对比[Linux端参数配置](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_infer_python.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L1-L26)发现二者的区别。
-
-Mac端需要设置不使用GPU训练，可以通过设置gpu_list:-1实现，-1表示使用CPU训练，同时PaddleOCR通过设置Global.use_gpu参数选择是否在GPU上运行，CPU上运行时需要设置为False。另外，Mac端也无需测试混合精度训练，因此，设置混合精度的参数选项Global.auto_cast为null，表示当前参数不生效。
-```
-gpu_list:-1
-Global.use_gpu:False
-Global.auto_cast:null
-```
-
-#### 4.4.1 Mac端预测接入自动化测试
-
-Mac端预测无需测试TensorRT和Mkldnn相关的预测链条，仅需要测试CPU上运行情况，PaddleOCR DB检测模型关于Mac端预测参数配置参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/bc95e05de88dc7484bc2ed1bb11069455c49ec94/test_tipc/configs/ppocr_det_mobile/train_linux_cpu_normal_normal_infer_python_mac_cpu.txt?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L27-L51)
-
-在参数文件中，将tensorrt，mkldnn相关的参数--use_tensortt 、--enable_mkldnn均设置为False。
-
-### 4.5 Windows端接入TIPC测试
-
-Windows接入TIPC测试与Linux端接入方法完全相同，因此Windows端的测试方法可以参考第3节：编写自动化测试章节。
-
-PaddleOCR检测模型在Windows上的TIPC配置文件参考[链接](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile/train_linux_gpu_normal_normal_infer_python_windows_cpu_gpu.txt)
-
-另外，考虑到Windows上和linux的文件路径方式不同，建议在win上安装gitbash终端，在gitbash中执行指令的方式和在linux端执行指令方式相同，更方便tipc测试。gitbash下载[链接](https://git-scm.com/download/win)。
-
-
-
-### 4.6 Jeston端接入TIPC测试
-
-Jeston产品是Nvidia推出的开发者套件，用于部署AI模型。Jeston系列的产品有Jeston Nano, TX，NX等等。本节以PaddleOCR检测模型和JestonNX为例，介绍如何在Jeston上接入TIPC预测推理的测试。
-
-Jeston的CPU性能远差于笔记本或者台式机，因此在Jeston上，只需要测试GPU上预测相关的链条即可，包括GPU预测，GPU+TensorRT(fp32)，GPU+TensorRT(fp16)预测。
-
-Jeston上预测推理的参数如下：
-```
-===========================infer_params===========================
-model_name:ocr_det
-python:python
-infer_model:./inference/ch_ppocr_mobile_v2.0_det_infer
-infer_export:null
-infer_quant:False
-inference:tools/infer/predict_det.py
---use_gpu:True|False
---enable_mkldnn:False
---cpu_threads:1|6
---rec_batch_num:1
---use_tensorrt:False|True
---precision:fp16|fp32
---det_model_dir:
---image_dir:./inference/ch_det_data_50/all-sum-510/
-null:null
---benchmark:True
-null:null
-```
-
-可以发现上图中第5行参数infer_export参数设置为null，表示不执行动转静的逻辑，同样在执行预测参数的选择上，做如下配置：
-```
---use_gpu:True|False
---enable_mkldnn:False
---cpu_threads:1|6
---rec_batch_num:1
---use_tensorrt:False|True
---precision:fp16|fp32
-```
-在Jeston CPU上执行预测时，仅测试CPU不同线程数的情况，由于jeston机器上的CPU不支持开启mlkdnn，所以设置参数--enable_mkldnn为False。
-在Jeston GPU上，需要测试开启TensorRT在不同精度（fp32, fp16）下的预测情况。所以设置--use_tensorrt:False|True， --precision:fp16|fp32。
-
 
 
