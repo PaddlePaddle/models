@@ -2,7 +2,7 @@
 
 # 目录
 - [1、总览](#1---)
-  * [1.1 背景：](#11----)
+  * [1.1 背景](#11----)
   * [1.2 TIPC自动化测试](#12-tipc-----)
   * [1.3 文本检测样板间概览](#13----------)
 - [2. TIPC规范接入流程](#2-tipc------)
@@ -16,7 +16,7 @@
     + [3.3 inference预测接入自动化测试](#33-inference---------)
 - [4. 附录](#4---)
   * [4.1 common_func.sh 函数介绍](#41-common-funcsh-----)
-    + [4.2 params.txt参数介绍汇总](#42-paramstxt------)
+  * [4.2 params.txt参数介绍汇总](#42-paramstxt------)
 
 
 <a name="1---"></a>
@@ -25,7 +25,7 @@
 飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
 
 <a name="11----"></a>
-## 1.1 背景：
+## 1.1 背景
 创建一个自动化测试CI机制，监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。
 
 主要监控的内容有：
@@ -569,7 +569,7 @@ echo $set_batchsize
 上图中273行即是组合出的命令，python对应python3.7,  run_train  可以是`ppocr_det_mobile_params.txt`中的`norm_train`，`quant_train`参数后的执行脚本，即要执行正常训练的脚本还是执行量化训练的脚本等等。
 
 <a name="42-paramstxt------"></a>
-### 4.2 params.txt参数介绍汇总
+## 4.2 params.txt参数介绍汇总
 文件链接 https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/configs/ppocr_det_mobile_params.txt
 ![](./images/train_infer_params1.png)
 ![](./images/train_infer_params2.png)
