@@ -72,8 +72,8 @@
 	
 - 飞桨模型转换，即动转静功能（**必选**）
 - Paddle inference 预测部署方面：
-	- Windows GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
-	- Windows CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
+	- Windows GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
+	- Windows CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
 
 
 <a name="13----------"></a>
