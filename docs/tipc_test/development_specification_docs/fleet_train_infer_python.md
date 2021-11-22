@@ -3,7 +3,7 @@
 ## 目录
 - [1.总览](#总览)
     - [1.1 背景](#背景)
-    - [1.2 全链条自动化测试](#全链条自动化测试)
+    - [1.2 TIPC自动化测试](#TIPC自动化测试)
     - [1.3 文本检测样板间概览](#文本检测样板间概览)
 - [2.TIPC规范接入多机多卡流程](#TIPC规范接入多机多卡流程)
     - [2.1 准备数据和环境](#准备数据和环境)
@@ -11,7 +11,7 @@
     - [2.3 编写自动化测试代码](#编写自动化测试代码)
 
 <a name="概述"></a>
-# 1、总览
+# 1. 总览
 
 <a name="背景"></a>
 ## 1.1 背景
@@ -47,17 +47,17 @@
 ![](./images/fleet_pipeline.png)
 
 - 模型训练方面: (只需要考虑Linux GPU)
-    - Docker镜像**（必选）**
-    - 分布式镜像 (可选)
+    - Docker镜像（**必选**）
+    - 分布式镜像 （可选）
     - k8s镜像 (可选)
 - 模型压缩方面:
     - 裁剪训练（可选）
     - 在线量化训练（可选）
     - 离线量化（可选）
-- 飞桨模型转换，即动转静功能**（必选）**
+- 飞桨模型转换，即动转静功能(**必选**)
 - Paddle inference 预测部署方面：
-    - Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
-    - Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态**（必选）**
+    - Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态(**必选**)
+    - Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态(**必选**)
 
 <a name="文本检测样板间概览"></a>
 ## 1.3 文本检测样板间概览
@@ -103,7 +103,7 @@ TIPC规范接入包含如下三个步骤，接下来将依次介绍这三个部�
 
 - 准备编译或者编译好的第三方库等
 
-prepare.sh的代码内容如下，参考链接https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/prepare.sh：
+prepare.sh的代码内容如下，[参考链接](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/prepare.sh)
 ```
 if [ ${MODE} = "lite_train_lite_infer" ];then
     # pretrain lite train data
