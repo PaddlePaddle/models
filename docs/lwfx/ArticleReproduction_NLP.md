@@ -1,5 +1,11 @@
 # 论文复现指南
 
+> 本文为针对 `NLP` 方向的复现赛指南
+>
+> 如果希望查阅 `CV` 方向的复现赛指南，可以参考：[./ArticleReproduction_CV.md](./ArticleReproduction_CV.md)
+> 
+> 如果希望查阅 `推荐` 方向的复现赛指南，可以参考：[./ArticleReproduction_REC.md](./ArticleReproduction_REC.md)
+
 ## 目录
 
 - [1. 总览](#1)
