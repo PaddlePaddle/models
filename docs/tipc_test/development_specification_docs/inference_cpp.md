@@ -5,7 +5,7 @@
 - [1.总览](#总览)
 	- [1.1 全链条自动化测试](#全链条自动化测试)
 	- [1.2 文本检测样板间概览](#文本检测样板间概览)
-- [2.全链条规范接入流程](#全链条规范接入流程)
+- [2.C++预测接入TIPC流程](#C++预测接入TIPC流程)
 	- [2.1 规范化输出预测日志](#规范化输出预测日志)
 	- [2.2 准备测试模型和数据](#准备测试模型和数据)
 	- [2.3 编写自动化测试代码](#编写自动化测试代码)
@@ -13,7 +13,7 @@
 
 <a name="概述"></a>
 ## 0. 概述
-训推一体认证（TIPC）旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍TIPC中**C++预测测试**的接入规范和监测点，是在[基础测试]()上针对C++测试的补充说明。
+训推一体认证（TIPC）旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍TIPC中**C++预测测试**的接入规范和监测点，是在[基础测试](train_infer_python.md)上针对C++测试的补充说明。
 
 主要监控的内容有：
 
@@ -32,6 +32,7 @@
 <a name="总览"></a>
 ## 1. 总览
 
+<a name="全链条自动化测试"></a>
 ### 1.1 全链条自动化测试
 
 本规范测试的链条如下（其中相邻两个模块之间是两两组合关系），可以根据代码仓库需要，适当删减链条。
@@ -47,6 +48,7 @@
 	- **Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（必选）**
 	- Win GPU，macOS CPU和Win CPU（可选）
 
+<a name="文本检测样板间概览"></a>
 ### 1.2 文本检测样板间概览
 
 在PaddleOCR中，以文本检测为例，提供了本规范的样板间，可以完成概述部分提到的1种CI/CE机制。
@@ -59,8 +61,8 @@ test_tipc/
     ├── ch_ppocr_mobile_v2.0_det      # ch_ppocr_mobile_v2.0_det模型的测试配置文件目录
         ├── model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt     # 测试Linux上c++预测的配置文件
 ├── results/   # 预先保存的预测结果，用于和实际预测结果进行精读比对
-	├── cpp_ppocr_det_mobile_results_fp32.txt       # 预存的mobile版ppocr检测模型c++预测的fp32精度的结果
-	├── cpp_ppocr_det_mobile_results_fp16.txt       # 预存的mobile版ppocr检测模型c++预测的fp16精度的结果
+    ├── cpp_ppocr_det_mobile_results_fp32.txt       # 预存的mobile版ppocr检测模型c++预测的fp32精度的结果
+    ├── cpp_ppocr_det_mobile_results_fp16.txt       # 预存的mobile版ppocr检测模型c++预测的fp16精度的结果
 ├── prepare.sh                        # 完成test_*.sh运行所需要的数据和模型下载
 ├── test_inference_cpp.sh             # 测试c++预测的主程序
 ├── compare_results.py                # 用于对比log中的预测结果与results中的预存结果精度误差是否在限定范围内
@@ -179,7 +181,7 @@ C++预测的自动化测试代码在脚本[test_inference_cpp.sh](https://github
 
 C++预测自动化测试的运行命令如下：
 ```shell
-bash test_tipc/test_inference_cpp.sh test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt
+bash test_tipc/test_inference_cpp.sh test_tipc/configs/ch_ppocr_mobile_v2.0_det/model_linux_gpu_normal_normal_infer_cpp_linux_gpu_cpu.txt
 ```
 
 理论上只需要修改配置文件和`prepare.sh`就可以完成自动化测试，本节将详细介绍如何修改配置文件，完成C++预测测试。运行脚本`test_inference_cpp.sh`将会在附录中详细介绍。
