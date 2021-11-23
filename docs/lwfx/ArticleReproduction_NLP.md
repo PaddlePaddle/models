@@ -334,7 +334,7 @@ if __name__ == "__main__":
 **【实战】**
 
 BERT模型组网正确性验证可以参考如下示例代码：
-[https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1](https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1
+[https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1](https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1)
 
 **【验收】**
 
