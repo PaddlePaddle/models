@@ -1,8 +1,8 @@
-# 论文复现指南
+# 论文复现赛指南-推荐方向
 
 > 本文为针对 `推荐` 方向的复现赛指南
 > 
-> 如果希望查阅 `CV` 方向的复现赛指南，可以参考：[CV方向论文复现赛指南](./ArticleReproduction_REC.md)
+> 如果希望查阅 `CV` 方向的复现赛指南，可以参考：[CV方向论文复现赛指南](./ArticleReproduction_CV.md)
 > 
 > 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
 
