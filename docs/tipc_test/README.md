@@ -19,7 +19,7 @@
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
 	- [基础训练预测](./development_specification_docs/train_infer_python.md)
-	- [多机多卡训练]
+	- [多机多卡训练](./development_specification_docs/fleet_train_infer_python.md)
 	- [混合精度训练]
 	- [c++预测](./development_specification_docs/inference_cpp.md)
 	- [Serving](./development_specification_docs/serving.md)
