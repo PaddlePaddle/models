@@ -150,15 +150,16 @@ whole_train_whole_infer:  全量数据训练，全量数据预测，验证模型
 
 混合精度训练测试要求规范输出预测结果及以下信息：
 
-当前的GPU型号，Paddle版本
-运行配置信息，是否开启了IR 优化、TRT、MKLDNN，以及具体使用的线程数
-运行的模型名称
-运行的数据信息，包括batch size，数据量
-性能信息，CPU占用内存，GPU显存、利用率信息，inference各阶段平均预测时间
-输入数据的FP32和FP16的inference结果，用于校验inference结果的正确性
+- 当前的GPU型号，Paddle版本
+- 运行配置信息，是否开启了IR 优化、TRT、MKLDNN，以及具体使用的线程数
+- 运行的模型名称
+- 运行的数据信息，包括batch size，数据量
+- 性能信息，CPU占用内存，GPU显存、利用率信息，inference各阶段平均预测时间
+ -输入数据的FP32和FP16的inference结果，用于校验inference结果的正确性
 
 ### 2.2.2 接入步骤
 该部分除了需要完成[基础链条](./train_infer_python.md)的接入步骤外，还需要在代码里面增加对Paddle框架混合精度训练功能的支持。
+
 自动混合精度训练的介绍及接入方法可参考：[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html)
 
 <a name="编写自动化测试代码"></a>
