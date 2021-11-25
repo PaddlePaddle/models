@@ -82,6 +82,7 @@
 * 完成模型的训练、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
     * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
     * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
+    * [PaddleRecInference使用文档](https://github.com/PaddlePaddle/PaddleRec/blob/master/doc/inference.md)
 * 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
 
 
