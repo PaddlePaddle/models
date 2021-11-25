@@ -205,7 +205,7 @@ idx: 16 shape [1, 160, 20, 20]
 | 原始论文 | 37.4 | - |
 | MobileNetV1_x1_0 | 28.2 | batchsize=32 |
 | MobileNetV3_large_x1_0 | 27.1 | batchsize=32 |
-| MobileNetV3_small_x1_0 | `coming soon` | batchsize=32 |
+| MobileNetV3_small_x1_0 | 17.0% | batchsize=32 |
 | ShuffleNetV2_x1_0 | 23.8| batchsize=32 |
 
 * 文件夹`test_tipc`目录中，将不同骨干网络对应的模型接入基础链条测试规范并验证通过。
