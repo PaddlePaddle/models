@@ -1,8 +1,8 @@
-# 论文复现赛指南-CV方向
+# 论文复现赛指南-NLP方向
 
-> 本文为针对 `CV` 方向的复现赛指南
+> 本文为针对 `NLP` 方向的复现赛指南
 >
-> 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
+> 如果希望查阅 `CV` 方向的复现赛指南，可以参考：[CV方向论文复现赛指南](./ArticleReproduction_CV.md)
 > 
 > 如果希望查阅 `推荐` 方向的复现赛指南，可以参考：[推荐方向论文复现赛指南](./ArticleReproduction_REC.md)
 
@@ -14,7 +14,6 @@
 - [2. 整体框图](#2)
     - [2.1 流程概览](#2.1)
     - [2.2 reprod_log whl包](#2.2)
-
 - [3. 论文复现理论知识及实战](#3)
     - [3.1 模型结构对齐](#3.1)
     - [3.2 验证/测试集数据读取对齐](#3.2)
@@ -30,18 +29,18 @@
     - [3.12 单机多卡训练](#3.12)
     - [3.13 TIPC基础链条测试接入](#3.13)
 - [4. 论文复现注意事项与FAQ](#4)
-    - [4.1 通用注意事项](#4.0)
-    - [4.2 模型结构对齐](#4.1)
-    - [4.3 验证/测试集数据读取对齐](#4.2)
-    - [4.4 评估指标对齐](#4.3)
-    - [4.5 损失函数对齐](#4.4)
-    - [4.6 优化器对齐](#4.5)
-    - [4.6 学习率对齐](#4.6)
-    - [4.8 正则化策略对齐](#4.7)
-    - [4.9 反向对齐](#4.8)
-    - [4.10 训练集数据读取对齐](#4.9)
-    - [4.11 网络初始化对齐](#4.10)
-    - [4.12 模型训练对齐](#4.11)
+    - [4.1 通用注意事项](#4.1)
+    - [4.2 模型结构对齐](#4.2)
+    - [4.3 验证/测试集数据读取对齐](#4.3)
+    - [4.4 评估指标对齐](#4.4)
+    - [4.5 损失函数对齐](#4.5)
+    - [4.6 优化器对齐](#4.6)
+    - [4.6 学习率对齐](#4.7)
+    - [4.8 正则化策略对齐](#4.8)
+    - [4.9 反向对齐](#4.9)
+    - [4.10 训练集数据读取对齐](#4.10)
+    - [4.11 网络初始化对齐](#4.11)
+    - [4.12 模型训练对齐](#4.12)
     - [4.13 TIPC基础链条测试接入](#4.13)
 
 <a name="1"></a>
@@ -60,14 +59,14 @@
 
 基于本指南复现论文过程中，建议开发者准备以下内容。
 
-* 了解该模型输入输出格式。以AlexNet图像分类任务为例，通过阅读论文与参考代码，了解到模型输入为`[batch_size, 3, 224, 244]`的tensor，类型为`float32`或者`float16`，label为`[batch, ]`的label，类型为`int64`。
+* 了解该模型输入输出格式。以BERT的情感分类任务为例，通过阅读论文与参考代码，了解到模型输入为`[batch_size, sequence_length]`的tensor，类型为`int64`，label为`[batch, ]`的label，类型为`int64`。
 * 准备好训练/验证数据集，用于模型训练与评估
 * 准备好fake input data以及label，与模型输入shape、type等保持一致，用于后续模型前向对齐。
     * 在对齐模型前向过程中，我们不需要考虑数据集模块等其他模块，此时使用fake data是将模型结构和数据部分解耦非常合适的一种方式。
     * 将fake data以文件的形式存储下来，也可以保证PaddlePaddle与参考代码的模型结构输入是完全一致的，更便于排查问题。
-    * 在该步骤中，以AlexNet为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/fake_data/gen_fake_data.py)。
+    * 在该步骤中，以BERT为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/fake_data/gen_fake_data.py)。
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
-* 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
+* 本文档基于 `BERT-SST2-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[BERT-SST2-Prod文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/README.md)进行安装与测试。
 * 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加`参考代码的实现`，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将**复现代码与参考代码分成2个文件夹进行管理**。
 * 飞桨训推一体认证 (Training and Inference Pipeline Certification, TIPC) 是一个针对飞桨模型的测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。论文训练对齐之后，需要为代码接入TIPC基础链条测试文档与代码，关于TIPC基础链条测试接入规范的文档可以参考：[链接](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)。更多内容在`3.13`章节部分也会详细说明。
 
@@ -78,7 +77,7 @@
 <a name="2.1"></a>
 ### 2.1 流程概览
 
-面对一篇计算机视觉论文，复现该论文的整体流程如下图所示。
+面对一篇自然语言处理的论文，复现该论文的整体流程如下图所示。
 
 ![图片](images/framework_reprodcv.png)
 
@@ -102,7 +101,7 @@
 
 #### 2.2.2 reprod_log使用demo
 
-下面基于代码：[https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/reprod_log_demo](https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/reprod_log_demo)，给出如何使用该工具。
+下面基于代码：[https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/reprod_log_demo](https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/reprod_log_demo)，给出如何使用该工具。
 
 文件夹中包含`write_log.py`和`check_log_diff.py`文件，其中`write_log.py`中给出了`ReprodLogger`类的使用方法，`check_log_diff.py`给出了`ReprodDiffHelper`类的使用方法，依次运行两个python文件，使用下面的方式运行代码。
 
@@ -110,19 +109,19 @@
 # 进入文件夹
 cd pipeline/reprod_log_demo
 # 随机生成矩阵，写入文件中
-python3.7 write_log.py
+python write_log.py
 # 进行文件对比，输出日志
-python3.7 check_log_diff.py
+python check_log_diff.py
 ```
 
 最终会输出以下内容
 
 ```
-2021-09-28 01:07:44,832 - reprod_log.utils - INFO - demo_test_1:
-2021-09-28 01:07:44,832 - reprod_log.utils - INFO -     mean diff: check passed: True, value: 0.0
-2021-09-28 01:07:44,832 - reprod_log.utils - INFO - demo_test_2:
-2021-09-28 01:07:44,832 - reprod_log.utils - INFO -     mean diff: check passed: False, value: 0.3336232304573059
-2021-09-28 01:07:44,832 - reprod_log.utils - INFO - diff check failed
+[2021/11/18 09:29:31] root INFO: demo_test_1:
+[2021/11/18 09:29:31] root INFO:     mean diff: check passed: True, value: 0.0
+[2021/11/18 09:29:31] root INFO: demo_test_2:
+[2021/11/18 09:29:31] root INFO:     mean diff: check passed: False, value: 0.33387675881385803
+[2021/11/18 09:29:31] root INFO: diff check failed
 ```
 
 可以看出：对于key为`demo_test_1`的矩阵，由于diff为0，小于设置的阈值`1e-6`，核验成功；对于key为`demo_test_2`的矩阵，由于diff为0.33，大于设置的阈值`1e-6`，核验失败。
@@ -141,7 +140,7 @@ log_reprod
 ├── bp_align_paddle.npy
 ├── bp_align_torch.npy   # 与bp_align_paddle.npy作为一并核查的文件对
 ├── train_align_paddle.npy
-├── train_align_benchmark.npy # PaddlePaddle提供的参考评估指标
+├── train_align_torch.npy # pytorch运行得到的参考评估指标
 ```
 
 基于reprod_log的`ReprodDiffHelper`模块，产出下面5个日志文件。
@@ -151,12 +150,12 @@ log_reprod
 ├── metric_diff.log      # metric_paddle.npy与metric_torch.npy生成的diff结果文件
 ├── loss_diff.log          # loss_paddle.npy与loss_torch.npy生成的diff结果文件
 ├── bp_align_diff.log    # bp_align_paddle.npy与bp_align_torch.npy生成的diff结果文件
-├── train_align_diff.log # train_align_paddle.npy与train_align_benchmark.npy生成的diff结果文件
+├── train_align_diff.log # train_align_paddle.train_align_torch.npy生成的diff结果文件
 ```
 
 上述文件的生成代码都需要开发者进行开发，验收时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
 
-AlexNet-Prod项目提供了基于reprod_log的前5个验收点对齐验收示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
+BERT-SST2-Prod项目提供了基于reprod_log的5个验收点对齐验收示例，具体代码地址为：[https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline](https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline)，每个文件夹中的README.md文档提供了使用说明。
 
 InsightFace项目中提供了`TIPC基础链条验收点`的验收示例，参考代码地址为：[https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)，更多关于TIPC基础链条测试接入规范的代码可以参考：[https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)
 
@@ -189,10 +188,9 @@ InsightFace项目中提供了`TIPC基础链条验收点`的验收示例，参考
 
 **【实战】**
 
-AlexNet网络结构的PyTorch实现: [alexnet-pytorch](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_torch/torchvision/models/alexnet.py)
+BERT网络结构的PyTorch实现: [transformers-bert](https://github.com/huggingface/transformers/blob/master/src/transformers/models/bert/modeling_bert.py)
 
-对应转换后的PaddlePaddle实现: [alexnet-paddle](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step1/AlexNet_paddle/paddlevision/models/alexnet.py)
-
+对应转换后的PaddlePaddle实现: [paddlenlp-bert](https://github.com/PaddlePaddle/PaddleNLP/blob/develop/paddlenlp/transformers/bert/modeling.py)
 
 #### 3.1.2 权重转换
 
@@ -206,38 +204,123 @@ AlexNet网络结构的PyTorch实现: [alexnet-pytorch](https://github.com/little
 
 **【实战】**
 
-AlexNet的代码转换脚本可以在这里查看：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py)，
+BERT的代码转换脚本可以在这里查看：[https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/weights/torch2paddle.py](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/weights/torch2paddle.py)，
 
-注意：运行该代码需要首先下载PyTorch的AlexNet预训练模型到该目录下，下载地址为：[https://download.pytorch.org/models/alexnet-owt-7be5be79.pth](https://download.pytorch.org/models/alexnet-owt-7be5be79.pth)
+注意：运行该代码需要首先下载Huggingface的BERT预训练模型到该目录下，下载地址为：[https://huggingface.co/bert-base-uncased/blob/main/pytorch_model.bin](https://huggingface.co/bert-base-uncased/blob/main/pytorch_model.bin)
 
 ```python
-# https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/weights/torch2paddle.py
+# https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/weights/torch2paddle.py
+
+from collections import OrderedDict
 
 import numpy as np
-import torch
 import paddle
+import torch
+from paddlenlp.transformers import BertForPretraining as PDBertForMaskedLM
+from transformers import BertForMaskedLM as PTBertForMaskedLM
 
-def transfer():
-    input_fp = "alexnet-owt-7be5be79.pth"
-    output_fp = "alexnet_paddle.pdparams"
-    torch_dict = torch.load(input_fp)
-    paddle_dict = {}
-    fc_names = [
-        "classifier.1.weight", "classifier.4.weight", "classifier.6.weight"
-    ]
-    for key in torch_dict:
-        weight = torch_dict[key].cpu().detach().numpy()
-        flag = [i in key for i in fc_names]
-        if any(flag):
-            print("weight {} need to be trans".format(key))
-            weight = weight.transpose()
-        paddle_dict[key] = weight
-    paddle.save(paddle_dict, output_fp)
 
-transfer()
+def convert_pytorch_checkpoint_to_paddle(
+        pytorch_checkpoint_path="pytorch_model.bin",
+        paddle_dump_path="model_state.pdparams",
+        version="old", ):
+    hf_to_paddle = {
+        "embeddings.LayerNorm": "embeddings.layer_norm",
+        "encoder.layer": "encoder.layers",
+        "attention.self.query": "self_attn.q_proj",
+        "attention.self.key": "self_attn.k_proj",
+        "attention.self.value": "self_attn.v_proj",
+        "attention.output.dense": "self_attn.out_proj",
+        "intermediate.dense": "linear1",
+        "output.dense": "linear2",
+        "attention.output.LayerNorm": "norm1",
+        "output.LayerNorm": "norm2",
+        "predictions.decoder.": "predictions.decoder_",
+        "predictions.transform.dense": "predictions.transform",
+        "predictions.transform.LayerNorm": "predictions.layer_norm",
+    }
+    do_not_transpose = []
+    if version == "old":
+        hf_to_paddle.update({
+            "predictions.bias": "predictions.decoder_bias",
+            ".gamma": ".weight",
+            ".beta": ".bias",
+        })
+        do_not_transpose = do_not_transpose + ["predictions.decoder.weight"]
+
+    pytorch_state_dict = torch.load(
+        pytorch_checkpoint_path, map_location="cpu")
+    paddle_state_dict = OrderedDict()
+    for k, v in pytorch_state_dict.items():
+        is_transpose = False
+        if k[-7:] == ".weight":
+            # embeddings.weight and LayerNorm.weight do not transpose
+            if all(d not in k for d in do_not_transpose):
+                if ".embeddings." not in k and ".LayerNorm." not in k:
+                    if v.ndim == 2:
+                        v = v.transpose(0, 1)
+                        is_transpose = True
+        oldk = k
+        for hf_name, pd_name in hf_to_paddle.items():
+            k = k.replace(hf_name, pd_name)
+
+        # add prefix `bert.`
+        if "bert." not in k and "cls." not in k and "classifier" not in k:
+            k = "bert." + k
+
+        print(f"Converting: {oldk} => {k} | is_transpose {is_transpose}")
+        paddle_state_dict[k] = v.data.numpy()
+
+    paddle.save(paddle_state_dict, paddle_dump_path)
+
+
+def compare(out_torch, out_paddle):
+    out_torch = out_torch.detach().numpy()
+    out_paddle = out_paddle.detach().numpy()
+    assert out_torch.shape == out_paddle.shape
+    abs_dif = np.abs(out_torch - out_paddle)
+    mean_dif = np.mean(abs_dif)
+    max_dif = np.max(abs_dif)
+    min_dif = np.min(abs_dif)
+    print("mean_dif:{}".format(mean_dif))
+    print("max_dif:{}".format(max_dif))
+    print("min_dif:{}".format(min_dif))
+
+
+def test_forward():
+    paddle.set_device("cpu")
+    model_torch = PTBertForMaskedLM.from_pretrained("./bert-base-uncased")
+    model_paddle = PDBertForMaskedLM.from_pretrained("./bert-base-uncased")
+    model_torch.eval()
+    model_paddle.eval()
+    np.random.seed(42)
+    x = np.random.randint(
+        1, model_paddle.bert.config["vocab_size"], size=(4, 64))
+    input_torch = torch.tensor(x, dtype=torch.int64)
+    out_torch = model_torch(input_torch)[0]
+
+    input_paddle = paddle.to_tensor(x, dtype=paddle.int64)
+    out_paddle = model_paddle(input_paddle)[0]
+
+    print("torch result shape:{}".format(out_torch.shape))
+    print("paddle result shape:{}".format(out_paddle.shape))
+    compare(out_torch, out_paddle)
+
+
+if __name__ == "__main__":
+    convert_pytorch_checkpoint_to_paddle(
+        "./bert-base-uncased/pytorch_model.bin",
+        "./bert-base-uncased/model_state.pdparams")
+    test_forward()
+    # torch result shape:torch.Size([4, 64, 30522])
+    # paddle result shape:[4, 64, 30522]
+    # mean_dif:1.666686512180604e-05
+    # max_dif:0.00015211105346679688
+    # min_dif:0.0
 ```
 
-运行完成之后，会在当前目录生成`alexnet_paddle.pdparams`文件，即为转换后的PaddlePaddle预训练模型。
+运行完成之后，会在当前目录生成`model_state.pdparams`文件，即为转换后的PaddlePaddle预训练模型。
+**Tips**: 由于paddlenlp中已有转换后的bert-base-uncased模型，因此可以一键加载，程序会自动下载对应权重！
 
 
 #### 3.1.3 模型组网正确性验证
@@ -252,13 +335,12 @@ transfer()
 
 * 模型在前向对齐验证时，需要调用`model.eval()`方法，保证组网中的随机量被关闭，比如BatchNorm、Dropout等。
 * 给定相同的输入数据，为保证可复现性，如果有随机数生成，固定相关的随机种子。
-* 输出diff可以使用`np.mean(np.abs(o1 - o2))`进行计算，一般小于1e-6的话，可以认为前向没有问题。如果最终输出结果diff较大，可以使用二分的方法进行排查，比如说ResNet50，包含1个stem、4个res-stage、global avg-pooling以及最后的fc层，那么完成模型组网和权重转换之后，如果模型输出没有对齐，可以尝试输出中间某一个res-stage的tensor进行对比，如果相同，则向后进行排查；如果不同，则继续向前进行排查，以此类推，直到找到导致没有对齐的操作。
+* 输出diff可以使用`np.mean(np.abs(o1 - o2))`进行计算，一般小于1e-6的话，可以认为前向没有问题。如果最终输出结果diff较大，可以使用二分的方法进行排查，比如说BERT，包含1个embdding层、12个transformer-block以及最后的MLM head层，那么完成模型组网和权重转换之后，如果模型输出没有对齐，可以尝试输出中间某一个transformer-block的tensor进行对比，如果相同，则向后进行排查；如果不同，则继续向前进行排查，以此类推，直到找到导致没有对齐的操作。
 
 **【实战】**
 
-AlexNet模型组网正确性验证可以参考如下示例代码：
-[https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1](https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1)
-
+BERT模型组网正确性验证可以参考如下示例代码：
+[https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1](https://github.com/JunnYu/BERT-SST2-Prod/tree/main/pipeline/Step1)
 
 **【验收】**
 
@@ -268,9 +350,9 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
     * 使用参考代码的dataloader，生成一个batch的数据，保存下来，在前向对齐时，直接从文件中读入。
     * 固定随机数种子，生成numpy随机矩阵，转化tensor
 2. 保存输出：
-    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为tensor的值。最后将dict保存到文件中。建议命名为`forward_paddle.npy`和`forward_pytorch.npy`。
+    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为tensor的值。最后将dict保存到文件中。建议命名为`forward_paddle.npy`和`forward_torch.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`forward_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：新建文件夹，将`forward_paddle.npy`、`forward_pytorch.npy`与`forward_diff_log.txt`文件放在文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+4. 提交内容：新建文件夹，将`forward_paddle.npy`、`forward_torch.npy`与`forward_diff_log.txt`文件放在文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 5. 注意：
     * PaddlePaddle与PyTorch保存的dict的key需要保持相同，否则report过程可能会提示key无法对应，从而导致report失败，之后的`【验收】`环节也是如此。
     * 如果是固定随机数种子，建议将fake data保存到dict中，方便check参考代码和PaddlePaddle的输入是否一致。
@@ -283,9 +365,7 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 对于一个数据集，一般有以下一些信息需要重点关注
 
 * 数据集名称、下载地址
-* 训练集/验证集/测试集图像数量、类别数量、分辨率等
-* 数据集标注格式、标注信息
-* 数据集通用的预处理方法
+* 训练集/验证集/测试集
 
 PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，PyTorch中对应为`torch.utils.data.Dataset`，二者功能一致，在绝大多数情况下，可以使用该类构建数据集。它是描述Dataset方法和行为的抽象类，在具体实现的时候，需要继承这个基类，实现其中的`__getitem__`和`__len__`方法。除了参考代码中相关实现，也可以参考待复现论文中的说明。
 
@@ -297,34 +377,35 @@ PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，PyTorch中对应为
 
 论文中一般会提供数据集的名称以及基本信息。复现过程中，我们在下载完数据之后，建议先检查下是否和论文中描述一致，否则可能存在的问题有：
 
-* 数据集年份不同，比如论文中使用了MS-COCO2014数据集，但是我们下载的是MS-COCO2017数据集，如果不对其进行检查，可能会导致我们最终训练的数据量等与论文中有diff
+* 数据集版本不同，比如论文中使用了cnn_dailymail的v3.0.0版本数据集，但是我们下载的是cnn_dailymail的v1.0.0版本数据集，如果不对其进行检查，可能会导致我们最终训练的数据量等与论文中有diff
 * 数据集使用方式不同，有些论文中，可能只是抽取了该数据集的子集进行方法验证，此时需要注意抽取方法，需要保证抽取出的子集完全相同。
 * 在评估指标对齐时，我们可以固定batch size，关闭Dataloader的shuffle操作。
 
-构建数据集时，也会涉及到一些预处理方法，以CV领域为例，PaddlePaddle提供了一些现成的视觉类操作api，具体可以参考：[paddle.vision类API](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)。对应地，PyTorch中的数据处理api可以参考：[torchvision.transforms类API](https://pytorch.org/vision/stable/transforms.html)。对于其中之一，可以找到另一个平台的实现。
+构建数据集时，可以使用PaddleNLP中的数据集加载方式，具体可以参考：[如何自定义数据集](https://paddlenlp.readthedocs.io/zh/latest/data_prepare/dataset_self_defined.html)。对应地，PyTorch中的数据处理api可以参考：[huggingface的datasets自定义数据集](https://huggingface.co/docs/datasets/about_dataset_load.html#building-a-dataset)。对于其中之一，可以找到另一个平台的实现。
 
 此外，
 * 有些自定义的数据处理方法，如果不涉及到深度学习框架的部分，可以直接复用。
-* 对于特定任务中的数据预处理方法，比如说图像分类、检测、分割等，如果没有现成的API可以调用，可以参考官方模型套件中的一些实现方法，比如PaddleClas、PaddleDetection、PaddleSeg等。
+* 对于特定任务中的数据预处理方法，比如说Tokenizer，如果没有现成的API可以调用，可以参考PaddleNLP套件中的一些实现方法，比如``BertTokenizer``, ``XLNetTokenizer``等。
 
 **【实战】**
 
-AlexNet模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考该文件：
-[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py)
+BERT模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考该文件：
+[https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step2/test_data.py](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step2/test_data.py)
 
 
-使用方法可以参考[数据检查文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)。
+使用方法可以参考[数据检查文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step2/README.md)。
 
 <a name="3.3"></a>
 ### 3.3 评估指标对齐
 
 **【基本流程】**
 
-PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Precision`, `Recall`等，而PyTorch中，目前可以通过组合的方式实现metric计算，或者调用[torchmetrics](https://torchmetrics.readthedocs.io/en/latest/)，在论文复现的过程中，需要注意保证对于该模块，给定相同的输入，二者输出完全一致。具体流程如下。
+PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Precision`, `Recall`等，而PyTorch中，目前可以通过组合的方式实现metric计算，或者调用[huggingface-datasets](https://huggingface.co/docs/datasets/about_metrics.html?highlight=metric)，在论文复现的过程中，需要注意保证对于该模块，给定相同的输入，二者输出完全一致。具体流程如下。
 
-1. 定义PyTorch模型，加载训练好的权重（需要是官网repo提供好的），获取评估结果，使用reprod_log保存结果。
-2. 定义PaddlePaddle模型，加载训练好的权重（需要是从PyTorch转换得到），获取评估结果，使用reprod_log保存结果。
-3. 使用reprod_log排查diff，小于阈值，即可完成自测。
+1. 构建fake数据
+2. 使用PyTorch的指标获取评估结果，使用reprod_log保存结果。
+3. 使用PaddlePaddle的指标获取评估结果，使用reprod_log保存结果。
+4. 使用reprod_log排查diff，小于阈值，即可完成自测。
 
 **【注意事项】**
 
@@ -333,7 +414,7 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
 
 **【实战】**
 
-评估指标对齐检查方法可以参考文档：[评估指标对齐检查方法文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md#%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4)
+评估指标对齐检查方法可以参考文档：[评估指标对齐检查方法文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step2/README.md#%E6%95%B0%E6%8D%AE%E8%AF%84%E4%BC%B0%E5%AF%B9%E9%BD%90%E6%B5%81%E7%A8%8B)
 
 
 **【验收】**
@@ -342,9 +423,9 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
 
 1. 输入：dataloader, model
 2. 输出：
-    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`metric_paddle.npy`和`metric_pytorch.npy`。
+    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`metric_paddle.npy`和`metric_torch.npy`。
     * 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`metric_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-3. 提交内容：将`metric_paddle.npy`、`metric_pytorch.npy`与`metric_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+3. 提交内容：将`metric_paddle.npy`、`metric_torch.npy`与`metric_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 4. 注意：
     * 数据需要是真实数据
     * 需要检查论文是否只是抽取了验证集/测试集中的部分文件，如果是的话，则需要保证PaddlePaddle和参考代码中dataset使用的数据集一致。
@@ -372,7 +453,7 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 **【实战】**
 
-本部分可以参考文档：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step3/README.md](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step3/README.md)。
+本部分可以参考文档：[https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step3/README.md](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step3/README.md)。
 
 **【验收】**
 
@@ -380,9 +461,9 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 1. 输入：fake data & label
 2. 输出：
-    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`loss_paddle.npy`和`loss_pytorch.npy`。
+    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`loss_paddle.npy`和`loss_torch.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`loss_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`loss_paddle.npy`、`loss_pytorch.npy`与`loss_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+4. 提交内容：将`loss_paddle.npy`、`loss_torch.npy`与`loss_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 
 <a name="3.5"></a>
 ### 3.5 优化器对齐
@@ -416,7 +497,7 @@ PaddlePaddle中，需要首先构建学习率策略，再传入优化器对象�
 
 **【实战】**
 
-学习率复现对齐，可以参考代码：[学习率对齐验证文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step4/README.md#%E5%AD%A6%E4%B9%A0%E7%8E%87%E5%AF%B9%E9%BD%90%E9%AA%8C%E8%AF%81)。
+学习率复现对齐，可以参考代码：[学习率对齐验证文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step4/README.md#%E5%AD%A6%E4%B9%A0%E7%8E%87%E5%AF%B9%E9%BD%90%E9%AA%8C%E8%AF%81)。
 
 <a name="3.7"></a>
 ### 3.7 正则化策略对齐
@@ -427,8 +508,8 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 
 **【注意事项】**
 
-* PaddlePaddle的optimizer中支持L1Decat/L2Decay。
-* PyTorch的optimizer支持不同参数列表的学习率分别设置，params传入字典即可，而PaddlePaddle目前尚未支持这种行为，可以通过设置`ParamAttr`的`learning_rate`参数，来确定相对学习率倍数，使用链接可以参考：[PaddleClas-ResNet model](https://github.com/PaddlePaddle/PaddleClas/blob/d67a352fcacc49ae6bbc7d1c7158e2c65f8e06d9/ppcls/arch/backbone/legendary_models/resnet.py#L121)。
+* PaddlePaddle的optimizer中支持L1Decay/L2Decay。
+* PyTorch的optimizer支持不同参数列表的学习率分别设置，params传入字典即可，而PaddlePaddle的2.1.0版本目前尚未支持这种行为，可以通过设置`ParamAttr`的`learning_rate`参数，来确定相对学习率倍数。PaddlePaddle的2.2.0版本中虽然实现该功能，但是模型收敛速度较慢，不建议使用。[优化器收敛速度慢](https://github.com/PaddlePaddle/Paddle/issues/36915)
 
 **【实战】**
 
@@ -455,30 +536,43 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 梯度的打印方法示例代码如下所示，注释掉的内容即为打印网络中所有参数的梯度shape。
 
 ```python
-    # 代码地址：https://github.com/littletomatodonkey/AlexNet-Prod/blob/63184b258eda650e7a8b7f2610b55f4337246630/pipeline/Step4/AlexNet_paddle/train.py#L93
-    loss_list = []
-    for idx in range(max_iter):
-        image = paddle.to_tensor(fake_data)
-        target = paddle.to_tensor(fake_label)
+    # 代码地址：https://github.com/JunnYu/BERT-SST2-Prod/blob/2c372656bb1b077b0073c50161771d9fa9d8de5a/pipeline/Step4/test_bp.py#L12
+    def pd_train_some_iters(model,
+                        criterion,
+                        optimizer,
+                        fake_data,
+                        fake_label,
+                        max_iter=2):
+        model = PDBertForSequenceClassification.from_pretrained("bert-base-uncased", num_classes=2)
+        classifier_weights = paddle.load("../classifier_weights/paddle_classifier_weights.bin")
+        model.load_dict(classifier_weights)
+        model.eval()
+        criterion = paddle.nn.CrossEntropy()
+        decay_params = [
+            p.name for n, p in model.named_parameters()
+            if not any(nd in n for nd in ["bias", "norm"])
+        ]
+        optimizer = paddle.optimizer.AdamW(learning_rate=3e-5, parameters=model.parameters(),
+            weight_decay=1e-2,
+            epsilon=1e-6,
+            apply_decay_param_fun=lambda x: x in decay_params)
+        loss_list = []
+        for idx in range(max_iter):
+            input_ids = paddle.to_tensor(fake_data)
+            labels = paddle.to_tensor(fake_label)
 
-        output = model(image)
-        loss = criterion(output, target)
-        loss.backward()
-        # for name, tensor in model.named_parameters():
-        #     grad = tensor.grad
-        #     print(name, tensor.grad.shape)
-        #     break
-        optimizer.step()
-        optimizer.clear_grad()
-        loss_list.append(loss)
+            output = model(input_ids)
+            loss = criterion(output, labels)
+            loss.backward()
+            optimizer.step()
+            optimizer.clear_grad()
+            loss_list.append(loss)
+        return loss_list
 ```
-
-
-
 
 **【实战】**
 
-本部分可以参考文档：[反向对齐操作文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step4/README.md#%E5%8F%8D%E5%90%91%E5%AF%B9%E9%BD%90%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95)。
+本部分可以参考文档：[反向对齐操作文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step4/README.md#%E5%8F%8D%E5%90%91%E5%AF%B9%E9%BD%90%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95)。
 
 **【验收】**
 
@@ -486,9 +580,9 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 
 1. 输入：fake data & label
 2. 输出：
-    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体loss的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`bp_align_paddle.npy`和`bp_align_pytorch.npy`。
+    * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体loss的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`bp_align_paddle.npy`和`bp_align_torch.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`bp_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`bp_align_paddle.npy`、`bp_align_pytorch.npy`与`bp_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+4. 提交内容：将`bp_align_paddle.npy`、`bp_align_torch.npy`与`bp_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 5. 注意：
     * loss需要保存至少2轮以上。
     * 在迭代的过程中，需要保证模型的batch size等超参数完全相同
@@ -522,9 +616,6 @@ np.random.seed(config.SEED)
 random.seed(config.SEED)
 ```
 
-**【实战】**
-
-本部分对齐建议对照[PaddlePaddle vision高层API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)与参考代码的数据预处理实现进行对齐，用之后的训练对齐统一验证该模块的正确性。
 
 <a name="3.10"></a>
 ### 3.10 网络初始化对齐
@@ -556,7 +647,7 @@ random.seed(config.SEED)
 完成前面的步骤之后，就可以开始全量数据的训练对齐任务了。按照下面的步骤进行训练对齐。
 
 1. 准备train/eval data, loader, model
-2. 对model按照论文所述进行初始化(如果论文中提到加载pretrain，则按需加载pretrained model)
+2. 对model按照论文所述进行初始化(如果论文中提到加载了预训练模型，则按需加载pretrained model)
 3. 加载配置，开始训练，迭代得到最终模型与评估指标，将评估指标使用reprod_log保存到文件中。
 4. 将PaddlePaddle提供的参考指标使用reprod_log提交到另一个文件中。
 5. 使用reprod_log排查diff，小于阈值，即可完成自测。
@@ -564,7 +655,7 @@ random.seed(config.SEED)
 **【注意事项】**
 
 * 【强烈】建议先做完反向对齐之后再进行模型训练对齐，二者之间的不确定量包括：数据集、PaddlePaddle与参考代码在模型training mode下的区别，初始化参数。
-* 在训练对齐过程中，受到较多随机量的影响，精度有少量diff是正常的，以ImageNet1k数据集的分类为例，diff在0.15%以内可以认为是正常的，这里可以根据不同的任务，适当调整对齐检查的阈值(`ReprodDiffHelper.report`函数中的`diff_threshold`参数)。
+* 在训练对齐过程中，受到较多随机量的影响，精度有少量diff是正常的，以SST-2数据集的分类为例，diff在0.15%以内可以认为是正常的，这里可以根据不同的任务，适当调整对齐检查的阈值(`ReprodDiffHelper.report`函数中的`diff_threshold`参数)。
 * 训练过程中的波动是正常的，如果最终收敛结果不一致，可以
     * 仔细排查Dropout、BatchNorm以及其他组网模块及超参是否无误。
     * 基于参考代码随机生成一份预训练模型，转化为PaddlePaddle的模型，并使用PaddlePaddle加载训练，对比二者的收敛曲线与最终结果，排查初始化影响。
@@ -572,7 +663,7 @@ random.seed(config.SEED)
 
 **【实战】**
 
-本部分可以参考文档：[训练对齐操作文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/README.md)。
+本部分可以参考文档：[训练对齐操作文档](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/Step5/README.md)。
 
 **【验收】**
 
@@ -641,39 +732,53 @@ if paddle.distributed.get_world_size() > 1:
 
 #### 3.12.4 程序启动方式
 
-对于单机单卡，启动脚本如下所示。
+对于单机单卡或者单机多卡的启动脚本可以参考：[https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/language_model/bert](https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/language_model/bert)
+
+对于单机单卡，启动脚本如下所示
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0
-python3.7 train.py \
-    --data-path /paddle/data/ILSVRC2012_torch \
-    --lr 0.00125 \
-    --batch-size 32 \
-    --output-dir "./output/"
+unset CUDA_VISIBLE_DEVICES
+python -m paddle.distributed.launch --gpus "0" run_glue.py \
+    --model_type bert \
+    --model_name_or_path bert-base-uncased \
+    --task_name SST-2 \
+    --max_seq_length 128 \
+    --batch_size 32   \
+    --learning_rate 2e-5 \
+    --num_train_epochs 3 \
+    --logging_steps 1 \
+    --save_steps 500 \
+    --output_dir ./tmp/ \
+    --device gpu \
+    --use_amp False
 ```
 
 
-对于单机多卡（示例中为8卡训练），启动脚本如下所示。
+对于单机多卡（示例中为4卡训练），启动脚本如下所示。
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-
-python3.7 -m paddle.distributed.launch \
-    --gpus="0,1,2,3,4,5,6,7" \
-    train.py \
-    --data-path /paddle/data/ILSVRC2012_torch \
-    --lr 0.01 \
-    --batch-size 32 \
-    --output-dir "./output/"
+unset CUDA_VISIBLE_DEVICES
+python -m paddle.distributed.launch --gpus "0,1,2,3" run_glue.py \
+    --model_type bert \
+    --model_name_or_path bert-base-uncased \
+    --task_name SST-2 \
+    --max_seq_length 128 \
+    --batch_size 32   \
+    --learning_rate 2e-5 \
+    --num_train_epochs 3 \
+    --logging_steps 1 \
+    --save_steps 500 \
+    --output_dir ./tmp/ \
+    --device gpu \
+    --use_amp False
 ```
 
-注意：这里8卡训练时，虽然单卡的batch size没有变化(32)，但是总卡的batch size相当于是单卡的8倍，因此学习率也设置为了单卡时的8倍。
+注意：这里4卡训练时，虽然单卡的batch size没有变化(32)，但是总卡的batch size相当于是单卡的4倍，因此学习率也设置为了单卡时的4倍。
 
 
 **【实战】**
 
-本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
-
+本部分可以参考paddlenlp库中的例子：[单机多卡训练](https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/language_model/bert)。
 
 <a name="3.13"></a>
 
@@ -685,7 +790,6 @@ python3.7 -m paddle.distributed.launch \
     * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
     * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
 * 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
-
 
 
 **【注意事项】**
@@ -708,8 +812,7 @@ TIPC基础链条测试接入用例可以参考：[InsightFace-paddle TIPC基础�
 
 本部分主要总结大家在论文复现赛过程中遇到的问题，如果本章内容没有能够解决你的问题，欢迎给该文档提出优化建议或者给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)。
 
-<a name="4.0"></a>
-
+<a name="4.1"></a>
 ### 4.1 通用注意事项
 
 * 需要仔细对照PaddlePaddle与参考代码的优化器参数实现，确保优化器参数严格对齐。
@@ -730,17 +833,11 @@ torch.stack([
 * 对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，是通过`model.to("device")` （局部）来确定模型结构的运行设备，这块在复现的时候需要注意。
 
 
-<a name="4.1"></a>
+<a name="4.2"></a>
 ### 4.2 模型结构对齐
 
 #### 4.2.1 API
-* 对于 `paddle.nn.Linear` 层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置，示例代码可以参考[AlexNet权重转换脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/e3855e0b1992332c2765ccf627d0c5f5f68232fe/pipeline/weights/torch2paddle.py#L19)。
-* `paddle.nn.BatchNorm2D` 包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含4个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`。 其中，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
-    * `weight` -> `weight`
-    * `bias` -> `bias`
-    * `_variance` -> `running_var`
-    * `_mean` -> `running_mean`
-* [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
+* 对于 `paddle.nn.Linear` 层的weight参数，PaddlePaddle与PyTorch的保存方式不同，在转换时需要进行转置，示例代码可以参考[BERT权重转换脚本](https://github.com/JunnYu/BERT-SST2-Prod/blob/main/pipeline/weights/torch2paddle.py)。
 * `torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考：[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
 * `pack_padded_sequence`和`pad_packed_sequence`这两个API目前PaddlePaddle中没有实现，可以直接在RNN或者LSTM的输入中传入`sequence_length`来实现等价的功能。
 
@@ -752,26 +849,23 @@ torch.stack([
 
 #### 4.2.3 模型组网正确性验证
 
-* 在论文复现的过程中，可能会遇到一些经典的模型结构，比如ResNet等，Paddle官方也提供了ResNet的实现，但是这里建议自己根据PyTorch代码重新实现一遍，一方面是对整体的模型结构更加熟悉，另一方面也保证模型结构和权重完全对齐。
-* 在复杂的网络结构中，如果前向结果对不齐，可以按照模块排查问题，比如依次获取backbone、neck、head输出等，看下问题具体出现在哪个子模块，再进到子模块详细排查。
-* 网络结构对齐后，尽量使用训练好的预训练模型和真实的图片进行前向diff计算，这样更准确。
-
-<a name="4.2"></a>
-### 4.3 验证/测试集数据读取对齐
-
-* 如果使用 PaddlePaddle 提供的数据集API，比如 `paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，但是这些数据集的实现都是经过广泛验证的，可以使用。此时对数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
-* 需要仔细排查数据预处理，不仅包含的预处理方法相同，也需要保证预处理的流程相同，比如先padding再做归一化与先做归一化再padding，得到的结果是不同的。
+* 在论文复现的过程中，可能会遇到一些经典的模型结构，比如Transformer等，Paddle官方也提供了Transformer的实现，但是这里建议自己根据PyTorch代码重新实现一遍，一方面是对整体的模型结构更加熟悉，另一方面也保证模型结构和权重完全对齐。
+* 在复杂的网络结构中，如果前向结果对不齐，可以按照模块排查问题，比如依次获取embedding、transformer-block、mlm-head输出等，看下问题具体出现在哪个子模块，再进到子模块详细排查。
+* 网络结构对齐后，尽量使用训练好的预训练模型和真实的数据进行前向diff计算，这样更准确。
 
 <a name="4.3"></a>
+### 4.3 验证/测试集数据读取对齐
+
+* 需要仔细排查数据预处理，不仅包含的预处理方法相同，也需要保证预处理的流程相同，比如padding策略不同和截断策略的不同会导致得到最终的结果是不同的。
+
+<a name="4.4"></a>
 ### 4.4 评估指标对齐
 
 * 真实数据评估时，需要注意评估时 `paddle.io.DataLoader` 的 ``drop_last`` 参数是否打开(文档[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/io/DataLoader_cn.html#dataloader))，复现代码需要与参考代码保持一致，否则最后不够batch-size的数据的评估会有diff。
 * 在识别或者检索过程中，为了加速评估过程，往往会将评估函数由CPU实现改为GPU实现，由此会带来评估函数输出的不一致。这是由于sort函数对于相同值的排序结果不同带来的。在复现的过程中，如果可以接受轻微的指标不稳定，可以使用PaddlePaddle的sort函数，如果对于指标非常敏感，同时对速度性能要求很高，可以给PaddlePaddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，由研发人员高优开发。
-* 在检测任务中，评估流程往往和训练流程有一定差异，例如RPN阶段NMS的参数等，这里需要仔细检查评估时的超参数，不要将训练超参和评估超参弄混淆。
-* 在OCR等任务中，需要注意评估过程也会对gt信息进行修正，比如大小写等，也会过滤掉一些样本，这里需要注意过滤规则，确保有效评估数据集一致。
 
 
-<a name="4.4"></a>
+<a name="4.5"></a>
 ### 4.5 损失函数对齐
 
 * 部分算法的损失函数中会用到 bool 索引，这时候可以使用[paddle.where](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/where_cn.html#where) 代替。
@@ -792,38 +886,31 @@ with paddle.no_grad()
     avg_loss += loss
 ```
 
-* 目前PaddlePaddle中没有HingeEmbeddingLoss API，可以使用组合的方式进行实现，参考实现：[链接](https://github.com/ImportPaddle/DiscoGAN-Paddle/blob/main/discogan/loss_fn.py)。
-
-<a name="4.5"></a>
+<a name="4.6"></a>
 ### 4.6 优化器对齐
 
 * Paddle目前支持在 ``optimizer`` 中通过设置 ``params_groups`` 的方式设置不同参数的更新方式，可以参考[代码示例](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/optimizer/optimizer.py#L107) 。
 * 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
 * 在某些任务中，比如说深度学习可视化、可解释性等任务中，一般只要求模型前向过程，不需要训练，此时优化器、学习率等用于模型训练的模块对于该类论文复现是不需要的。
-* 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。
-* 在OCR识别等任务中，`Adadelta`优化器常常被使用，该优化器与PyTorch实现目前稍有不同，但是不影响模型训练精度对齐，在做前反向对齐时，需要注意可以将该优化器替换为Adam等优化器（PaddlePaddle与参考代码均需要替换）；对齐完成之后，再使用`Adadelta`优化器进行训练对齐。
+* 在文本分类领域，大多数Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。
 
 
-<a name="4.6"></a>
+<a name="4.7"></a>
 ### 4.7 学习率对齐
 
 * PaddlePaddle 中参数的学习率受到优化器学习率和`ParamAttr`中设置的学习率影响，因此跟踪学习率需要将二者结合进行跟踪。
 * 对于复现代码和参考代码，学习率在整个训练过程中在相同的轮数相同的iter下应该保持一致，可以通过`reprod_log`工具、打印学习率值或者可视化二者学习率的log来查看diff。
 * 有些网络的学习率策略比较细致，比如带warmup的学习率策略，这里需要保证起始学习率等参数都完全一致。
-* `torch.optim.lr_scheduler.MultiplicativeLR` API目前PaddlePaddle中没有实现，可以使用`paddle.optimizer.lr.LambdaDecay`替换实现，参考代码：[链接](https://github.com/Paddle-Team-7/PixelCNN-Paddle/blob/607ef1d1ca6a489cecdcd2182d3acc5b2df7c779/src/pixel_cnn.py#L161)。
 
-
-<a name="4.7"></a>
+<a name="4.8"></a>
 ### 4.8 正则化策略对齐
 
 * 在如Transformer或者少部分CNN模型中，存在一些参数不做正则化(正则化系数为0)的情况。这里需要找到这些参数并对齐取消实施正则化策略，可以参考[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)，对特定参数进行修改。
 
-<a name="4.8"></a>
+<a name="4.9"></a>
 ### 4.9 反向对齐
 
-* Paddle打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/PaddleDetection/blob/debug_gfl/ppdet/modeling/backbones/resnet.py#L581)；PyTorch打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/mmdetection/blob/debug_gfl/mmdet/models/backbones/resnet.py#L630)。
 * 反向对齐时，如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`loss.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证。第3章中给出了获取所有参数的梯度方法，如果只希望打印特定参数的梯度，可以用下面的方式。
-
 
 ```python
 import paddle
@@ -841,31 +928,26 @@ w.backward()
 ```
 
 
-<a name="4.9"></a>
+<a name="4.10"></a>
 ### 4.10 训练集数据读取对齐
 
 #### 4.10.1 API
 
 * 在前向过程中，如果数据预处理过程运行出错，请先将 ``paddle.io.DataLoader`` 的 ``num_workers`` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。
-* 如果使用PaddlePaddle提供的数据集API，比如`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，如果是全量数据使用，对结果不会有影响，如果是按照比例选取子集进行训练，则建议重新根据参考代码实现数据读取部分，保证子集完全一致。
 
 #### 4.10.2 数据预处理
 
-* 数据读取需要注意图片读取方式是opencv还是PIL.Image，图片格式是RGB还是BGR，复现时，需要保证复现代码和参考代码完全一致。
 * 如果数据处理过程中涉及到随机数生成，建议固定seed (`np.random.seed(0)`, `random.seed(0)`)，查看复现代码和参考代码处理后的数据是否有diff。
-* 不同的图像预处理库，使用相同的插值方式可能会有diff，建议使用相同的库对图像进行resize。
-* 视频解码时，不同库解码出来的图像数据会有diff，注意区分解码库是opencv、decord还是pyAV，需要保证复现代码和参考代码完全一致。
+* 对文本进行tokenizer处理时，需要确定文本的截断策略，padding策略。
 
-<a name="4.10"></a>
+<a name="4.11"></a>
 ### 4.11 网络初始化对齐
 
 * 对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。如果十分怀疑初始化导致的问题，建议将参考的初始化权重转成paddle模型，加载该初始化模型训练，看下收敛精度。
 * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；而transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查。
-* 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查。
-* 领域自适应算法由于需要基于初始模型生成伪标签，因此对初始网络敏感，建议加载预训练的模型进行训练。
 
 
-<a name="4.11"></a>
+<a name="4.12"></a>
 ### 4.12 模型训练对齐
 
 #### 4.12.1 训练对齐通用问题
@@ -874,10 +956,9 @@ w.backward()
 * 训练过程中可以对loss或者acc进行可视化，和竞品loss或者acc进行直观的对比；如果训练较大的数据集，1次完整训练的成本比较高，此时可以隔一段时间查看一下，如果精度差异比较大，建议先停掉实验，排查原因。
 * 如果训练的过程中出nan，一般是因为除0或者log0的情况， 可以着重看下几个部分：
     * 如果有预训练模型的话，可以确认下是否加载正确
-    * 确认下reader的预处理中是否会出现box（或mask）为空的情况
     * 模型结构中计算loss的部分是否有考虑到正样本为0的情况
     * 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
-* 如果训练过程中出现不收敛的情况，可以
+* 如果训练过程中如果出现不收敛的情况，可以
     * 简化网络和数据，实验是否收敛；
     * 如果是基于原有实现进行改动，可以尝试控制变量法，每次做一个改动，逐个排查；
     * 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
@@ -887,15 +968,9 @@ w.backward()
 #### 4.12.2 细分场景特定问题
 
 * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
-* transformer 系列模型对于数据增广与模型初始化非常敏感，因此在保证前反向对齐后，如果训练仍无法对齐，可以考虑使用官方的PyTorch模型训练代码，结合复现的Paddle组网代码进行训练，这样可以验证是否是数据预处理/数据增强策略存在问题。
-* 检测、分割等任务中，训练通常需要加载backbone的权重作为预训练模型，注意在完成模型对齐后，将转换的权重修改为backbone权重。
-* 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
-* 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
-* 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
 
 
 <a name="4.13"></a>
-
 ### 4.13 TIPC基础链条测试接入
 
 * 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。

@@ -11,11 +11,11 @@
         - [3.2.2 接入步骤](#接入步骤)
     - [3.3 编写自动化测试代码](#编写自动化测试代码)
 - [4.附录](#附录)
-    - [4.1 自动化测试脚本test_arm_cpp.sh函数介绍](#自动化测试脚本test_arm_cpp.sh函数介绍)
-    - [4.2 其他说明](#其他说明)
+    - [4.1 自动化测试脚本test_arm_cpp.sh函数介绍](#自动化测试脚本函数介绍)
+    - [4.2 注意事项](#注意事项)
 
 <a name="概述"></a>
-# 1、概述
+# 1.概述
 
 训推一体认证（TIPC）旨在监控框架代码更新可能导致的模型训练、预测报错、性能下降等问题。本文主要介绍TIPC中基于ARM_CPU设备的Lite预测cpp测试的接入规范和监测点，是在基础测试上针对Lite测试的补充说明。
 
@@ -36,7 +36,7 @@
 **注:** 由于CI有时间限制，所以在测试的时候需要限制运行时间，所以需要构建一个很小的数据集完成测试。
 
 <a name="总览"></a>
-# 2、总览
+# 2.总览
 
 <a name="训推一体自动化测试"></a>
 ## 2.1 训推一体自动化测试
@@ -70,7 +70,7 @@ test_tipc/
 不同代码仓库的`configs`目录下的内容可根据实际情况进行调整, 配置文件`model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt`需满足[TIPC配置文件命名规范](https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83)。
 
 <a name="Lite端ARM_CPU预测接入TIPC流程"></a>
-# 3、Lite端ARM_CPU预测接入TIPC流程
+# 3.Lite端ARM_CPU预测接入TIPC流程
 
 Lite端ARM_CPU预测接入TIPC包含如下三个步骤，接下来将依次介绍这三个部分。
 
@@ -263,7 +263,7 @@ if (strcmp(argv[9], "True") == 0) {
 ```    
 
 2.输出日志格式如下：
-![](images/lite_auto_log.png)
+![](images/lite_cpu_cpp_auto_log.png)
 
 <a name="编写自动化测试代码"></a>
 ## 3.3 编写自动化测试代码
@@ -286,9 +286,9 @@ if (strcmp(argv[9], "True") == 0) {
 | –benchmark:True | 设置是否开启AutoLog的参数  |
 
 <a name="附录"></a>
-# 4、附录
+# 4.附录
 
-<a name="自动化测试脚本test_lite_arm_cpp.sh函数介绍"></a>
+<a name="自动化测试脚本函数介绍"></a>
 ## 4.1 自动化测试脚本test_lite_arm_cpp.sh函数介绍
 
 Lite预测核心函数：
