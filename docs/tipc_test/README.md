@@ -18,27 +18,26 @@
 
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
-	- [基础训练预测](./development_specification_docs/train_infer_python.md)
-	- [多机多卡训练](./development_specification_docs/fleet_train_infer_python.md)
-	- [混合精度训练]
-	- [c++预测](./development_specification_docs/inference_cpp.md)
-	- [Serving](./development_specification_docs/serving.md)
-	- [Lite ARM CPU](./development_specification_docs/Lite_arm_cpu_cpp_infer.md)
-	- [Lite OpenCL ARM GPU](./development_specification_docs/Lite_arm_gpu_opencl_cpp_infer.md)
-	- [Lite Metal ARM GPU]
-	- [Paddle2ONNX](./development_specification_docs/paddle2onnx.md)
-	- [Paddle.js]
-	- [XPU]
-	- [XPU2]
-	- [DCU]
-	- [NPU]
-	- [Jetson](./development_specification_docs/Jeston_infer_python.md)
-	- [Windows](./development_specification_docs/Windows_train_infer_python.md)
-	- [MacOS](./development_specification_docs/Mac_train_infer_python.md)
+    - [基础训练预测](./development_specification_docs/train_infer_python.md)
+    - [多机多卡训练](./development_specification_docs/fleet_train_infer_python.md)
+    - [混合精度训练](./development_specification_docs/amp_train_infer_python.md)
+    - [c++预测](./development_specification_docs/inference_cpp.md)
+    - [Serving](./development_specification_docs/serving.md)
+    - [Lite ARM CPU](./development_specification_docs/Lite_arm_cpu_cpp_infer.md)
+    - [Lite OpenCL ARM GPU](./development_specification_docs/Lite_arm_gpu_opencl_cpp_infer.md)
+    - [Lite Metal ARM GPU]
+    - [Paddle2ONNX](./development_specification_docs/paddle2onnx.md)
+    - [Paddle.js]
+    - [XPU]
+    - [XPU2]
+    - [DCU]
+    - [NPU]
+    - [Jetson](./development_specification_docs/Jeston_infer_python.md)
+    - [Windows](./development_specification_docs/Windows_train_infer_python.md)
+    - [MacOS](./development_specification_docs/Mac_train_infer_python.md)
 
 ### 2.2 撰写测试文档
 
 参考测试文档样板间撰写测试文档：
 
 - 测试文档样板间：https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/readme.md
-
