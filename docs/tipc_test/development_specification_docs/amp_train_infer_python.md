@@ -139,7 +139,7 @@ bash test_tipc/prepare.sh ./test_tipc/configs/ppocr_det_mobile/train_linux_gpu_n
 基础链条的运行模式一共有7种，在混合精度训练推理测试规范中，只需要覆盖如下两种：
 ```
 lite_train_lite_infer:    少量数据集训练、预测打通验证
-whole_train_whole_infer:  全量数据训练，全量数据预测，验证模型训练精度，训来速度; 预测精度，预测速度
+whole_train_whole_infer:  全量数据训练，全量数据预测，验证模型训练精度，训练速度; 预测精度，预测速度
 ```
 
 <a name="规范化输出日志"></a>
