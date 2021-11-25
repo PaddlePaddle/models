@@ -3,7 +3,7 @@
 > 本文为针对 `CV` 方向的复现赛指南
 >
 > 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
-> 
+>
 > 如果希望查阅 `推荐` 方向的复现赛指南，可以参考：[推荐方向论文复现赛指南](./ArticleReproduction_REC.md)
 
 ## 目录
@@ -900,3 +900,4 @@ w.backward()
 
 * 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
 * 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
+* 接入过程中，如果需要在AiStudio中进行TensorRT预测，可以参考：[AiStudio中使用TensorRT进行预测教程](https://aistudio.baidu.com/aistudio/projectdetail/3027768)。
