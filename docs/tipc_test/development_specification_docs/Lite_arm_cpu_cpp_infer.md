@@ -56,14 +56,14 @@ Lite预测测试工具位于PaddleOCR dygraph分支下的test_tipc目录，与Li
 test_tipc/
 ├── common_func.sh
 ├── configs # 配置文件目录
-│   ├── ppocr_det_mobile
+│   ├── ch_PP-OCRv2_det
 │   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
 │   │   ├── ...
 │   ├── ...
-│   ├── ppocr_system_mobile
+│   ├── ch_PP-OCRv2
 │   │   ├── model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
 │   │   └── ...
-├── prepare_lite_cpp.sh # 完成test_cpu_cpp.sh运行所需要的数据和模型下载
+├── prepare_lite_cpp.sh # 完成test_lite_**.sh运行所需要的数据和模型下载
 ├── test_lite_arm_cpp.sh # lite测试主程序
 ```
 
@@ -89,9 +89,18 @@ Lite端ARM_CPU预测接入TIPC包含如下三个步骤，接下来将依次介�
 
 以PaddleOCR文本检测模型为例，使用方式：
 
+下载Paddle-Lite预测库的方式：
+
 ```               
-bash test_tipc/prepare_lite_arm_cpp.sh test_tipc/configs/ppocr_det_mobile/model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt
-```   
+bash test_tipc/prepare_lite_arm_cpp.sh test_tipc/configs/ch_PP-OCRv2_det/model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt download
+```
+
+编译Paddle-Lite预测库的方式：
+
+```               
+bash test_tipc/prepare_lite_arm_cpp.sh test_tipc/configs/ch_PP-OCRv2_det/model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt compile
+```
+
 `prepare_lite_arm_cpp.sh`具体内容：
 
 1.解析`model_linux_gpu_normal_normal_lite_cpp_arm_cpu.txt`部分用于预测的参数字段，方便后续预测。
@@ -104,6 +113,7 @@ dataline=$(cat ${FILENAME})
 IFS=$'\n'
 lines=(${dataline})
 IFS=$'\n'
+paddlelite_library_source=$2
 
 inference_cmd=$(func_parser_value "${lines[1]}")
 DEVICE=$(func_parser_value "${lines[2]}")
@@ -112,10 +122,29 @@ rec_lite_model_list=$(func_parser_value "${lines[4]}")
 cls_lite_model_list=$(func_parser_value "${lines[5]}")
 ```
 
-2.转换`infernce model`到Lite预测的`.nb`模型
+2.填写不同硬件设备需要的信息
+
+```
+if [ ${DEVICE} = "ARM_CPU" ];then
+    valid_targets="arm"
+    paddlelite_library_url="https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10-rc/inference_lite_lib.android.armv8.gcc.c++_shared.with_extra.with_cv.tar.gz"
+    end_index="66"
+    compile_with_opencl="OFF"
+elif [ ${DEVICE} = "ARM_GPU_OPENCL" ];then
+    valid_targets="opencl"
+    paddlelite_library_url="https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10-rc/inference_lite_lib.armv8.clang.with_exception.with_extra.with_cv.opencl.tar.gz"
+    end_index="71"
+    compile_with_opencl="ON"
+else
+    echo "DEVICE only support ARM_CPU, ARM_GPU_OPENCL."
+    exit 2
+fi
+```
+
+3.转换`infernce model`到Lite预测的`.nb`模型
    
 ```
-# prepare lite .nb model
+# prepare paddlelite model
 if [[ $inference_cmd =~ "det" ]];then
     lite_model_list=${det_lite_model_list}
 elif [[ $inference_cmd =~ "rec" ]];then
@@ -126,6 +155,11 @@ else
     echo "inference_cmd is wrong, please check."
     exit 1
 fi
+
+pip install paddlelite==2.10-rc
+current_dir=${PWD}
+IFS="|"
+model_path=./inference_models
 
 for model in ${lite_model_list[*]}; do
     if [[ $model =~ "PP-OCRv2" ]];then
@@ -146,37 +180,51 @@ for model in ${lite_model_list[*]}; do
 done
 ```
 
-3.准备测试数据
+4.准备测试数据
 
 ```
 data_url=https://paddleocr.bj.bcebos.com/dygraph_v2.0/test/icdar2015_lite.tar
-model_path=./inference_models
-inference_model=${inference_model_url##*/}
 data_file=${data_url##*/}
-wget -nc  -P ./inference_models ${inference_model_url}
 wget -nc  -P ./test_data ${data_url}
-cd ./inference_models && tar -xf ${inference_model} && cd ../
 cd ./test_data && tar -xf ${data_file} && rm ${data_file} && cd ../
 ```
 
-4.准备Lite预测环境，此处需要下载或者编译Paddle-Lite预测库。
+5.准备Lite预测环境，此处需要下载或者编译Paddle-Lite预测库。
 
 ```
 # prepare lite env
-paddlelite_zipfile=$(echo $paddlelite_url | awk -F "/" '{print $NF}')
-paddlelite_file=${paddlelite_zipfile:0:${end_index}}
-wget ${paddlelite_url} && tar -xf ${paddlelite_zipfile}
-mkdir -p  ${paddlelite_file}/demo/cxx/ocr/test_lite
-cp -r ${model_path}/*_opt.nb test_data ${paddlelite_file}/demo/cxx/ocr/test_lite
-cp ppocr/utils/ppocr_keys_v1.txt deploy/lite/config.txt ${paddlelite_file}/demo/cxx/ocr/test_lite
-cp -r ./deploy/lite/* ${paddlelite_file}/demo/cxx/ocr/
-cp ${paddlelite_file}/cxx/lib/libpaddle_light_api_shared.so ${paddlelite_file}/demo/cxx/ocr/test_lite
-cp ${FILENAME} test_tipc/test_lite_arm_cpp.sh test_tipc/common_func.sh ${paddlelite_file}/demo/cxx/ocr/test_lite
-cd ${paddlelite_file}/demo/cxx/ocr/
+if [[ ${paddlelite_library_source} = "download" ]]; then
+    paddlelite_library_zipfile=$(echo $paddlelite_library_url | awk -F "/" '{print $NF}')
+    paddlelite_library_file=${paddlelite_library_zipfile:0:${end_index}}
+    wget ${paddlelite_library_url} && tar -xf ${paddlelite_library_zipfile}
+    cd ${paddlelite_library_zipfile}
+elif [[ ${paddlelite_library_source} = "compile" ]]; then
+    git clone -b release/v2.10 https://github.com/PaddlePaddle/Paddle-Lite.git
+    cd Paddle-Lite
+    ./lite/tools/build_android.sh  --arch=armv8  --with_cv=ON --with_extra=ON --toolchain=clang --with_opencl=${compile_with_opencl}
+    cd ../
+    cp -r Paddle-Lite/build.lite.android.armv8.clang/inference_lite_lib.android.armv8/ .
+    paddlelite_library_file=inference_lite_lib.android.armv8
+else
+    echo "paddlelite_library_source only support 'download' and 'compile'"
+    exit 3
+fi
+```
+
+6.准备编译以及后续在Lite设备上测试需要的文件
+```
+mkdir -p  ${paddlelite_library_file}/demo/cxx/ocr/test_lite
+cp -r ${model_path}/*_opt.nb test_data ${paddlelite_library_file}/demo/cxx/ocr/test_lite
+cp ppocr/utils/ppocr_keys_v1.txt deploy/lite/config.txt ${paddlelite_library_file}/demo/cxx/ocr/test_lite
+cp -r ./deploy/lite/* ${paddlelite_library_file}/demo/cxx/ocr/
+cp ${paddlelite_library_file}/cxx/lib/libpaddle_light_api_shared.so ${paddlelite_library_file}/demo/cxx/ocr/test_lite
+cp ${FILENAME} test_tipc/test_lite_arm_cpp.sh test_tipc/common_func.sh ${paddlelite_library_file}/demo/cxx/ocr/test_lite
+cd ${paddlelite_library_file}/demo/cxx/ocr/
 git clone https://github.com/cuicheng01/AutoLog.git
 ```
 
-5.交叉编译获得在手机上的可以运行的可执行文件
+
+7.交叉编译获得在手机上的可以运行的可执行文件及删除当前目录下无用文件
 
 ```
 make -j
@@ -184,8 +232,10 @@ sleep 1
 make -j
 cp ocr_db_crnn test_lite && cp test_lite/libpaddle_light_api_shared.so test_lite/libc++_shared.so
 tar -cf test_lite.tar ./test_lite && cp test_lite.tar ${current_dir} && cd ${current_dir}
-rm -rf ${paddlelite_file}* && rm -rf ${model_path}
+rm -rf ${paddlelite_library_file}* && rm -rf ${model_path}
 ```
+
+
 
 运行结果会在当前目录上生成test_lite.tar，里边的内容大致如下：
 ``` 
