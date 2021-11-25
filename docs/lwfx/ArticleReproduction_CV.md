@@ -728,7 +728,20 @@ torch.stack([
     * 对于初学者来说，可以给Paddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，列出Paddle不支持的实现，Paddle开发人员会根据优先级进行实现。
 * PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，复现的时候注意，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) ，关于PaddlePaddle与PyTorch更多API的映射关系可以参考：[API映射表](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/08_api_mapping/pytorch_api_mapping_cn.html)。
 * 对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，是通过`model.to("device")` （局部）来确定模型结构的运行设备，这块在复现的时候需要注意。
+* 安装paddle的develop版本：在 Paddle 修复了框架的问题或者新增了API和功能之后，如果需要马上使用，可以采用以下方式安装最新的 develop 版本：
 
+  * 进入 [Paddle 官网](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html)，选择develop版本，并根据自己的情况选择其他字段，根据生成的安装信息安装，当选择 Linux-pip-CUDA10.2字段后，就可以按照下面的信息安装。
+
+    ```shell
+    python -m pip install paddlepaddle-gpu==0.0.0.post102 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html
+    ```
+
+  * 如果不确定自己安装的是否是最新版本，可以进入[网站](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html)下载对应的包并查看时间戳。
+
+* 如果遇到复现时间较长的论文，我们建议：
+
+  * 根据自己的时间、资源、战略部署评估是否复现这个论文复现；
+  * 在决定复现的情况下，参照本复现指南中的对齐操作对模型、数据、优化方式等对齐，以最快的时间排除问题。
 
 <a name="4.1"></a>
 ### 4.2 模型结构对齐
@@ -901,3 +914,62 @@ w.backward()
 * 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
 * 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
 * 接入过程中，如果需要在AiStudio中进行TensorRT预测，可以参考：[AiStudio中使用TensorRT进行预测教程](https://aistudio.baidu.com/aistudio/projectdetail/3027768)。
+
+### 4.14 常见bug汇总
+在论文复现中，可能因为各种原因出现报错，下面我们列举了常见的问题和解决方法，从而提供debug的方向：
+#### 1. 显存泄露：
+显存泄露会在 `nvidia-smi` 等命令下，明显地观察到显存的增加，最后会因为 `out of memory` 的错误而程序终止。
+
+##### 可能原因：
+
+1. Tensor 切片的时候增加变量引用，导致显存增加，解决方法如下：
+
+   使用 where, gather 函数替代原有的 slice 方式：
+
+   ```python
+   a = paddle.range(3)
+   c = paddle.ones([3])
+   b = a>1
+   # 会增加引用的一种写法
+   c[b] = 0
+   # 修改后
+   paddle.where(b, paddle.zeros(c.shape), c)
+   
+   ```
+
+#### 2. 内存泄露：
+
+内存泄露和显存泄露相似，并不能立即察觉，而是在使用 `top` 命令时，观察到内存显著增加，最后会因为 `can't allocate memory` 的错误而程序终止，如图所示是 `top` 命令下观察内存变化需要检查的字段。
+
+![图片](https://raw.githubusercontent.com/shiyutang/files/main/top.png)
+
+##### 可能原因：
+
+1. 对在计算图中的 tensor 进行了不需要的累加、保存等操作，导致反向传播中计算图没有析构，解决方法如下：
+
+   **预测阶段**：在predict函数上增加装饰器@paddle.no_grad()；在预测部分的代码前加上 with paddle.no_grad()
+
+   **训练阶段**：对于不需要进行加入计算图的计算，将tensor detach出来；对于不需要使用tensor的情形，将 tensor 转换为numpy进行操作，例如下面的代码：
+
+   ```python
+   cross_entropy_loss = paddle.nn.CrossEntropyLoss()
+   loss = cross_entropy_loss(pred, gt)
+   # 会导致内存泄露的操作
+   loss_total += loss 
+   # 修改后
+   loss_total += loss.numpy() # 如果可以转化为numpy
+   loss_total += loss.detach().clone() # 如果需要持续使用tensor
+   ```
+
+##### 排查方法：
+
+  1. 在没有使用 paddle.no_grad 的代码中，寻找对模型参数和中间计算结果的操作；
+  2. 考虑这些操作是否应当加入计算图中（即对最后损失产生影响）；
+  3. 如果不需要，则需要对操作中的参数或中间计算结果进行`.detach().clone()`或者`.numpy` 后操作。
+
+#### 3. dataloader 加载数据时间长：
+- **解决方式**：增大 num_worker 的值，提升io速度，一般建议设置 4 或者 8。
+
+
+#### 4. 单机多卡报错信息不明确：
+- **解决方式**：前往 log 下寻找 worklog.x 进行查看，其中 worklog.x 代表第 x 卡的报错信息。
