@@ -43,6 +43,7 @@
     - [4.11 网络初始化对齐](#4.10)
     - [4.12 模型训练对齐](#4.11)
     - [4.13 TIPC基础链条测试接入](#4.13)
+    - [4.14 常见bug汇总](#4.14)
 
 <a name="1"></a>
 ## 1. 总览
@@ -80,7 +81,9 @@
 
 面对一篇计算机视觉论文，复现该论文的整体流程如下图所示。
 
-![图片](images/framework_reprodcv.png)
+<div align="center">
+<img src="images/framework_reprodcv.png"  width = "800" />
+</div>
 
 总共包含12个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
 
@@ -915,14 +918,18 @@ w.backward()
 * 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
 * 接入过程中，如果需要在AiStudio中进行TensorRT预测，可以参考：[AiStudio中使用TensorRT进行预测教程](https://aistudio.baidu.com/aistudio/projectdetail/3027768)。
 
+<a name="4.14"></a>
+
 ### 4.14 常见bug汇总
+
 在论文复现中，可能因为各种原因出现报错，下面我们列举了常见的问题和解决方法，从而提供debug的方向：
-#### 1. 显存泄露：
+
+#### 4.14.1 显存泄露
 显存泄露会在 `nvidia-smi` 等命令下，明显地观察到显存的增加，最后会因为 `out of memory` 的错误而程序终止。
 
-##### 可能原因：
+* 可能原因：
 
-1. Tensor 切片的时候增加变量引用，导致显存增加，解决方法如下：
+1. Tensor 切片的时候增加变量引用，导致显存增加。解决方法如下：
 
    使用 where, gather 函数替代原有的 slice 方式：
 
@@ -937,13 +944,15 @@ w.backward()
    
    ```
 
-#### 2. 内存泄露：
+#### 4.14.2 内存泄露
 
 内存泄露和显存泄露相似，并不能立即察觉，而是在使用 `top` 命令时，观察到内存显著增加，最后会因为 `can't allocate memory` 的错误而程序终止，如图所示是 `top` 命令下观察内存变化需要检查的字段。
 
-![图片](https://raw.githubusercontent.com/shiyutang/files/main/top.png)
+<div align="center">
+<img src="https://raw.githubusercontent.com/shiyutang/files/main/top.png"  width = "600" />
+</div>
 
-##### 可能原因：
+可能原因：
 
 1. 对在计算图中的 tensor 进行了不需要的累加、保存等操作，导致反向传播中计算图没有析构，解决方法如下：
 
@@ -961,15 +970,16 @@ w.backward()
    loss_total += loss.detach().clone() # 如果需要持续使用tensor
    ```
 
-##### 排查方法：
+排查方法：
 
   1. 在没有使用 paddle.no_grad 的代码中，寻找对模型参数和中间计算结果的操作；
   2. 考虑这些操作是否应当加入计算图中（即对最后损失产生影响）；
   3. 如果不需要，则需要对操作中的参数或中间计算结果进行`.detach().clone()`或者`.numpy` 后操作。
 
-#### 3. dataloader 加载数据时间长：
+#### 4.14.3 dataloader 加载数据时间长
+
 - **解决方式**：增大 num_worker 的值，提升io速度，一般建议设置 4 或者 8。
 
 
-#### 4. 单机多卡报错信息不明确：
+#### 4.14.4 单机多卡报错信息不明确
 - **解决方式**：前往 log 下寻找 worklog.x 进行查看，其中 worklog.x 代表第 x 卡的报错信息。
