@@ -75,7 +75,7 @@
 | [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection) | PaddleDetection源码解析[1](https://aistudio.baidu.com/aistudio/projectdetail/1327454), [2](https://aistudio.baidu.com/aistudio/projectdetail/1422393), [3](https://aistudio.baidu.com/aistudio/projectdetail/1422430)  |  [CenterNet PR](https://github.com/PaddlePaddle/PaddleDetection/pull/4098) |
 | [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) | [PaddleSeg模型开发文档](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.3/docs/pr/pr/style_cn.md)，[PaddleSeg代码提交流程与规范](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.3/docs/pr/pr/pr.md)  |  [SegNet PR](https://github.com/PaddlePaddle/PaddleSeg/pull/1416) |
 | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) | [如何新增算法](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/add_new_algorithm.md) | [PseNet PR](https://github.com/PaddlePaddle/PaddleOCR/pull/3376/files) |
-| [PaddleVideo](https://github.com/PaddlePaddle/PaddleVideo) | -  |  [PP-TSN PR](https://github.com/PaddlePaddle/PaddleVideo/pull/162) |
+| [PaddleVideo](https://github.com/PaddlePaddle/PaddleVideo) | [新增算法指南](https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/contribute/add_new_algorithm.md)  |  [示例PR链接](https://github.com/PaddlePaddle/PaddleVideo/pull/257) |
 | [PaddleGAN](https://github.com/PaddlePaddle/PaddleGAN) | [贡献指南](https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/en_US/contribute.md)  |  [PAN PR](https://github.com/PaddlePaddle/PaddleGAN/pull/426) |
 | [PaddleRec](https://github.com/PaddlePaddle/PaddleRec) | [贡献指南](https://github.com/PaddlePaddle/PaddleRec/blob/master/doc/contribute.md)  |  [DeepFM PR](https://github.com/PaddlePaddle/PaddleRec/pull/321) |
 
