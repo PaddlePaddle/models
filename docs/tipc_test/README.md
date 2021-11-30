@@ -19,36 +19,45 @@
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
     - 基础测试开发规范
-      (1) Linux GPU/CPU 基础测试开发规范
+    
+      (1) [Linux GPU/CPU 基础测试开发规范](./development_specification_docs/train_infer_python.md)
       
-      (2) Linux DCU 基础测试开发规范
+      (2) Linux XPU2 基础测试开发规范 (coming soon)
       
-      (3) Linux NPU 基础测试开发规范
+      (3) Linux DCU 基础测试开发规范 (coming soon)
       
-      (4) Windows GPU 基础测试开发规范
+      (4) Linux NPU 基础测试开发规范 (coming soon)
       
-      (5) macOS CPU 基础测试开发规范
+      (5) [Windows GPU 基础测试开发规范](./development_specification_docs/Windows_train_infer_python.md)
+      
+      (6) [macOS CPU 基础测试开发规范](./development_specification_docs/Mac_train_infer_python.md)  
           
     - 更多训练方式测试开发规范
-    - 
+
+      (1) [多机多卡训练测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
+      
+      (2) [混合精度训练测试开发规范](./development_specification_docs/amp_train_infer_python.md)
+    
     - 更多部署方式测试开发规范 
-    - [基础训练预测](./development_specification_docs/train_infer_python.md)
-    - [多机多卡训练](./development_specification_docs/fleet_train_infer_python.md)
-    - [混合精度训练](./development_specification_docs/amp_train_infer_python.md)
-    - [c++预测](./development_specification_docs/inference_cpp.md)
-    - [Serving](./development_specification_docs/serving.md)
-    - [Lite ARM CPU](./development_specification_docs/Lite_arm_cpu_cpp_infer.md)
-    - [Lite OpenCL ARM GPU](./development_specification_docs/Lite_arm_gpu_opencl_cpp_infer.md)
-    - [Lite Metal ARM GPU]
-    - [Paddle2ONNX](./development_specification_docs/paddle2onnx.md)
-    - [Paddle.js]
-    - [XPU]
-    - [XPU2]
-    - [DCU]
-    - [NPU]
-    - [Jetson](./development_specification_docs/Jeston_infer_python.md)
-    - [Windows](./development_specification_docs/Windows_train_infer_python.md)
-    - [MacOS](./development_specification_docs/Mac_train_infer_python.md)
+
+      (1) [C++ Inference 测试开发规范](./development_specification_docs/inference_cpp.md)
+      
+      (2) [服务化部署测试开发规范](./development_specification_docs/serving.md)
+      
+      (3) Paddle.js 部署测试开发规范 (coming soon)
+      
+      (4) [Paddle2ONNX 测试开发规范](./development_specification_docs/paddle2onnx.md)
+      
+      (5) [ARM CPU 部署测试开发规范](./development_specification_docs/Lite_arm_cpu_cpp_infer.md)
+      
+      (6) [OpenCL ARM GPU 部署测试开发规范](./development_specification_docs/Lite_arm_gpu_opencl_cpp_infer.md)
+
+      (7) Metal ARM GPU 部署测试开发规范 (coming soon)
+      
+      (8) [Jetson 部署测试开发规范](./development_specification_docs/Jeston_infer_python.md)
+      
+      (9) XPU 部署测试开发规范 (coming soon)
+      
 
 ### 2.2 撰写测试文档
 
