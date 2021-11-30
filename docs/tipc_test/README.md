@@ -40,7 +40,7 @@
     
     - 更多部署方式测试开发规范 
 
-      (1) [C++ Inference 测试开发规范](./development_specification_docs/inference_cpp.md)
+      (1) [C++ 推理测试开发规范](./development_specification_docs/inference_cpp.md)
       
       (2) [服务化部署测试开发规范](./development_specification_docs/serving.md)
       
