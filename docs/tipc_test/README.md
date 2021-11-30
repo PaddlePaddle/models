@@ -34,9 +34,9 @@
           
     - 更多训练方式测试开发规范
 
-          - [多机多卡训练测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
+      (1) [多机多卡训练测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
       
-          - [混合精度训练测试开发规范](./development_specification_docs/amp_train_infer_python.md)
+      (2) [混合精度训练测试开发规范](./development_specification_docs/amp_train_infer_python.md)
     
     - 更多部署方式测试开发规范 
 
