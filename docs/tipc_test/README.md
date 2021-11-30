@@ -1,8 +1,8 @@
-# 飞桨训推一体认证（TIPC）开发文档
+# 飞桨训推一体全流程（TIPC）开发文档
 
 ## 1. TIPC简介
 
-飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。飞桨训推一体认证（TIPC）旨在为用户提供所有飞桨模型的训练推理部署打通情况，即TIPC认证信息，同时提供一套自动化测试工具，方便用户进行一键测试。本文主要介绍了TIPC测试的接入规范。
+飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。飞桨训推一体全流程（Training and Inference Pipeline Criterion(TIPC)）旨在为用户提供所有飞桨模型的训练推理部署打通情况，同时提供一套自动化测试工具，方便用户进行一键测试。本文主要介绍了TIPC测试的接入规范。
 
 <div align="center">
     <img src="tipc_guide.png" width="1000">
@@ -18,6 +18,16 @@
 
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
+    - 基础测试开发规范
+          - Linux GPU/CPU 基础测试开发规范
+          - Linux XPU2 基础测试开发规范
+          - Linux DCU 基础测试开发规范
+          - Linux NPU 基础测试开发规范
+          - Windows GPU 基础测试开发规范
+          - macOS CPU 基础测试开发规范
+    - 更多训练方式测试开发规范
+    - 
+    - 更多部署方式测试开发规范 
     - [基础训练预测](./development_specification_docs/train_infer_python.md)
     - [多机多卡训练](./development_specification_docs/fleet_train_infer_python.md)
     - [混合精度训练](./development_specification_docs/amp_train_infer_python.md)
