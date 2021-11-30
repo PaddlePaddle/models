@@ -34,13 +34,13 @@
           
     - 更多训练方式测试开发规范
 
-      (1) [多机多卡训练推理测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
+      (1) [Linux GPU 多机多卡训练推理测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
       
-      (2) [混合精度训练推理测试开发规范](./development_specification_docs/amp_train_infer_python.md)
+      (2) [Linux GPU 混合精度训练推理测试开发规范](./development_specification_docs/amp_train_infer_python.md)
     
     - 更多部署方式测试开发规范 
 
-      (1) [C++ 推理测试开发规范](./development_specification_docs/inference_cpp.md)
+      (1) [Linux GPU/CPU C++ 推理测试开发规范](./development_specification_docs/inference_cpp.md)
       
       (2) [服务化部署测试开发规范](./development_specification_docs/serving.md)
       
