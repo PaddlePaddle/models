@@ -58,7 +58,7 @@ TIPC基础链条添加包含7个步骤，如下所示。
 
 更加具体地：
 
-- 主要内容可以参考[TIPC基础链条添加指南(coming soon)]()。
+- 主要内容可以参考：[TIPC基础链条添加指南(coming soon)]()。
 - 示例代码可以参考：[AlexNet添加TIPC基础链条(coming soon)]()。
 
 **注意：**
