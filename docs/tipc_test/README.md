@@ -18,7 +18,7 @@
 
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
-    - 基础测试开发规范
+    - 基础训练推理测试开发规范
     
       (1) [Linux GPU/CPU 基础测试开发规范](./development_specification_docs/train_infer_python.md)
       
