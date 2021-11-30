@@ -430,7 +430,7 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 
 **【注意事项】**
 
-* PaddlePaddle的optimizer中支持L1Decat/L2Decay。
+* PaddlePaddle的optimizer中支持L1Decay/L2Decay。
 * PyTorch的optimizer支持不同参数列表的学习率分别设置，params传入字典即可，而PaddlePaddle目前尚未支持这种行为，可以通过设置`ParamAttr`的`learning_rate`参数，来确定相对学习率倍数，使用链接可以参考：[PaddleClas-ResNet model](https://github.com/PaddlePaddle/PaddleClas/blob/d67a352fcacc49ae6bbc7d1c7158e2c65f8e06d9/ppcls/arch/backbone/legendary_models/resnet.py#L121)。
 
 **【实战】**
