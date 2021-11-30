@@ -1,10 +1,10 @@
-# 论文复现赛指南-CV方向
+# 论文复现指南-CV方向
 
-> 本文为针对 `CV` 方向的复现赛指南
+> 本文为针对 `CV` 方向的复现指南
 >
-> 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
+> 如果希望查阅 `NLP` 方向的复现指南，可以参考：[NLP方向论文复现指南](./ArticleReproduction_NLP.md)
 >
-> 如果希望查阅 `推荐` 方向的复现赛指南，可以参考：[推荐方向论文复现赛指南](./ArticleReproduction_REC.md)
+> 如果希望查阅 `推荐` 方向的复现指南，可以参考：[推荐方向论文复现指南](./ArticleReproduction_REC.md)
 
 ## 目录
 
@@ -28,7 +28,6 @@
     - [3.10 网络初始化对齐](#3.10)
     - [3.11 模型训练对齐](#3.11)
     - [3.12 单机多卡训练](#3.12)
-    - [3.13 TIPC基础链条测试接入](#3.13)
 - [4. 论文复现注意事项与FAQ](#4)
     - [4.1 通用注意事项](#4.0)
     - [4.2 模型结构对齐](#4.1)
@@ -42,8 +41,7 @@
     - [4.10 训练集数据读取对齐](#4.9)
     - [4.11 网络初始化对齐](#4.10)
     - [4.12 模型训练对齐](#4.11)
-    - [4.13 TIPC基础链条测试接入](#4.13)
-    - [4.14 常见bug汇总](#4.14)
+    - [4.13 常见bug汇总](#4.13)
 
 <a name="1"></a>
 ## 1. 总览
@@ -70,7 +68,6 @@
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
 * 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加`参考代码的实现`，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将**复现代码与参考代码分成2个文件夹进行管理**。
-* 飞桨训推一体认证 (Training and Inference Pipeline Certification, TIPC) 是一个针对飞桨模型的测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。论文训练对齐之后，需要为代码接入TIPC基础链条测试文档与代码，关于TIPC基础链条测试接入规范的文档可以参考：[链接](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)。更多内容在`3.13`章节部分也会详细说明。
 
 
 <a name="2"></a>
@@ -85,9 +82,9 @@
 <img src="images/framework_reprodcv.png"  width = "800" />
 </div>
 
-总共包含12个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
+总共包含11个步骤。为了高效复现论文，设置了5个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
 
-* 第3章：介绍12个复现步骤的理论知识、实战以及验收流程。
+* 第3章：介绍11个复现步骤的理论知识、实战以及验收流程。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 <a name="2.2"></a>
@@ -160,9 +157,6 @@ log_reprod
 上述文件的生成代码都需要开发者进行开发，验收时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
 
 AlexNet-Prod项目提供了基于reprod_log的前5个验收点对齐验收示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
-
-InsightFace项目中提供了`TIPC基础链条验收点`的验收示例，参考代码地址为：[https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)，更多关于TIPC基础链条测试接入规范的代码可以参考：[https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)
-
 
 
 <a name="3"></a>
@@ -431,7 +425,6 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 **【注意事项】**
 
 * PaddlePaddle的optimizer中支持L1Decay/L2Decay。
-* PyTorch的optimizer支持不同参数列表的学习率分别设置，params传入字典即可，而PaddlePaddle目前尚未支持这种行为，可以通过设置`ParamAttr`的`learning_rate`参数，来确定相对学习率倍数，使用链接可以参考：[PaddleClas-ResNet model](https://github.com/PaddlePaddle/PaddleClas/blob/d67a352fcacc49ae6bbc7d1c7158e2c65f8e06d9/ppcls/arch/backbone/legendary_models/resnet.py#L121)。
 
 **【实战】**
 
@@ -677,34 +670,6 @@ python3.7 -m paddle.distributed.launch \
 
 本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
 
-
-<a name="3.13"></a>
-
-### 3.13 TIPC基础链条测试接入
-
-**【基本流程】**
-
-* 完成模型的训练、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
-    * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
-    * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
-* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
-
-
-
-**【注意事项】**
-
-* 基础链条测试接入时，只需要验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
-* 在文档中需要给出一键测试的脚本与使用说明。
-
-**【实战】**
-
-TIPC基础链条测试接入用例可以参考：[InsightFace-paddle TIPC基础链条测试开发文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)。
-
-
-**【验收】**
-
-* TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
-
 <a name="4"></a>
 
 ## 4. 论文复现注意事项与FAQ
@@ -912,19 +877,11 @@ w.backward()
 
 <a name="4.13"></a>
 
-### 4.13 TIPC基础链条测试接入
-
-* 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
-* 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
-* 接入过程中，如果需要在AiStudio中进行TensorRT预测，可以参考：[AiStudio中使用TensorRT进行预测教程](https://aistudio.baidu.com/aistudio/projectdetail/3027768)。
-
-<a name="4.14"></a>
-
-### 4.14 常见bug汇总
+### 4.13 常见bug汇总
 
 在论文复现中，可能因为各种原因出现报错，下面我们列举了常见的问题和解决方法，从而提供debug的方向：
 
-#### 4.14.1 显存泄露
+#### 4.13.1 显存泄露
 显存泄露会在 `nvidia-smi` 等命令下，明显地观察到显存的增加，最后会因为 `out of memory` 的错误而程序终止。
 
 * 可能原因：
@@ -941,10 +898,10 @@ w.backward()
    c[b] = 0
    # 修改后
    paddle.where(b, paddle.zeros(c.shape), c)
-   
+
    ```
 
-#### 4.14.2 内存泄露
+#### 4.13.2 内存泄露
 
 内存泄露和显存泄露相似，并不能立即察觉，而是在使用 `top` 命令时，观察到内存显著增加，最后会因为 `can't allocate memory` 的错误而程序终止，如图所示是 `top` 命令下观察内存变化需要检查的字段。
 
@@ -964,7 +921,7 @@ w.backward()
    cross_entropy_loss = paddle.nn.CrossEntropyLoss()
    loss = cross_entropy_loss(pred, gt)
    # 会导致内存泄露的操作
-   loss_total += loss 
+   loss_total += loss
    # 修改后
    loss_total += loss.numpy() # 如果可以转化为numpy
    loss_total += loss.detach().clone() # 如果需要持续使用tensor
@@ -976,10 +933,10 @@ w.backward()
   2. 考虑这些操作是否应当加入计算图中（即对最后损失产生影响）；
   3. 如果不需要，则需要对操作中的参数或中间计算结果进行`.detach().clone()`或者`.numpy` 后操作。
 
-#### 4.14.3 dataloader 加载数据时间长
+#### 4.13.3 dataloader 加载数据时间长
 
 - **解决方式**：增大 num_worker 的值，提升io速度，一般建议设置 4 或者 8。
 
 
-#### 4.14.4 单机多卡报错信息不明确
+#### 4.13.4 单机多卡报错信息不明确
 - **解决方式**：前往 log 下寻找 worklog.x 进行查看，其中 worklog.x 代表第 x 卡的报错信息。

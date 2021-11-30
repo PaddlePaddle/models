@@ -1,10 +1,10 @@
-# 论文复现赛指南-推荐方向
+# 论文复现指南-推荐方向
 
-> 本文为针对 `推荐` 方向的复现赛指南
-> 
-> 如果希望查阅 `CV` 方向的复现赛指南，可以参考：[CV方向论文复现赛指南](./ArticleReproduction_CV.md)
-> 
-> 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
+> 本文为针对 `推荐` 方向的复现指南
+>
+> 如果希望查阅 `CV` 方向的复现指南，可以参考：[CV方向论文复现指南](./ArticleReproduction_CV.md)
+>
+> 如果希望查阅 `NLP` 方向的复现指南，可以参考：[NLP方向论文复现指南](./ArticleReproduction_NLP.md)
 
 ## 目录
 
@@ -73,7 +73,7 @@
     * 数据和指标先行对齐
 * 数据集获取
     * PaddleRec提供了大量推荐数据集，可优先从[这里查找](https://github.com/PaddlePaddle/PaddleRec/tree/master/datasets)
-    
+
 <a name="4.1"></a>
 ### 4.2 TIPC基础链条接入
 
@@ -100,5 +100,3 @@ TIPC基础链条测试接入用例可以参考：[PaddlRec TIPC基础链条测�
 **【验收】**
 
 * TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
-
-
