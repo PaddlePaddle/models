@@ -18,25 +18,25 @@
 
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
-    - 基础训练推理测试开发规范
+    - 基础测试开发规范
     
-      (1) [Linux GPU/CPU 基础测试开发规范](./development_specification_docs/train_infer_python.md)
+      (1) [Linux GPU/CPU 基础训练推理测试开发规范](./development_specification_docs/train_infer_python.md)
       
-      (2) Linux XPU2 基础测试开发规范 (coming soon)
+      (2) Linux XPU2 基础训练推理测试开发规范 (coming soon)
       
-      (3) Linux DCU 基础测试开发规范 (coming soon)
+      (3) Linux DCU 基础训练推理测试开发规范 (coming soon)
       
-      (4) Linux NPU 基础测试开发规范 (coming soon)
+      (4) Linux NPU 基础训练推理测试开发规范 (coming soon)
       
-      (5) [Windows GPU 基础测试开发规范](./development_specification_docs/Windows_train_infer_python.md)
+      (5) [Windows GPU 基础训练推理测试开发规范](./development_specification_docs/Windows_train_infer_python.md)
       
-      (6) [macOS CPU 基础测试开发规范](./development_specification_docs/Mac_train_infer_python.md)  
+      (6) [macOS CPU 基础训练推理测试开发规范](./development_specification_docs/Mac_train_infer_python.md)  
           
     - 更多训练方式测试开发规范
 
-      (1) [多机多卡训练测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
+      (1) [多机多卡训练推理测试开发规范](./development_specification_docs/fleet_train_infer_python.md)
       
-      (2) [混合精度训练测试开发规范](./development_specification_docs/amp_train_infer_python.md)
+      (2) [混合精度训练推理测试开发规范](./development_specification_docs/amp_train_infer_python.md)
     
     - 更多部署方式测试开发规范 
 
