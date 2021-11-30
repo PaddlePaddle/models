@@ -82,6 +82,9 @@
 - Paddle inference 预测部署方面：
 	- Linux GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
 	- Linux CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（**必选**）
+	- Windows GPU上不同batchsize，是否开启TensorRT，不同预测精度（FP32，FP16，INT8）的运行状态（可选）
+	- Windows CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（可选）
+	- MacOS CPU上不同batchsize，是否开启MKLDNN，不同预测精度（FP32，FP16，INT8）的运行状态（可选）
 
 <a name="13----------"></a>
 ## 1.3 文本检测样板间概览
