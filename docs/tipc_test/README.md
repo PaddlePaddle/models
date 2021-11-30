@@ -19,12 +19,11 @@
 - 测试工具样板间：https://github.com/PaddlePaddle/PaddleOCR/tree/dygraph/test_tipc
 - 测试工具开发文档：
     - 基础测试开发规范
-          - Linux GPU/CPU 基础测试开发规范
-          - Linux XPU2 基础测试开发规范
-          - Linux DCU 基础测试开发规范
-          - Linux NPU 基础测试开发规范
-          - Windows GPU 基础测试开发规范
-          - macOS CPU 基础测试开发规范
+      (1) Linux GPU/CPU 基础测试开发规范
+      (2) Linux DCU 基础测试开发规范
+      (3) Linux NPU 基础测试开发规范
+      (4) Windows GPU 基础测试开发规范
+      (5) macOS CPU 基础测试开发规范
           
     - 更多训练方式测试开发规范
     - 
