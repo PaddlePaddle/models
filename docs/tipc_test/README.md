@@ -42,7 +42,7 @@
 
       (1) [Linux GPU/CPU C++ 推理测试开发规范](./development_specification_docs/inference_cpp.md)
       
-      (2) [服务化部署测试开发规范](./development_specification_docs/serving.md)
+      (2) [Linux GPU/CPU 服务化部署测试开发规范](./development_specification_docs/serving.md)
       
       (3) Paddle.js 部署测试开发规范 (coming soon)
       
