@@ -40,7 +40,7 @@
 
 更加具体地：
 
-* 如果希望查阅 `CV` 方向的复现指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_CV.md)
+* 如果希望查阅 `CV` 方向的复现指南，可以参考：[CV方向论文复现赛指南](./ArticleReproduction_CV.md)
 * 如果希望查阅 `NLP` 方向的复现指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
 * 如果希望查阅 `推荐` 方向的复现指南，可以参考：[推荐方向论文复现赛指南](./ArticleReproduction_REC.md)
 
@@ -53,7 +53,7 @@
 TIPC基础链条添加包含7个步骤，如下所示。
 
 <div align="center">
-<img src="images/framework_tipc_base.png"  width = "400" />
+<img src="images/tipc_pipeline.png"  width = "350" />
 </div>
 
 更加具体地：
