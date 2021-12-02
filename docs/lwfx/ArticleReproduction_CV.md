@@ -675,7 +675,7 @@ python3.7 -m paddle.distributed.launch \
 
 **【实战】**
 
-本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/train_dist.sh)。
+本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/shell/train_dist.sh)。
 
 
 <a name="3.13"></a>
