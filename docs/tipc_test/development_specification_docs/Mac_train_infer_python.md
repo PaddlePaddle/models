@@ -1,20 +1,20 @@
 
-# MAC端TIPC测试开发规范
+# MacOS CPU 基础训练推理测试开发规范
 
 - [1. 总览](#1---)
   * [1.1 背景](#11----)
   * [1.2 TIPC自动化测试](#12-tipc-----)
   * [1.3 文本检测样板间概览](#13----------)
 - [2. TIPC规范接入流程](#2-tipc------)
-- [3. MAC 端TIPC参数配置](#3-mac--tipc----)
-  * [3.1 MAC 端TIPC训练参数配置](#31-mac--tipc------)
-  * [3.2 MAC 端TIPC预测参数配置](#32-mac--tipc------)
+- [3. MAC 端TIPC参数配置](#3-MAC--tipc----)
+  * [3.1 MAC 端TIPC训练参数配置](#31-MAC-tipc------)
+  * [3.2 MAC 端TIPC预测参数配置](#32-MAC-tipc------)
 - [4. 其他说明](#4-----)
 
 <a name="1---"></a>
 # 1. 总览
 
-飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体认证 (Training and Inference Pipeline Certification(TIPC)) 信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
+飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体全流程（Training and Inference Pipeline Criterion(TIPC)）信息和测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。
 
 <a name="11----"></a>
 ## 1.1 背景
@@ -144,7 +144,7 @@ null:null
 ```
 gpu_list 参数设置为-1，use_gpu参数设置为False，表示在CPU上运行，其他参数与Linux端的参数配置保持一致。
 
-<a name="31-MAC-tipc------"></a>
+<a name="32-MAC-tipc------"></a>
 ## 3.2 MAC 端TIPC预测参数配置
 
 以PaddleOCR检测模型为例，MAC端TIPC预测链条参数配置如下：
@@ -182,7 +182,7 @@ null:null
 
 <a name="4-----"></a>
 # 4. 其他说明
-MAC端TIPC测试方法同Linux端，仅仅根据不同硬件环境调整了部分参数，有关TIPC接入详细说明请参考[Linux端基础链条测试规范](./train_infer_python.md)。。
+MAC端TIPC测试方法同Linux端，仅仅根据不同硬件环境调整了部分参数，有关TIPC接入详细说明请参考[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)。。
 
 
 
