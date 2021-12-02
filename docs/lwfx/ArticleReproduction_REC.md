@@ -16,6 +16,7 @@
 - [4. 论文复现注意事项与FAQ](#4)
     - [4.1 通用注意事项](#4.0)
     - [4.2 TIPC基础链条测试接入](#4.1)
+- [5. 合入代码规范要求](#5)
 
 <a name="1"></a>
 ## 1. 总览
@@ -48,6 +49,7 @@
     * 在该步骤中，以AlexNet为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/fake_data/gen_fake_data.py)。
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加参考代码的实现，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将复现代码与参考代码分成2个文件夹进行管理。
+* 除了精度符合要求之外，还需要符合代码规范（详见第五章）。
 * 飞桨训推一体认证 (Training and Inference Pipeline Certification, TIPC) 是一个针对飞桨模型的测试工具，方便用户查阅每种模型的训练推理部署打通情况，并可以进行一键测试。论文训练对齐之后，需要为代码接入TIPC基础链条测试文档与代码，关于TIPC基础链条测试接入规范的文档可以参考：[链接](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)。更多内容在`4.2`章节部分也会详细说明。
 
 
@@ -101,5 +103,10 @@ TIPC基础链条测试接入用例可以参考：[PaddlRec TIPC基础链条测�
 **【验收】**
 
 * TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
+
+<a name="5"></a>
+## 5. 合入代码规范要求
+
+验收的最后一道标准是需要符合合入官方套件的要求，具体要求见[链接](https://github.com/PaddlePaddle/PaddleRec/blob/master/doc/contribute.md)
 
 
