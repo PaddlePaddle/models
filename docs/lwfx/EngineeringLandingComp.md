@@ -147,14 +147,12 @@ Paddle Serving 旨在帮助深度学习开发者轻易部署在线预测服务�
 
 #### 4.3.2 具体内容
 
-* 更换骨干网络，进行模型训练，记录精度、预训练模型，保存日志文件。
-* 将更换了骨干网络部分产出的模型接入`TIPC基础链条`，并将测试文档和测试脚本放置在`test_tipc`目录中。
+* 分别更换模型的骨干网络为MobileNetV1_x1_0，MobileNetV3_large_x1_0，MobileNetV3_small_x1_0，ShuffleNetV2_x1_0并进行训练，记录精度、训练结果模型，保存日志文件。
+* 将更换骨干网络产出的4个模型接入`TIPC基础链条`，并将测试文档和测试脚本放置在`test_tipc`目录中。
 
 #### 4.3.3 轻量化网络选型和特征抽取选型
 
-* 网络选型
-
-按照轻量化网络的性能和模型大小，选取了下面的4个轻量化网络，
+* 网络选型：本期工程落地赛中，选取的轻量化骨干网络在ImageNet1k验证集上的精度以及模型大小如下所示。
 
 |网络 | ImageNet TOP1 ACC | 模型大小 |
 |:---:|:---:|:---:|
@@ -164,6 +162,7 @@ Paddle Serving 旨在帮助深度学习开发者轻易部署在线预测服务�
 | ShuffleNetV2_x1_0 | 0.6880 | 12MB |
 
 * 特征图抽取
+
 对于检测，分割等CV任务，在backbone阶段一般输出`3~4`个特征图，分别在backbone输出shape为输入shape的`1/4`, `1/8`, `1/16` 和 `1/32` 处，在进行接入时，可以逐层打印网络的输出shape。
 如PaddleDetection里MobileNetV3_large_x1_0，当输入为 `[1,3,640,640]` 时，输出的shape如下。
 
@@ -210,7 +209,6 @@ idx: 16 shape [1, 160, 20, 20]
 
 * 文件夹`test_tipc`目录中，将不同骨干网络对应的模型接入基础链条测试规范并验证通过。
 
-
 <a name="5"></a>
 
 ## 5. 模型工程落地赛注意事项与FAQ
@@ -256,4 +254,6 @@ idx: 16 shape [1, 160, 20, 20]
     * 非模型训练任务（模型可视化等）
     * 对抗攻击网络
     * 更多...
-* 骨干网络的实现与预训练模型可以从[PaddleClas](https://github.com/PaddlePaddle/PaddleClas)中获得。
+* 骨干网络的实现与预训练模型可以从[PaddleClas](https://github.com/PaddlePaddle/PaddleClas)中获得，预训练模型的下载地址在骨干网络实现的文件中可以获得，以`MobileNetV3_large_x1_0`为例，预训练模型下载地址对应的内容为：[链接](https://github.com/PaddlePaddle/PaddleClas/blob/323e1bf929397be30171ee00d2b2dd19d86d20c4/ppcls/arch/backbone/legendary_models/mobilenet_v3.py#L25)，定义的时候，指定`pretrained`参数为`True`即可加载预训练模型。
+
+<a name="5.4"></a>
