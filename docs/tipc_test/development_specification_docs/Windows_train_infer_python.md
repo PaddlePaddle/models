@@ -108,7 +108,7 @@ TIPC规范接入包含如下三个步骤：
 
 <a name="3-----"></a>
 # 3. 其他说明
-Windows端TIPC测试方法同Windows端，有关TIPC接入详细说明请参考[Linux端基础链条测试规范](./train_infer_python.md)。
+Windows端TIPC测试方法同Windows端，有关TIPC接入详细说明请参考[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)。
 
 
 
