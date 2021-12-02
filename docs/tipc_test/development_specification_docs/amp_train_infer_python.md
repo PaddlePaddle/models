@@ -1,6 +1,5 @@
-# 混合精度训练推理测试开发规范
+# Linux GPU 混合精度训练推理测试开发规范
 
-## 目录
 - [1.总览](#总览)
     - [1.1 背景](#背景)
     - [1.2 TIPC自动化测试](#TIPC自动化测试)
@@ -15,7 +14,7 @@
 
 <a name="背景"></a>
 ## 1.1 背景
-训推一体认证（TIPC），旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍TIPC中**混合精度训练推理链条**的接入规范和监测点，是在[基础链条](./train_infer_python.md)上针对混合精度训练推理链条的补充说明。
+训推一体全流程（TIPC），旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍TIPC中**Linux GPU 混合精度训练推理测试链条**的接入规范和监测点，是在[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)上针对混合精度训练推理链条的补充说明。
 
 主要监控的内容有：
 
@@ -158,7 +157,7 @@ whole_train_whole_infer:  全量数据训练，全量数据预测，验证模型
  -输入数据的FP32和FP16的inference结果，用于校验inference结果的正确性
 
 ### 2.2.2 接入步骤
-该部分除了需要完成[基础链条](./train_infer_python.md)的接入步骤外，还需要在代码里面增加对Paddle框架混合精度训练功能的支持。
+该部分除了需要完成[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)的接入步骤外，还需要在代码里面增加对Paddle框架混合精度训练功能的支持。
 
 自动混合精度训练的介绍及接入方法可参考：[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html)
 
