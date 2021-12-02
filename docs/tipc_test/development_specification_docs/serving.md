@@ -19,7 +19,7 @@
 
 <a name="11"></a>
 ## 1.1 背景
-训推一体 CI 机制，旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍训推一体中**PaddleServing预测链条**的接入规范和监测点，是在[Linux GPU/CPU 基础训练推理测试开发规范](todo:add_basic_doc_link)上针对PaddleServing链条的补充说明。
+训推一体 CI 机制，旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍训推一体中**PaddleServing预测链条**的接入规范和监测点，是在[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)上针对PaddleServing链条的补充说明。
 
 主要监控的内容有：
 
