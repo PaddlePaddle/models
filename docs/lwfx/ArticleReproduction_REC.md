@@ -92,7 +92,7 @@
 
 * 基础链条测试接入时，只需要验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
 * 在文档中需要给出一键测试的脚本与使用说明。
-* 禁止修改通用参数 
+* 禁止修改通用参数, 比如train_infer_python.txt中的enable_tensorRT，enable_mkldnn等。 
 * 接入TIPC功能是需安装[特定版本paddle](https://paddleinference.paddlepaddle.org.cn/master/user_guides/download_lib.html#python)。
 
 **【实战】**
