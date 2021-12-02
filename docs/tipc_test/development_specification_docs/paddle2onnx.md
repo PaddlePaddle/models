@@ -19,7 +19,7 @@
 
 <a name="11"></a>
 ## 1.1 背景
-训推一体 CI 机制，旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍训推一体中**Paddle2ONNX预测链条**的接入规范和监测点，是在[Linux GPU/CPU 基础训练推理测试开发规范](http://agroup.baidu.com/paddlepaddle/md/article/4273691)上针对Paddle2ONNX链条的补充说明。
+训推一体 CI 机制，旨在监控框架代码更新可能导致的**模型训练、预测报错、性能下降**等问题。本文主要介绍训推一体中**Paddle2ONNX预测链条**的接入规范和监测点，是在[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)上针对Paddle2ONNX链条的补充说明。
 
 主要监控的内容有：
 
@@ -149,7 +149,7 @@ Paddle2ONNX 测试要求规范输出预测结果及以下信息：
 Paddle2ONNX 测试链条无需接入 AutoLog 工具包，注意日志导出名称需符合规范，具体在编写自动化测试代码中说明。
 
 
-<a name="223"></a>
+<a name="23"></a>
 ## 2.3 编写自动化测试代码
 
 如果已经完成 python 预测链条的接入，那么 Paddle2ONNX 链条接入是类似的。
