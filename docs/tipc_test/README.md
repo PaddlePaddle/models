@@ -30,7 +30,7 @@
       
       (5) [Windows GPU 基础训练推理测试开发规范](./development_specification_docs/Windows_train_infer_python.md)
       
-      (6) [macOS CPU 基础训练推理测试开发规范](./development_specification_docs/Mac_train_infer_python.md)  
+      (6) [MacOS CPU 基础训练推理测试开发规范](./development_specification_docs/Mac_train_infer_python.md)  
           
     - 更多训练方式测试开发规范
 
