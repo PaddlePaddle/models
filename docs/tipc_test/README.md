@@ -10,13 +10,7 @@
 
 ## 2. 不同环境不同训练推理方式的开发文档 
 
-- 基础训练推理开发文档
-    - Linux GPU/CPU 基础训练推理开发文档 (coming soon)
-    - Linux XPU2 基础训练推理开发文档 (coming soon)
-    - Linux DCU 基础训练推理开发文档 (coming soon)
-    - Linux NPU 基础训练推理开发文档 (coming soon)
-    - Windows GPU 基础训练推理开发文档 (coming soon)
-    - macOS CPU 基础训练推理开发文档 (coming soon) 
+- Linux GPU/CPU 基础训练推理开发文档 (coming soon)
      
 - 更多训练方式开发文档
     - Linux GPU 多机多卡训练推理开发文档 (coming soon)
@@ -32,3 +26,10 @@
     - Metal ARM GPU 部署开发文档 (coming soon)
     - Jetson 部署开发文档 (coming soon)
     - XPU 部署开发文档 (coming soon)
+
+- 更多训练环境开发文档
+    - Linux XPU2 基础训练推理开发文档 (coming soon)
+    - Linux DCU 基础训练推理开发文档 (coming soon)
+    - Linux NPU 基础训练推理开发文档 (coming soon)
+    - Windows GPU 基础训练推理开发文档 (coming soon)
+    - macOS CPU 基础训练推理开发文档 (coming soon) 
