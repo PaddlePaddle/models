@@ -10,7 +10,7 @@
 
 ## 2. 不同环境不同训练推理方式的开发文档 
 
-- 基础开发文档
+- 基础训练推理开发文档
     - Linux GPU/CPU 基础训练推理开发文档 (coming soon)
     - Linux XPU2 基础训练推理开发文档 (coming soon)
     - Linux DCU 基础训练推理开发文档 (coming soon)
