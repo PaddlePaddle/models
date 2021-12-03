@@ -873,9 +873,30 @@ w.backward()
 * 视频解码时，不同库解码出来的图像数据会有diff，注意区分解码库是opencv、decord还是pyAV，需要保证复现代码和参考代码完全一致。
 
 <a name="4.10"></a>
+
 ### 4.11 网络初始化对齐
 
+#### 4.11.1 网络初始化通用问题
+
 * 对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。如果十分怀疑初始化导致的问题，建议将参考的初始化权重转成paddle模型，加载该初始化模型训练，看下收敛精度。
+* Paddle中目前没有`torch.nn.init.constant_()`的方法，如果希望对参数赋值为常数，可以使用[paddle.nn.initializer.Constant](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/initializer/Constant_cn.html#constant)API；或者可以参考下面的实现。更加具体的解释可以参考：[链接](https://github.com/PaddlePaddle/Paddle/issues/37578)。
+
+    ```python
+    import paddle
+    import paddle.nn as nn
+    import numpy as np
+
+    # Define the linear layer.
+    m = paddle.nn.Linear(2, 4)
+    print(m.bias)
+    if isinstance(m, nn.Layer):
+        print("set m.bias")
+        m.bias.set_value(np.ones(shape=m.bias.shape, dtype="float32"))
+        print(m.bias)
+    ```
+
+#### 4.11.2 细分场景特定问题
+
 * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；而transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查。
 * 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查。
 * 领域自适应算法由于需要基于初始模型生成伪标签，因此对初始网络敏感，建议加载预训练的模型进行训练。
@@ -941,7 +962,7 @@ w.backward()
    c[b] = 0
    # 修改后
    paddle.where(b, paddle.zeros(c.shape), c)
-   
+
    ```
 
 #### 4.14.2 内存泄露
@@ -964,7 +985,7 @@ w.backward()
    cross_entropy_loss = paddle.nn.CrossEntropyLoss()
    loss = cross_entropy_loss(pred, gt)
    # 会导致内存泄露的操作
-   loss_total += loss 
+   loss_total += loss
    # 修改后
    loss_total += loss.numpy() # 如果可以转化为numpy
    loss_total += loss.detach().clone() # 如果需要持续使用tensor
