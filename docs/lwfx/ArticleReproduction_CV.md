@@ -599,10 +599,9 @@ random.seed(config.SEED)
 * 必选项：当前`epoch`, 当前迭代次数`iter`, 损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
 * 建议项：学习率(`lr`), 准确率(`acc`)等。
 
-
 ```
-[2021/12/04 05:16:13] root INFO: [epoch 0, batch_idx 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010543 sec, avg_batch_cost: 0.0111100 sec, loss: 0.3450000 , acc: 6.5500000 , avg_ips: 2880.2952878 images/sec
-[2021/12/04 05:16:13] root INFO: [epoch 0, batch_idx 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010542 sec, avg_batch_cost: 0.0111101 sec, loss: 0.2450000 , acc: 7.5500000 , avg_ips: 2880.2582019 images/sec
+[2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010543 sec, avg_batch_cost: 0.0111100 sec, loss: 0.3450000 , avg_ips: 2880.2952878 images/sec
+[2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010542 sec, avg_batch_cost: 0.0111101 sec, loss: 0.2450000 , avg_ips: 2880.2582019 images/sec
 ```
 
 
