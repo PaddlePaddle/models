@@ -17,7 +17,7 @@
 
 - [3. 论文复现理论知识及实战](#3)
     - [3.1 模型结构对齐](#3.1)
-    - [3.2 验证/测试集数据读取对齐](#3.2)
+    - [3.2 准备小数据集，验证集数据读取对齐](#3.2)
     - [3.3 评估指标对齐](#3.3)
     - [3.4 损失函数对齐](#3.4)
     - [3.5 优化器对齐](#3.5)
@@ -27,8 +27,8 @@
     - [3.9 训练集数据读取对齐](#3.9)
     - [3.10 网络初始化对齐](#3.10)
     - [3.11 模型训练对齐](#3.11)
-    - [3.12 单机多卡训练](#3.12)
-    - [3.13 TIPC基础链条测试接入](#3.13)
+    - [3.12 规范训练日志](#3.12)
+    - [3.13 单机多卡训练](#3.13)
 - [4. 论文复现注意事项与FAQ](#4)
     - [4.1 通用注意事项](#4.0)
     - [4.2 模型结构对齐](#4.1)
@@ -161,9 +161,6 @@ log_reprod
 
 AlexNet-Prod项目提供了基于reprod_log的前5个验收点对齐验收示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
 
-InsightFace项目中提供了`TIPC基础链条验收点`的验收示例，参考代码地址为：[https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)，更多关于TIPC基础链条测试接入规范的代码可以参考：[https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)
-
-
 
 <a name="3"></a>
 ## 3. 论文复现理论知识及实战
@@ -279,9 +276,17 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
     * 如果是固定随机数种子，建议将fake data保存到dict中，方便check参考代码和PaddlePaddle的输入是否一致。
 
 <a name="3.2"></a>
-### 3.2 验证/测试集数据读取对齐
+### 3.2 准备小数据集，验证集数据读取对齐
 
 **【基本流程】**
+
+PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，使用该接口可以完成数据集的单个样本读取。
+
+复现完Dataset之后，可以使用`paddle.io.DataLoader`，构建Dataloader，对数据进行组batch、批处理，送进网络进行计算。
+
+为后续的快速验证(训练/评估/预测)，建议准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
+
+**【注意事项】**
 
 对于一个数据集，一般有以下一些信息需要重点关注
 
@@ -289,14 +294,6 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 * 训练集/验证集/测试集图像数量、类别数量、分辨率等
 * 数据集标注格式、标注信息
 * 数据集通用的预处理方法
-
-PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，PyTorch中对应为`torch.utils.data.Dataset`，二者功能一致，在绝大多数情况下，可以使用该类构建数据集。它是描述Dataset方法和行为的抽象类，在具体实现的时候，需要继承这个基类，实现其中的`__getitem__`和`__len__`方法。除了参考代码中相关实现，也可以参考待复现论文中的说明。
-
-复现完Dataset之后，可以构建Dataloader，对数据进行组batch、批处理，送进网络进行计算。
-
-`paddle.io.DataLoader`可以进行数据加载，将数据分成批数据，并提供加载过程中的采样。PyTorch对应的实现为`torch.utils.data.DataLoader`，二者在功能上一致，只是在参数方面稍有diff：（1）PaddlePaddle缺少对`pin_memory`等参数的支持；（2）PaddlePaddle增加了`use_shared_memory`参数来选择是否使用共享内存加速数据加载过程。
-
-**【注意事项】**
 
 论文中一般会提供数据集的名称以及基本信息。复现过程中，我们在下载完数据之后，建议先检查下是否和论文中描述一致，否则可能存在的问题有：
 
@@ -307,14 +304,16 @@ PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，PyTorch中对应为
 构建数据集时，也会涉及到一些预处理方法，以CV领域为例，PaddlePaddle提供了一些现成的视觉类操作api，具体可以参考：[paddle.vision类API](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)。对应地，PyTorch中的数据处理api可以参考：[torchvision.transforms类API](https://pytorch.org/vision/stable/transforms.html)。对于其中之一，可以找到另一个平台的实现。
 
 此外，
+
 * 有些自定义的数据处理方法，如果不涉及到深度学习框架的部分，可以直接复用。
 * 对于特定任务中的数据预处理方法，比如说图像分类、检测、分割等，如果没有现成的API可以调用，可以参考官方模型套件中的一些实现方法，比如PaddleClas、PaddleDetection、PaddleSeg等。
 
 **【实战】**
 
-AlexNet模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考该文件：
-[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py)
+AlexNet复现过程中，准备`ImageNet小数据集`的脚本可以参考[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
+AlexNet模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考该文件：
+[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/test_data.py)。
 
 使用方法可以参考[数据检查文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md)。
 
@@ -431,7 +430,6 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 **【注意事项】**
 
 * PaddlePaddle的optimizer中支持L1Decay/L2Decay。
-* PyTorch的optimizer支持不同参数列表的学习率分别设置，params传入字典即可，而PaddlePaddle目前尚未支持这种行为，可以通过设置`ParamAttr`的`learning_rate`参数，来确定相对学习率倍数，使用链接可以参考：[PaddleClas-ResNet model](https://github.com/PaddlePaddle/PaddleClas/blob/d67a352fcacc49ae6bbc7d1c7158e2c65f8e06d9/ppcls/arch/backbone/legendary_models/resnet.py#L121)。
 
 **【实战】**
 
@@ -588,13 +586,54 @@ random.seed(config.SEED)
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`train_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
 4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，最终一并打包上传即可。
 
-<a name="3.12"></a>
 
-### 3.12 单机多卡训练
+<a name="3.12"></a>
+### 3.12 训练日志规范
+
+**【背景】**
+
+训练过程中，损失函数(`loss`)可以直接反映目前网络，对于模型的收敛情况判断非常重要，数据耗时(`reader_cost`)对于分析GPU利用率非常重要，一个batch训练耗时(`batch_cost`)对于我们判断模型的整体训练时间非常重要，因此希望在训练中添加这些统计信息，便于分析模型的收敛和资源利用情况。
+
+**【基本流程】**
+
+在训练代码中添加日志统计信息，对训练中的信息进行统计。推荐使用`autolog`工具。
+
+* 必选项：当前`epoch`, 当前迭代次数`iter`, 损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
+* 建议项：学习率(`lr`), 准确率(`acc`)等。
+
+
+```
+[2021/12/04 05:16:13] root INFO: [epoch 0, batch_idx 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010543 sec, avg_batch_cost: 0.0111100 sec, loss: 0.3450000 , acc: 6.5500000 , avg_ips: 2880.2952878 images/sec
+[2021/12/04 05:16:13] root INFO: [epoch 0, batch_idx 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010542 sec, avg_batch_cost: 0.0111101 sec, loss: 0.2450000 , acc: 7.5500000 , avg_ips: 2880.2582019 images/sec
+```
+
+
+**【注意事项】**
+
+* 使用下面的方法安装`AutoLog`工具，更多使用方法可以参考[AutoLog](https://github.com/LDOUBLEV/AutoLog)。
+
+```bash
+git clone https://github.com/LDOUBLEV/AutoLog
+pip3 install -r requirements.txt
+python3 setup.py bdist_wheel
+pip3 install ./dist/auto_log-1.0.0-py3-none-any.whl
+```
+
+**【实战】**
+
+参考代码：[train.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/d0eab851603a8d9097b1b8d6089f26d96c6707b0/pipeline/Step5/AlexNet_paddle/train.py#L204)。
+
+**【验收】**
+
+* 输出目录中包含`train.log`文件，每个迭代过程中，至少包含`loss`, `avg_reader_cost`, `avg_batch_cost`等关键字段。
+
+<a name="3.13"></a>
+
+### 3.13 单机多卡训练
 
 如果希望使用单机多卡提升训练效率，可以从以下几个过程对代码进行修改。
 
-#### 3.12.1 数据读取
+#### 3.13.1 数据读取
 
 对于PaddlePaddle来说，多卡数据读取这块主要的变化在sampler
 
@@ -620,7 +659,7 @@ train_batch_sampler = paddle.io.DistributedBatchSampler(
 注意：在这种情况下，单机多卡的代码仍然能够以单机单卡的方式运行，因此建议以这种sampler方式进行论文复现。
 
 
-#### 3.12.2 多卡模型初始化
+#### 3.13.2 多卡模型初始化
 
 如果以多卡的方式运行，需要初始化并行训练环境，代码如下所示。
 
@@ -637,12 +676,12 @@ if paddle.distributed.get_world_size() > 1:
 ```
 
 
-#### 3.12.3 模型保存、日志保存等其他模块
+#### 3.13.3 模型保存、日志保存等其他模块
 
 以模型保存为例，我们只需要在0号卡上保存即可，否则多个trainer同时保存的话，可能会造成写冲突，导致最终保存的模型不可用。
 
 
-#### 3.12.4 程序启动方式
+#### 3.13.4 程序启动方式
 
 对于单机单卡，启动脚本如下所示。
 
@@ -678,34 +717,7 @@ python3.7 -m paddle.distributed.launch \
 本部分可以参考文档：[单机多卡训练脚本](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/AlexNet_paddle/shell/train_dist.sh)。
 
 
-<a name="3.13"></a>
 
-### 3.13 TIPC基础链条测试接入
-
-**【基本流程】**
-
-* 完成模型的训练、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
-    * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
-    * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
-* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`少量数据训练模型，少量数据预测`的模式即可，用于测试TIPC流程的模型和少量数据需要放在当前repo中。
-
-
-
-**【注意事项】**
-
-* 基础链条测试接入时，只需要验证`少量数据训练模型，少量数据预测`的模式，只需要在Linux下验证通过即可。
-* 在文档中需要给出一键测试的脚本与使用说明。
-
-**【实战】**
-
-TIPC基础链条测试接入用例可以参考：[InsightFace-paddle TIPC基础链条测试开发文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)。
-
-
-**【验收】**
-
-* TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
-
-<a name="4"></a>
 
 ## 4. 论文复现注意事项与FAQ
 
@@ -933,11 +945,9 @@ w.backward()
 
 <a name="4.13"></a>
 
-### 4.13 TIPC基础链条测试接入
+### 4.13 规范训练日志
 
-* 在接入时，建议将少量用于测试的数据打包(`tar -zcf lite_data.tar data/`)，放在data目录下，后续在进行环境准备的时候，直接解压该压缩包即可。
-* 接入过程中，需要依赖于inference模型，因此建议首先提供模型导出和基于inference模型的预测脚本，之后再接入TIPC测试代码与文档。
-* 接入过程中，如果需要在AiStudio中进行TensorRT预测，可以参考：[AiStudio中使用TensorRT进行预测教程](https://aistudio.baidu.com/aistudio/projectdetail/3027768)。
+* `autolog`支持训练和预测的日志规范化，更多关于`autolog`的使用可以参考：[https://github.com/LDOUBLEV/AutoLog](https://github.com/LDOUBLEV/AutoLog)。
 
 <a name="4.14"></a>
 
