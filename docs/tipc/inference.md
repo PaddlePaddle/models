@@ -124,7 +124,7 @@ inference.pdiparams.info: 模型参数信息文件
 
 **【实战】**
 
-AlexNet预处理包含`ResizeImage`, `CenterCropImage`, `NormalizeImage`, `ToCHW` 4个步骤，后处理为`argmax`，示例代码如下所示。参考链接：[predict.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/predict.py)。
+AlexNet预处理包含`ResizeImage`, `CenterCropImage`, `NormalizeImage`, `ToCHW` 4个步骤，后处理为`argmax`，示例代码如下所示。参考链接：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/infer.py)。
 
 ```python
     # 预处理
@@ -155,7 +155,7 @@ AlexNet预处理包含`ResizeImage`, `CenterCropImage`, `NormalizeImage`, `ToCHW
 
 **【实战】**
 
-AlexNet基于Paddle Inference的预测代码如下所示。参考链接：[predict.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/predict.py)。
+AlexNet基于Paddle Inference的预测代码如下所示。参考链接：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/infer.py)。
 
 ```python
 def predict(args):
