@@ -10,7 +10,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 ## 2. 流程
 
-为方便大家快速使用Paddle Inference进行预测推理，将模型推理过程分为4个步骤，如下图所示。
+为方便大家快速使用Paddle Inference进行预测推理，将模型推理过程分为5个步骤，如下图所示。
 
 <div align="center">
     <img src="./images/inference_pipeline.png" width="500">
@@ -197,5 +197,25 @@ def predict(args):
 
 * 基于训练引擎和预测引擎的推理结果相同。参考链接：[check_inference.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/check_inference.py)。
 
+
+### 2.5 规范推理日志
+
+**【背景】**
+
+推理过程一般包含预处理、预测引擎运行、后处理三个步骤，对这三个步骤的预测耗时进行记录，可以帮助我们更好地分析模型推理的耗时瓶颈，有助于后续的模型性能优化。
+
+**【基本流程】**
+
+在训练代码中添加日志统计信息，对推理中的信息进行统计。推荐使用`AutoLog`工具。
+
+基于`AutoLog`工具规范化推理日志的过程包括：初始化、在每个节点的、输出日志。
+
+**【注意事项】**
+
+* 使用下面的方法安装`AutoLog`工具，更多使用方法可以参考[AutoLog](https://github.com/LDOUBLEV/AutoLog)。
+
+**【实战】**
+
+AlexNet推理脚本中，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/infer.py)。
 
 ## 3. FAQ
