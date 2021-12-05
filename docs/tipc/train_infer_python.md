@@ -90,7 +90,7 @@ python   run_script    set_configs
 * 一行内容为`======xxxxx=====`：该行内容表示，无需修改。
 * 一行内容为`##`：该行内容表示段落分隔符，没有实际意义，无需修改。
 
-### 3.2.1 训练配置参数
+#### 3.2.1 训练配置参数
 
 在配置文件中，可以通过下面的方式配置一些常用的输出文件，如：是否使用GPU、迭代轮数、batch size、预训练模型路径等，下面给出了常用的配置以及需要修改的内容。
 
@@ -111,7 +111,7 @@ python   run_script    set_configs
 | 13 | null:null                           | 预留字段          | 否         | 否           | -                                |
 
 
-### 3.2.2 训练命令配置
+#### 3.2.2 训练命令配置
 
 | 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |                   |
 |----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
@@ -124,7 +124,7 @@ python   run_script    set_configs
 | 21 | null:null                                   | 预留字段            | 否         | 否           | -                 |
 
 
-### 3.2.3 模型导出配置参数
+#### 3.2.3 模型导出配置参数
 
 
 | 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
@@ -143,7 +143,7 @@ python   run_script    set_configs
 | 13 | null:null                           | 预留字段          | 否         | 否           | -                                |
 
 
-### 3.2.4 模型推理配置
+#### 3.2.4 模型推理配置
 
 
 | 行号 | 参考内容                                                 | 含义              | key是否需要修改 | value是否需要修改 | 修改内容                              |
@@ -167,7 +167,7 @@ python   run_script    set_configs
 
 ### 3.3 验收
 
-### 3.3.1 目录结构
+#### 3.3.1 目录结构
 
 整理目录结构如下所示。可以参考：[AlexNet_paddle/test_tipc](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc)
 
@@ -184,12 +184,12 @@ test_tipc
     |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
 ```
 
-### 3.3.2 配置文件
+#### 3.3.2 配置文件
 
 * 修改配置参数模板中文件内容，制作您的配置参数文件，放在`configs`目录下。
 * 可以参考AlexNet的[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
 
-### 3.3.3 说明文档
+#### 3.3.3 说明文档
 
 * `test_tipc/docs/test_train_inference_python.md`文档中需要包含环境(`AutoLog安装`)与数据准备(如果需要，如数据解压等)、一键测试的命令。按照文档流程可以走通训练推理过程。
 
