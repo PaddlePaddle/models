@@ -77,8 +77,8 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 ### 4.1 开发流程
 
+TIPC测试开发流程与规范可以参考：[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)。
 
 ### 4.2 规范验收点
 
-
-## 5. 附录
+验收点包含`目录结构、配置文件、说明文档`，具体内容可以参考[Linux GPU/CPU 基础训练推理测试开发规范](./train_infer_python.md)的`3.3章节`。
