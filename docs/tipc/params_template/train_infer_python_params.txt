@@ -4,9 +4,9 @@ python:python3.7
 gpu_list:0
 use_gpu:True
 null:null
-epoch_num:lite_train_infer=1
+epoch_num:lite_train_lite_infer=1
 output_dir:./output/
-train_batch_size:lite_train_infer=4
+train_batch_size:lite_train_lite_infer=4
 pretrained_model:null
 train_model_name:latest
 null:null
