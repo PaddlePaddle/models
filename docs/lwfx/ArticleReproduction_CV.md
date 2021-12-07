@@ -613,6 +613,57 @@ random.seed(config.SEED)
 
 参考代码：[train.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/d0eab851603a8d9097b1b8d6089f26d96c6707b0/pipeline/Step5/AlexNet_paddle/train.py#L204)。
 
+具体地，规范化日志可以按照如下所示的方式实现。
+
+```py
+def train_one_epoch(model,
+                    criterion,
+                    optimizer,
+                    data_loader,
+                    epoch,
+                    print_freq):
+    model.train()
+    # training log
+    train_reader_cost = 0.0
+    train_run_cost = 0.0
+    total_samples = 0
+    acc = 0.0
+    reader_start = time.time()
+    batch_past = 0
+
+    for batch_idx, (image, target) in enumerate(data_loader):
+        train_reader_cost += time.time() - reader_start
+        train_start = time.time()
+        output = model(image)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        optimizer.clear_grad()
+        train_run_cost += time.time() - train_start
+        acc = utils.accuracy(output, target).item()
+        total_samples += image.shape[0]
+        batch_past += 1
+
+        if batch_idx > 0 and batch_idx % print_freq == 0:
+            msg = "[Epoch {}, iter: {}] acc: {:.5f}, lr: {:.5f}, loss: {:.5f}, avg_reader_cost: {:.5f} sec, avg_batch_cost: {:.5f} sec, avg_samples: {}, avg_ips: {:.5f} images/sec.".format(
+                epoch, batch_idx, acc / batch_past,
+                optimizer.get_lr(),
+                loss.item(), train_reader_cost / batch_past,
+                (train_reader_cost + train_run_cost) / batch_past,
+                total_samples / batch_past,
+                total_samples / (train_reader_cost + train_run_cost))
+            print(msg)
+            sys.stdout.flush()
+            train_reader_cost = 0.0
+            train_run_cost = 0.0
+            total_samples = 0
+            acc = 0.0
+            batch_past = 0
+
+        reader_start = time.time()
+```
+
+
 **【验收】**
 
 * 输出目录中包含`train.log`文件，每个迭代过程中，至少包含`loss`, `avg_reader_cost`, `avg_batch_cost`等关键字段。

@@ -171,7 +171,7 @@ python   run_script    set_configs
 
 #### 3.3.1 目录结构
 
-整理目录结构如下所示。可以参考：[AlexNet_paddle/test_tipc](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc)
+整体目录结构如下所示。可以参考：[AlexNet_paddle/test_tipc](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc)
 
 
 ```
