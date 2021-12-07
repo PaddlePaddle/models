@@ -274,7 +274,7 @@ url = "http://127.0.0.1:18080/alexnet/prediction"
 客户端访问服务的命令如下：
 
 ```
-python3 alex_pipeline_http_client.py
+python3 pipeline_http_client.py
 ```
 
 访问成功的界面如下：
