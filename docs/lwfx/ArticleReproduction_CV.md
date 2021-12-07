@@ -594,10 +594,10 @@ random.seed(config.SEED)
 
 **【基本流程】**
 
-在训练代码中添加日志统计信息，对训练中的信息进行统计。推荐使用`autolog`工具。
+在训练代码中添加日志统计信息，对训练中的信息进行统计。
 
-* 必选项：当前`epoch`, 当前迭代次数`iter`, 损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
-* 建议项：学习率(`lr`), 准确率(`acc`)等。
+* 必选项：损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
+* 建议项：当前`epoch`, 当前迭代次数`iter`，学习率(`lr`), 准确率(`acc`)等。
 
 ```
 [2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010543 sec, avg_batch_cost: 0.0111100 sec, loss: 0.3450000 , avg_ips: 2880.2952878 images/sec
@@ -607,14 +607,7 @@ random.seed(config.SEED)
 
 **【注意事项】**
 
-* 使用下面的方法安装`AutoLog`工具，更多使用方法可以参考[AutoLog](https://github.com/LDOUBLEV/AutoLog)。
-
-```bash
-git clone https://github.com/LDOUBLEV/AutoLog
-pip3 install -r requirements.txt
-python3 setup.py bdist_wheel
-pip3 install ./dist/auto_log-1.0.0-py3-none-any.whl
-```
+* 日志打印也比较耗时，这里不建议统计其耗时，防止对统计结果造成影响。
 
 **【实战】**
 
