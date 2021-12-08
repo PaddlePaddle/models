@@ -19,11 +19,11 @@
 
 该系列文档主要介绍飞桨模型基于 Linux GPU/CPU 基础训练推理开发过程，主要包含三个步骤。
 
-1. 参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测过程。
+- 步骤一：参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测程序开发。
 
-2. 参考[《Linux GPU/CPU 模型推理开发文档》](./py_inference.md)，在基于训练引擎预测的基础上，完成基于Paddle Inference的推理过程开发。
+- 步骤二：参考[《Linux GPU/CPU 模型推理开发文档》](./infer_python.md)，在基于训练引擎预测的基础上，完成基于Paddle Inference的推理程序开发。
 
-3. 参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_linux_train_infer_python.md)，完成Linux GPU/CPU 训练、推理测试功能开发。
+- 步骤三：参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_train_infer_python.md)，完成Linux GPU/CPU 训练、推理测试功能开发。
 
 <a name="2"></a>
 
@@ -68,14 +68,13 @@
     * `avg_ips`: 过段若干个iter个训练速度（单位: images/sec）
 
 
-#### 2.2.4 基于训练引擎的预测过程
+#### 2.2.4 基于训练引擎的预测程序
 
 * 提供基于训练引擎的预测脚本与命令，文档需要提供示例图片，并根据示例图片，可视化出使用提供的预测命令运行得到的结果。
 
 #### 2.2.5 文档
 
 * 说明文档中需要有数据准备以及模型训练、评估、预测的命令。
-
 
 <a name="3"></a>
 
@@ -144,8 +143,8 @@ test_tipc
 ```
 
 
-#### 4.2.2 配置文件和说明文档
+#### 4.2.2 配置文件和测试文档
 
 * `test_tipc/README.md` 文档中对该模型支持的的功能进行总体介绍。
-* `test_tipc/docs/test_train_inference_python.md` 文档中对**Linux GPU/CPU 基础训练推理**的功能进行详细介绍。
-* 根据文档内容，基于配置文件，跑通自动化训练、推理的测试过程。
+* `test_tipc/docs/test_train_inference_python.md` 文档中对**Linux GPU/CPU 基础训练推理**的功能支持情况进行介绍。
+* 根据测试文档，基于配置文件，跑通训练推理全流程测试。
