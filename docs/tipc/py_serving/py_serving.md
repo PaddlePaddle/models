@@ -1,15 +1,15 @@
 # Linux GPU/CPU 服务化部署开发文档
 - [1 简介](#1---)
-- [2 服务化部署能力开发](#2---)
+- [2 服务化部署开发](#2---)
   * [2.1 准备测试数据和部署环境](#21---)
-  * [2.2 准备部署模型](#22---)
-  * [2.3 修改样例程序文件名](#23---)
+  * [2.2 准备服务化部署模型](#22---)
+  * [2.3 复制部署样例程序](#23---)
   * [2.4 初始化部署引擎](#24---)
   * [2.5 开发数据预处理程序](#25---)
   * [2.6 开发预测结果后处理程序](#26---)
   * [2.7 启动模型预测服务](#27---)
   * [2.8 开发客户端访问服务的程序](#28---)
-  * [2.9 验证服务化部署能力的正确性](#29---)
+  * [2.9 验证服务化部署功能的正确性](#29---)
 - [3 FAQ](#3---)
 
 <a name="1---"></a>
@@ -40,7 +40,7 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 
 【基本流程】
 
-**（1）准备测试数据：** 从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证。后续文档中将使用测试图像 ./demo.jpg 进行说明。
+**（1）准备测试数据：** 从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证。
 
 **（2）准备部署环境**
 
@@ -59,10 +59,10 @@ wget https://paddle-serving.bj.bcebos.com/test-dev/whl/paddle_serving_app-0.7.0-
 pip3 install paddle_serving_app-0.7.0-py3-none-any.whl
 ```
 
-Paddle Serving Server更多不同环境的whl包请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
+Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
 
 <a name="22---"></a>
-### 2.2 准备部署模型
+### 2.2 准备服务化部署模型
 
 【基本流程】
 
@@ -75,49 +75,46 @@ python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --mod
 
 【实战】
 
-针对AlexNet网络，将静态图模型转换为服务化部署模型的示例命令如下，转换完后在本地生成serving_server和serving_client两个文件夹。
+针对AlexNet网络，将静态图模型（[模型下载地址，待补充]）转换为服务化部署模型的示例命令如下，转换完后在本地生成serving_server和serving_client两个文件夹。本教程后续主要使用serving_server文件夹中的模型。
 
 ```python
-python3 -m paddle_serving_client.convert --dirname ../alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server serving_server --serving_client serving_client
+python3 -m paddle_serving_client.convert --dirname ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server serving_server --serving_client serving_client
 ```
 
 <a name="23---"></a>
-### 2.3 修改样例程序文件名
+### 2.3 复制部署样例程序
 
 【基本流程】
 
-目录 pdserving/example 下面包含3个用于服务化部署的样例程序，具体如下：
+服务化部署的样例程序的目录地址为：[tipc/py_serving/template/code/, 待补充地址]
+该目录下面包含3个文件，具体如下：
 
-- tipc_web_service.py：用于开发服务端模型预测相关程序。由于使用多卡或者多机部署预测服务，设计高效的服务调度策略比较复杂，Paddle Serving将网络预测进行了封装，在这个程序里面开发者只需要关心部署服务引擎的初始化，模型预测的前处理和后处理开发，不用关心模型预测调度问题。
+- web_service.py：用于开发服务端模型预测相关程序。由于使用多卡或者多机部署预测服务，设计高效的服务调度策略比较复杂，Paddle Serving将网络预测进行了封装，在这个程序里面开发者只需要关心部署服务引擎的初始化，模型预测的前处理和后处理开发，不用关心模型预测调度问题。
 
 - config.yml：服务端模型预测相关配置文件，里面有各参数的详细说明。开发者只需要关注如下配置：http_port（服务的http端口），model_config（服务化部署模型的路径），device_type（计算硬件类型），devices（计算硬件ID）。
 
-- tipc_pipeline_http_client.py：用于客户端访问服务的程序，开发者需要设置url（服务地址）、logid（日志ID）和测试图像。
+- pipeline_http_client.py：用于客户端访问服务的程序，开发者需要设置url（服务地址）、logid（日志ID）和测试图像。
 
 【实战】
 
-如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录，并修改名称如下：
-
-- tipc_web_service.py ---> alex_web_service.py
-
-- config.yml ---> alex_config.yml
-
-- tipc_pipeline_http_client.py ---> alex_pipeline_http_client.py
+如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录。
 
 <a name="24---"></a>
 ### 2.4 初始化部署引擎
 
 【基本流程】
 
-针对模型名称，修改tipc_web_service.py中类TIPCExampleService、TIPCExampleOp的名称，以及这些类初始化中任务名称name，同时通过uci_service.prepare_pipeline_config设置配置参数。
+针对模型名称，修改web_service.py中类TIPCExampleService、TIPCExampleOp的名称，以及这些类初始化中任务名称name，同时通过uci_service.prepare_pipeline_config设置配置参数。
 
-同时修改服务配置文件中的配置：http_port（服务的http端口），model_config（服务化部署模型的路径），device_type（计算硬件类型），devices（计算硬件ID）
+同时修改服务配置文件中的配置：OP名称，http_port（服务的http端口），model_config（服务化部署模型的路径），device_type（计算硬件类型），devices（计算硬件ID）
 
 【实战】
 
-针对AlexNet网络，修改alex_web_service.py文件后的代码如下：
+针对AlexNet网络，（1）修改web_service.py文件后的代码如下：
 
 ```
+from paddle_serving_server.web_service import WebService, Op
+
 class AlexNetOp(Op):
     def init_op(self):
         pass
@@ -135,18 +132,23 @@ class AlexNetService(WebService):
         return alexnet_op
 
 uci_service = AlexNetService(name="alexnet")
-uci_service.prepare_pipeline_config("alex_config.yml")
+uci_service.prepare_pipeline_config("config.yml")
 uci_service.run_service()
 ```
 
-服务配置文件alex_config.yml 这里我们使用默认配置，开发者可以根据具体运行环境情况进行修改。
+（2）修改服务配置文件config.yml。
+- http_port：使用默认的端口号18080
+- OP名称：第14行更新为alexnet
+- model_config：与2.2转换后服务化部署模型文件夹路径一致，这里使用默认配置 "./serving_server"
+- device_type：使用默认配置1，基于GPU预测
+- devices：使用默认配置"0"，0号卡预测
 
 <a name="25---"></a>
 ### 2.5 开发数据预处理程序
 
 【基本流程】
 
-tipc_web_service.py文件中的TIPCExampleOp类的preprocess函数用于开发数据预处理程序，包含输入、处理流程和输出三部分。
+web_service.py文件中的TIPCExampleOp类的preprocess函数用于开发数据预处理程序，包含输入、处理流程和输出三部分。
 
 **（1）输入：** 一般开发者使用时，只需要关心input_dicts和log_id两个输入参数。这两个参数与客户端访问服务程序tipc_pipeline_http_client.py中的请求参数相对应，即：
 ```
@@ -165,15 +167,17 @@ tipc_web_service.py文件中的TIPCExampleOp类的preprocess函数用于开发�
 
 【实战】
 
-针对AlexNet网络的数据预处理开发，需要将Paddle Inference中的preprocess.py 复制到Paddle Serving的目录下，修改alex_web_service.py文件中代码如下：
+针对AlexNet网络的数据预处理开发，需要将[Paddle Inference中的preprocess_ops.py, 待补充文件路径] 复制到Paddle Serving的目录下，修改alex_web_service.py文件中代码如下：
 
 添加头文件：
 
 ```py
+import numpy as np
+import sys
 import base64
 from PIL import Image
 import io
-from preprocess import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
+from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 ```
 修改AlexNetOp中的init_op和preprocess函数相关代码：
 
@@ -204,7 +208,7 @@ class AlexNetOp(Op):
 
 【基本流程】
 
-tipc_web_service.py文件中的TIPCExampleOp类的 postprocess 函数用于开发预测结果后处理程序，包含输入、处理流程和输出三部分。
+web_service.py文件中的TIPCExampleOp类的 postprocess 函数用于开发预测结果后处理程序，包含输入、处理流程和输出三部分。
 
 **（1）输入：** 包含四个参数，其中参数input_dicts、log_id和数据预处理函数preprocess中一样，data_id可忽略，fetch_dict 是网络预测输出字典，其中输出的key可以通过服务化模型配置文件serving_server/serving_server_conf.prototxt中的fetch_var字典的name字段获取。
 
@@ -218,11 +222,11 @@ result, None, ""
 
 【实战】
 
-针对AlexNet网络的预测结果后处理开发，修改alex_web_service.py文件中AlexNetOp中的postprocess函数相关代码如下：
+针对AlexNet网络的预测结果后处理开发，修改web_service.py文件中AlexNetOp中的postprocess函数相关代码如下：
 
 ```
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
-        score_list = fetch_dict["conv2d_5.tmp_0"]
+        score_list = fetch_dict["save_infer_model/scale_0.tmp_1"]
         result = {"class_id": [], "prob": []}
         for score in score_list:
             score = score.flatten()
@@ -243,37 +247,34 @@ result, None, ""
 当完成服务化部署引擎初始化、数据预处理和预测结果后处理开发，则可以按如下命令启动模型预测服务：
 
 ```bash
-python3 tipc_web_service.py &
+python3 web_service.py &
 ```
 
 【实战】
 
-针对AlexNet网络, 模型预测服务启动命令如下：
-
-```bash
-python3 alex_web_service.py &
-```
-
-启动成功的界面如下：
-
+针对AlexNet网络, 启动成功的界面如下：
 
 ![](./images/py_serving_startup_visualization.jpg)
-
 
 <a name="28---"></a>
 ### 2.8 开发客户端访问服务的程序
 
 【基本流程】
 
-当成功启动了模型预测服务，可以修改tipc_pipeline_http_client.py程序，访问该服务。主要设置url（服务地址）、logid（日志ID）和测试图像。其中服务地址的url设置如下：
-
+当成功启动了模型预测服务，可以修改pipeline_http_client.py程序，访问该服务。主要设置url（服务地址）、logid（日志ID）和测试图像。其中服务地址的url的样式为 "http://127.0.0.1:18080/tipc_example/prediction" ，url的设置需要将url中的tipc_example更新为TIPCExampleService类初始化的name。
 
 【实战】
 
-针对AlexNet网络, 客户端访问服务的命令如下：
+针对AlexNet网络, 修改pipeline_http_client.py程序中的url（服务地址）、logid（日志ID）和测试图像地址，其中url改为：
 
 ```
-python3 alex_pipeline_http_client.py
+url = "http://127.0.0.1:18080/alexnet/prediction"
+```
+
+客户端访问服务的命令如下：
+
+```
+python3 pipeline_http_client.py
 ```
 
 访问成功的界面如下：
@@ -289,7 +290,7 @@ unset https_proxy
 ```
 
 <a name="29---"></a>
-### 2.9 验证服务化部署能力的正确性
+### 2.9 验证服务化部署功能的正确性（[待若愚完善]）
 
 ```
 python3 infer.py --model-dir ../alexnet_infer/ --benchmark False --img-path ../pdserving/demo.jpg --use-gpu True
