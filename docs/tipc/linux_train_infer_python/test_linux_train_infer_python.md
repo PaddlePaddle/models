@@ -156,7 +156,7 @@ AlexNet中验证配置正确性的脚本：[Linux端基础训练推理功能测�
 撰写TIPC功能总览和测试流程说明文档，分别为
 
 1. TIPC功能总览文档：test_tipc/README.md
-2. Linux GPU/CPU 基础训练推理测试说明文：test_tipc/docs/test_train_infer_python.md
+2. Linux GPU/CPU 基础训练推理测试说明文档：test_tipc/docs/test_train_infer_python.md
 
 2个文档模板分别位于，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
