@@ -19,7 +19,7 @@
 
 该系列文档主要介绍飞桨模型基于 Linux GPU/CPU 基础训练推理开发过程，主要包含三个步骤。
 
-1. 参考 [《模型复现指南》](./ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测过程。
+1. 参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测过程。
 
 2. 参考[《Linux GPU/CPU 模型推理开发文档》](./py_inference.md)，在基于训练引擎预测的基础上，完成基于Paddle Inference的推理过程开发。
 
