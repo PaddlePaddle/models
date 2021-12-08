@@ -14,21 +14,24 @@
 
 from paddle_serving_server.web_service import WebService, Op
 
+
 class TIPCExampleOp(Op):
     def init_op(self):
         pass
-    
+
     def preprocess(self, input_dicts, data_id, log_id):
         pass
-        
+
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
         pass
 
 
 class TIPCExampleService(WebService):
     def get_pipeline_response(self, read_op):
-        tipc_example_op = TIPCExampleOp(name="tipc_example", input_ops=[read_op])
+        tipc_example_op = TIPCExampleOp(
+            name="tipc_example", input_ops=[read_op])
         return tipc_example_op
+
 
 uci_service = TIPCExampleService(name="tipc_example")
 uci_service.prepare_pipeline_config("config.yml")
