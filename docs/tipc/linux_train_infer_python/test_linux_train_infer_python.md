@@ -1,58 +1,42 @@
-# Linux GPU/CPU 基础训练推理测试开发规范
+# Linux GPU/CPU 基础训练推理测试开发文档
 
-## 1. 本规范测试功能
+# 目录
 
-本规范主要关注Linux GPU/CPU 下模型的基础训练推理全流程测试，具体测试点如下：
+- [1. 简介](#1)
+- [2. 命令解析](#2)
+- [3. 测试功能开发](#2)
+    - [2.1 准备数据与环境](#.21)
+    - [2.2 准备开发所需脚本](#2.2)
+    - [2.3 填写配置文件](#2.3)
+    - [2.4 验证配置正确性](#2.4)
+    - [2.5 撰写说明文档](#2.5)
+- [4. 附录](#4)
+    - [4.1 `train_infer_python.txt`配置文件说明](#4.1)
+
+<a name="1"></a>
+
+## 1. 简介
+
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的测试开发过程。主要内容为
+
+1. 在基于训练引擎预测的基础上，完成基于Paddle Inference的推理过程开发。
+
+在此之前，您需要完成下面的内容。
+
+1. 参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测过程。
+
+2. 参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
+
+
+具体地，本文档主要关注Linux GPU/CPU 下模型的基础训练推理全流程测试，具体测试点如下：
 
 - 模型训练方面：单机单卡/多卡训练跑通
 - 飞桨模型转换：保存静态图模型
 - Paddle Inference 推理过程跑通
 
-目的：对于特定模型，通过一个配置文件，跑通该模型的训练、模型转换和Paddle Inference推理过程。
+<a name="2"></a>
 
-本规则
-
-## 2. 前置条件
-
-### 2.1 准备小数据集与环境
-
-**【基本内容】**
-
-为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
-
-相关文档可以参考[论文复现赛指南3.2章节](../lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
-
-**【注意事项】**
-
-* 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
-    * 压缩命令： `tar -zcf lite_data.tar lite_data`
-    * 解压命令： `tar -xf lite_data.tar`
-
-### 2.2 规范训练日志
-
-**【基本内容】**
-
-训练日志符合规范，相关文档可以参考[论文复现赛指南3.12章节](../../lwfx/ArticleReproduction_CV.md)。
-
-
-**【注意事项】**
-
-* 训练日志中，至少需要包含`loss`, `avg_reader_cost`, `avg_batch_cost`, `avg_ips`关键字段及信息。
-* 规范化日志输出建议使用[AutoLog](https://github.com/LDOUBLEV/AutoLog)工具包，示例代码可以参考：[AlexNet训练过程中添加训练日志](https://github.com/littletomatodonkey/AlexNet-Prod/blob/f52b475ec88c1cf7ee15775ab0dd94f8d3f3cf40/pipeline/Step5/AlexNet_paddle/train.py#L55)。
-
-### 2.3 支持模型推理功能，规范推理日志
-
-**【基本内容】**
-
-模型支持动转静与推理过程，推理日志符合日志规范。
-
-**【注意事项】**
-
-* 相关内容可以参考[模型推理开发规范](./inference.md)。
-
-## 3. 配置文件解析与开发
-
-### 3.1 介绍
+## 2. 命令解析
 
 运行模型训练、动转静、推理过程的命令差别很大，但是都可以拆解为3个部分：
 
@@ -64,19 +48,155 @@ python   run_script    set_configs
 
 * 对于通过配置文件传参的场景来说，`python3.7 train.py -c config.yaml -o epoch_num=120`
     * `python`部分为`python3.7`
-    * `run_script`部分为`train.p`
+    * `run_script`部分为`train.py`
     * `set_configs`部分为`-c config.yaml -o epoch_num=120`
 * 对于通过argparse传参的场景来说，`python3.7 train.py --lr=0.1, --output=./output`
     * `python`部分为`python3.7`
     * `run_script`部分为`train.py`
     * `set_configs`部分为`--lr=0.1, --output=./output`
 
-给定配置文件模板，便可以拼凑为完整的训练命令格式。
+其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以拼凑出一条完整的命令。
+
+<a name="3"></a>
+
+## 3. 测试功能开发
+
+基础训练推理测试开发过程主要分为以下5个步骤。
+
+<div align="center">
+    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
+</div>
+
+其中设置了2个核验点。下面进行详细介绍。
+
+<a name="3.1"></a>
+
+### 3.1 准备小数据集与环境
+
+**【基本内容】**
+
+1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
+
+    相关文档可以参考[论文复现赛指南3.2章节](../lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
+
+2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
 
 
-### 3.2 配置文件解析与开发
+**【注意事项】**
 
-完整的配置文件共有51行，包含5个方面的内容。
+* 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
+    * 压缩命令： `tar -zcf lite_data.tar lite_data`
+    * 解压命令： `tar -xf lite_data.tar`
+
+<a name="=3.2"></a>
+
+### 3.2 准备开发所需脚本
+
+**【基本内容】**
+
+在repo中新建`test_tipc`目录，将文件 [common_func.sh](template/test/common_func.sh) 和 [test_train_inference_python.sh](template/test/test_train_inference_python.sh) 分别拷贝到`test_tipc`目录中。
+
+
+**【注意事项】**
+
+* 上述2个脚本文件无需改动，在实际使用时，直接修改配置文件即可。
+
+<a name="3.3"></a>
+
+### 3.3 填写配置文件
+
+**【基本内容】**
+
+在repo的`test_tipc/`目录中新建`configs/model_name`，将文件 [template/test/train_infer_python.txt](template/test/train_infer_python.txt) 拷贝到该目录中，其中`model_name`需要修改为您自己的模型名称。
+
+**【注意事项】**
+
+
+**【实战】**
+
+配置文件的含义解析可以参考 [4.1章节配置文件解析](#4.1) 部分。
+
+AlexNet的测试开发配置文件可以参考：[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
+
+<a name="3.4"></a>
+
+### 3.4 验证配置正确性
+
+**【基本内容】**
+
+基于修改完的配置，运行
+
+```bash
+bash test_tipc/test_train_inference_python.sh ${your_params_file} lite_train_lite_infer
+```
+
+**【注意事项】**
+
+如果运行失败，会输出具体的报错命令，可以根据输出的报错命令排查下配置文件的问题并修改，示例报错如下所示，通过报错信息可知`pretrained`参数没有添加`.pdparams`后缀，因此直接修改后面的配置文件即可。
+
+```
+Run failed with command - python3.7 tools/export_model.py --model=alexnet --pretrained=./test_tipc/output/norm_train_gpus_0_autocast_null/latest --save-inference-dir=./test_tipc/output/norm_train_gpus_0_autocast_null!
+```
+
+**【实战】**
+
+AlexNet中验证配置正确性的脚本：[Linux端基础训练推理功能测试文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/docs/test_train_inference_python.md#23-%E5%8A%9F%E8%83%BD%E6%B5%8B%E8%AF%95)。
+
+
+**【核验】**
+
+基于修改后的配置文件，测试通过，全部命令成功
+
+<a name="3.5"></a>
+
+### 3.5 撰写说明文档
+
+**【基本内容】**
+
+撰写TIPC功能总览和测试流程说明文档，分别为
+
+1. TIPC功能总览文档：test_tipc/README.md
+2. Linux GPU/CPU 基础训练推理测试说明文：test_tipc/docs/test_train_infer_python.md
+
+2个文档模板分别位于，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
+
+1. [./template/test/doc/README.md](./template/test/doc/README.md)
+2. [./template/test/doc/test_train_inference_python.md](./template/test/doc/test_train_inference_python.md)
+
+**【实战】**
+
+AlexNet中`test_tipc`文档如下所示。
+
+1. TIPC功能总览文档：https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/README.md
+2. Linux GPU/CPU 基础训练推理测试说明文档：https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/docs/test_train_inference_python.md
+
+**【核验】**
+
+repo中最终目录结构如下所示。
+
+```
+test_tipc
+    |--configs                              # 配置目录
+    |    |--model_name                      # 您的模型名称
+    |           |--train_infer_python.txt   # 基础训练推理测试配置文件
+    |--docs                                 # 文档目录
+    |   |--test_train_inference_python.md   # 基础训练推理测试说明文档
+    |----README.md                          # TIPC说明文档
+    |----test_train_inference_python.sh     # TIPC基础训练推理测试解析脚本，无需改动
+    |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
+```
+
+基于`test_train_inference_python.md`文档，跑通`Linux GPU/CPU 基础训练推理测试`流程。
+
+<a name="4"></a>
+
+## 4. 附录
+
+<a name="4.1"></a>
+
+### 4.1 `train_infer_python.txt`配置文件说明
+
+完整的`train_infer_python.txt`配置文件共有51行，包含5个方面的内容。
 
 * 训练参数：第1~14行
 * 训练脚本配置：第15~22行
@@ -84,7 +204,7 @@ python   run_script    set_configs
 * 模型导出脚本和配置：第27~36行
 * 模型Inference推理：第37~51行
 
-具体内容见[train_infer_python_params.txt](params_template/train_infer_python_params.txt)。
+具体内容见[train_infer_python.txt](template/test/train_infer_python.txt)。
 
 文本文件中主要有以下3种类型字段。
 
@@ -92,7 +212,7 @@ python   run_script    set_configs
 * 一行内容为`======xxxxx=====`：该行内容表示，无需修改。
 * 一行内容为`##`：该行内容表示段落分隔符，没有实际意义，无需修改。
 
-#### 3.2.1 训练配置参数
+#### 4.1.1 训练配置参数
 
 在配置文件中，可以通过下面的方式配置一些常用的输出文件，如：是否使用GPU、迭代轮数、batch size、预训练模型路径等，下面给出了常用的配置以及需要修改的内容。
 
@@ -113,7 +233,7 @@ python   run_script    set_configs
 | 13 | null:null                           | 预留字段          | 否         | 否           | -                                |
 
 
-#### 3.2.2 训练命令配置
+#### 4.1.2 训练命令配置
 
 | 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
 |----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
@@ -126,7 +246,7 @@ python   run_script    set_configs
 | 21 | null:null                                   | 预留字段            | 否         | 否           | -                 |
 
 
-#### 3.2.3 模型导出配置参数
+#### 4.1.3 模型导出配置参数
 
 | 行号 | 参考内容                 | 含义        | key是否需要修改 | value是否需要修改 | 修改内容                    |
 |----|------------------|-----------|-----------|-------------|-------------------------|
@@ -141,7 +261,7 @@ python   run_script    set_configs
 
 
 
-#### 3.2.4 模型推理配置
+#### 4.1.4 模型推理配置
 
 
 | 行号 | 参考内容             | 含义     | key是否需要修改 | value是否需要修改 | 修改内容        |
@@ -161,36 +281,3 @@ python   run_script    set_configs
 | 49 | --save_log_path:null                                 | 推理日志输出路径        | 否         | 否           | -                                 |
 | 50 | --benchmark:False                                    | 是否使用            | 是         | 是           | key和value修改为规范化推理日志输出设置的参数和值      |
 | 51 | null:null                                            | 预留字段            | 否         | 否           | -                                 |
-
-
-### 3.3 核验
-
-#### 3.3.1 目录结构
-
-整体目录结构如下所示。可以参考：[AlexNet_paddle/test_tipc](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc)
-
-
-```
-test_tipc
-    |--configs                              # 配置目录
-    |    |--model_name                      # 您的模型名称
-    |           |--train_infer_python.txt   # 基础训练推理测试配置文件
-    |--docs                                 # 文档目录
-    |   |--test_train_inference_python.md   # 基础训练推理测试说明文档
-    |----README.md                          # TIPC说明文档
-    |----test_train_inference_python.sh     # TIPC基础训练推理测试解析脚本，无需改动
-    |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
-```
-
-#### 3.3.2 配置文件
-
-* 修改配置参数模板中文件内容，制作您的配置参数文件，放在`configs`目录下。
-* 可以参考AlexNet的[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
-
-#### 3.3.3 说明文档
-
-* `test_tipc/docs/test_train_inference_python.md`文档中需要包含环境(`AutoLog安装`)与数据准备(如果需要，如数据解压等)、一键测试的命令。按照文档流程可以走通训练推理过程。
-
-* TIPC首页文档可以参考：[README.md](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/README.md)，需要将其中的模型与支持的训练推理模式修改为该模型目前测试脚本中包含的模式。
-
-* TIPC训练推理测试说明文档可以参考：[test_train_inference_python.md](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/docs/test_train_inference_python.md)，需要将其中的模型与支持的训练推理模式修改为该模型目前测试脚本中包含的模式。
