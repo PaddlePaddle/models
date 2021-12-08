@@ -1,10 +1,10 @@
-# 论文复现赛指南-CV方向
+# 论文复现指南-CV方向
 
-> 本文为针对 `CV` 方向的复现赛指南
+> 本文为针对 `CV` 方向的复现指南
 >
-> 如果希望查阅 `NLP` 方向的复现赛指南，可以参考：[NLP方向论文复现赛指南](./ArticleReproduction_NLP.md)
+> 如果希望查阅 `NLP` 方向的复现指南，可以参考：[NLP方向论文复现指南](./ArticleReproduction_NLP.md)
 >
-> 如果希望查阅 `推荐` 方向的复现赛指南，可以参考：[推荐方向论文复现赛指南](./ArticleReproduction_REC.md)
+> 如果希望查阅 `推荐` 方向的复现指南，可以参考：[推荐方向论文复现指南](./ArticleReproduction_REC.md)
 
 ## 目录
 
@@ -28,7 +28,8 @@
     - [3.10 网络初始化对齐](#3.10)
     - [3.11 模型训练对齐](#3.11)
     - [3.12 规范训练日志](#3.12)
-    - [3.13 单机多卡训练](#3.13)
+    - [3.13 预测程序开发](#3.13)
+    - [3.14 单机多卡训练](#3.14)
 - [4. 论文复现注意事项与FAQ](#4)
     - [4.1 通用注意事项](#4.0)
     - [4.2 模型结构对齐](#4.1)
@@ -43,7 +44,8 @@
     - [4.11 网络初始化对齐](#4.10)
     - [4.12 模型训练对齐](#4.11)
     - [4.13 规范训练日志](#4.13)
-    - [4.14 常见bug汇总](#4.14)
+    - [4.14 预测程序开发](#4.14)
+    - [4.15 常见bug汇总](#4.15)
 
 <a name="1"></a>
 ## 1. 总览
@@ -69,7 +71,7 @@
     * 在该步骤中，以AlexNet为例，生成fake data的脚本可以参考：[gen_fake_data.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/fake_data/gen_fake_data.py)。
 * 在特定设备(CPU/GPU)上，跑通参考代码的预测过程(前向)以及至少2轮(iteration)迭代过程，保证后续基于PaddlePaddle复现论文过程中可对比。
 * 本文档基于 `AlexNet-Prod` 代码以及`reprod_log` whl包进行说明与测试。如果希望体验，建议参考[AlexNet-Reprod文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/README.md)进行安装与测试。
-* 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加`参考代码的实现`，在验收通过之后，需要删除打卡日志。建议在初期复现的时候，就将**复现代码与参考代码分成2个文件夹进行管理**。
+* 在复现的过程中，只需要将PaddlePaddle的复现代码以及打卡日志上传至github，不能在其中添加`参考代码的实现`，在核验通过之后，需要删除打卡日志。建议在初期复现的时候，就将**复现代码与参考代码分成2个文件夹进行管理**。
 
 <a name="2"></a>
 ## 2. 整体框图
@@ -83,16 +85,17 @@
 <img src="images/framework_reprodcv.png"  width = "800" />
 </div>
 
-总共包含12个步骤。为了高效复现论文，设置了6个验收节点。如上图中黄色框所示。后续章节会详细介绍上述步骤和验收节点，具体内容安排如下：
+总共包含13个步骤。为了高效复现论文，设置了6个核验点。如上图中黄色框所示。后续章节会详细介绍上述步骤和核验点，具体内容安排如下：
 
-* 第3章：介绍12个复现步骤的理论知识、实战以及验收流程。
+* 第3章：介绍13个复现步骤的理论知识、实战以及核验流程。
 * 第4章：针对复现流程过程中每个步骤可能出现的问题，本章会进行详细介绍。如果还是不能解决问题，可以提ISSUE进行讨论，提ISSUE地址：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)
 
 <a name="2.2"></a>
+
 ### 2.2 reprod_log whl包
 
 #### 2.2.1 reprod_log工具简介
-`reprod_log`是用于论文复现赛中辅助自查和验收工具。该工具源代码地址在：[https://github.com/WenmuZhou/reprod_log](https://github.com/WenmuZhou/reprod_log)。主要功能如下：
+`reprod_log`是用于论文复现赛中辅助自查和核验工具。该工具源代码地址在：[https://github.com/WenmuZhou/reprod_log](https://github.com/WenmuZhou/reprod_log)。主要功能如下：
 
 * 存取指定节点的输入输出tensor
 * 基于文件的tensor读写
@@ -155,9 +158,9 @@ log_reprod
 ├── train_align_diff.log # train_align_paddle.npy与train_align_benchmark.npy生成的diff结果文件
 ```
 
-上述文件的生成代码都需要开发者进行开发，验收时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
+上述文件的生成代码都需要开发者进行开发，核验时需要提供上面罗列的所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
 
-AlexNet-Prod项目提供了基于reprod_log的前5个验收点对齐验收示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
+AlexNet-Prod项目提供了基于reprod_log的前5个核验点对齐核验示例，参考代码地址为：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/)，每个文件夹中的README.md文档提供了使用说明。
 
 
 <a name="3"></a>
@@ -258,9 +261,9 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 [https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1](https://github.com/littletomatodonkey/AlexNet-Prod/tree/master/pipeline/Step1)
 
 
-**【验收】**
+**【核验】**
 
-对于待复现的项目，前向对齐验收流程如下。
+对于待复现的项目，前向对齐核验流程如下。
 
 1. 准备输入：fake data
     * 使用参考代码的dataloader，生成一个batch的数据，保存下来，在前向对齐时，直接从文件中读入。
@@ -270,7 +273,7 @@ AlexNet模型组网正确性验证可以参考如下示例代码：
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`forward_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
 4. 提交内容：新建文件夹，将`forward_paddle.npy`、`forward_pytorch.npy`与`forward_diff_log.txt`文件放在文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 5. 注意：
-    * PaddlePaddle与PyTorch保存的dict的key需要保持相同，否则report过程可能会提示key无法对应，从而导致report失败，之后的`【验收】`环节也是如此。
+    * PaddlePaddle与PyTorch保存的dict的key需要保持相同，否则report过程可能会提示key无法对应，从而导致report失败，之后的`【核验】`环节也是如此。
     * 如果是固定随机数种子，建议将fake data保存到dict中，方便check参考代码和PaddlePaddle的输入是否一致。
 
 <a name="3.2"></a>
@@ -336,15 +339,15 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
 评估指标对齐检查方法可以参考文档：[评估指标对齐检查方法文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step2/README.md#%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4)
 
 
-**【验收】**
+**【核验】**
 
-对于待复现的项目，评估指标对齐验收流程如下。
+对于待复现的项目，评估指标对齐核验流程如下。
 
 1. 输入：dataloader, model
 2. 输出：
     * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`metric_paddle.npy`和`metric_pytorch.npy`。
     * 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`metric_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-3. 提交内容：将`metric_paddle.npy`、`metric_pytorch.npy`与`metric_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+3. 提交内容：将`metric_paddle.npy`、`metric_pytorch.npy`与`metric_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 4. 注意：
     * 数据需要是真实数据
     * 需要检查论文是否只是抽取了验证集/测试集中的部分文件，如果是的话，则需要保证PaddlePaddle和参考代码中dataset使用的数据集一致。
@@ -374,15 +377,15 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 本部分可以参考文档：[https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step3/README.md](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step3/README.md)。
 
-**【验收】**
+**【核验】**
 
-对于待复现的项目，损失函数对齐验收流程如下。
+对于待复现的项目，损失函数对齐核验流程如下。
 
 1. 输入：fake data & label
 2. 输出：
     * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`loss_paddle.npy`和`loss_pytorch.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`loss_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`loss_paddle.npy`、`loss_pytorch.npy`与`loss_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+4. 提交内容：将`loss_paddle.npy`、`loss_pytorch.npy`与`loss_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 
 <a name="3.5"></a>
 ### 3.5 优化器对齐
@@ -479,15 +482,15 @@ L2正则化策略用于模型训练，可以防止模型对训练数据过拟合
 
 本部分可以参考文档：[反向对齐操作文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step4/README.md#%E5%8F%8D%E5%90%91%E5%AF%B9%E9%BD%90%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95)。
 
-**【验收】**
+**【核验】**
 
-对于待复现的项目，反向对齐验收流程如下。
+对于待复现的项目，反向对齐核验流程如下。
 
 1. 输入：fake data & label
 2. 输出：
     * PaddlePaddle/PyTorch：dict，key为tensor的name（自定义），value为具体loss的值。最后将dict使用reprod_log保存到各自的文件中，建议命名为`bp_align_paddle.npy`和`bp_align_pytorch.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`bp_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`bp_align_paddle.npy`、`bp_align_pytorch.npy`与`bp_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
+4. 提交内容：将`bp_align_paddle.npy`、`bp_align_pytorch.npy`与`bp_align_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 5. 注意：
     * loss需要保存至少2轮以上。
     * 在迭代的过程中，需要保证模型的batch size等超参数完全相同
@@ -573,19 +576,20 @@ random.seed(config.SEED)
 
 本部分可以参考文档：[训练对齐操作文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/master/pipeline/Step5/README.md)。
 
-**【验收】**
+**【核验】**
 
-对于待复现的项目，训练对齐验收流程如下。
+对于待复现的项目，训练对齐核验流程如下。
 
 1. 输入：train/eval dataloader, model
 2. 输出：
     * PaddlePaddle：dict，key为保存值的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到文件中，建议命名为`train_align_paddle.npy`。
     * benchmark：dict，key为保存值的name（自定义），value为论文复现赛的评估指标要求的值。最后将dict使用reprod_log保存到文件中，建议命名为`train_align_benchmark.npy`。
 3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`train_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节验收环节`新建的文件夹中，最终一并打包上传即可。
+4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，最终一并打包上传即可。
 
 
 <a name="3.12"></a>
+
 ### 3.12 规范训练日志
 
 **【背景】**
@@ -663,18 +667,35 @@ def train_one_epoch(model,
         reader_start = time.time()
 ```
 
-
-**【验收】**
-
-* 输出目录中包含`train.log`文件，每个迭代过程中，至少包含`loss`, `avg_reader_cost`, `avg_batch_cost`等关键字段。
-
 <a name="3.13"></a>
 
-### 3.13 单机多卡训练
+### 3.13 预测程序开发
+
+**【基本流程】**
+
+模型训练完成之后，对图像使用该模型基于训练引擎进行预测，主要包含
+
+1. 定义模型结构，加载模型权重；
+2. 加载图像，对其进行数据预处理；
+3. 模型预测；
+4. 对模型输出进行后处理，获取最终输出结果。
+
+**【注意事项】**
+
+* 在模型评估过程中，为了保证数据可以组batch，我们一般会使用resize/crop/padding等方法去保持尺度的一致性，在预测推理过程中，需要注意crop是否合适，比如OCR识别任务中，crop的操作会导致识别结果不全。
+
+**【实战】**
+
+AlexNet的预测程序：[predict.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/predict.py)。
+
+
+<a name="3.14"></a>
+
+### 3.14 单机多卡训练
 
 如果希望使用单机多卡提升训练效率，可以从以下几个过程对代码进行修改。
 
-#### 3.13.1 数据读取
+#### 3.14.1 数据读取
 
 对于PaddlePaddle来说，多卡数据读取这块主要的变化在sampler
 
@@ -700,7 +721,7 @@ train_batch_sampler = paddle.io.DistributedBatchSampler(
 注意：在这种情况下，单机多卡的代码仍然能够以单机单卡的方式运行，因此建议以这种sampler方式进行论文复现。
 
 
-#### 3.13.2 多卡模型初始化
+#### 3.14.2 多卡模型初始化
 
 如果以多卡的方式运行，需要初始化并行训练环境，代码如下所示。
 
@@ -717,12 +738,12 @@ if paddle.distributed.get_world_size() > 1:
 ```
 
 
-#### 3.13.3 模型保存、日志保存等其他模块
+#### 3.14.3 模型保存、日志保存等其他模块
 
 以模型保存为例，我们只需要在0号卡上保存即可，否则多个trainer同时保存的话，可能会造成写冲突，导致最终保存的模型不可用。
 
 
-#### 3.13.4 程序启动方式
+#### 3.14.4 程序启动方式
 
 对于单机单卡，启动脚本如下所示。
 
@@ -990,13 +1011,21 @@ w.backward()
 
 * `autolog`支持训练和预测的日志规范化，更多关于`autolog`的使用可以参考：[https://github.com/LDOUBLEV/AutoLog](https://github.com/LDOUBLEV/AutoLog)。
 
+
 <a name="4.14"></a>
 
-### 4.14 常见bug汇总
+### 4.14 预测程序开发
+
+
+
+
+<a name="4.15"></a>
+
+### 4.15 常见bug汇总
 
 在论文复现中，可能因为各种原因出现报错，下面我们列举了常见的问题和解决方法，从而提供debug的方向：
 
-#### 4.14.1 显存泄露
+#### 4.15.1 显存泄露
 显存泄露会在 `nvidia-smi` 等命令下，明显地观察到显存的增加，最后会因为 `out of memory` 的错误而程序终止。
 
 * 可能原因：
@@ -1016,7 +1045,7 @@ w.backward()
 
    ```
 
-#### 4.14.2 内存泄露
+#### 4.15.2 内存泄露
 
 内存泄露和显存泄露相似，并不能立即察觉，而是在使用 `top` 命令时，观察到内存显著增加，最后会因为 `can't allocate memory` 的错误而程序终止，如图所示是 `top` 命令下观察内存变化需要检查的字段。
 
@@ -1048,10 +1077,10 @@ w.backward()
   2. 考虑这些操作是否应当加入计算图中（即对最后损失产生影响）；
   3. 如果不需要，则需要对操作中的参数或中间计算结果进行`.detach().clone()`或者`.numpy` 后操作。
 
-#### 4.14.3 dataloader 加载数据时间长
+#### 4.15.3 dataloader 加载数据时间长
 
 - **解决方式**：增大 num_worker 的值，提升io速度，一般建议设置 4 或者 8。
 
 
-#### 4.14.4 单机多卡报错信息不明确
+#### 4.15.4 单机多卡报错信息不明确
 - **解决方式**：前往 log 下寻找 worklog.x 进行查看，其中 worklog.x 代表第 x 卡的报错信息。
