@@ -689,6 +689,11 @@ def train_one_epoch(model,
 AlexNet的预测程序：[predict.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/predict.py)。
 
 
+**【核验】**
+
+预测程序按照文档中的命令操作可以正常跑通，文档中给出预测结果可视化结果或者终端输出结果。
+
+
 <a name="3.14"></a>
 
 ### 3.14 单机多卡训练

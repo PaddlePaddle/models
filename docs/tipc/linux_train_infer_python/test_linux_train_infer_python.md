@@ -32,13 +32,13 @@
 
 **【基本内容】**
 
-训练日志符合规范，相关文档可以参考[论文复现赛指南3.12章节](../lwfx/ArticleReproduction_CV.md)。
+训练日志符合规范，相关文档可以参考[论文复现赛指南3.12章节](../../lwfx/ArticleReproduction_CV.md)。
 
 
 **【注意事项】**
 
-* 训练日志中，至少需要包含`epoch`, `iter`, `loss`, `avg_reader_cost`, `avg_batch_cost`, `avg_ips`关键字段及信息。
-* 规范化日志输出建议使用[AutoLog](https://github.com/LDOUBLEV/AutoLog)工具包，示例代码可以参考：[AlexNet训练过程中添加训练日志](https://github.com/littletomatodonkey/AlexNet-Prod/blob/0099e0bb74020ef8e8c11e5811517c47bf1e78ef/pipeline/Step5/AlexNet_paddle/train.py#L204)。
+* 训练日志中，至少需要包含`loss`, `avg_reader_cost`, `avg_batch_cost`, `avg_ips`关键字段及信息。
+* 规范化日志输出建议使用[AutoLog](https://github.com/LDOUBLEV/AutoLog)工具包，示例代码可以参考：[AlexNet训练过程中添加训练日志](https://github.com/littletomatodonkey/AlexNet-Prod/blob/f52b475ec88c1cf7ee15775ab0dd94f8d3f3cf40/pipeline/Step5/AlexNet_paddle/train.py#L55)。
 
 ### 2.3 支持模型推理功能，规范推理日志
 
