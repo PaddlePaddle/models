@@ -162,7 +162,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 #### 4.2.1 目录结构
 
-在repo根目录下面新建`test_tipc`文件夹，目录结构如下所示。
+在repo根目录下面包含`test_tipc`文件夹，目录结构如下所示。
 
 ```
 test_tipc
