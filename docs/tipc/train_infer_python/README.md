@@ -101,7 +101,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 **【参考】**
 
-* [repo模板首页文档](../../../community/repo_template/README.md)。
+* [repo模板首页文档](../../../community/repo_template/README.md)，如果论文还没有完成推理部署部分，可以先不添加模板文档中的`第5章`内容。
 
 **【要求】**
 
