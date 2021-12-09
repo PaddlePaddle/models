@@ -41,7 +41,7 @@
     <img src="../../lwfx/images/framework_reprodcv.png" width="800">
 </div>
 
-更多内容请参考：[模型复现指南](../lwfx/ArticleReproduction_CV.md)。
+更多内容请参考：[模型复现指南](../../lwfx/ArticleReproduction_CV.md)。
 
 <a name="2.2"></a>
 
@@ -51,9 +51,22 @@
 
 #### 2.2.1 小数据集
 
-* repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_data`小数据集文件夹。该数据集可以便于快速验证训练过程的能否跑通，其中包含的数据也可以用于验证推理部署过程。
+**【参考】**
+
+* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.2`章节。
+
+**【要求】**
+
+repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_data`小数据集文件夹。该数据集可以便于快速验证训练过程的能否跑通，其中包含的数据也可以用于验证推理部署过程。
+
 
 #### 2.2.2 代码与精度
+
+**【参考】**
+
+* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中第`3`章节。
+
+**【要求】**
 
 * 代码中包含训练(`train.py`)、评估(`eval.py`)、预测(`predict.py`)的脚本，分别作为模型训练、评估、预测的入口。
 
@@ -61,20 +74,37 @@
 
 #### 2.2.3 训练日志
 
+**【参考】**
+
+[模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.12`章节。
+
+**【要求】**
+
 * 日志文件中，每个迭代过程的输出信息至少包含`loss`, `avg_reader_cost`, `avg_batch_cost`, `avg_ips`关键字段。含义如下所示。
     * `loss`: 过去若干个iter的loss值
     * `avg_reader_cost`: 过去若干个iter的平均reader耗时 (单位: sec)
     * `avg_batch_cost`: 过去若干个iter的平均训练耗时 (单位: sec)
     * `avg_ips`: 过段若干个iter个训练速度（单位: images/sec）
 
-
 #### 2.2.4 基于训练引擎的预测程序
 
-* 提供基于训练引擎的预测脚本与命令，文档需要提供示例图片，并根据示例图片，可视化出使用提供的预测命令运行得到的结果。
+**【参考】**
+
+* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.13`章节。
+
+**【要求】**
+
+提供基于训练引擎的预测脚本与命令，文档需要提供示例图片，并根据示例图片，可视化出使用提供的预测命令运行得到的结果。
 
 #### 2.2.5 文档
 
-* 说明文档中需要有数据准备以及模型训练、评估、预测的命令。
+**【参考】**
+
+* [repo模板首页文档](../../../community/repo_template/README.md)。
+
+**【要求】**
+
+* 按照参考`repo模板首页文档`的内容，添加对应的信息。
 
 <a name="3"></a>
 
