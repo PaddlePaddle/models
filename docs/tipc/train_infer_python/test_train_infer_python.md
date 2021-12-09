@@ -36,6 +36,8 @@
 - Paddle Inference 推理过程跑通
 
 
+
+
 <a name="2"></a>
 
 ## 2. 命令与配置文件解析
@@ -70,6 +72,13 @@ python   run_script    set_configs
 * `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等，**该脚本无需修改**。
 
 
+基础训练推理测试开发过程主要分为以下5个步骤。
+
+<div align="center">
+    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
+</div>
+
+其中设置了2个核验点。下面在第2章对配置文件进行详细说明，在第章详细介绍开发过程。
 
 <a name="2.2"></a>
 
@@ -214,14 +223,6 @@ python   run_script    set_configs
 <a name="3"></a>
 
 ## 3. 测试功能开发
-
-基础训练推理测试开发过程主要分为以下5个步骤。
-
-<div align="center">
-    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
-</div>
-
-其中设置了2个核验点。下面进行详细介绍。
 
 <a name="3.1"></a>
 
