@@ -269,7 +269,7 @@ python   run_script    set_configs
 
 **【实战】**
 
-配置文件的含义解析可以参考 [4.1章节配置文件解析](#4.1) 部分。
+配置文件的含义解析可以参考 [2.2章节配置文件解析](#2.1) 部分。
 
 AlexNet的测试开发配置文件可以参考：[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
 
