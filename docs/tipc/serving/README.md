@@ -14,15 +14,15 @@
 
 ## 1. 简介
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发规范。主要包含三个步骤：
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发规范。主要包含2个步骤：
 
-1. 参考[《Linux GPU/CPU 服务化部署开发文档》](./py_serving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
+（1） 参考[《Linux GPU/CPU 服务化部署开发文档》](./py_serving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
 
-2. 参考[《Linux GPU/CPU 服务化部署测试开发文档》]()，完成 TIPC 服务化部署测试开发
+（2） 参考[《Linux GPU/CPU 服务化部署测试开发文档》]()，完成 TIPC 服务化部署测试开发
 
 在此之前，您需要完成下面的内容（如果您已经开发完基于Paddle Inference的模型推理过程，该步骤可以跳过）。
 
-* 参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
+（3） 参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
 
 
 <a name="2"></a>
@@ -76,5 +76,3 @@ coming soon!
 <a name="3.2"></a>
 
 ### 3.2 核验点
-
-coming soon!
