@@ -121,7 +121,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
     <img src="./images/py_inference_pipeline.png" width="800">
 </div>
 
-更多的介绍可以参考：[模型推理开发规范](./inference.md)。
+更多的介绍可以参考：[模型推理开发规范](./infer_python.md)。
 
 <a name="3.2"></a>
 
