@@ -152,7 +152,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
     <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
-更多的介绍可以参考：[Linux GPU/CPU 基础训练推理测试开发规范](./test_linux_train_infer_python.md)。
+更多的介绍可以参考：[Linux GPU/CPU 基础训练推理测试开发规范](./test_train_infer_python.md)。
 
 
 <a name="4.2"></a>
