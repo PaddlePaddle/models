@@ -231,7 +231,7 @@ python   run_script    set_configs
 
 1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
 
-    相关文档可以参考[论文复现赛指南3.2章节](../lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
+    相关文档可以参考[论文复现赛指南3.2章节](../../lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
 2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
 
