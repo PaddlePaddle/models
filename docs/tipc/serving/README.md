@@ -22,7 +22,7 @@
 
 在此之前，您需要完成下面的内容（如果您已经开发完基于Paddle Inference的模型推理过程，该步骤可以跳过）。
 
-（3） 参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
+* 参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
 
 
 <a name="2"></a>
