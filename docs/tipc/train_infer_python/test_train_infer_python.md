@@ -210,13 +210,6 @@ python   run_script    set_configs
 * 推理的入口脚本为`deploy/inference/python/infer.py`，因此40行需要修改为`inference:deploy/inference/python/infer.py`。
 * Inference模型目录配置为`--model-dir=./alexnet_infer/`，而运行该命令时，会直接基于已经生成的Inference模型，因此47行需要修改为`--model-dir:./alexnet_infer/`
 * 测试图像目录配置为`--img-path=./lite_data/test/demo.jpg`，因此48行修改为`--img-path:./lite_data/test/demo.jpg`
-*
-
-
-* 预训练模型路径的配置为`--pretrained=./alexnet_paddle.pdparams`，因此需要将29行修改为`--pretrained:`
-* 动转静保存目录的配置为`--save-inference-dir="./alexnet_infer"`，因此需要将28行修改为`--save-inference-dir:`
-* 模型导出命令为`tools/export_model.py`，考虑到也需要配置`--model=alexnet`，因此可以将30行修改为`norm_export:tools/export_model.py --model=alexnet`
-
 
 <a name="3"></a>
 
