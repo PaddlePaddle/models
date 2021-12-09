@@ -598,7 +598,7 @@ random.seed(config.SEED)
 
 **【基本流程】**
 
-在训练代码中添加日志统计信息，对训练中的信息进行统计。
+1. 在训练代码中添加日志统计信息，对训练中的信息进行统计。
 
 * 必选项：损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
 * 建议项：当前`epoch`, 当前迭代次数`iter`，学习率(`lr`), 准确率(`acc`)等。
@@ -608,6 +608,7 @@ random.seed(config.SEED)
 [2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010542 sec, avg_batch_cost: 0.0111101 sec, loss: 0.2450000 , avg_ips: 2880.2582019 images/sec
 ```
 
+2. 如果训练中同时包含评估过程，则也需要在日志里添加模型的`评估结果`信息。
 
 **【注意事项】**
 
@@ -617,7 +618,7 @@ random.seed(config.SEED)
 
 参考代码：[train.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/d0eab851603a8d9097b1b8d6089f26d96c6707b0/pipeline/Step5/AlexNet_paddle/train.py#L204)。
 
-具体地，规范化日志可以按照如下所示的方式实现。
+具体地，规范化的训练日志可以按照如下所示的方式实现。
 
 ```py
 def train_one_epoch(model,
@@ -656,7 +657,9 @@ def train_one_epoch(model,
                 (train_reader_cost + train_run_cost) / batch_past,
                 total_samples / batch_past,
                 total_samples / (train_reader_cost + train_run_cost))
-            print(msg)
+            # just log on 1st device
+            if paddle.distributed.get_rank() <= 0:
+                print(msg)
             sys.stdout.flush()
             train_reader_cost = 0.0
             train_run_cost = 0.0
