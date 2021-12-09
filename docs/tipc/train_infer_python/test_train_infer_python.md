@@ -78,7 +78,7 @@ python   run_script    set_configs
     <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
-其中设置了2个核验点。下面在第2章对配置文件进行详细说明，在第章详细介绍开发过程。
+其中设置了2个核验点。下面在第2章对配置文件进行详细说明，在第3章详细介绍开发过程。
 
 <a name="2.2"></a>
 
