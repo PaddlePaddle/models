@@ -1,4 +1,4 @@
-# Linux GPU/CPU 基础训练推理开发规范
+# Linux GPU/CPU 基础训练推理开发文档
 
 # 目录
 
