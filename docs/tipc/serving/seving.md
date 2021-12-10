@@ -294,15 +294,22 @@ unset https_proxy
 ```
 
 <a name="29---"></a>
-### 2.9 验证服务化部署功能的正确性（[待若愚完善]）
+### 2.9 验证服务化部署功能的正确性
 
-```
-python3 infer.py --model-dir ../alexnet_infer/ --benchmark False --img-path ../pdserving/demo.jpg --use-gpu True
-```
-运行结果为：
-```
-image_name: ../pdserving/demo.jpg, class_id: 8, prob: 0.874140202999115
-```
+**【基本流程】**
+
+* 对于相同图像，分别使用Inference推理以及Serving部署，获取预测结果，比较二者结果。
+
+**【实战】**
+
+AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#512-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
+
+模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
+
+**【核验】**
+
+* 二者预测结果完全相同
+* 文档中给出基于相同图像的预测命令说明以及结果显示
 
 <a name="3---"></a>
 ## 3 FAQ
