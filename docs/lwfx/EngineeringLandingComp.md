@@ -29,7 +29,7 @@
 * 保证飞桨训推一体功能完备性：作为产业级深度学习平台，PaddlePaddle希望模型可以被更多的开发者在实际的使用场景中使用。提供了训推一体的pipeline，方便用户查询部署支持情况：python、C++、lite、serving、各种硬件，进而可以选择合适的部署方案。
 
 <div align="center">
-<img src="./images/framework_tipc.png"  width = "1200" />
+<img src="./images/framework_tipc.png"  width = "1000" />
 </div>
 
 
@@ -100,20 +100,14 @@
 
 #### 4.1.2 具体内容
 
-* 完成模型的训练、评估、预测、导出inference、基于PaddleInference的推理过程的文档与代码。参考链接：
-    * [insightface训练预测使用文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/README_cn.md)
-    * [PaddleInference使用文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)
-* 基于[TIPC基础链条测试接入规范](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc_test/development_specification_docs/train_infer_python.md)，完成该模型的TIPC基础链条开发以及测试文档/脚本，目录为`test_tipc`，测试脚本名称为`test_train_inference_python.sh`，该任务中只需要完成`lite_train_lite_infer`模式即可，用于测试TIPC流程的少量数据需要放在当前repo中，同时明确注明来源。参考链接：
-    * [insightface TIPC基础链条测试开发文档](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/test_tipc/readme.md)
-
+* 完成模型的模型动转静、Inference推理过程的文档与代码。参考链接：
+    * [Linux GPU/CPU 推理功能开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/train_infer_python/README.md)
+* 完成模型的训练推理测试开发过程，参考链接：
+    * [Linux GPU/CPU 基础训练推理测试开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/train_infer_python/test_train_infer_python.md)
 
 #### 4.1.3 验收方法
 
-* 根据文档流程，基于模型的训练、预测、评估、模型预测、导出inference、基于PaddleInference的推理过程，代码可执行。具体地，要求
-    * 按照文档操作步骤，训练可以跑通，前100轮loss收敛正常，并在`test_log`目录下提供`log_train.txt`的日志文件。
-    * 基于提供的模型，评估指标可以达到文档中所述精度，在README文档中给出模型评估方法和说明。
-    * 提供真实测试图像，基于预训练模型的预测与基于导出的inference模型的推理结果完全一致，并在README文档中给出二者的`使用说明、脚本、预测、推理结果`。
-* TIPC基础链条测试文档清晰，`test_train_inference_python.sh`脚本可以成功执行并返回正确结果。
+[Linux GPU/CPU 基础训练推理开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/train_infer_python/README.md)中`第3章`和`第4章`的所有核验点满足要求。
 
 <a name="4.2"></a>
 
@@ -125,17 +119,16 @@ Paddle Serving 旨在帮助深度学习开发者轻易部署在线预测服务�
 
 #### 4.2.2 具体内容
 
-* 完成基于该模型的Paddle Serving模型部署，提供相应的说明文档。参考链接：
-    * [PaddleServing官方文档](https://www.paddlepaddle.org.cn/tutorials/projectdetail/1975340)
-    * [InsightFace Paddle Serving部署教程](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_paddle/deploy/pdserving/README_CN.md)
-* 将Paddle Serving的功能添加到文件夹`test_tipc`中，编写`test_serving.sh`脚本文件与相应的Paddle Serving测试开发规范文档。参考链接：
-    * [Paddle Serving测试开发文档](https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/test_tipc/docs/test_serving.md)
+* 完成基于该模型的Serving服务化部署，提供相应的说明文档。参考链接：
+    * [Linux GPU/CPU 服务化部署功能开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/serving/serving.md)
+* 完成基于该模型的Serving服务化部署测试开发，并提供相应的文档。参考链接：
+    * [Linux GPU/CPU 服务化部署测试开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/serving/test_serving.md)
 
 
 #### 4.2.3 验收方法
 
-* 该模型基于Paddle Serving的部署文档清晰可读，根据文档说明流程，可以成功完成：`启动服务`，`发送服务请求`，`获取返回结果`，返回结果与`章节4.1.3`中的模型推理结果完全相同。
-* Paddle Serving测试开发规范文档清晰可读，`test_serving.sh`脚本可成功执行。
+[Linux GPU/CPU 服务化部署开发文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/serving/README.md)中`第2章`和`第3章`的所有核验点满足要求。
+
 
 <a name="4.3"></a>
 
@@ -148,7 +141,7 @@ Paddle Serving 旨在帮助深度学习开发者轻易部署在线预测服务�
 #### 4.3.2 具体内容
 
 * 分别更换模型的骨干网络为MobileNetV1_x1_0，MobileNetV3_large_x1_0，MobileNetV3_small_x1_0，ShuffleNetV2_x1_0并进行训练，记录精度、训练结果模型，保存日志文件。
-* 将更换骨干网络产出的4个模型接入`TIPC基础链条`，并将测试文档和测试脚本放置在`test_tipc`目录中。
+* 将更换骨干网络产出的4个模型接入`TIPC基础训练推理测试链条`，并将测试文档和测试脚本放置在`test_tipc`目录中。
 
 #### 4.3.3 轻量化网络选型和特征抽取选型
 
@@ -207,7 +200,7 @@ idx: 16 shape [1, 160, 20, 20]
 | MobileNetV3_small_x1_0 | 17.0 | batchsize=32 |
 | ShuffleNetV2_x1_0 | 23.8| batchsize=32 |
 
-* 文件夹`test_tipc`目录中，将不同骨干网络对应的模型接入基础链条测试规范并验证通过。
+* 文件夹`test_tipc`目录中，参考[基础训练推理测试开发文文档](https://github.com/PaddlePaddle/models/blob/tipc/docs/tipc/train_infer_python/test_train_infer_python.md)，为不同骨干网络对应的模型添加全流程测试代码与文档。
 
 <a name="5"></a>
 
