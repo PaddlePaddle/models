@@ -18,7 +18,7 @@
 
 （1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
 
-（2）参考[《Linux GPU/CPU 服务化部署功能开发文档》](./seving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
+（2）参考[《Linux GPU/CPU 服务化部署功能开发文档》](./serving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
 
 （3） 参考[《Linux GPU/CPU 服务化部署测试开发文档》](./test_serving.md)，完成 TIPC 服务化部署测试开发。
 
@@ -55,7 +55,7 @@
 
 #### 2.2.3 说明文档
 
-* 参考[AlexNet Serving部署文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving/README.md)。
+* 参考[AlexNet Serving部署文档](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving)。
 
 * 文档中给出服务化部署的数据、环境准备、启动服务、访问服务的具体命令说明。
 
@@ -99,4 +99,4 @@ test_tipc
 
 * `test_tipc/README.md` 文档中对该模型支持的的部署功能进行总体介绍。
 * `test_tipc/docs/test_serving.md` 文档中对**Linux GPU/CPU Serving部署**的功能支持情况进行介绍。
-* 根据测试文档，基于配置文件，跑通Serving部署测试过程。
+* 根据测试文档，基于配置文件，跑通Serving部署测试过程，在文档里记录一下

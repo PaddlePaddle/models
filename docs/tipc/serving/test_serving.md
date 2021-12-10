@@ -22,7 +22,7 @@
 
 （1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
 
-（2）参考[《Linux GPU/CPU 服务化部署功能开发文档》](./seving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
+（2）参考[《Linux GPU/CPU 服务化部署功能开发文档》](./serving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
 
 （3）完成 TIPC 服务化部署测试开发（**本文档**）。
 
@@ -169,7 +169,7 @@ Serving服务化部署主要分为以下5个步骤。
 
 * 数据集：为方便快速验证服务化部署过程，需要准备至少1张图像用于测试，可以放在repo中。
 
-* 环境：可以参考[Linux GPU/CPU 服务化部署功能开发规范](./seving.md)完成Serving部署环境的准备。
+* 环境：可以参考[Linux GPU/CPU 服务化部署功能开发规范](./serving.md)完成Serving部署环境的准备。
 
 
 <a name="=3.2"></a>
@@ -230,13 +230,13 @@ AlexNet中验证配置正确性的脚本：[AlexNet Serving 部署功能测试](
 **【基本内容】**
 
 * 补充TIPC首页文档，补充更多部署方式。
-* 撰写测试流程说明文档，模板可以参考：[./template/test/test_serving.md](./template/test/test_serving.md)。
+* 撰写测试流程说明文档，说明文档模板为：[./template/test/test_serving.md](./template/test/test_serving.md)。
 
 可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
 **【实战】**
 
-AlexNet中`test_tipc`文档如下所示。
+参考上面基本内容，具体地，以AlexNet为例，`test_tipc`文档如下所示。
 
 1. TIPC功能总览文档：https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/README.md
 2. Linux GPU/CPU 基础训练推理测试说明文档：https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/docs/test_serving.md
