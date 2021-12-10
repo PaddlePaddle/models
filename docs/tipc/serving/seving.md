@@ -1,4 +1,4 @@
-# Linux GPU/CPU 服务化部署开发文档
+# Linux GPU/CPU 服务化部署功能开发文档
 - [1 简介](#1---)
 - [2 服务化部署开发](#2---)
   * [2.1 准备测试数据和部署环境](#21---)
@@ -20,13 +20,14 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 
 本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。主要包含三个步骤：
 
-（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](待补充) 完成模型的训练和基于Paddle Inference的模型推理开发。
+（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md) 完成模型的训练和基于Paddle Inference的模型推理开发。
 
-（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（本文档第二章）。
+（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（**本文档**）。
 
-（3）完成TIPC 服务化部署测试开发（本文档第三章）。
+（3）参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_serving.md)，完成TIPC 服务化部署测试开发。
 
 <a name="2---"></a>
+
 ## 2 服务化部署能力开发
 
 一个模型的服务化部署开发流程如下图所示，一般包含9个步骤。
