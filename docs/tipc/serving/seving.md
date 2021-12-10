@@ -32,7 +32,7 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 
 一个模型的服务化部署开发流程如下图所示，一般包含9个步骤。
 
-![pipline](./images/py_serving_deploy_pipeline.jpg)
+![pipline](./images/serving_deploy_pipeline.jpg)
 
 其中核验点如图黄色区域所示，具体如下：
 - 第7步：启动模型预测服务
@@ -89,7 +89,8 @@ python3 -m paddle_serving_client.convert --dirname ./alexnet_infer/ --model_file
 
 【基本流程】
 
-服务化部署的样例程序的目录地址为：[tipc/py_serving/template/code/, 待补充地址]
+服务化部署的样例程序的目录地址为："template/code/"
+
 该目录下面包含3个文件，具体如下：
 
 - web_service.py：用于开发服务端模型预测相关程序。由于使用多卡或者多机部署预测服务，设计高效的服务调度策略比较复杂，Paddle Serving将网络预测进行了封装，在这个程序里面开发者只需要关心部署服务引擎的初始化，模型预测的前处理和后处理开发，不用关心模型预测调度问题。
@@ -100,7 +101,7 @@ python3 -m paddle_serving_client.convert --dirname ./alexnet_infer/ --model_file
 
 【实战】
 
-如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录。
+如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录，建议在`$repo_name/deploy/serving`目录下。
 
 <a name="24---"></a>
 ### 2.4 初始化部署引擎
@@ -257,7 +258,7 @@ python3 web_service.py &
 
 针对AlexNet网络, 启动成功的界面如下：
 
-![](./images/py_serving_startup_visualization.jpg)
+![](./images/serving_startup_visualization.jpg)
 
 <a name="28---"></a>
 ### 2.8 开发客户端访问服务的程序
@@ -282,7 +283,7 @@ python3 pipeline_http_client.py
 
 访问成功的界面如下：
 
-![](./images/py_serving_client_results.jpg)
+![](./images/serving_client_results.jpg)
 
 【注意事项】
 如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
