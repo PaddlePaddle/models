@@ -114,7 +114,7 @@ python   run_script    set_configs
 | 2  | model_name:alexnet                  | 模型名字          | 否         | 是           | value修改为自己的模型名字                  |
 | 3  | python:python3.7                    | python环境      | 否         | 是           | value修改为自己的python环境              |
 | 4  | gpu_list:0                          | gpu id        | 否         | 是           | value修改为自己的GPU ID                |
-| 5  | use_gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为设置GPU使用的内容，value修改         |
+| 5  | use_gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为可以设置GPU的内容，value修改为设置GPU的值         |
 | 6  | auto_cast:null                      | 是否使用混合精度      | 否         | 否           | -                                |
 | 7  | epoch_num:lite_train_infer=1        | 迭代的epoch数目    | 是         | 否           | key修改为可以设置代码中epoch数量的内容          |
 | 8  | output_dir:./output/                | 输出目录          | 是         | 否           | key修改为代码中可以设置输出路径的内容             |
