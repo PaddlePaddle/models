@@ -64,7 +64,7 @@ python3.7 pipeline_http_client.py --img-path=../../images/demo.jpg
 Serving服务化部署主要分为以下5个步骤。
 
 <div align="center">
-    <img src="./images/images/test_serving_pipeline.png" width="400">
+    <img src="./images/test_serving_pipeline.png" width="400">
 </div>
 
 其中设置了2个核验点。下面在第2章对配置文件进行详细说明，在第3章详细介绍开发过程。
@@ -105,7 +105,7 @@ Serving服务化部署主要分为以下5个步骤。
 
 </details>
 
-以训练命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving/alexnet_server --serving_client ./deploy/serving/alexnet_server`为例，总共包含4个超参数。
+以命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving/alexnet_server --serving_client ./deploy/serving/alexnet_server`为例。
 
 * Inference模型路径为`./alexnet_infer/`，因此第5行需要修改为`--dirname:./alexnet_infer/`
 * 模型结构和参数文件名和默认保持一致，因此这里无需修改。
@@ -155,7 +155,7 @@ Serving服务化部署主要分为以下5个步骤。
 以命令`python3.7 pipeline_http_client.py --img-path=../../images/demo.jpg`为例。
 
 * 第12行配置GPU ID，默认使用0号卡，一般情况下无需修改。
-* 第13~16行为预留配置，无需修改。
+* 第13~16行为服务端配置，无需修改。
 * 第17行用于配置客户端命令，这里与默认相同，无需修改。
 * 第18行配置传入的图片路径，上面命令中，图片路径是通过`--img-path=../../images/demo.jpg`传入，因此需要修改为`--img-path:../../images/demo.jpg`
 
@@ -169,9 +169,9 @@ Serving服务化部署主要分为以下5个步骤。
 
 **【基本内容】**
 
-1. 数据集：为方便快速验证服务化部署过程，需要准备至少1张图像用于测试，可以放在repo中。
+* 数据集：为方便快速验证服务化部署过程，需要准备至少1张图像用于测试，可以放在repo中。
 
-2. 环境：可以参考[Linux GPU/CPU 服务化部署测试开发规范](./seving.md)完成Serving部署功能。
+* 环境：可以参考[Linux GPU/CPU 服务化部署功能开发规范](./seving.md)完成Serving部署环境的准备。
 
 
 <a name="=3.2"></a>
@@ -198,7 +198,7 @@ Serving服务化部署主要分为以下5个步骤。
 
 配置文件的含义解析可以参考 [2.2章节配置文件解析](#2.2) 部分。
 
-AlexNet的测试开发配置文件可以参考：[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
+AlexNet的测试开发配置文件可以参考：[model_linux_gpu_normal_normal_serving_python_linux_gpu_cpu.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/model_linux_gpu_normal_normal_serving_python_linux_gpu_cpu.txt)。
 
 <a name="3.4"></a>
 
@@ -251,13 +251,10 @@ repo中最终目录结构如下所示。
 test_tipc
     |--configs                              # 配置目录
     |    |--model_name                      # 您的模型名称
-    |           |--train_infer_python.txt   # 基础训练推理测试配置文件
     |           |--model_linux_gpu_normal_normal_serving_python_linux_gpu_cpu.txt   # Serving配置文件
     |--docs                                 # 文档目录
-    |   |--test_train_inference_python.md   # 基础训练推理测试说明文档
     |   |--test_serving.md                  # Serving测试说明文档
     |----README.md                          # TIPC 说明文档
-    |----test_train_inference_python.sh     # TIPC 基础训练推理测试解析脚本，无需改动
     |----test_serving.sh                    # TIPC Serving测试解析脚本
     |----common_func.sh                     # TIPC 基础训练推理测试常用函数，无需改动
 ```
