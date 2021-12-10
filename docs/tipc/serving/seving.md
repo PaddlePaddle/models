@@ -1,4 +1,4 @@
-# Linux GPU/CPU 服务化部署开发文档
+# Linux GPU/CPU 服务化部署功能开发文档
 - [1 简介](#1---)
 - [2 服务化部署开发](#2---)
   * [2.1 准备测试数据和部署环境](#21---)
@@ -20,18 +20,19 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 
 本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。主要包含三个步骤：
 
-（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](待补充) 完成模型的训练和基于Paddle Inference的模型推理开发。
+（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md) 完成模型的训练和基于Paddle Inference的模型推理开发。
 
-（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（本文档第二章）。
+（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（**本文档**）。
 
-（3）完成TIPC 服务化部署测试开发（本文档第三章）。
+（3）参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_serving.md)，完成TIPC 服务化部署测试开发。
 
 <a name="2---"></a>
+
 ## 2 服务化部署能力开发
 
 一个模型的服务化部署开发流程如下图所示，一般包含9个步骤。
 
-![pipline](./images/py_serving_deploy_pipeline.jpg)
+![pipline](./images/serving_deploy_pipeline.jpg)
 
 其中核验点如图黄色区域所示，具体如下：
 - 第7步：启动模型预测服务
@@ -88,7 +89,8 @@ python3 -m paddle_serving_client.convert --dirname ./alexnet_infer/ --model_file
 
 【基本流程】
 
-服务化部署的样例程序的目录地址为：[tipc/py_serving/template/code/, 待补充地址]
+服务化部署的样例程序的目录地址为："template/code/"
+
 该目录下面包含3个文件，具体如下：
 
 - web_service.py：用于开发服务端模型预测相关程序。由于使用多卡或者多机部署预测服务，设计高效的服务调度策略比较复杂，Paddle Serving将网络预测进行了封装，在这个程序里面开发者只需要关心部署服务引擎的初始化，模型预测的前处理和后处理开发，不用关心模型预测调度问题。
@@ -99,7 +101,7 @@ python3 -m paddle_serving_client.convert --dirname ./alexnet_infer/ --model_file
 
 【实战】
 
-如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录。
+如果服务化部署AlexNet网络，需要拷贝上述三个文件到运行目录，建议在`$repo_name/deploy/serving`目录下。
 
 <a name="24---"></a>
 ### 2.4 初始化部署引擎
@@ -256,7 +258,7 @@ python3 web_service.py &
 
 针对AlexNet网络, 启动成功的界面如下：
 
-![](./images/py_serving_startup_visualization.jpg)
+![](./images/serving_startup_visualization.jpg)
 
 <a name="28---"></a>
 ### 2.8 开发客户端访问服务的程序
@@ -281,7 +283,7 @@ python3 pipeline_http_client.py
 
 访问成功的界面如下：
 
-![](./images/py_serving_client_results.jpg)
+![](./images/serving_client_results.jpg)
 
 【注意事项】
 如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
@@ -292,15 +294,22 @@ unset https_proxy
 ```
 
 <a name="29---"></a>
-### 2.9 验证服务化部署功能的正确性（[待若愚完善]）
+### 2.9 验证服务化部署功能的正确性
 
-```
-python3 infer.py --model-dir ../alexnet_infer/ --benchmark False --img-path ../pdserving/demo.jpg --use-gpu True
-```
-运行结果为：
-```
-image_name: ../pdserving/demo.jpg, class_id: 8, prob: 0.874140202999115
-```
+**【基本流程】**
+
+* 对于相同图像，分别使用Inference推理以及Serving部署，获取预测结果，比较二者结果。
+
+**【实战】**
+
+AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#512-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
+
+模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
+
+**【核验】**
+
+* 二者预测结果完全相同
+* 文档中给出基于相同图像的预测命令说明以及结果显示
 
 <a name="3---"></a>
 ## 3 FAQ
