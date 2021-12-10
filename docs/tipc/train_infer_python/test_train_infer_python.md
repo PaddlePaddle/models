@@ -5,7 +5,7 @@
 - [1. 简介](#1)
 - [2. 命令与配置文件解析](#2)
     - [2.1 命令解析](#2.1)
-    - [2.2 配置文件解析](#2.2)
+    - [2.2 配置文件和运行命令映射解析](#2.2)
 - [3. 测试功能开发](#3)
     - [3.1 准备数据与环境](#3.1)
     - [3.2 准备开发所需脚本](#3.2)
@@ -22,12 +22,6 @@
 
 * 在基于训练引擎预测的基础上，完成基于Paddle Inference的推理过程测试开发。
 
-在此之前，您需要完成下面的内容。
-
-（1）参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测过程。
-
-（2）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../linux_train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
-
 
 具体地，本文档主要关注Linux GPU/CPU 下模型的基础训练推理全流程测试，具体测试点如下：
 
@@ -35,8 +29,11 @@
 - 飞桨模型转换：保存静态图模型
 - Paddle Inference 推理过程跑通
 
+为了一键跑通上述所有功能，我们为大家准备了`训推一体全流程`自动化测试工具，它包含2个脚本文件和1个配置文件，如下所示。
 
-
+* `test_train_inference_python.sh`: 测试Linux上训练、模型动转静、推理功能的脚本，会对`train_infer_python.txt`进行解析，得到具体的执行命令。**该脚本无需修改**。
+* `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等，**该脚本无需修改**。
+* `train_infer_python.txt`: 配置文件，其中的内容会被`test_train_inference_python.sh`解析成具体的执行命令字段。
 
 <a name="2"></a>
 
@@ -65,12 +62,6 @@ python   run_script    set_configs
 
 其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以拼凑出一条完整的命令。
 
-在后续测试过程中，主要用到2个脚本文件和1个配置文件。
-
-* `train_infer_python.txt`: 配置文件，也是该文档会重点介绍的内容。
-* `test_train_inference_python.sh`: 测试Linux上训练、模型动转静、推理功能的脚本，会对`train_infer_python.txt`进行解析，得到具体的执行命令。**该脚本无需修改**。
-* `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等，**该脚本无需修改**。
-
 
 基础训练推理测试开发过程主要分为以下5个步骤。
 
@@ -82,7 +73,7 @@ python   run_script    set_configs
 
 <a name="2.2"></a>
 
-### 2.2 配置文件解析
+### 2.2 配置文件和运行命令映射解析
 
 完整的`train_infer_python.txt`配置文件共有51行，包含5个方面的内容。
 
@@ -104,7 +95,7 @@ python   run_script    set_configs
 
 在配置文件中，可以通过下面的方式配置一些常用的超参数，如：是否使用GPU、迭代轮数、batch size、预训练模型路径等，下面给出了常用的训练配置以及需要修改的内容。
 
-<details open>
+<details>
 <summary><b>训练配置参数（点击以展开详细内容或者折叠）
 </b></summary>
 
@@ -137,7 +128,7 @@ python   run_script    set_configs
 
 下面给出了配置文件中的训练命令配置参数（点击以展开详细内容或者折叠）
 
-<details open>
+<details>
 <summary><b>训练命令配置参数（点击以展开详细内容或者折叠）
 </b></summary>
 
@@ -165,7 +156,7 @@ python   run_script    set_configs
 
 **【注意：】** 在模型动转静过程中，为方便管理输入输出，程序会自动指定输入和输出目录，因此我们只需要提供可以配置输入输出目录的参数即可。
 
-<details open>
+<details>
 <summary><b>模型动转静配置参数（点击以展开详细内容或者折叠）</b></summary>
 
 | 行号 | 参考内容                 | 含义        | key是否需要修改 | value是否需要修改 | 修改内容                    |
@@ -191,7 +182,7 @@ python   run_script    set_configs
 
 下面给出了配置文件中的模型推理配置参数。
 
-<details open>
+<details>
 <summary><b>模型推理配置参数（点击以展开详细内容或者折叠）</b></summary>
 
 | 行号 | 参考内容             | 含义     | key是否需要修改 | value是否需要修改 | 修改内容        |

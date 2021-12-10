@@ -30,7 +30,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 （2）在基于训练引擎预测的基础上，完成基于预测引擎的推理过程开发。
 
-（3）完成Linux GPU/CPU 训练、推理测试开发（[《Linux GPU/CPU 基础训练推理测试开发规范》](./test_linux_train_infer_python.md)）。
+（3）完成Linux GPU/CPU 训练、推理测试开发（[《Linux GPU/CPU 基础训练推理测试开发规范》](./test_train_infer_python.md)）。
 
 
 <a name="2"></a>
