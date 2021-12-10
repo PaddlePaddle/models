@@ -177,7 +177,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-该模板类对应AlexNet的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/py_inference/infer.py)。
+该模板类对应AlexNet的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py)。
 
 其中每个子模块的操作在下面详细介绍。
 
@@ -200,7 +200,7 @@ class InferenceEngine(object):
 针对AlexNet模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/py_inference/infer.py#L38
+    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py#L38
     def load_predictor(self, model_file_path, params_file_path):
         args = self.args
         config = inference.Config(model_file_path, params_file_path)
@@ -249,7 +249,7 @@ class InferenceEngine(object):
 图像分类AlexNet为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/py_inference/infer.py#L68
+    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py#L68
     def preprocess(self, img_path):
         with open(img_path, "rb") as f:
             img = Image.open(f)
