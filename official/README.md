@@ -1,4 +1,4 @@
-<table border="1">
+<table>
     <tr>
         <th>序号</th>
         <th>模型简称</th>
