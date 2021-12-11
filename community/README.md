@@ -1,6 +1,6 @@
-# 飞桨社区模型
+# 社区模型库
 
-飞桨社区列表如下：
+飞桨目前包含100+个社区模型，覆盖CV、NLP、推荐等多个领域，详细内容如下表：
 
 <table>
     <tr>
@@ -476,7 +476,7 @@
         <td>67</td>
         <td><a href="https://openaccess.thecvf.com/content_CVPR_2019/papers/He_Adaptive_Pyramid_Context_Network_for_Semantic_Segmentation_CVPR_2019_paper.pdf">Adaptive Pyramid Context Network for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>Semi-supervised learning (SSL) provides an effective means of leveragingunlabeled data to improve a model's performance. In this paper, we demonstratethe power of a simple combination of two common SSL methods: consistencyregularization and pseudo-labeling. Our algorithm, FixMatch, first generatespseudo-labels using the model's predictions on weakly-augmented unlabeledimages. For a given image, the pseudo-label is only retained if the modelproduces a high-confidence prediction. The model is then trained to predict thepseudo-label when fed a strongly-augmented version of the same image. Despiteits simplicity, we show that FixMatch achieves state-of-the-art performanceacross a variety of standard semi-supervised learning benchmarks, including94.93% accuracy on CIFAR-10 with 250 labels and 88.61% accuracy with 40 -- just4 labels per class. Since FixMatch bears many similarities to existing SSLmethods that achieve worse performance, we carry out an extensive ablationstudy to tease apart the experimental factors that are most important toFixMatch's success. We make our code available atthis https URL.</div></details></td>
-        <td>数据集：Cityscapes验收指标：1. mIOU = 79.08%；2. 达到精度后向 Paddleseg 提交PR：https://github.com/PaddlePaddle/PaddleSeg</td>
+        <td>Cityscapes数据集mIOU=79.28%</td>
         <td><a href="https://github.com/Dylan-get/APCNet">快速开始</a></td>
     </tr>
     <tr>
@@ -490,14 +490,14 @@
         <td>69</td>
         <td><a href="https://arxiv.org/abs/1710.11063">Grad-CAM++: Improved Visual Explanations for Deep Convolutional Networks</a></td>
         <td><details><summary>Abstract</summary><div>This paper addresses the visualisation of image classification models, learntusing deep Convolutional Networks (ConvNets). We consider two visualisationtechniques, based on computing the gradient of the class score with respect tothe input image. The first one generates an image, which maximises the classscore [Erhan et al., 2009], thus visualising the notion of the class, capturedby a ConvNet. The second technique computes a class saliency map, specific to agiven image and class. We show that such maps can be employed for weaklysupervised object segmentation using classification ConvNets. Finally, weestablish the connection between the gradient-based ConvNet visualisationmethods and deconvolutional networks [Zeiler et al., 2013].</div></details></td>
-        <td>同时提供pytorch和paddle对于相同输入的输出结果，保证结果一致</td>
+        <td>可视化方法</td>
         <td><a href="https://github.com/vcowwy/paddle-grad-cam">快速开始</a></td>
     </tr>
     <tr>
         <td>70</td>
         <td><a href="https://arxiv.org/pdf/1312.6034v2.pdf">Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps</a></td>
         <td><details><summary>Abstract</summary><div>Relational reasoning is a central component of generally intelligentbehavior, but has proven difficult for neural networks to learn. In this paperwe describe how to use Relation Networks (RNs) as a simple plug-and-play moduleto solve problems that fundamentally hinge on relational reasoning. We testedRN-augmented networks on three tasks: visual question answering using achallenging dataset called CLEVR, on which we achieve state-of-the-art,super-human performance; text-based question answering using the bAbI suite oftasks; and complex reasoning about dynamic physical systems. Then, using acurated dataset called Sort-of-CLEVR we show that powerful convolutionalnetworks do not have a general capacity to solve relational questions, but cangain this capacity when augmented with RNs. Our work shows how a deep learningarchitecture equipped with an RN module can implicitly discover and learn toreason about entities and their relations.</div></details></td>
-        <td>2种新的可视化技术</td>
+        <td>可视化方法</td>
         <td><a href="https://github.com/632652101/VisualizeCNN-Pd">快速开始</a></td>
     </tr>
     <tr>
@@ -518,21 +518,21 @@
         <td>73</td>
         <td><a href="https://paperswithcode.com/paper/superpoint-self-supervised-interest-point">SuperPoint: Self-Supervised Interest Point Detection and Description</a></td>
         <td><details><summary>Abstract</summary><div>The demand of applying semantic segmentation model on mobile devices has beenincreasing rapidly. Current state-of-the-art networks have enormous amount ofparameters hence unsuitable for mobile devices, while other small memoryfootprint models follow the spirit of classification network and ignore theinherent characteristic of semantic segmentation. To tackle this problem, wepropose a novel Context Guided Network (CGNet), which is a light-weight andefficient network for semantic segmentation. We first propose the ContextGuided (CG) block, which learns the joint feature of both local feature andsurrounding context, and further improves the joint feature with the globalcontext. Based on the CG block, we develop CGNet which captures contextualinformation in all stages of the network and is specially tailored forincreasing segmentation accuracy. CGNet is also elaborately designed to reducethe number of parameters and save memory footprint. Under an equivalent numberof parameters, the proposed CGNet significantly outperforms existingsegmentation networks. Extensive experiments on Cityscapes and CamVid datasetsverify the effectiveness of the proposed approach. Specifically, without anypost-processing and multi-scale testing, the proposed CGNet achieves 64.8% meanIoU on Cityscapes with less than 0.5 M parameters. The source code for thecomplete system can be found at this https URL.</div></details></td>
-        <td>数据集：MS-COCO 2014 验收指标：Homography Estimation, e=1 0.310  参考论文 Table.4</td>
+        <td>MS-COCO 2014 HPatches Homography Estimation, e=1 0.460</td>
         <td><a href="https://github.com/vcowwy/paddle-superpoint">快速开始</a></td>
     </tr>
     <tr>
         <td>74</td>
         <td><a href="https://arxiv.org/pdf/1811.08201">CGNet: A Light-weight Context Guided Network for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>We focus on the challenging task of real-time semantic segmentation in thispaper. It finds many practical applications and yet is with fundamentaldifficulty of reducing a large portion of computation for pixel-wise labelinference. We propose an image cascade network (ICNet) that incorporatesmulti-resolution branches under proper label guidance to address thischallenge. We provide in-depth analysis of our framework and introduce thecascade feature fusion unit to quickly achieve high-quality segmentation. Oursystem yields real-time inference on a single GPU card with decent qualityresults evaluated on challenging datasets like Cityscapes, CamVid andCOCO-Stuff.</div></details></td>
-        <td>数据集：Cityscapes valset验收标准：在Cityscapes valset 上基于M3N21，mIOU=68.27</td>
+        <td>在Cityscapes valset 上基于M3N21，mIOU=68.27%</td>
         <td><a href="https://github.com/632652101/VisualizeCNN-Pd">快速开始</a></td>
     </tr>
     <tr>
         <td>75</td>
         <td><a href="https://arxiv.org/pdf/1704.08545.pdf">ICNet for Real-Time Semantic Segmentation on High-Resolution Images</a></td>
         <td><details><summary>Abstract</summary><div>Recent deep learning based approaches have shown promising results for thechallenging task of inpainting large missing regions in an image. These methodscan generate visually plausible image structures and textures, but often createdistorted structures or blurry textures inconsistent with surrounding areas.This is mainly due to ineffectiveness of convolutional neural networks inexplicitly borrowing or copying information from distant spatial locations. Onthe other hand, traditional texture and patch synthesis approaches areparticularly suitable when it needs to borrow textures from the surroundingregions. Motivated by these observations, we propose a new deep generativemodel-based approach which can not only synthesize novel image structures butalso explicitly utilize surrounding image features as references during networktraining to make better predictions. The model is a feed-forward, fullyconvolutional neural network which can process images with multiple holes atarbitrary locations and with variable sizes during the test time. Experimentson multiple datasets including faces (CelebA, CelebA-HQ), textures (DTD) andnatural images (ImageNet, Places2) demonstrate that our proposed approachgenerates higher-quality inpainting results than existing ones. Code, demo andmodels are available at: this https URL.</div></details></td>
-        <td>数据集：Cityscapes验收指标：mIOU=67.7动态图实现</td>
+        <td>Cityscapes mIOU 69.6%</td>
         <td><a href="https://github.com/pooruss/ICNet-Paddle2.2.0rc">快速开始</a></td>
     </tr>
     <tr>
