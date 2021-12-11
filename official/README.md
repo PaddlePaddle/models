@@ -5,7 +5,7 @@
         <th>论文名称(链接)</th>
         <th>摘要</th>
         <th>数据集</th>
-        <th>快速开始</th>
+        <th width='10%'>快速开始</th>
         <th>支持 TIPC</th>
     </tr>
     <tr>
