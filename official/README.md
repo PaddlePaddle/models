@@ -1,4 +1,4 @@
-<tabel>
+<table>
     <tr>
         <th>序号</th>
         <th>模型简称</th>
@@ -4112,4 +4112,5 @@
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/model_compression/tinybert">快速开始</a></td>
         <td></td>
     </tr>
-</tabel>
+
+</table>

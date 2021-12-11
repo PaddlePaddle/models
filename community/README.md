@@ -1,4 +1,4 @@
-<tabel>
+<table>
     <tr>
         <th>序号</th>
         <th>论文名称(链接)</th>
@@ -804,4 +804,5 @@
         <td>https://github.com/gsq7474741/Paddle-NCR</td>
         <td><a href="ML100K :HR@K >0.68">快速开始</a></td>
     </tr>
-</tabel>
+
+</table>
