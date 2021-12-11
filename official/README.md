@@ -4112,4 +4112,4 @@
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/model_compression/tinybert">快速开始</a></td>
         <td></td>
     </tr>
-
+</tabel>
