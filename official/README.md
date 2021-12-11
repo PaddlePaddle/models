@@ -1,6 +1,6 @@
 # 飞桨官方模型
 
-飞桨官方列表如下：
+飞桨官方模型列表如下：
 
 <table>
     <tr>
@@ -4114,6 +4114,438 @@
         <td><details><summary>Abstract</summary><div>Language model pre-training, such as BERT, has significantly improved the performances of many natural language processing tasks. However, pre-trained language models are usually computationally expensive, so it is difficult to efficiently execute them on resourcerestricted devices. To accelerate inference and reduce model size while maintaining accuracy, we first propose a novel Transformer distillation method that is specially designed for knowledge distillation (KD) of theTransformer-based models. By leveraging this new KD method, the plenty of knowledge encoded in a large “teacher” BERT can be effectively transferred to a small “student” TinyBERT. Then, we introduce a new two-stage learning framework for TinyBERT, which performs Transformer distillation at both the pretraining and task-specific learning stages. This framework ensures that TinyBERT can capture the general-domain as well as the task-specificknowledge in BERT. TinyBERT4 1 with 4 layers is empirically effective and achieves more than 96.8% the performance of its teacher BERTBASE on GLUEbenchmark, while being 7.5x smaller and 9.4x faster on inference. TinyBERT4 is also significantly better than 4-layer state-of-the-art baselines on BERT distillation, with only ∼28% parameters and ∼31% inference time of them. Moreover, TinyBERT6 with 6 layers performs on-par with its teacher BERTBASE.</div></details></td>
         <td>SST-2/dev/93.00</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/model_compression/tinybert">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>457</td>
+        <td>XLNet</td>
+        <td><a href="https://paperswithcode.com/paper/xlnet-generalized-autoregressive-pretraining">XLNet: Generalized Autoregressive Pretraining for Language Understanding</a></td>
+        <td><details><summary>Abstract</summary><div>With the capability of modeling bidirectional contexts, denoising autoencoding based pretraining like BERT achieves better performance than pretraining ap- proaches based on autoregressive language modeling. However, relying on corrupt- ing the input with masks, BERT neglects dependency between the masked positions and suffers from a pretrain-finetune discrepancy. In light of these pros and cons, we propose XLNet, a generalized autoregressive pretraining method that (1) enables learning bidirectional contexts by maximizing the expected likelihood over all permutations of the factorization order and (2) overcomes the limitations of BERT thanks to its autoregressive formulation. Furthermore, XLNet integrates ideas from Transformer-XL, the state-of-the-art autoregressive model, into pretraining. Empirically, under comparable experiment settings, XLNet outperforms BERT on 20 tasks, often by a large margin, including question answering, natural language inference, sentiment analysis, and document ranking.</div></details></td>
+        <td>SST-2/dev/94.3</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleNLP/blob/develop/examples/language_model/xlnet/README.md">快速开始</a></td>
+        <td>支持 Paddle Inference</td>
+    </tr>
+    <tr>
+        <td>458</td>
+        <td>GaAN</td>
+        <td><a href="https://paperswithcode.com/paper/gaan-gated-attention-networks-for-learning-on#code">GaAN: Gated Attention Networks for Learning on Large and Spatiotemporal Graphs</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a new network architecture, Gated Attention Networks (GaAN), for learning on graphs. Unlike the traditional multi-head attention mechanism, which equally consumes all attention heads, GaAN uses a convolutional sub-network to control each attention head's importance. We demonstrate the effectiveness of GaAN on the inductive node classification problem. Moreover, with GaAN as a building block, we construct the Graph Gated Recurrent Unit (GGRU) to address the traffic speed forecasting problem. Extensive experiments on three real-world datasets show that our GaAN framework achieves state-of-the-art results on both tasks.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/GaAN/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>459</td>
+        <td>stgcn</td>
+        <td><a href="https://paperswithcode.com/paper/spatio-temporal-graph-convolutional-networks">Spatio-Temporal Graph Convolutional Networks: A Deep Learning Framework for Traffic Forecasting</a></td>
+        <td><details><summary>Abstract</summary><div>Timely accurate traffic forecast is crucial for urban traffic control and guidance. Due to the high nonlinearity and complexity of traffic flow, traditional methods cannot satisfy the requirements of mid-and-long term prediction tasks and often neglect spatial and temporal dependencies. In this paper, we propose a novel deep learning framework, Spatio-Temporal Graph Convolutional Networks (STGCN), to tackle the time series prediction problem in traffic domain. Instead of applying regular convolutional and recurrent units, we formulate the problem on graphs and build the model with complete convolutional structures, which enable much faster training speed with fewer parameters. Experiments show that our model STGCN effectively captures comprehensive spatio-temporal correlations through modeling multi-scale traffic networks and consistently outperforms state-of-the-art baselines on various real-world traffic datasets</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/stgcn/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>460</td>
+        <td>graphsage</td>
+        <td><a href="https://paperswithcode.com/paper/inductive-representation-learning-on-large">Inductive Representation Learning on Large Graphs</a></td>
+        <td><details><summary>Abstract</summary><div>Low-dimensional embeddings of nodes in large graphs have proved extremely useful in a variety of prediction tasks, from content recommendation to identifying protein functions. However, most existing approaches require that all nodes in the graph are present during training of the embeddings; these previous approaches are inherently transductive and do not naturally generalize to unseen nodes. Here we present GraphSAGE, a general, inductive framework that leverages node feature information (e.g., text attributes) to efficiently generate node embeddings for previously unseen data. Instead of training individual embeddings for each node, we learn a function that generates embeddings by sampling and aggregating features from a node's local neighborhood. Our algorithm outperforms strong baselines on three inductive node-classification benchmarks: we classify the category of unseen nodes in evolving information graphs based on citation and Reddit post data, and we show that our algorithm generalizes to completely unseen graphs using a multi-graph dataset of protein-protein interactions.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/main/examples/graphsage/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>461</td>
+        <td>metapath2vec</td>
+        <td><a href="https://paperswithcode.com/paper/metapath2vec-scalable-representation-learning">metapath2vec: Scalable Representation Learning for Heterogeneous Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We study the problem of representation learning in heterogeneous networks. Its unique challenges come from the existence of multiple types of nodes and links, which limit the feasibility of the conventional network embedding techniques. We develop two scalable representation learning models, namely metapath2vec and metapath2vec++. The metapath2vec model formalizes meta-path-based random walks to construct the heterogeneous neighborhood of a node and then leverages a heterogeneous skip-gram model to perform node embeddings. The metapath2vec++ model further enables the simultaneous modeling of structural and semantic correlations in heterogeneous networks. Extensive experiments show that metapath2vec and metapath2vec++ are able to not only outperform state-of-the-art embedding models in various heterogeneous network mining tasks, such as node classification, clustering, and similarity search, but also discern the structural and semantic correlations between diverse network objects.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/main/examples/metapath2vec/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>462</td>
+        <td>SAGPool</td>
+        <td><a href="https://paperswithcode.com/paper/self-attention-graph-pooling">Self-Attention Graph Pooling</a></td>
+        <td><details><summary>Abstract</summary><div>Advanced methods of applying deep learning to structured data such as graphs have been proposed in recent years. In particular, studies have focused on generalizing convolutional neural networks to graph data, which includes redefining the convolution and the downsampling (pooling) operations for graphs. The method of generalizing the convolution operation to graphs has been proven to improve performance and is widely used. However, the method of applying downsampling to graphs is still difficult to perform and has room for improvement. In this paper, we propose a graph pooling method based on self-attention. Self-attention using graph convolution allows our pooling method to consider both node features and graph topology. To ensure a fair comparison, the same training procedures and model architectures were used for the existing pooling methods and our method. The experimental results demonstrate that our method achieves superior graph classification performance on the benchmark datasets using a reasonable number of parameters.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/SAGPool/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>463</td>
+        <td>line</td>
+        <td><a href="https://paperswithcode.com/paper/line-large-scale-information-network">LINE: Large-scale Information Network Embedding</a></td>
+        <td><details><summary>Abstract</summary><div>This paper studies the problem of embedding very large information networks into low-dimensional vector spaces, which is useful in many tasks such as visualization, node classification, and link prediction. Most existing graph embedding methods do not scale for real world information networks which usually contain millions of nodes. In this paper, we propose a novel network embedding method called the "LINE," which is suitable for arbitrary types of information networks: undirected, directed, and/or weighted. The method optimizes a carefully designed objective function that preserves both the local and global network structures. An edge-sampling algorithm is proposed that addresses the limitation of the classical stochastic gradient descent and improves both the effectiveness and the efficiency of the inference. Empirical experiments prove the effectiveness of the LINE on a variety of real-world information networks, including language networks, social networks, and citation networks. The algorithm is very efficient, which is able to learn the embedding of a network with millions of vertices and billions of edges in a few hours on a typical single machine. The source code of the LINE is available online.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/line/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>464</td>
+        <td>pgl-ke</td>
+        <td><a href="无">无</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/pgl-ke">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>465</td>
+        <td>xformer</td>
+        <td><a href="无">无</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/xformer">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>466</td>
+        <td>erniesage</td>
+        <td><a href="无">无</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/erniesage">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>467</td>
+        <td>dgi</td>
+        <td><a href="https://paperswithcode.com/paper/deep-graph-infomax">Deep Graph Infomax</a></td>
+        <td><details><summary>Abstract</summary><div>We present Deep Graph Infomax (DGI), a general approach for learning node representations within graph-structured data in an unsupervised manner. DGI relies on maximizing mutual information between patch representations and corresponding high-level summaries of graphs---both derived using established graph convolutional network architectures. The learnt patch representations summarize subgraphs centered around nodes of interest, and can thus be reused for downstream node-wise learning tasks. In contrast to most prior approaches to unsupervised learning with GCNs, DGI does not rely on random walk objectives, and is readily applicable to both transductive and inductive learning setups. We demonstrate competitive performance on a variety of node classification benchmarks, which at times even exceeds the performance of supervised learning.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/dgi/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>468</td>
+        <td>sgc</td>
+        <td><a href="https://paperswithcode.com/paper/simplifying-graph-convolutional-networks">Simplifying Graph Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Graph Convolutional Networks (GCNs) and their variants have experienced significant attention and have become the de facto methods for learning graph representations. GCNs derive inspiration primarily from recent deep learning approaches, and as a result, may inherit unnecessary complexity and redundant computation. In this paper, we reduce this excess complexity through successively removing nonlinearities and collapsing weight matrices between consecutive layers. We theoretically analyze the resulting linear model and show that it corresponds to a fixed low-pass filter followed by a linear classifier. Notably, our experimental evaluation demonstrates that these simplifications do not negatively impact accuracy in many downstream applications. Moreover, the resulting model scales to larger datasets, is naturally interpretable, and yields up to two orders of magnitude speedup over FastGCN.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/static_stable/examples/sgc/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>469</td>
+        <td>gcn</td>
+        <td><a href="https://paperswithcode.com/method/gcn">Semi-Supervised Classification with Graph Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a scalable approach for semi-supervised learning on graph-structured data that is based on an efficient variant of convolutional neural networks which operate directly on graphs. We motivate the choice of our convolutional architecture via a localized first-order approximation of spectral graph convolutions. Our model scales linearly in the number of graph edges and learns hidden layer representations that encode both local graph structure and features of nodes. In a number of experiments on citation networks and on a knowledge graph dataset we demonstrate that our approach outperforms related methods by a significant margin.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/blob/main/examples/gcn/README.md">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>470</td>
+        <td>gin</td>
+        <td><a href="https://paperswithcode.com/paper/how-powerful-are-graph-neural-networks">How Powerful are Graph Neural Networks?</a></td>
+        <td><details><summary>Abstract</summary><div>Graph Neural Networks (GNNs) are an effective framework for representation learning of graphs. GNNs follow a neighborhood aggregation scheme, where the representation vector of a node is computed by recursively aggregating and transforming representation vectors of its neighboring nodes. Many GNN variants have been proposed and have achieved state-of-the-art results on both node and graph classification tasks. However, despite GNNs revolutionizing graph representation learning, there is limited understanding of their representational properties and limitations. Here, we present a theoretical framework for analyzing the expressive power of GNNs to capture different graph structures. Our results characterize the discriminative power of popular GNN variants, such as Graph Convolutional Networks and GraphSAGE, and show that they cannot learn to distinguish certain simple graph structures. We then develop a simple architecture that is provably the most expressive among the class of GNNs and is as powerful as the Weisfeiler-Lehman graph isomorphism test. We empirically validate our theoretical findings on a number of graph classification benchmarks, and demonstrate that our model achieves state-of-the-art performance.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/gin">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>471</td>
+        <td>strucvec</td>
+        <td><a href="https://paperswithcode.com/paper/struc2vec-learning-node-representations-from">struc2vec: Learning Node Representations from Structural Identity</a></td>
+        <td><details><summary>Abstract</summary><div>Structural identity is a concept of symmetry in which network nodes are identified according to the network structure and their relationship to other nodes. Structural identity has been studied in theory and practice over the past decades, but only recently has it been addressed with representational learning techniques. This work presents struc2vec, a novel and flexible framework for learning latent representations for the structural identity of nodes. struc2vec uses a hierarchy to measure node similarity at different scales, and constructs a multilayer graph to encode structural similarities and generate structural context for nodes. Numerical experiments indicate that state-of-the-art techniques for learning node representations fail in capturing stronger notions of structural identity, while struc2vec exhibits much superior performance in this task, as it overcomes limitations of prior approaches. As a consequence, numerical experiments indicate that struc2vec improves performance on classification tasks that depend more on structural identity.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/strucvec">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>472</td>
+        <td>node2vec</td>
+        <td><a href="https://paperswithcode.com/paper/node2vec-scalable-feature-learning-for">node2vec: Scalable Feature Learning for Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Prediction tasks over nodes and edges in networks require careful effort in engineering features used by learning algorithms. Recent research in the broader field of representation learning has led to significant progress in automating prediction by learning the features themselves. However, present feature learning approaches are not expressive enough to capture the diversity of connectivity patterns observed in networks. Here we propose node2vec, an algorithmic framework for learning continuous feature representations for nodes in networks. In node2vec, we learn a mapping of nodes to a low-dimensional space of features that maximizes the likelihood of preserving network neighborhoods of nodes. We define a flexible notion of a node's network neighborhood and design a biased random walk procedure, which efficiently explores diverse neighborhoods. Our algorithm generalizes prior work which is based on rigid notions of network neighborhoods, and we argue that the added flexibility in exploring neighborhoods is the key to learning richer representations. We demonstrate the efficacy of node2vec over existing state-of-the-art techniques on multi-label classification and link prediction in several real-world networks from diverse domains. Taken together, our work represents a new way for efficiently learning state-of-the-art task-independent representations in complex networks.</div></details></td>
+        <td>MacroF1</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/node2vec">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>473</td>
+        <td>GATNE</td>
+        <td><a href="https://paperswithcode.com/paper/190501669">Representation Learning for Attributed Multiplex Heterogeneous Network</a></td>
+        <td><details><summary>Abstract</summary><div>Network embedding (or graph embedding) has been widely used in many real-world applications. However, existing methods mainly focus on networks with single-typed nodes/edges and cannot scale well to handle large networks. Many real-world networks consist of billions of nodes and edges of multiple types, and each node is associated with different attributes. In this paper, we formalize the problem of embedding learning for the Attributed Multiplex Heterogeneous Network and propose a unified framework to address this problem. The framework supports both transductive and inductive learning. We also give the theoretical analysis of the proposed framework, showing its connection with previous works and proving its better expressiveness. We conduct systematical evaluations for the proposed framework on four different genres of challenging datasets: Amazon, YouTube, Twitter, and Alibaba. Experimental results demonstrate that with the learned embeddings from the proposed framework, we can achieve statistically significant improvements (e.g., 5.99-28.23% lift by F1 scores; p<<0.01, t-test) over previous state-of-the-art methods for link prediction. The framework has also been successfully deployed on the recommendation system of a worldwide leading e-commerce company, Alibaba Group. Results of the offline A/B tests on product recommendation further confirm the effectiveness and efficiency of the framework in practice.</div></details></td>
+        <td>AUC</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/GATNE">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>474</td>
+        <td>deeper_gcn</td>
+        <td><a href="无">DeeperGCN: All You Need to Train Deeper GCNs</a></td>
+        <td><details><summary>Abstract</summary><div>Graph Convolutional Networks (GCNs) have been drawing significant attention with the power of representation learning on graphs. Unlike Convolutional Neural Networks (CNNs), which are able to take advantage of stacking very deep layers, GCNs suffer from vanishing gradient, over-smoothing and over-fitting issues when going deeper. These challenges limit the representation power of GCNs on large-scale graphs. This paper proposes DeeperGCN that is capable of successfully and reliably training very deep GCNs. We define differentiable generalized aggregation functions to unify different message aggregation operations (e.g. mean, max). We also propose a novel normalization layer namely MsgNorm and a pre-activation version of residual connections for GCNs. Extensive experiments on Open Graph Benchmark (OGB) show DeeperGCN significantly boosts performance over the state-of-the-art on the large scale graph learning tasks of node property prediction and graph property prediction. Please visit this https URL for more information.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/deeper_gcn">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>475</td>
+        <td>ges</td>
+        <td><a href="https://paperswithcode.com/paper/billion-scale-commodity-embedding-for-e">Billion-scale Commodity Embedding for E-commerce Recommendation in Alibaba</a></td>
+        <td><details><summary>Abstract</summary><div>Recommender systems (RSs) have been the most important technology for increasing the business in Taobao, the largest online consumer-to-consumer (C2C) platform in China. The billion-scale data in Taobao creates three major challenges to Taobao's RS: scalability, sparsity and cold start. In this paper, we present our technical solutions to address these three challenges. The methods are based on the graph embedding framework. We first construct an item graph from users' behavior history. Each item is then represented as a vector using graph embedding. The item embeddings are employed to compute pairwise similarities between all items, which are then used in the recommendation process. To alleviate the sparsity and cold start problems, side information is incorporated into the embedding framework. We propose two aggregation methods to integrate the embeddings of items and the corresponding side information. Experimental results from offline experiments show that methods incorporating side information are superior to those that do not. Further, we describe the platform upon which the embedding methods are deployed and the workflow to process the billion-scale data in Taobao. Using online A/B test, we show that the online Click-Through-Rate (CTRs) are improved comparing to the previous recommendation methods widely used in Taobao, further demonstrating the effectiveness and feasibility of our proposed methods in Taobao's live production environment.</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/static_stable/examples/ges">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>476</td>
+        <td>gat</td>
+        <td><a href="https://paperswithcode.com/paper/graph-attention-networks">Graph Attention Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present graph attention networks (GATs), novel neural network architectures that operate on graph-structured data, leveraging masked self-attentional layers to address the shortcomings of prior methods based on graph convolutions or their approximations. By stacking layers in which nodes are able to attend over their neighborhoods' features, we enable (implicitly) specifying different weights to different nodes in a neighborhood, without requiring any kind of costly matrix operation (such as inversion) or depending on knowing the graph structure upfront. In this way, we address several key challenges of spectral-based graph neural networks simultaneously, and make our model readily applicable to inductive as well as transductive problems. Our GAT models have achieved or matched state-of-the-art results across four established transductive and inductive graph benchmarks: the Cora, Citeseer and Pubmed citation network datasets, as well as a protein-protein interaction dataset (wherein test graphs remain unseen during training).</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/gat">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>477</td>
+        <td>deepwalk</td>
+        <td><a href="https://paperswithcode.com/paper/deepwalk-online-learning-of-social">DeepWalk: Online Learning of Social Representations</a></td>
+        <td><details><summary>Abstract</summary><div>We present DeepWalk, a novel approach for learning latent representations of vertices in a network. These latent representations encode social relations in a continuous vector space, which is easily exploited by statistical models. DeepWalk generalizes recent advancements in language modeling and unsupervised feature learning (or deep learning) from sequences of words to graphs. DeepWalk uses local information obtained from truncated random walks to learn latent representations by treating walks as the equivalent of sentences. We demonstrate DeepWalk's latent representations on several multi-label network classification tasks for social networks such as BlogCatalog, Flickr, and YouTube. Our results show that DeepWalk outperforms challenging baselines which are allowed a global view of the network, especially in the presence of missing information. DeepWalk's representations can provide F1 scores up to 10% higher than competing methods when labeled data is sparse. In some experiments, DeepWalk's representations are able to outperform all baseline methods while using 60% less training data. DeepWalk is also scalable. It is an online learning algorithm which builds useful incremental results, and is trivially parallelizable. These qualities make it suitable for a broad class of real world applications such as network classification, and anomaly detection.</div></details></td>
+        <td>MacroF1</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/deepwalk">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>478</td>
+        <td>MAG240M</td>
+        <td><a href="https://paperswithcode.com/paper/masked-label-prediction-unified-massage">Masked Label Prediction: Unified Message Passing Model for Semi-Supervised Classification</a></td>
+        <td><details><summary>Abstract</summary><div>Graph neural network (GNN) and label propagation algorithm (LPA) are both message passing algorithms, which have achieved superior performance in semi-supervised classification. GNN performs feature propagation by a neural network to make predictions, while LPA uses label propagation across graph adjacency matrix to get results. However, there is still no effective way to directly combine these two kinds of algorithms. To address this issue, we propose a novel Unified Message Passaging Model (UniMP) that can incorporate feature and label propagation at both training and inference time. First, UniMP adopts a Graph Transformer network, taking feature embedding and label embedding as input information for propagation. Second, to train the network without overfitting in self-loop input label information, UniMP introduces a masked label prediction strategy, in which some percentage of input label information are masked at random, and then predicted. UniMP conceptually unifies feature propagation and label propagation and is empirically powerful. It obtains new state-of-the-art semi-supervised classification results in Open Graph Benchmark (OGB).</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/kddcup2021/MAG240M/r_unimp">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>479</td>
+        <td>PCQM4M</td>
+        <td><a href="无">无</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/kddcup2021/PCQM4M">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>480</td>
+        <td>WikiKG90M</td>
+        <td><a href="无">无</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/kddcup2021/WikiKG90M">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>481</td>
+        <td>lightgcn</td>
+        <td><a href="https://paperswithcode.com/paper/lightgcn-simplifying-and-powering-graph">LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation</a></td>
+        <td><details><summary>Abstract</summary><div>Graph Convolution Network (GCN) has become new state-of-the-art for collaborative filtering. Nevertheless, the reasons of its effectiveness for recommendation are not well understood. Existing work that adapts GCN to recommendation lacks thorough ablation analyses on GCN, which is originally designed for graph classification tasks and equipped with many neural network operations. However, we empirically find that the two most common designs in GCNs -- feature transformation and nonlinear activation -- contribute little to the performance of collaborative filtering. Even worse, including them adds to the difficulty of training and degrades recommendation performance.In this work, we aim to simplify the design of GCN to make it more concise and appropriate for recommendation. We propose a new model named LightGCN, including only the most essential component in GCN -- neighborhood aggregation -- for collaborative filtering. Specifically, LightGCN learns user and item embeddings by linearly propagating them on the user-item interaction graph, and uses the weighted sum of the embeddings learned at all layers as the final embedding. Such simple, linear, and neat model is much easier to implement and train, exhibiting substantial improvements (about 16.0\% relative improvement on average) over Neural Graph Collaborative Filtering (NGCF) -- a state-of-the-art GCN-based recommender model -- under exactly the same experimental setting. Further analyses are provided towards the rationality of the simple LightGCN from both analytical and empirical perspectives</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/lightgcn">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>482</td>
+        <td>ngcf</td>
+        <td><a href="https://paperswithcode.com/paper/neural-graph-collaborative-filtering">Neural Graph Collaborative Filtering</a></td>
+        <td><details><summary>Abstract</summary><div>Learning vector representations (aka. embeddings) of users and items lies at the core of modern recommender systems. Ranging from early matrix factorization to recently emerged deep learning based methods, existing efforts typically obtain a user's (or an item's) embedding by mapping from pre-existing features that describe the user (or the item), such as ID and attributes. We argue that an inherent drawback of such methods is that, the collaborative signal, which is latent in user-item interactions, is not encoded in the embedding process. As such, the resultant embeddings may not be sufficient to capture the collaborative filtering effect.In this work, we propose to integrate the user-item interactions -- more specifically the bipartite graph structure -- into the embedding process. We develop a new recommendation framework Neural Graph Collaborative Filtering (NGCF), which exploits the user-item graph structure by propagating embeddings on it. This leads to the expressive modeling of high-order connectivity in user-item graph, effectively injecting the collaborative signal into the embedding process in an explicit manner. We conduct extensive experiments on three public benchmarks, demonstrating significant improvements over several state-of-the-art models like HOP-Rec and Collaborative Memory Network. Further analysis verifies the importance of embedding propagation for learning better user and item representations, justifying the rationality and effectiveness of NGCF. Codes are available at this https URL.</div></details></td>
+        <td>无</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/ngcf">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>483</td>
+        <td>rgcn</td>
+        <td><a href="https://paperswithcode.com/paper/modeling-relational-data-with-graph">Modeling Relational Data with Graph Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Knowledge graphs enable a wide variety of applications, including question answering and information retrieval. Despite the great effort invested in their creation and maintenance, even the largest (e.g., Yago, DBPedia or Wikidata) remain incomplete. We introduce Relational Graph Convolutional Networks (R-GCNs) and apply them to two standard knowledge base completion tasks: Link prediction (recovery of missing facts, i.e. subject-predicate-object triples) and entity classification (recovery of missing entity attributes). R-GCNs are related to a recent class of neural networks operating on graphs, and are developed specifically to deal with the highly multi-relational data characteristic of realistic knowledge bases. We demonstrate the effectiveness of R-GCNs as a stand-alone model for entity classification. We further show that factorization models for link prediction such as DistMult can be significantly improved by enriching them with an encoder model to accumulate evidence over multiple inference steps in the relational graph, demonstrating a large improvement of 29.8% on FB15k-237 over a decoder-only baseline.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/rgcn">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>484</td>
+        <td>ssgc</td>
+        <td><a href="https://paperswithcode.com/paper/simple-spectral-graph-convolution">Simple Spectral Graph Convolution</a></td>
+        <td><details><summary>Abstract</summary><div>Graph Convolutional Networks (GCNs) are leading methods for learning graph representations. However, without specially designed architectures, the performance of GCNs degrades quickly with increased depth. As the aggregated neighborhood size and neural network depth are two completely orthogonal aspects of graph representation, several methods focus on summarizing the neighborhood by aggregating K-hop neighborhoods of nodes while using shallow neural networks. However, these methods still encounter oversmoothing, and suffer from high computation and storage costs. In this paper, we use a modified Markov Diffusion Kernel to derive a variant of GCN called Simple Spectral Graph Convolution (SSGC). Our spectral analysis shows that our simple spectral graph convolution used in SSGC is a trade-off of low- and high-pass filter bands which capture the global and local contexts of each node. We provide two theoretical claims which demonstrate that we can aggregate over a sequence of increasingly larger neighborhoods compared to competitors while limiting severe oversmoothing.  Our experimental evaluations show that SSGC with a linear learner is competitive in text and node classification tasks. Moreover, SSGC is comparable to other state-of-the-art methods for node clustering and community prediction tasks.</div></details></td>
+        <td>Acc</td>
+        <td><a href="https://github.com/PaddlePaddle/PGL/tree/main/examples/ssgc">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>485</td>
+        <td>Prioritized_DQN</td>
+        <td><a href="https://paperswithcode.com/paper/prioritized-experience-replay">Prioritized Experience Replay</a></td>
+        <td><details><summary>Abstract</summary><div>Experience replay lets online reinforcement learning agents remember and reuse experiences from the past. In prior work, experience transitions were uniformly sampled from a replay memory. However, this approach simply replays transitions at the same frequency that they were originally experienced, regardless of their significance. In this paper we develop a framework for prioritizing experience, so as to replay important transitions more frequently, and therefore learn more efficiently. We use prioritized experience replay in Deep Q-Networks (DQN), a reinforcement learning algorithm that achieved human-level performance across many Atari games. DQN with prioritized experience replay achieves a new state-of-the-art, outperforming DQN with uniform replay on 41 out of 49 games.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/benchmark/fluid/Prioritized_DQN">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>486</td>
+        <td>PPO</td>
+        <td><a href="https://paperswithcode.com/paper/proximal-policy-optimization-algorithms">Proximal Policy Optimization Algorithms</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a new family of policy gradient methods for reinforcement learning, which alternate between sampling data through interaction with the environment, and optimizing a "surrogate" objective function using stochastic gradient ascent. Whereas standard policy gradient methods perform one gradient update per data sample, we propose a novel objective function that enables multiple epochs of minibatch updates. The new methods, which we call proximal policy optimization (PPO), have some of the benefits of trust region policy optimization (TRPO), but they are much simpler to implement, more general, and have better sample complexity (empirically). Our experiments test PPO on a collection of benchmark tasks, including simulated robotic locomotion and Atari game playing, and we show that PPO outperforms other online policy gradient methods, and overall strikes a favorable balance between sample complexity, simplicity, and wall-time.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/PPO">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>487</td>
+        <td>GA3C</td>
+        <td><a href="无">GA3C: GPU-based A3C for Deep Reinforcement Learning</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/benchmark/fluid/GA3C">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>488</td>
+        <td>SAC</td>
+        <td><a href="https://paperswithcode.com/paper/soft-actor-critic-off-policy-maximum-entropy">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a></td>
+        <td><details><summary>Abstract</summary><div>Model-free deep reinforcement learning (RL) algorithms have been demonstrated on a range of challenging decision making and control tasks. However, these methods typically suffer from two major challenges: very high sample complexity and brittle convergence properties, which necessitate meticulous hyperparameter tuning. Both of these challenges severely limit the applicability of such methods to complex, real-world domains. In this paper, we propose soft actor-critic, an off-policy actor-critic deep RL algorithm based on the maximum entropy reinforcement learning framework. In this framework, the actor aims to maximize expected reward while also maximizing entropy. That is, to succeed at the task while acting as randomly as possible. Prior deep RL methods based on this framework have been formulated as Q-learning methods. By combining off-policy updates with a stable stochastic actor-critic formulation, our method achieves state-of-the-art performance on a range of continuous control benchmark tasks, outperforming prior on-policy and off-policy methods. Furthermore, we demonstrate that, in contrast to other off-policy algorithms, our approach is very stable, achieving very similar performance across different random seeds.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/SAC">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>489</td>
+        <td>IMPALA</td>
+        <td><a href="https://paperswithcode.com/paper/impala-scalable-distributed-deep-rl-with">Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures</a></td>
+        <td><details><summary>Abstract</summary><div>In this work we aim to solve a large collection of tasks using a single reinforcement learning agent with a single set of parameters. A key challenge is to handle the increased amount of data and extended training time. We have developed a new distributed agent IMPALA (Importance Weighted Actor-Learner Architecture) that not only uses resources more efficiently in single-machine training but also scales to thousands of machines without sacrificing data efficiency or resource utilisation. We achieve stable learning at high throughput by combining decoupled acting and learning with a novel off-policy correction method called V-trace. We demonstrate the effectiveness of IMPALA for multi-task reinforcement learning on DMLab-30 (a set of 30 tasks from the DeepMind Lab environment (Beattie et al., 2016)) and Atari-57 (all available Atari games in Arcade Learning Environment (Bellemare et al., 2013a)). Our results show that IMPALA is able to achieve better performance than previous agents with less data, and crucially exhibits positive transfer between tasks as a result of its multi-task approach.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/benchmark/fluid/IMPALA">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>490</td>
+        <td>DDPG</td>
+        <td><a href="https://paperswithcode.com/paper/continuous-control-with-deep-reinforcement">Continuous control with deep reinforcement learning</a></td>
+        <td><details><summary>Abstract</summary><div>We adapt the ideas underlying the success of Deep Q-Learning to the continuous action domain. We present an actor-critic, model-free algorithm based on the deterministic policy gradient that can operate over continuous action spaces. Using the same learning algorithm, network architecture and hyper-parameters, our algorithm robustly solves more than 20 simulated physics tasks, including classic problems such as cartpole swing-up, dexterous manipulation, legged locomotion and car driving. Our algorithm is able to find policies whose performance is competitive with those found by a planning algorithm with full access to the dynamics of the domain and its derivatives. We further demonstrate that for many of the tasks the algorithm can learn policies end-to-end: directly from raw pixel inputs.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DDPG">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>491</td>
+        <td>PolicyGradient</td>
+        <td><a href="https://paperswithcode.com/method/reinforce">REINFORCE</a></td>
+        <td><details><summary>Abstract</summary><div>REINFORCE is a Monte Carlo variant of a policy gradient algorithm in reinforcement learning. </div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>492</td>
+        <td>NeurIPS2019-Learn-to-</br>Move-Challenge</td>
+        <td><a href="无">同 NeurIPS2018-AI-for-Prosthetics-Challenge</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2019-Learn-to-Move-Challenge">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>493</td>
+        <td>TD3</td>
+        <td><a href="https://paperswithcode.com/paper/addressing-function-approximation-error-in">Addressing Function Approximation Error in Actor-Critic Methods</a></td>
+        <td><details><summary>Abstract</summary><div>In value-based reinforcement learning methods such as deep Q-learning, function approximation errors are known to lead to overestimated value estimates and suboptimal policies. We show that this problem persists in an actor-critic setting and propose novel mechanisms to minimize its effects on both the actor and the critic. Our algorithm builds on Double Q-learning, by taking the minimum value between a pair of critics to limit overestimation. We draw the connection between target networks and overestimation bias, and suggest delaying policy updates to reduce per-update error and further improve performance. We evaluate our method on the suite of OpenAI gym tasks, outperforming the state of the art in every environment tested.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/TD3">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>494</td>
+        <td>DQN</td>
+        <td><a href="https://paperswithcode.com/paper/human-level-control-through-deep">Human-level Control Through Deep Reinforcement Learning</a></td>
+        <td><details><summary>Abstract</summary><div>The theory of reinforcement learning provides a normative account, deeply rooted in psychological and neuroscientific perspectives on animal behaviour, of how agents may optimize their control of an environment. To use reinforcement learning successfully in situations approaching real-world complexity, however, agents are confronted with a difficult task: they must derive efficient representations of the environment from high-dimensional sensory inputs, and use these to generalize past experience to new situations. Remarkably, humans and other animals seem to solve this problem through a harmonious combination of reinforcement learning and hierarchical sensory processing systems, the former evidenced by a wealth of neural data revealing notable parallels between the phasic signals emitted by dopaminergic neurons and temporal difference reinforcement learning algorithms. While reinforcement learning agents have achieved some successes in a variety of domains, their applicability has previously been limited to domains in which useful features can be handcrafted, or to domains with fully observed, low-dimensional state spaces. Here we use recent advances in training deep neural networks to develop a novel artificial agent, termed a deep Q-network, that can learn successful policies directly from high-dimensional sensory inputs using end-to-end reinforcement learning. We tested this agent on the challenging domain of classic Atari 2600 games. We demonstrate that the deep Q-network agent, receiving only the pixels and the game score as inputs, was able to surpass the performance of all previous algorithms and achieve a level comparable to that of a professional human games tester across a set of 49 games, using the same algorithm, network architecture and hyperparameters. This work bridges the divide between high-dimensional sensory inputs and actions, resulting in the first artificial agent that is capable of learning to excel at a diverse array of challenging tasks.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>495</td>
+        <td>ES</td>
+        <td><a href="https://paperswithcode.com/paper/evolution-strategies-as-a-scalable">Evolution Strategies as a Scalable Alternative to Reinforcement Learning</a></td>
+        <td><details><summary>Abstract</summary><div>We explore the use of Evolution Strategies (ES), a class of black box optimization algorithms, as an alternative to popular MDP-based RL techniques such as Q-learning and Policy Gradients. Experiments on MuJoCo and Atari show that ES is a viable solution strategy that scales extremely well with the number of CPUs available: By using a novel communication strategy based on common random numbers, our ES implementation only needs to communicate scalars, making it possible to scale to over a thousand parallel workers. This allows us to solve 3D humanoid walking in 10 minutes and obtain competitive results on most Atari games after one hour of training. In addition, we highlight several advantages of ES as a black box optimization technique: it is invariant to action frequency and delayed rewards, tolerant of extremely long horizons, and does not need temporal discounting or value function approximation. </div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/ES">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>496</td>
+        <td>DQN_variant</td>
+        <td><a href="https://paperswithcode.com/paper/deep-reinforcement-learning-with-double-q">Deep Reinforcement Learning with Double Q-learning</a></td>
+        <td><details><summary>Abstract</summary><div>The popular Q-learning algorithm is known to overestimate action values under certain conditions. It was not previously known whether, in practice, such overestimations are common, whether they harm performance, and whether they can generally be prevented. In this paper, we answer all these questions affirmatively. In particular, we first show that the recent DQN algorithm, which combines Q-learning with a deep neural network, suffers from substantial overestimations in some games in the Atari 2600 domain. We then show that the idea behind the Double Q-learning algorithm, which was introduced in a tabular setting, can be generalized to work with large-scale function approximation. We propose a specific adaptation to the DQN algorithm and show that the resulting algorithm not only reduces the observed overestimations, as hypothesized, but that this also leads to much better performance on several games.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>497</td>
+        <td>A2C</td>
+        <td><a href="https://paperswithcode.com/paper/asynchronous-methods-for-deep-reinforcement">A2C is a synchronous, deterministic variant of Asynchronous Advantage Actor Critic (A3C) </a></td>
+        <td><details><summary>Abstract</summary><div>We propose a conceptually simple and lightweight framework for deep reinforcement learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforcement learning algorithms and show that parallel actor-learners have a stabilizing effect on training allowing all four methods to successfully train neural network controllers. The best performing method, an asynchronous variant of actor-critic, surpasses the current state-of-the-art on the Atari domain while training for half the time on a single multi-core CPU instead of a GPU. Furthermore, we show that asynchronous actor-critic succeeds on a wide variety of continuous motor control problems as well as on a new task of navigating random 3D mazes using a visual input.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>498</td>
+        <td>NeurIPS2018-AI-for-Pr</br>osthetics-Challenge</td>
+        <td><a href="无">Efficient and Robust Learning on Elaborated Gaits with Curriculum Learning</a></td>
+        <td><details><summary>Abstract</summary><div>无</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2018-AI-for-Prosthetics-Challenge">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>499</td>
+        <td>MADDPG</td>
+        <td><a href="https://paperswithcode.com/paper/multi-agent-actor-critic-for-mixed">Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments</a></td>
+        <td><details><summary>Abstract</summary><div>We explore deep reinforcement learning methods for multi-agent domains. We begin by analyzing the difficulty of traditional algorithms in the multi-agent case: Q-learning is challenged by an inherent non-stationarity of the environment, while policy gradient suffers from a variance that increases as the number of agents grows. We then present an adaptation of actor-critic methods that considers action policies of other agents and is able to successfully learn policies that require complex multi-agent coordination. Additionally, we introduce a training regimen utilizing an ensemble of policies for each agent that leads to more robust multi-agent policies. We show the strength of our approach compared to existing methods in cooperative as well as competitive scenarios, where agent populations are able to discover various physical and informational coordination strategies.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/MADDPG">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>500</td>
+        <td>AlphaZero</td>
+        <td><a href="无">Learning to Play Othello Without Human Knowledge</a></td>
+        <td><details><summary>Abstract</summary><div>Game playing is a popular area within the field of artificial intelligence. Most agents in literature have hand-crafted features and are often trained on datasets obtained from expert human play. We implement a self- play based algorithm using neural networks for policy estimation and Monte Carlo Tree Search for policy im- provement, with no input human knowledge that learns to play Othello. We evaluate our learning algorithm for 6x6 and 8x8 versions of the game of Othello. Our work is compared with random and greedy baselines, as well as a minimax agent that uses a hand-crafted scoring function, and achieves impressive results. Further, our agent for the 6x6 version of Othello easily outperforms humans when tested against it.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/AlphaZero">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>501</td>
+        <td>CARLA_SAC</td>
+        <td><a href="同 SAC">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a></td>
+        <td><details><summary>Abstract</summary><div>同 SAC</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/CARLA_SAC">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>502</td>
+        <td>NeurIPS2020 L2RPN Cha</br>llenge</td>
+        <td><a href="https://paperswithcode.com/paper/action-set-based-policy-optimization-for-safe">Action Set Based Policy Optimization for Safe Power Grid Management</a></td>
+        <td><details><summary>Abstract</summary><div>Maintaining the stability of the modern power grid is becoming increasingly difficult due to fluctuating power consumption, unstable power supply coming from renewable energies, and unpredictable accidents such as man-made and natural disasters. As the operation on the power grid must consider its impact on future stability, reinforcement learning (RL) has been employed to provide sequential decision-making in power grid management. However, existing methods have not considered the environmental constraints. As a result, the learned policy has risk of selecting actions that violate the constraints in emergencies, which will escalate the issue of overloaded power lines and lead to large-scale blackouts. In this work, we propose a novel method for this problem, which builds on top of the search-based planning algorithm. At the planning stage, the search space is limited to the action set produced by the policy. The selected action strictly follows the constraints by testing its outcome with the simulation function provided by the system. At the learning stage, to address the problem that gradients cannot be propagated to the policy, we introduce Evolutionary Strategies (ES) with black-box policy optimization to improve the policy directly, maximizing the returns of the long run. In NeurIPS 2020 Learning to Run Power Network (L2RPN) competition, our solution safely managed the power grid and ranked first in both tracks.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>503</td>
+        <td>OAC</td>
+        <td><a href="https://paperswithcode.com/paper/better-exploration-with-optimistic-actor-1">Better Exploration with Optimistic Actor-Critic</a></td>
+        <td><details><summary>Abstract</summary><div>Actor-critic methods, a type of model-free Reinforcement Learning, have been successfully applied to challenging tasks in continuous control, often achieving state-of-the art performance. However, wide-scale adoption of these methods in real-world domains is made difficult by their poor sample efficiency. We address this problem both theoretically and empirically. On the theoretical side, we identify two phenomena preventing efficient exploration in existing state-of-the-art algorithms such as Soft Actor Critic. First, combining a greedy actor update with a pessimistic estimate of the critic leads to the avoidance of actions that the agent does not know about, a phenomenon we call pessimistic underexploration. Second, current algorithms are directionally uninformed, sampling actions with equal probability in opposite directions from the current mean. This is wasteful, since we typically need actions taken along certain directions much more than others. To address both of these phenomena, we introduce a new algorithm, Optimistic Actor Critic, which approximates a lower and upper confidence bound on the state-action value function. This allows us to apply the principle of optimism in the face of uncertainty to perform directed exploration using the upper bound while still using the lower bound to avoid overestimation. We evaluate OAC in several challenging continuous control tasks, achieving state-of the art sample efficiency.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/OAC">快速开始</a></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>504</td>
+        <td>QMIX</td>
+        <td><a href="https://paperswithcode.com/paper/the-starcraft-multi-agent-challenge">The StarCraft Multi-Agent Challenge</a></td>
+        <td><details><summary>Abstract</summary><div>In the last few years, deep multi-agent reinforcement learning (RL) has become a highly active area of research. A particularly challenging class of problems in this area is partially observable, cooperative, multi-agent learning, in which teams of agents must learn to coordinate their behaviour while conditioning only on their private observations. This is an attractive research area since such problems are relevant to a large number of real-world systems and are also more amenable to evaluation than general-sum problems.Standardised environments such as the ALE and MuJoCo have allowed singleagent RL to move beyond toy domains, such as grid worlds. However, there is no comparable benchmark for cooperative multi-agent RL. As a result, most papers in this field use one-off toy problems, making it difficult to measure real progress. In this paper, we propose the StarCraft Multi-Agent Challenge (SMAC) as a benchmark problem to fill this gap.1 SMAC is based on the popular real-time strategy game StarCraft II and focuses on micromanagement challenges where each unit is controlled by an independent agent that must act based on local observations. We offer a diverse set of challenge scenarios and recommendations for best practices in benchmarking and evaluations. We also open-source a deep multi-agent RL learning framework including state-of-the-art algorithms.2 We believe that SMAC can provide a standard benchmark environment for years to come. Videos of our best agents for several SMAC scenarios are available at: https://youtu.be/VZ7zmQ_obZ0.</div></details></td>
+        <td>reward</td>
+        <td><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/QMIX">快速开始</a></td>
         <td></td>
     </tr>
 
