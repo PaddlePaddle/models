@@ -1889,7 +1889,7 @@
         <td>det_mv3_db_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/real-time-scene-text-detection-with">Real-time Scene Text Detection with Differentiable Binarization</a></td>
         <td><details><summary>Abstract</summary><div>Recently, segmentation-based methods are quite popular in scene text detection, as the segmentation results can more accurately describe scene text of various shapes such as curve text. However, the post-processing of binarization is essential for segmentation-based detection, which converts probability maps produced by a segmentation method into bounding boxes/regions of text. In this paper, we propose a module named Differentiable Binarization (DB), which can perform the binarization process in a segmentation network. Optimized along with a DB module, a segmentation network can adaptively set the thresholds for binarization, which not only simplifies the post-processing but also enhances the performance of text detection. Based on a simple segmentation network, we validate the performance improvements of DB on five benchmark datasets, which consistently achieves state-of-the-art results, in terms of both detection accuracy and speed. In particular, with a light-weight backbone, the performance improvements by DB are significant so that we can look for an ideal tradeoff between detection accuracy and efficiency. Specifically, with a backbone of ResNet-18, our detector achieves an F-measure of 82.8, running at 62 FPS, on the MSRA-TD500 dataset. Code is available at: this https URL</div></details></td>
-        <td>icdar2015 / hmean / 75.12%</td>
+        <td>icdar2015 / hmean / 7</br>5.12%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1898,7 +1898,7 @@
         <td>det_r50_vd_db_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/real-time-scene-text-detection-with">Real-time Scene Text Detection with Differentiable Binarization</a></td>
         <td><details><summary>Abstract</summary><div>Recently, segmentation-based methods are quite popular in scene text detection, as the segmentation results can more accurately describe scene text of various shapes such as curve text. However, the post-processing of binarization is essential for segmentation-based detection, which converts probability maps produced by a segmentation method into bounding boxes/regions of text. In this paper, we propose a module named Differentiable Binarization (DB), which can perform the binarization process in a segmentation network. Optimized along with a DB module, a segmentation network can adaptively set the thresholds for binarization, which not only simplifies the post-processing but also enhances the performance of text detection. Based on a simple segmentation network, we validate the performance improvements of DB on five benchmark datasets, which consistently achieves state-of-the-art results, in terms of both detection accuracy and speed. In particular, with a light-weight backbone, the performance improvements by DB are significant so that we can look for an ideal tradeoff between detection accuracy and efficiency. Specifically, with a backbone of ResNet-18, our detector achieves an F-measure of 82.8, running at 62 FPS, on the MSRA-TD500 dataset. Code is available at: this https URL</div></details></td>
-        <td>icdar2015 / hmean / 82.38%</td>
+        <td>icdar2015 / hmean / 8</br>2.38%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1907,7 +1907,7 @@
         <td>det_mv3_east_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/east-an-efficient-and-accurate-scene-text">EAST: an efficient and accurate scene text detector</a></td>
         <td><details><summary>Abstract</summary><div>Previous approaches for scene text detection have already achieved promising performances across various benchmarks. However, they usually fall short when dealing with challenging scenarios, even when equipped with deep neural network models, because the overall performance is determined by the interplay of multiple stages and components in the pipelines. In this work, we propose a simple yet powerful pipeline that yields fast and accurate text detection in natural scenes. The pipeline directly predicts words or text lines of arbitrary orientations and quadrilateral shapes in full images, eliminating unnecessary intermediate steps (e.g., candidate aggregation and word partitioning), with a single neural network. The simplicity of our pipeline allows concentrating efforts on designing loss functions and neural network architecture. Experiments on standard datasets including ICDAR 2015, COCO-Text and MSRA-TD500 demonstrate that the proposed algorithm significantly outperforms state-of-the-art methods in terms of both accuracy and efficiency. On the ICDAR 2015 dataset, the proposed algorithm achieves an F-score of 0.7820 at 13.2fps at 720p resolution.</div></details></td>
-        <td>icdar2015 / hmean / 80.03%</td>
+        <td>icdar2015 / hmean / 8</br>0.03%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1916,7 +1916,7 @@
         <td>det_r50_vd_east_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/east-an-efficient-and-accurate-scene-text">EAST: an efficient and accurate scene text detector</a></td>
         <td><details><summary>Abstract</summary><div>Previous approaches for scene text detection have already achieved promising performances across various benchmarks. However, they usually fall short when dealing with challenging scenarios, even when equipped with deep neural network models, because the overall performance is determined by the interplay of multiple stages and components in the pipelines. In this work, we propose a simple yet powerful pipeline that yields fast and accurate text detection in natural scenes. The pipeline directly predicts words or text lines of arbitrary orientations and quadrilateral shapes in full images, eliminating unnecessary intermediate steps (e.g., candidate aggregation and word partitioning), with a single neural network. The simplicity of our pipeline allows concentrating efforts on designing loss functions and neural network architecture. Experiments on standard datasets including ICDAR 2015, COCO-Text and MSRA-TD500 demonstrate that the proposed algorithm significantly outperforms state-of-the-art methods in terms of both accuracy and efficiency. On the ICDAR 2015 dataset, the proposed algorithm achieves an F-score of 0.7820 at 13.2fps at 720p resolution.</div></details></td>
-        <td>icdar2015 / hmean / 86.25%</td>
+        <td>icdar2015 / hmean / 8</br>6.25%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1925,7 +1925,7 @@
         <td>det_r50_vd_sast_icdar</br>15_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/a-single-shot-arbitrarily-shaped-text">A Single-Shot Arbitrarily-Shaped Text Detector based on Context Attended Multi-Task Learning</a></td>
         <td><details><summary>Abstract</summary><div>Detecting scene text of arbitrary shapes has been a challenging task over the past years. In this paper, we propose a novel segmentation-based text detector, namely SAST, which employs a context attended multi-task learning framework based on a Fully Convolutional Network (FCN) to learn various geometric properties for the reconstruction of polygonal representation of text regions. Taking sequential characteristics of text into consideration, a Context Attention Block is introduced to capture long-range dependencies of pixel information to obtain a more reliable segmentation. In post-processing, a Point-to-Quad assignment method is proposed to cluster pixels into text instances by integrating both high-level object knowledge and low-level pixel information in a single shot. Moreover, the polygonal representation of arbitrarily-shaped text can be extracted with the proposed geometric properties much more effectively. Experiments on several benchmarks, including ICDAR2015, ICDAR2017-MLT, SCUT-CTW1500, and Total-Text, demonstrate that SAST achieves better or comparable performance in terms of accuracy. Furthermore, the proposed algorithm runs at 27.63 FPS on SCUT-CTW1500 with a Hmean of 81.0% on a single NVIDIA Titan Xp graphics card, surpassing most of the existing segmentation-based methods.</div></details></td>
-        <td>icdar2015 / hmean / 87.42%</td>
+        <td>icdar2015 / hmean / 8</br>7.42%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1934,7 +1934,7 @@
         <td>det_r50_vd_sast_total</br>text_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/a-single-shot-arbitrarily-shaped-text">A Single-Shot Arbitrarily-Shaped Text Detector based on Context Attended Multi-Task Learning</a></td>
         <td><details><summary>Abstract</summary><div>Detecting scene text of arbitrary shapes has been a challenging task over the past years. In this paper, we propose a novel segmentation-based text detector, namely SAST, which employs a context attended multi-task learning framework based on a Fully Convolutional Network (FCN) to learn various geometric properties for the reconstruction of polygonal representation of text regions. Taking sequential characteristics of text into consideration, a Context Attention Block is introduced to capture long-range dependencies of pixel information to obtain a more reliable segmentation. In post-processing, a Point-to-Quad assignment method is proposed to cluster pixels into text instances by integrating both high-level object knowledge and low-level pixel information in a single shot. Moreover, the polygonal representation of arbitrarily-shaped text can be extracted with the proposed geometric properties much more effectively. Experiments on several benchmarks, including ICDAR2015, ICDAR2017-MLT, SCUT-CTW1500, and Total-Text, demonstrate that SAST achieves better or comparable performance in terms of accuracy. Furthermore, the proposed algorithm runs at 27.63 FPS on SCUT-CTW1500 with a Hmean of 81.0% on a single NVIDIA Titan Xp graphics card, surpassing most of the existing segmentation-based methods.</div></details></td>
-        <td>total-text / hmean / 83.66%</td>
+        <td>total-text / hmean / </br>83.66%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1943,7 +1943,7 @@
         <td>det_r50_vd_pse_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/shape-robust-text-detection-with-progressive-1">Shape Robust Text Detection with Progressive Scale Expansion Network</a></td>
         <td><details><summary>Abstract</summary><div>Scene text detection has witnessed rapid progress especially with the recent development of convolutional neural networks. However, there still exists two challenges which prevent the algorithm into industry applications. On the one hand, most of the state-of-art algorithms require quadrangle bounding box which is in-accurate to locate the texts with arbitrary shape. On the other hand, two text instances which are close to each other may lead to a false detection which covers both instances. Traditionally, the segmentation-based approach can relieve the first problem but usually fail to solve the second challenge. To address these two challenges, in this paper, we propose a novel Progressive Scale Expansion Network (PSENet), which can precisely detect text instances with arbitrary shapes. More specifically, PSENet generates the different scale of kernels for each text instance, and gradually expands the minimal scale kernel to the text instance with the complete shape. Due to the fact that there are large geometrical margins among the minimal scale kernels, our method is effective to split the close text instances, making it easier to use segmentation-based methods to detect arbitrary-shaped text instances. Extensive experiments on CTW1500, Total-Text, ICDAR 2015 and ICDAR 2017 MLT validate the effectiveness of PSENet. Notably, on CTW1500, a dataset full of long curve texts, PSENet achieves a F-measure of 74.3% at 27 FPS, and our best F-measure (82.2%) outperforms state-of-art algorithms by 6.6%. </div></details></td>
-        <td>icdar2015 / hmean / 82.55%</td>
+        <td>icdar2015 / hmean / 8</br>2.55%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1952,7 +1952,7 @@
         <td>det_mv3_pse_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/shape-robust-text-detection-with-progressive-1">Shape Robust Text Detection with Progressive Scale Expansion Network</a></td>
         <td><details><summary>Abstract</summary><div>Scene text detection has witnessed rapid progress especially with the recent development of convolutional neural networks. However, there still exists two challenges which prevent the algorithm into industry applications. On the one hand, most of the state-of-art algorithms require quadrangle bounding box which is in-accurate to locate the texts with arbitrary shape. On the other hand, two text instances which are close to each other may lead to a false detection which covers both instances. Traditionally, the segmentation-based approach can relieve the first problem but usually fail to solve the second challenge. To address these two challenges, in this paper, we propose a novel Progressive Scale Expansion Network (PSENet), which can precisely detect text instances with arbitrary shapes. More specifically, PSENet generates the different scale of kernels for each text instance, and gradually expands the minimal scale kernel to the text instance with the complete shape. Due to the fact that there are large geometrical margins among the minimal scale kernels, our method is effective to split the close text instances, making it easier to use segmentation-based methods to detect arbitrary-shaped text instances. Extensive experiments on CTW1500, Total-Text, ICDAR 2015 and ICDAR 2017 MLT validate the effectiveness of PSENet. Notably, on CTW1500, a dataset full of long curve texts, PSENet achieves a F-measure of 74.3% at 27 FPS, and our best F-measure (82.2%) outperforms state-of-art algorithms by 6.6%. </div></details></td>
-        <td>icdar2015 / hmean / 75.89%</td>
+        <td>icdar2015 / hmean / 7</br>5.89%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1961,7 +1961,7 @@
         <td>rec_mv3_none_bilstm_c</br>tc_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 79.97%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 79.97%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1970,7 +1970,7 @@
         <td>rec_r34_vd_none_bilst</br>m_ctc_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 82.76%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 82.76%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1979,7 +1979,7 @@
         <td>rec_mv3_none_none_ctc</br>_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 78.05%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 78.05%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1988,7 +1988,7 @@
         <td>rec_r34_vd_none_none_</br>ctc_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 80.9%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 80.9%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -1997,7 +1997,7 @@
         <td>rec_mv3_tps_bilstm_at</br>t_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 82.5%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 82.5%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2006,7 +2006,7 @@
         <td>rec_r34_vd_tps_bilstm</br>_att_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 83.6%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 83.6%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2015,7 +2015,7 @@
         <td>rec_mv3_tps_bilstm_ct</br>c_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 81.42%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 81.42%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2024,7 +2024,7 @@
         <td>rec_r34_vd_tps_bilstm</br>_ctc_v2.0</td>
         <td><a href="https://paperswithcode.com/paper/what-is-wrong-with-scene-text-recognition">What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis</a></td>
         <td><details><summary>Abstract</summary><div>Many new proposals for scene text recognition (STR) models have been introduced in recent years. While each claim to have pushed the boundary of the technology, a holistic and fair comparison has been largely missing in the field due to the inconsistent choices of training and evaluation datasets. This paper addresses this difficulty with three major contributions. First, we examine the inconsistencies of training and evaluation datasets, and the performance gap results from inconsistencies. Second, we introduce a unified four-stage STR framework that most existing STR models fit into. Using this framework allows for the extensive evaluation of previously proposed STR modules and the discovery of previously unexplored module combinations. Third, we analyze the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 84.44%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 84.44%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2033,7 +2033,7 @@
         <td>rec_r50_vd_srn</td>
         <td><a href="https://paperswithcode.com/paper/towards-accurate-scene-text-recognition-with">Towards Accurate Scene Text Recognition with Semantic Reasoning Networks</a></td>
         <td><details><summary>Abstract</summary><div>Scene text image contains two levels of contents: visual texture and semantic information. Although the previous scene text recognition methods have made great progress over the past few years, the research on mining semantic information to assist text recognition attracts less attention, only RNN-like structures are explored to implicitly model semantic information. However, we observe that RNN based methods have some obvious shortcomings, such as time-dependent decoding manner and one-way serial transmission of semantic context, which greatly limit the help of semantic information and the computation efficiency. To mitigate these limitations, we propose a novel end-to-end trainable framework named semantic reasoning network (SRN) for accurate scene text recognition, where a global semantic reasoning module (GSRM) is introduced to capture global semantic context through multi-way parallel transmission. The state-of-the-art results on 7 public benchmarks, including regular text, irregular text and non-Latin long text, verify the effectiveness and robustness of the proposed method. In addition, the speed of SRN has significant advantages over the RNN based methods, demonstrating its value in practical use.</div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 88.52%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 88.52%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2042,7 +2042,7 @@
         <td>rec_mtb_nrtr</td>
         <td><a href="https://paperswithcode.com/paper/nrtr-a-no-recurrence-sequence-to-sequence">NRTR: A No-Recurrence Sequence-to-Sequence Model For Scene Text Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Scene text recognition has attracted a great many researches due to its importance to various applications. Existing methods mainly adopt recurrence or convolution based networks. Though have obtained good performance, these methods still suffer from two limitations: slow training speed due to the internal recurrence of RNNs, and high complexity due to stacked convolutional layers for long-term feature extraction. This paper, for the first time, proposes a no-recurrence sequence-to-sequence text recognizer, named NRTR, that dispenses with recurrences and convolutions entirely. NRTR follows the encoder-decoder paradigm, where the encoder uses stacked self-attention to extract image features, and the decoder applies stacked self-attention to recognize texts based on encoder output. NRTR relies solely on self-attention mechanism thus could be trained with more parallelization and less complexity. Considering scene image has large variation in text and background, we further design a modality-transform block to effectively transform 2D input images to 1D sequences, combined with the encoder to extract more discriminative features. NRTR achieves state-of-the-art or highly competitive performance on both regular and irregular benchmarks, while requires only a small fraction of training time compared to the best model from the literature (at least 8 times faster). </div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 84.3%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 84.3%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2051,7 +2051,7 @@
         <td>rec_r31_sar</td>
         <td><a href="https://paperswithcode.com/paper/show-attend-and-read-a-simple-and-strong">Show, Attend and Read: A Simple and Strong Baseline for Irregular Text Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Recognizing irregular text in natural scene images is challenging due to the large variance in text appearance, such as curvature, orientation and distortion. Most existing approaches rely heavily on sophisticated model designs and/or extra fine-grained annotations, which, to some extent, increase the difficulty in algorithm implementation and data collection. In this work, we propose an easy-to-implement strong baseline for irregular scene text recognition, using off-the-shelf neural network components and only word-level annotations. It is composed of a -layer ResNet, an LSTM-based encoder-decoder framework and a 2-dimensional attention module. Despite its simplicity, the proposed method is robust and achieves state-of-the-art performance on both regular and irregular scene text recognition benchmarks. </div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 87.2%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 87.2%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2060,7 +2060,7 @@
         <td>rec_resnet_stn_bilstm</br>_att</td>
         <td><a href="https://paperswithcode.com/paper/seed-semantics-enhanced-encoder-decoder">SEED: Semantics Enhanced Encoder-Decoder Framework for Scene TextRecognition</a></td>
         <td><details><summary>Abstract</summary><div>Scene text recognition is a hot research topic in computer vision. Recently, many recognition methods based on the encoder-decoder framework have been proposed, and they can handle scene texts of perspective distortion and curve shape. Nevertheless, they still face lots of challenges like image blur, uneven illumination, and incomplete characters. We argue that most encoder-decoder methods are based on local visual features without explicit global semantic information. In this work, we propose a semantics enhanced encoder-decoder framework to robustly recognize low-quality scene texts. The semantic information is used both in the encoder module for supervision and in the decoder module for initializing. In particular, the state-of-the art ASTER method is integrated into the proposed framework as an exemplar. Extensive experiments demonstrate that the proposed framework is more robust for low-quality text images, and achieves state-of-the-art results on several benchmark datasets. </div></details></td>
-        <td>IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE / avg_acc / 85.2%</td>
+        <td>IIIT, SVT, IC03, IC13</br>, IC15, SVTP, CUTE / avg_acc / 85.2%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/algorithm_overview.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2069,7 +2069,7 @@
         <td>en_server_pgnetA</td>
         <td><a href="https://paperswithcode.com/paper/pgnet-real-time-arbitrarily-shaped-text">PGNet: Real-time Arbitrarily-Shaped Text Spottingwith Point Gathering Network</a></td>
         <td><details><summary>Abstract</summary><div>The reading of arbitrarily-shaped text has received increasing research attention. However, existing text spotters are mostly built on two-stage frameworks or character-based methods, which suffer from either Non-Maximum Suppression (NMS), Region-of-Interest (RoI) operations, or character-level annotations. In this paper, to address the above problems, we propose a novel fully convolutional Point Gathering Network (PGNet) for reading arbitrarily-shaped text in real-time. The PGNet is a single-shot text spotter, where the pixel-level character classification map is learned with proposed PG-CTC loss avoiding the usage of character-level annotations. With a PG-CTC decoder, we gather high-level character classification vectors from two-dimensional space and decode them into text symbols without NMS and RoI operations involved, which guarantees high efficiency. Additionally, reasoning the relations between each character and its neighbors, a graph refinement module (GRM) is proposed to optimize the coarse recognition and improve the end-to-end performance. Experiments prove that the proposed method achieves competitive accuracy, meanwhile significantly improving the running speed. In particular, in Total-Text, it runs at 46.7 FPS, surpassing the previous spotters with a large margin.</div></details></td>
-        <td>total-text / e2e_f_score / 60.03%</td>
+        <td>total-text / e2e_f_sc</br>ore / 60.03%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.1/doc/doc_ch/pgnet.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2420,7 +2420,7 @@
         <td>blazeface_1000e</td>
         <td><a href="无">BlazeFace: Sub-millisecond Neural Face Detection on Mobile GPUs</a></td>
         <td><details><summary>Abstract</summary><div>We present BlazeFace, a lightweight and well-performing face detector tailored for mobile GPU inference. It runs at a speed of 200-1000+ FPS on flagship devices. This super-realtime performance enables it to be applied to any augmented reality pipeline that requires an accurate facial region of interest as an input for task-specific models, such as 2D/3D facial keypoint or geometry estimation, facial features or expression classification, and face region segmentation. Our contributions include a lightweight feature extraction network inspired by, but distinct from MobileNetV1/V2, a GPU-friendly anchor scheme modified from Single Shot MultiBox Detector (SSD), and an improved tie resolution strategy alternative to non-maximum suppression.</div></details></td>
-        <td>wider face/0.885 / 0.855 / 0.731</td>
+        <td>wider face/0.885 / 0.</br>855 / 0.731</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/develop/docs/tutorials/GETTING_STARTED_cn.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2429,7 +2429,7 @@
         <td>blazeface_fpn_ssh_100</br>0e</td>
         <td><a href="无">BlazeFace: Sub-millisecond Neural Face Detection on Mobile GPUs</a></td>
         <td><details><summary>Abstract</summary><div>We present BlazeFace, a lightweight and well-performing face detector tailored for mobile GPU inference. It runs at a speed of 200-1000+ FPS on flagship devices. This super-realtime performance enables it to be applied to any augmented reality pipeline that requires an accurate facial region of interest as an input for task-specific models, such as 2D/3D facial keypoint or geometry estimation, facial features or expression classification, and face region segmentation. Our contributions include a lightweight feature extraction network inspired by, but distinct from MobileNetV1/V2, a GPU-friendly anchor scheme modified from Single Shot MultiBox Detector (SSD), and an improved tie resolution strategy alternative to non-maximum suppression.</div></details></td>
-        <td>wider face0.907 / 0.883 / 0.793</td>
+        <td>wider face0.907 / 0.8</br>83 / 0.793</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/develop/docs/tutorials/GETTING_STARTED_cn.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2834,7 +2834,7 @@
         <td>U-Net</td>
         <td><a href="https://paperswithcode.com/paper/u-net-convolutional-networks-for-biomedical">U-Net: Convolutional Networks for Biomedical Image Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>There is large consent that successful training of deep networks requires many thousand annotated training samples. In this paper, we present a network and training strategy that relies on the stronguse of data augmentation to use the available annotated samples moreefficiently. The architecture consists of a contracting path to capturecontext and a symmetric expanding path that enables precise localization. We show that such a network can be trained end-to-end from veryfew images and outperforms the prior best method (a sliding-windowconvolutional network) on the ISBI challenge for segmentation of neuronal structures in electron microscopic stacks. Using the same network trained on transmitted light microscopy images (phase contrastand DIC) we won the ISBI cell tracking challenge 2015 in these categories by a large margin. Moreover, the network is fast. Segmentationof a 512x512 image takes less than a second on a recent GPU. The fullimplementation (based on Caffe) and the trained networks are availableat http://lmb.informatik.uni-freiburg.de/people/ronneber/u-net.</div></details></td>
-        <td>Cityscapes/mIoU=65.00%</td>
+        <td>Cityscapes/mIoU=65.00</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2843,7 +2843,7 @@
         <td>PSPNet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/pyramid-scene-parsing-network">Pyramid Scene Parsing Network</a></td>
         <td><details><summary>Abstract</summary><div>Scene parsing is challenging for unrestricted open vocabulary and diverse scenes. In this paper, we exploit the capability of global context information by different-region-based context aggregation through our pyramid pooling module together with the proposed pyramid scene parsing network (PSPNet). Our global prior representation is effective to produce good quality results on the scene parsing task, while PSPNet provides a superior framework for pixel-level prediction. The proposed approach achieves state-of-the-art performance on various datasets. It came first in ImageNet scene parsing challenge 2016, PASCAL VOC 2012 benchmark and Cityscapes benchmark. A single PSPNet yields the new record of mIoU accuracy 85.4% on PASCAL VOC 2012 and accuracy 80.2% on Cityscapes.</div></details></td>
-        <td>Cityscapes/mIoU=78.83%</td>
+        <td>Cityscapes/mIoU=78.83</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2861,7 +2861,7 @@
         <td>Fast-SCNN</td>
         <td><a href="https://paperswithcode.com/paper/fast-scnn-fast-semantic-segmentation-network">Fast-SCNN: Fast Semantic Segmentation Network</a></td>
         <td><details><summary>Abstract</summary><div>The encoder-decoder framework is state-of-the-art for offline semantic image segmentation. Since the rise in autonomous systems, real-time computation is increasingly desirable. In this paper, we introduce fast segmentation convolutional neural network (Fast-SCNN), an above real-time semantic segmentation model on high resolution image data (1024x2048px) suited to efficient computation on embedded devices with low memory. Building on existing two-branch methods for fast segmentation, we introduce our `learning to downsample' module which computes low-level features for multiple resolution branches simultaneously. Our network combines spatial detail at high resolution with deep features extracted at lower resolution, yielding an accuracy of 68.0% mean intersection over union at 123.5 frames per second on Cityscapes. We also show that large scale pre-training is unnecessary. We thoroughly validate our metric in experiments with ImageNet pre-training and the coarse labeled data of Cityscapes. Finally, we show even faster computation with competitive results on subsampled inputs, without any network modifications.</div></details></td>
-        <td>Cityscapes/mIoU=69.31%</td>
+        <td>Cityscapes/mIoU=69.31</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2870,7 +2870,7 @@
         <td>OCRNet_HRNetW18</td>
         <td><a href="https://paperswithcode.com/paper/object-contextual-representations-for">Object-Contextual Representations for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>In this paper, we address the semantic segmentation problem with a focus on the context aggregation strategy. Our motivation is that the label of a pixel is the category of the object that the pixel belongs to. We present a simple yet effective approach, object-contextual representations, characterizing a pixel by exploiting the representation of the corresponding object class. First, we learn object regions under the supervision of ground-truth segmentation. Second, we compute the object region representation by aggregating the representations of the pixels lying in the object region. Last, % the representation similarity we compute the relation between each pixel and each object region and augment the representation of each pixel with the object-contextual representation which is a weighted aggregation of all the object region representations according to their relations with the pixel. We empirically demonstrate that the proposed approach achieves competitive performance on various challenging semantic segmentation benchmarks: Cityscapes, ADE20K, LIP, PASCAL-Context, and COCO-Stuff. Cityscapes, ADE20K, LIP, PASCAL-Context, and COCO-Stuff. Our submission "HRNet + OCR + SegFix" achieves 1-st place on the Cityscapes leaderboard by the time of submission. Code is available at: https://git.io/openseg and https://git.io/HRNet.OCR. We rephrase the object-contextual representation scheme using the Transformer encoder-decoder framework. The details are presented in~Section3.3.</div></details></td>
-        <td>Cityscapes/mIoU=80.67%</td>
+        <td>Cityscapes/mIoU=80.67</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2879,7 +2879,7 @@
         <td>ANN_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/asymmetric-non-local-neural-networks-for">Asymmetric Non-local Neural Networks for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>The non-local module works as a particularly useful technique for semantic segmentation while criticized for its prohibitive computation and GPU memory occupation. In this paper, we present Asymmetric Non-local Neural Network to semantic segmentation, which has two prominent components: Asymmetric Pyramid Non-local Block (APNB) and Asymmetric Fusion Non-local Block (AFNB). APNB leverages a pyramid sampling module into the non-local block to largely reduce the computation and memory consumption without sacrificing the performance. AFNB is adapted from APNB to fuse the features of different levels under a sufficient consideration of long range dependencies and thus considerably improves the performance. Extensive experiments on semantic segmentation benchmarks demonstrate the effectiveness and efficiency of our work. In particular, we report the state-of-the-art performance of 81.3 mIoU on the Cityscapes test set. For a 256x128 input, APNB is around 6 times faster than a non-local block on GPU while 28 times smaller in GPU running memory occupation. Code is available at: https://github.com/MendelXu/ANN.git</div></details></td>
-        <td>Cityscapes/mIoU=79.09%</td>
+        <td>Cityscapes/mIoU=79.09</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2888,7 +2888,7 @@
         <td>Deeplabv3_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/rethinking-atrous-convolution-for-semantic">Rethinking Atrous Convolution for Semantic Image Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>In this work, we revisit atrous convolution, a powerful tool to explicitly adjust filter's field-of-view as well as control the resolution of feature responses computed by Deep Convolutional Neural Networks, in the application of semantic image segmentation. To handle the problem of segmenting objects at multiple scales, we design modules which employ atrous convolution in cascade or in parallel to capture multi-scale context by adopting multiple atrous rates. Furthermore, we propose to augment our previously proposed Atrous Spatial Pyramid Pooling module, which probes convolutional features at multiple scales, with image-level features encoding global context and further boost performance. We also elaborate on implementation details and share our experience on training our system. The proposed `DeepLabv3' system significantly improves over our previous DeepLab versions without DenseCRF post-processing and attains comparable performance with other state-of-art models on the PASCAL VOC 2012 semantic image segmentation benchmark.</div></details></td>
-        <td>Cityscapes/mIoU=79.90%</td>
+        <td>Cityscapes/mIoU=79.90</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2897,7 +2897,7 @@
         <td>GCNet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/gcnet-non-local-networks-meet-squeeze">GCNet: Non-local networks meet squeeze-excitation networks and beyond</a></td>
         <td><details><summary>Abstract</summary><div>The Non-Local Network (NLNet) presents a pioneering approach for capturing long-range dependencies, via aggregating query-specific global context to each query position. However, through a rigorous empirical analysis, we have found that the global contexts modeled by non-local network are almost the same for different query positions within an image. In this paper, we take advantage of this finding to create a simplified network based on a query-independent formulation, which maintains the accuracy of NLNet but with significantly less computation. We further observe that this simplified design shares similar structure with Squeeze-Excitation Network (SENet). Hence we unify them into a three-step general framework for global context modeling. Within the general framework, we design a better instantiation, called the global context (GC) block, which is lightweight and can effectively model the global context. The lightweight property allows us to apply it for multiple layers in a backbone network to construct a global context network (GCNet), which generally outperforms both simplified NLNet and SENet on major benchmarks for various recognition tasks. The code and configurations are released at https://github.com/xvjiarui/GCNet</div></details></td>
-        <td>Cityscapes/mIoU=79.50%</td>
+        <td>Cityscapes/mIoU=79.50</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2906,7 +2906,7 @@
         <td>BiSeNetv2</td>
         <td><a href="https://paperswithcode.com/paper/bisenet-v2-bilateral-network-with-guided">BiSeNet V2: Bilateral Network with Guided Aggregation for Real-time Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>The low-level details and high-level semantics are both essential to the semantic segmentation task. However, to speed up the model inference, current approaches almost always sacrifice the low-level details, which leads to a considerable accuracy decrease. We propose to treat these spatial details and categorical semantics separately to achieve high accuracy and high efficiency for realtime semantic segmentation. To this end, we propose an efficient and effective architecture with a good trade-off between speed and accuracy, termed Bilateral Segmentation Network (BiSeNet V2). This architecture involves: (i) a Detail Branch, with wide channels and shallow layers to capture low-level details and generate high-resolution feature representation; (ii) a Semantic Branch, with narrow channels and deep layers to obtain high-level semantic context. The Semantic Branch is lightweight due to reducing the channel capacity and a fast-downsampling strategy. Furthermore, we design a Guided Aggregation Layer to enhance mutual connections and fuse both types of feature representation. Besides, a booster training strategy is designed to improve the segmentation performance without any extra inference cost. Extensive quantitative and qualitative evaluations demonstrate that the proposed architecture performs favourably against a few state-of-the-art real-time semantic segmentation approaches. Specifically, for a 2,048x1,024 input, we achieve 72.6% Mean IoU on the Cityscapes test set with a speed of 156 FPS on one NVIDIA GeForce GTX 1080 Ti card, which is significantly faster than existing methods, yet we achieve better segmentation accuracy</div></details></td>
-        <td>Cityscapes/mIoU=73.19%</td>
+        <td>Cityscapes/mIoU=73.19</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -2915,7 +2915,7 @@
         <td>DANet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/dual-attention-network-for-scene-segmentation">Dual Attention Network for Scene Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>In this paper, we address the scene segmentation task by capturing rich contextual dependencies based on the selfattention mechanism. Unlike previous works that capture contexts by multi-scale features fusion, we propose a Dual Attention Networks (DANet) to adaptively integrate local features with their global dependencies. Specifically, we append two types of attention modules on top of traditional dilated FCN, which model the semantic interdependencies in spatial and channel dimensions respectively. The position attention module selectively aggregates the features at each position by a weighted sum of the features at all positions. Similar features would be related to each other regardless of their distances. Meanwhile, the channel attention module selectively emphasizes interdependent channel maps by integrating associated features among all channel maps. We sum the outputs of the two attention modules to further improve feature representation which contributes to more precise segmentation results. We achieve new state-of-the-art segmentation performance on three challenging scene segmentation datasets, i.e., Cityscapes, PASCAL Context and COCO Stuff dataset. In particular, a Mean IoU score of 81.5% on Cityscapes test set is achieved without using coarse data. We make the code and trained model publicly available at https://github.com/junfu1115/DANet</div></details></td>
-        <td>Cityscapes/mIoU=80.27%</td>
+        <td>Cityscapes/mIoU=80.27</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2924,7 +2924,7 @@
         <td>HarDNet</td>
         <td><a href="https://paperswithcode.com/paper/hardnet-a-low-memory-traffic-network">HarDNet: A Low Memory Traffic Network</a></td>
         <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge.</div></details></td>
-        <td>Cityscapes/mIoU=79.03%</td>
+        <td>Cityscapes/mIoU=79.03</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2933,7 +2933,7 @@
         <td>DecoupledSegNet_ResNe</br>t50</td>
         <td><a href="https://paperswithcode.com/paper/improving-semantic-segmentation-via-decoupled">Improving Semantic Segmentation via Decoupled Body and Edge Supervision</a></td>
         <td><details><summary>Abstract</summary><div>Existing semantic segmentation approaches either aim to improve the object's inner consistency by modeling the global context, or refine objects detail along their boundaries by multi-scale feature fusion. In this paper, a new paradigm for semantic segmentation is proposed. Our insight is that appealing performance of semantic segmentation requires \textit{explicitly} modeling the object \textit{body} and \textit{edge}, which correspond to the high and low frequency of the image. To do so, we first warp the image feature by learning a flow field to make the object part more consistent. The resulting body feature and the residual edge feature are further optimized under decoupled supervision by explicitly sampling different parts (body or edge) pixels. We show that the proposed framework with various baselines or backbone networks leads to better object inner consistency and object boundaries. Extensive experiments on four major road scene semantic segmentation benchmarks including \textit{Cityscapes}, \textit{CamVid}, \textit{KIITI} and \textit{BDD} show that our proposed approach establishes new state of the art while retaining high efficiency in inference. In particular, we achieve 83.7 mIoU \% on Cityscape with only fine-annotated data. Code and models are made available to foster any further research (\url{https://github.com/lxtGH/DecoupleSegNets}).</div></details></td>
-        <td>Cityscapes/Resolution=1024x512/mIoU=80.86%</td>
+        <td>Cityscapes/Resolution</br>=1024x512/mIoU=80.86%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2942,7 +2942,7 @@
         <td>ISANet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/interlaced-sparse-self-attention-for-semantic">Interlaced Sparse Self-Attention for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>In this paper, we present a so-called interlaced sparse self-attention approach to improve the efficiency of the \emph{self-attention} mechanism for semantic segmentation. The main idea is that we factorize the dense affinity matrix as the product of two sparse affinity matrices. There are two successive attention modules each estimating a sparse affinity matrix. The first attention module is used to estimate the affinities within a subset of positions that have long spatial interval distances and the second attention module is used to estimate the affinities within a subset of positions that have short spatial interval distances. These two attention modules are designed so that each position is able to receive the information from all the other positions. In contrast to the original self-attention module, our approach decreases the computation and memory complexity substantially especially when processing high-resolution feature maps. We empirically verify the effectiveness of our approach on six challenging semantic segmentation benchmarks</div></details></td>
-        <td>Cityscapes/mIoU=79.03%</td>
+        <td>Cityscapes/mIoU=79.03</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2951,7 +2951,7 @@
         <td>SFNet_ResNet18</td>
         <td><a href="https://paperswithcode.com/paper/semantic-flow-for-fast-and-accurate-scene">Semantic Flow for Fast and Accurate Scene Parsing</a></td>
         <td><details><summary>Abstract</summary><div>In this paper, we focus on designing effective method for fast and accurate scene parsing. A common practice to improve the performance is to attain high resolution feature maps with strong semantic representation. Two strategies are widely used -- atrous convolutions and feature pyramid fusion, are either computation intensive or ineffective. Inspired by the Optical Flow for motion alignment between adjacent video frames, we propose a Flow Alignment Module (FAM) to learn Semantic Flow between feature maps of adjacent levels, and broadcast high-level features to high resolution features effectively and efficiently. Furthermore, integrating our module to a common feature pyramid structure exhibits superior performance over other real-time methods even on light-weight backbone networks, such as ResNet-18. Extensive experiments are conducted on several challenging datasets, including Cityscapes, PASCAL Context, ADE20K and CamVid. Especially, our network is the first to achieve 80.4\% mIoU on Cityscapes with a frame rate of 26 FPS. The code is available at \url{https://github.com/lxtGH/SFSegNets}</div></details></td>
-        <td>Cityscapes/mIoU=78.72%</td>
+        <td>Cityscapes/mIoU=78.72</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2960,7 +2960,7 @@
         <td>DNLNet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/disentangled-non-local-neural-networks">Disentangled Non-Local Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>The non-local block is a popular module for strengthening the context modeling ability of a regular convolutional neural network. This paper first studies the non-local block in depth, where we find that its attention computation can be split into two terms, a whitened pairwise term accounting for the relationship between two pixels and a unary term representing the saliency of every pixel. We also observe that the two terms trained alone tend to model different visual clues, e.g. the whitened pairwise term learns within-region relationships while the unary term learns salient boundaries. However, the two terms are tightly coupled in the non-local block, which hinders the learning of each. Based on these findings, we present the disentangled non-local block, where the two terms are decoupled to facilitate learning for both terms. We demonstrate the effectiveness of the decoupled design on various tasks, such as semantic segmentation on Cityscapes, ADE20K and PASCAL Context, object detection on COCO, and action recognition on Kinetics.</div></details></td>
-        <td>Cityscapes/mIoU=79.95%</td>
+        <td>Cityscapes/mIoU=79.95</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2969,7 +2969,7 @@
         <td>GSCNN_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/gated-scnn-gated-shape-cnns-for-semantic">Gated-scnn: Gated shape cnns for semantic segmentation</a></td>
         <td><details><summary>Abstract</summary><div>Current state-of-the-art methods for image segmentation form a dense image representation where the color, shape and texture information are all processed together inside a deep CNN. This however may not be ideal as they contain very different type of information relevant for recognition. Here, we propose a new two-stream CNN architecture for semantic segmentation that explicitly wires shape information as a separate processing branch, i.e. shape stream, that processes information in parallel to the classical stream. Key to this architecture is a new type of gates that connect the intermediate layers of the two streams. Specifically, we use the higher-level activations in the classical stream to gate the lower-level activations in the shape stream, effectively removing noise and helping the shape stream to only focus on processing the relevant boundary-related information. This enables us to use a very shallow architecture for the shape stream that operates on the image-level resolution. Our experiments show that this leads to a highly effective architecture that produces sharper predictions around object boundaries and significantly boosts performance on thinner and smaller objects. Our method achieves state-of-the-art performance on the Cityscapes benchmark, in terms of both mask (mIoU) and boundary (F-score) quality, improving by 2% and 4% over strong baselines.</div></details></td>
-        <td>Cityscapes/mIoU=80.67%</td>
+        <td>Cityscapes/mIoU=80.67</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -2978,7 +2978,7 @@
         <td>EMANet_ResNet50</td>
         <td><a href="https://paperswithcode.com/paper/expectation-maximization-attention-networks">Expectation-Maximization Attention Networks for Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>Self-attention mechanism has been widely used for various tasks. It is designed to compute the representation of each position by a weighted sum of the features at all positions. Thus, it can capture long-range relations for computer vision tasks. However, it is computationally consuming. Since the attention maps are computed w.r.t all other positions. In this paper, we formulate the attention mechanism into an expectation-maximization manner and iteratively estimate a much more compact set of bases upon which the attention maps are computed. By a weighted summation upon these bases, the resulting representation is low-rank and deprecates noisy information from the input. The proposed Expectation-Maximization Attention (EMA) module is robust to the variance of input and is also friendly in memory and computation. Moreover, we set up the bases maintenance and normalization methods to stabilize its training procedure. We conduct extensive experiments on popular semantic segmentation benchmarks including PASCAL VOC, PASCAL Context and COCO Stuff, on which we set new records.</div></details></td>
-        <td>Cityscapes/mIoU=79.05%</td>
+        <td>Cityscapes/mIoU=79.05</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3023,7 +3023,7 @@
         <td>SETR_Naive</td>
         <td><a href="https://paperswithcode.com/paper/rethinking-semantic-segmentation-from-a">Rethinking Semantic Segmentation from a Sequence-to-Sequence Perspective with Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Most recent semantic segmentation methods adopt a fully-convolutional network (FCN) with an encoder-decoder architecture. The encoder progressively reduces the spatial resolution and learns more abstract/semantic visual concepts with larger receptive fields. Since context modeling is critical for segmentation, the latest efforts have been focused on increasing the receptive field, through either dilated/atrous convolutions or inserting attention modules. However, the encoder-decoder based FCN architecture remains unchanged. In this paper, we aim to provide an alternative perspective by treating semantic segmentation as a sequence-to-sequence prediction task. Specifically, we deploy a pure transformer (ie, without convolution and resolution reduction) to encode an image as a sequence of patches. With the global context modeled in every layer of the transformer, this encoder can be combined with a simple decoder to provide a powerful segmentation model, termed SEgmentation TRansformer (SETR). Extensive experiments show that SETR achieves new state of the art on ADE20K (50.28% mIoU), Pascal Context (55.83% mIoU) and competitive results on Cityscapes. Particularly, we achieve the first position in the highly competitive ADE20K test server leaderboard on the day of submission</div></details></td>
-        <td>Cityscapes/mIoU=77.29%</td>
+        <td>Cityscapes/mIoU=77.29</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3041,7 +3041,7 @@
         <td>SegFormer_B0</td>
         <td><a href="https://paperswithcode.com/paper/segformer-simple-and-efficient-design-for">SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers</a></td>
         <td><details><summary>Abstract</summary><div>We present SegFormer, a simple, efficient yet powerful semantic segmentation framework which unifies Transformers with lightweight multilayer perception (MLP) decoders. SegFormer has two appealing features: 1) SegFormer comprises a novel hierarchically structured Transformer encoder which outputs multiscale features. It does not need positional encoding, thereby avoiding the interpolation of positional codes which leads to decreased performance when the testing resolution differs from training. 2) SegFormer avoids complex decoders. The proposed MLP decoder aggregates information from different layers, and thus combining both local attention and global attention to render powerful representations. We show that this simple and lightweight design is the key to efficient segmentation on Transformers. We scale our approach up to obtain a series of models from SegFormer-B0 to SegFormer-B5, reaching significantly better performance and efficiency than previous counterparts. For example, SegFormer-B4 achieves 50.3% mIoU on ADE20K with 64M parameters, being 5x smaller and 2.2% better than the previous best method. Our best model, SegFormer-B5, achieves 84.0% mIoU on Cityscapes validation set and shows excellent zero-shot robustness on Cityscapes-C. Code will be released at: github.com/NVlabs/SegFormer.</div></details></td>
-        <td>Cityscapes/mIoU=76.73%</td>
+        <td>Cityscapes/mIoU=76.73</br>%</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3050,7 +3050,7 @@
         <td>STDC_STDC1</td>
         <td><a href="https://paperswithcode.com/paper/rethinking-bisenet-for-real-time-semantic">Rethinking BiSeNet For Real-time Semantic Segmentation</a></td>
         <td><details><summary>Abstract</summary><div>BiSeNet has been proved to be a popular two-stream network for real-time segmentation. However, its principle of adding an extra path to encode spatial information is time-consuming, and the backbones borrowed from pretrained tasks, e.g., image classification, may be inefficient for image segmentation due to the deficiency of task-specific design. To handle these problems, we propose a novel and efficient structure named Short-Term Dense Concatenate network (STDC network) by removing structure redundancy. Specifically, we gradually reduce the dimension of feature maps and use the aggregation of them for image representation, which forms the basic module of STDC network. In the decoder, we propose a Detail Aggregation module by integrating the learning of spatial information into low-level layers in single-stream manner. Finally, the low-level features and deep features are fused to predict the final segmentation results. Extensive experiments on Cityscapes and CamVid dataset demonstrate the effectiveness of our method by achieving promising trade-off between segmentation accuracy and inference speed. On Cityscapes, we achieve 71.9% mIoU on the test set with a speed of 250.4 FPS on NVIDIA GTX 1080Ti, which is 45.2% faster than the latest methods, and achieve 76.8% mIoU with 97.0 FPS while inferring on higher resolution images.</div></details></td>
-        <td>Cityscapes/mIoU=74.74%	</td>
+        <td>Cityscapes/mIoU=74.74</br>%	</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleSeg/blob/develop/docs/whole_process.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3059,7 +3059,7 @@
         <td>PP-MSVSR</td>
         <td><a href="https://paperswithcode.com/paper/pp-msvsr-multi-stage-video-super-resolution">PP-MSVSR: Multi-Stage Video Super-Resolution</a></td>
         <td><details><summary>Abstract</summary><div>Different from the Single Image Super-Resolution(SISR) task, the key for Video Super-Resolution(VSR) task is to make full use of complementary information across frames to reconstruct the high-resolution sequence. Since images from different frames with diverse motion and scene, accurately aligning multiple frames and effectively fusing different frames has always been the key research work of VSR tasks. To utilize rich complementary information of neighboring frames, in this paper, we propose a multi-stage VSR deep architecture, dubbed as PP-MSVSR, with local fusion module, auxiliary loss and re-align module to refine the enhanced result progressively. Specifically, in order to strengthen the fusion of features across frames in feature propagation, a local fusion module is designed in stage-1 to perform local feature fusion before feature propagation. Moreover, we introduce an auxiliary loss in stage-2 to make the features obtained by the propagation module reserve more correlated information connected to the HR space, and introduce a re-align module in stage-3 to make full use of the feature information of the previous stage. Extensive experiments substantiate that PP-MSVSR achieves a promising performance of Vid4 datasets, which achieves a PSNR of 28.13dB with only 1.45M parameters. And the PP-MSVSR-L exceeds all state of the art method on REDS4 datasets with considerable parameters. Code and models will be released in PaddleGAN\footnote{this https URL.}.</div></details></td>
-        <td>REDS/psnr: 31.2535 ssim:0.8884</td>
+        <td>REDS/psnr: 31.2535 ss</br>im:0.8884</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/video_super_resolution.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3104,7 +3104,7 @@
         <td>LESRCNN</td>
         <td><a href="https://paperswithcode.com/paper/lightweight-image-super-resolution-with-2">Lightweight image super-resolution with enhanced CNN</a></td>
         <td><details><summary>Abstract</summary><div>Deep convolutional neural networks (CNNs) with strong expressive ability have achieved impressive performances on single image super-resolution (SISR). However, their excessive amounts of convolutions and parameters usually consume high computational cost and more memory storage for training a SR model, which limits their applications to SR with resource-constrained devices in real world. To resolve these problems, we propose a lightweight enhanced SR CNN (LESRCNN) with three successive sub-blocks, an information extraction and enhancement block (IEEB), a reconstruction block (RB) and an information refinement block (IRB). Specifically, the IEEB extracts hierarchical low-resolution (LR) features and aggregates the obtained features step-by-step to increase the memory ability of the shallow layers on deep layers for SISR. To remove redundant information obtained, a heterogeneous architecture is adopted in the IEEB. After that, the RB converts low-frequency features into high-frequency features by fusing global and local features, which is complementary with the IEEB in tackling the long-term dependency problem. Finally, the IRB uses coarse high-frequency features from the RB to learn more accurate SR features and construct a SR image. The proposed LESRCNN can obtain a high-quality image by a model for different scales. Extensive experiments demonstrate that the proposed LESRCNN outperforms state-of-the-arts on SISR in terms of qualitative and quantitative evaluation. The code of LESRCNN is accessible on this https URL.</div></details></td>
-        <td>DIV2K/pnsr: 30.231 ssim:0.8326</td>
+        <td>DIV2K/pnsr: 30.231 ss</br>im:0.8326</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/single_image_super_resolution.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3113,7 +3113,7 @@
         <td>ESRGAN</td>
         <td><a href="https://paperswithcode.com/paper/esrgan-enhanced-super-resolution-generative">Esrgan: Enhanced super-resolution generative adversarial networks</a></td>
         <td><details><summary>Abstract</summary><div>The Super-Resolution Generative Adversarial Network (SRGAN) is a seminal work that is capable of generating realistic textures during single image super-resolution. However, the hallucinated details are often accompanied with unpleasant artifacts. To further enhance the visual quality, we thoroughly study three key components of SRGAN - network architecture, adversarial loss and perceptual loss, and improve each of them to derive an Enhanced SRGAN (ESRGAN). In particular, we introduce the Residual-in-Residual Dense Block (RRDB) without batch normalization as the basic network building unit. Moreover, we borrow the idea from relativistic GAN to let the discriminator predict relative realness instead of the absolute value. Finally, we improve the perceptual loss by using the features before activation, which could provide stronger supervision for brightness consistency and texture recovery. Benefiting from these improvements, the proposed ESRGAN achieves consistently better visual quality with more realistic and natural textures than SRGAN and won the first place in the PIRM2018-SR Challenge. The code is available at this https URL</div></details></td>
-        <td>DIV2K/pnsr: 26.9013 ssim: 0.7542</td>
+        <td>DIV2K/pnsr: 26.9013 s</br>sim: 0.7542</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/single_image_super_resolution.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3122,7 +3122,7 @@
         <td>RealSR</td>
         <td><a href="https://paperswithcode.com/paper/real-world-super-resolution-via-kernel">Real-World Super-Resolution via Kernel Estimation and Noise Injection</a></td>
         <td><details><summary>Abstract</summary><div>Recent state-of-the-art super-resolution methods have achieved impressive performance on ideal datasets regardless of blur and noise. However, these methods always fail in real-world image super-resolution, since most of them adopt simple bicubic downsampling from high-quality images to construct Low-Resolution (LR) and High-Resolution (HR) pairs for training which may lose track of frequency-related details. To address this issue, we focus on designing a novel degradation framework for real-world images by estimating various blur kernels as well as real noise distributions. Based on our novel degradation framework, we can acquire LR images sharing a common domain with real-world images. Then, we propose a real-world super-resolution model aiming at better perception. Extensive experiments on synthetic noise data and real-world images demonstrate that our method outperforms the state-of-the-art methods, resulting in lower noise and better visual quality. In addition, our method is the winner of NTIRE 2020 Challenge on both tracks of Real-World Super-Resolution, which significantly outperforms other competitors by large margins.</div></details></td>
-        <td>DIV2K/pnsr:26.7306 ssim:0.7512</td>
+        <td>DIV2K/pnsr:26.7306 ss</br>im:0.7512</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/single_image_super_resolution.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3185,7 +3185,7 @@
         <td>FOM</td>
         <td><a href="https://paperswithcode.com/paper/first-order-motion-model-for-image-animation-1">First Order Motion Model for Image Animation</a></td>
         <td><details><summary>Abstract</summary><div>Image animation consists of generating a video sequence so that an object in a source image is animated according to the motion of a driving video. Our framework addresses this problem without using any annotation or prior information about the specific object to animate. Once trained on a set of videos depicting objects of the same category (e.g. faces, human bodies), our method can be applied to any object of this class. To achieve this, we decouple appearance and motion information using a self-supervised formulation. To support complex motions, we use a representation consisting of a set of learned keypoints along with their local affine transformations. A generator network models occlusions arising during target motions and combines the appearance extracted from the source image and the motion derived from the driving video. Our framework scores best on diverse benchmarks and on a variety of object categories</div></details></td>
-        <td>VoxCeleb/l1loss:0.04178</td>
+        <td>VoxCeleb/l1loss:0.041</br>78</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/motion_driving.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3194,7 +3194,7 @@
         <td>EDVR</td>
         <td><a href="https://paperswithcode.com/paper/edvr-video-restoration-with-enhanced">EDVR: Video Restoration with Enhanced Deformable Convolutional Networks</a></td>
         <td><details><summary>Abstract</summary><div>Video restoration tasks, including super-resolution, deblurring, etc, are drawing increasing attention in the computer vision community. A challenging benchmark named REDS is released in the NTIRE19 Challenge. This new benchmark challenges existing methods from two aspects: (1) how to align multiple frames given large motions, and (2) how to effectively fuse different frames with diverse motion and blur. In this work, we propose a novel Video Restoration framework with Enhanced Deformable networks, termed EDVR, to address these challenges. First, to handle large motions, we devise a Pyramid, Cascading and Deformable (PCD) alignment module, in which frame alignment is done at the feature level using deformable convolutions in a coarse-to-fine manner. Second, we propose a Temporal and Spatial Attention (TSA) fusion module, in which attention is applied both temporally and spatially, so as to emphasize important features for subsequent restoration. Thanks to these modules, our EDVR wins the champions and outperforms the second place by a large margin in all four tracks in the NTIRE19 video restoration and enhancement challenges. EDVR also demonstrates superior performance to state-of-the-art published methods on video super-resolution and deblurring</div></details></td>
-        <td>REDS/pnsr:30.4429 ssim:0.8684</td>
+        <td>REDS/pnsr:30.4429 ssi</br>m:0.8684</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/video_super_resolution.md">快速开始</a></td>
         <td></td>
     </tr>
@@ -3203,7 +3203,7 @@
         <td>BasicVSR</td>
         <td><a href="https://paperswithcode.com/paper/basicvsr-the-search-for-essential-components">BasicVSR: The Search for Essential Components in Video Super-Resolution and Beyond</a></td>
         <td><details><summary>Abstract</summary><div>Video super-resolution (VSR) approaches tend to have more components than the image counterparts as they need to exploit the additional temporal dimension. Complex designs are not uncommon. In this study, we wish to untangle the knots and reconsider some most essential components for VSR guided by four basic functionalities, i.e., Propagation, Alignment, Aggregation, and Upsampling. By reusing some existing components added with minimal redesigns, we show a succinct pipeline, BasicVSR, that achieves appealing improvements in terms of speed and restoration quality in comparison to many state-of-the-art algorithms. We conduct systematic analysis to explain how such gain can be obtained and discuss the pitfalls. We further show the extensibility of BasicVSR by presenting an information-refill mechanism and a coupled propagation scheme to facilitate information aggregation. The BasicVSR and its extension, IconVSR, can serve as strong baselines for future VSR approaches.</div></details></td>
-        <td>REDS/pnsr:30.4429 ssim:0.8684</td>
+        <td>REDS/pnsr:30.4429 ssi</br>m:0.8684</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleGAN/blob/develop/docs/zh_CN/tutorials/video_super_resolution.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3437,7 +3437,7 @@
         <td>Naml</td>
         <td><a href="https://paperswithcode.com/paper/neural-news-recommendation-with-attentive">Neural News Recommendation with Attentive Multi-View Learning</a></td>
         <td><details><summary>Abstract</summary><div>Neural News Recommendation with Attentive Multi-View Learning</div></details></td>
-        <td>microsoft news dataset</td>
+        <td>microsoft news datase</br>t</td>
         <td><a href="">快速开始</a></td>
         <td></td>
     </tr>
@@ -3563,7 +3563,7 @@
         <td>ESMM</td>
         <td><a href="https://paperswithcode.com/paper/entire-space-multi-task-model-an-effective">Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate</a></td>
         <td><details><summary>Abstract</summary><div>Estimating post-click conversion rate (CVR) accurately is crucial for ranking systems in industrial applications such as recommendation and advertising. Conventional CVR modeling applies popular deep learning methods and achieves state-of-the-art performance. However it encounters several task-specific problems in practice, making CVR modeling challenging. For example, conventional CVR models are trained with samples of clicked impressions while utilized to make inference on the entire space with samples of all impressions. This causes a sample selection bias problem. Besides, there exists an extreme data sparsity problem, making the model fitting rather difficult. In this paper, we model CVR in a brand-new perspective by making good use of sequential pattern of user actions, i.e., impression -> click -> conversion. The proposed Entire Space Multi-task Model (ESMM) can eliminate the two problems simultaneously by i) modeling CVR directly over the entire space, ii) employing a feature representation transfer learning strategy. Experiments on dataset gathered from Taobao's recommender system demonstrate that ESMM significantly outperforms competitive methods. We also release a sampling version of this dataset to enable future research. To the best of our knowledge, this is the first public dataset which contains samples with sequential dependence of click and conversion labels for CVR modeling.</div></details></td>
-        <td>Alibaba Click and Conversion Prediction</td>
+        <td>Alibaba Click and Con</br>version Prediction</td>
         <td><a href="">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3743,7 +3743,7 @@
         <td>Attention LSTM</td>
         <td><a href="https://paperswithcode.com/paper/beyond-short-snippets-deep-networks-for-video">Beyond Short Snippets: Deep Networks for Video Classification</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional neural networks (CNNs) have been exten- sively applied for image recognition problems giving state- of-the-art results on recognition, detection, segmentation and retrieval. In this work we propose and evaluate several deep neural network architectures to combine image infor- mation across a video over longer time periods than previ- ously attempted. We propose two methods capable of han- dling full length videos. The first method explores various convolutional temporal feature pooling architectures, ex- amining the various design choices which need to be made when adapting a CNN for this task. The second proposed method explicitly models the video as an ordered sequence of frames. For this purpose we employ a recurrent neural network that uses Long Short-Term Memory (LSTM) cells which are connected to the output of the underlying CNN. Our best networks exhibit significant performance improve- ments over previously published results on the Sports 1 mil- lion dataset (73.1% vs. 60.9%) and the UCF-101 datasets with (88.6% vs. 88.0%) and without additional optical flow information (82.6% vs. 73.0%). </div></details></td>
-        <td>Youtube8M, Hit@1: 89.0</td>
+        <td>Youtube8M, Hit@1: 89.</br>0</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/model_zoo/recognition/attention_lstm.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3761,7 +3761,7 @@
         <td>PP-TSM</td>
         <td><a href="https://paperswithcode.com/paper/temporal-shift-module-for-efficient-video">TSM: Temporal Shift Module for Efficient Video Understanding</a></td>
         <td><details><summary>Abstract</summary><div>The explosive growth in video streaming gives rise to challenges on performing video understanding at high accu- racy and low computation cost. Conventional 2D CNNs are computationally cheap but cannot capture temporal relationships; 3D CNN based methods can achieve good performance but are computationally intensive, making it expensive to deploy. In this paper, we propose a generic and effective Temporal Shift Module (TSM) that enjoys both high efficiency and high performance. Specifically, it can achieve the performance of 3D CNN but maintain 2D CNN’s complexity. TSM shifts part of the channels along the tempo- ral dimension; thus facilitate information exchanged among neighboring frames. It can be inserted into 2D CNNs to achieve temporal modeling at zero computation and zero parameters. We also extended TSM to online setting, which enables real-time low-latency online video recognition and video object detection. TSM is accurate and efficient: it ranks the first place on the Something-Something leader- board upon publication; on Jetson Nano and Galaxy Note8, it achieves a low latency of 13ms and 35ms for online video recognition.</div></details></td>
-        <td>k400, uniform, Top-1: 74.54</td>
+        <td>k400, uniform, Top-1:</br> 74.54</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/model_zoo/recognition/pp-tsm.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3806,7 +3806,7 @@
         <td>ST-GCN</td>
         <td><a href="https://paperswithcode.com/paper/spatial-temporal-graph-convolutional-networks-1">Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Dynamics of human body skeletons convey significant information for human action recognition. Conventional approaches for modeling skeletons usually rely on hand-crafted parts or traversal rules, thus resulting in limited expressive power and difficulties of generalization. In this work, we propose a novel model of dynamic skeletons called Spatial-Temporal Graph Convolutional Networks (ST-GCN), which moves beyond the limitations of previous methods by automatically learning both the spatial and temporal patterns from data. This formulation not only leads to greater expressive power but also stronger generalization capability. On two large datasets, Kinetics and NTU-RGBD, it achieves substantial improvements over mainstream methods.</div></details></td>
-        <td>ntu-rgbd, Top-1: 82.28</td>
+        <td>ntu-rgbd, Top-1: 82.2</br>8</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/model_zoo/recognition/stgcn.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3815,7 +3815,7 @@
         <td>AGCN</td>
         <td><a href="https://paperswithcode.com/paper/skeleton-based-action-recognition-with-multi">Skeleton-Based Action Recognition with Multi-Stream Adaptive Graph Convolutional Networks</a></td>
         <td><details><summary>Abstract</summary><div>Graph convolutional networks (GCNs), which generalize CNNs to more generic non-Euclidean structures, have achieved remarkable performance for skeleton-based action recognition. However, there still exist several issues in the previous GCN-based models. First, the topology of the graph is set heuristically and fixed over all the model layers and input data. This may not be suitable for the hierarchy of the GCN model and the diversity of the data in action recognition tasks. Second, the second-order information of the skeleton data, i.e., the length and orientation of the bones, is rarely investigated, which is naturally more informative and discriminative for the human action recognition. In this work, we propose a novel multi-stream attention-enhanced adaptive graph convolutional neural network (MS-AAGCN) for skeleton-based action recognition. The graph topology in our model can be either uniformly or individually learned based on the input data in an end-to-end manner. This data-driven approach increases the flexibility of the model for graph construction and brings more generality to adapt to various data samples. Besides, the proposed adaptive graph convolutional layer is further enhanced by a spatial-temporal-channel attention module, which helps the model pay more attention to important joints, frames and features. Moreover, the information of both the joints and bones, together with their motion information, are simultaneously modeled in a multi-stream framework, which shows notable improvement for the recognition accuracy. Extensive experiments on the two large-scale datasets, NTU-RGBD and Kinetics-Skeleton, demonstrate that the performance of our model exceeds the state-of-the-art with a significant margin.</div></details></td>
-        <td>ntu-rgbd, Top-1: 83.27</td>
+        <td>ntu-rgbd, Top-1: 83.2</br>7</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/model_zoo/recognition/agcn.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3824,7 +3824,7 @@
         <td>BMN</td>
         <td><a href="https://paperswithcode.com/paper/bmn-boundary-matching-network-for-temporal">BMN: Boundary-Matching Network for Temporal Action Proposal Generation</a></td>
         <td><details><summary>Abstract</summary><div>Temporal action proposal generation is an challenging and promising task which aims to locate temporal regions in real-world videos where action or event may occur. Current bottom-up proposal generation methods can generate proposals with precise boundary, but cannot efficiently generate adequately reliable confidence scores for retrieving proposals. To address these difficulties, we introduce the Boundary-Matching (BM) mechanism to evaluate confidence scores of densely distributed proposals, which denote a proposal as a matching pair of starting and ending boundaries and combine all densely distributed BM pairs into the BM confidence map. Based on BM mechanism, we propose an effective, efficient and end-to-end proposal generation method, named Boundary-Matching Network (BMN), which generates proposals with precise temporal boundaries as well as reliable confidence scores simultaneously. The two-branches of BMN are jointly trained in an unified framework. We conduct experiments on two challenging datasets: THUMOS-14 and ActivityNet-1.3, where BMN shows significant performance improvement with remarkable efficiency and generalizability. Further, combining with existing action classifier, BMN can achieve state-of-the-art temporal action detection performance.</div></details></td>
-        <td>ActivityNet, AUC: 67.23</td>
+        <td>ActivityNet, AUC: 67.</br>23</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleVideo/blob/develop/docs/zh-CN/model_zoo/localization/bmn.md">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3833,7 +3833,7 @@
         <td>IGSQL</td>
         <td><a href="https://paperswithcode.com/paper/igsql-database-schema-interaction-graph-based"> IGSQL: Database Schema Interaction Graph Based Neural Model for Context-Dependent Text-to-SQL Generation</a></td>
         <td><details><summary>Abstract</summary><div>Context-dependent text-to-SQL task has drawn much attention in recent years. Previous models on context-dependent text-to-SQL task only concentrate on utilizing historical user inputs. In this work, in addition to using encoders to capture historical information of user inputs, we propose a database schema interaction graph encoder to utilize historicalal information of database schema items. In decoding phase, we introduce a gate mechanism to weigh the importance of different vocabularies and then make the prediction of SQL tokens. We evaluate our model on the benchmark SParC and CoSQL datasets, which are two large complex context-dependent cross-domain text-to-SQL datasets. Our model outperforms previous state-of-the-art model by a large margin and achieves new state-of-the-art results on the two datasets. The comparison and ablation results demonstrate the efficacy of our model and the usefulness of the database schema interaction graph encoder.</div></details></td>
-        <td> CoSQL Test /  question match accuracy: 42.5 / interaction match accuracy: 15.0</td>
+        <td> CoSQL Test /  questi</br>on match accuracy: 42.5 / interaction match accuracy: 15.0</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_to_sql/IGSQL">快速开始</a></td>
         <td></td>
     </tr>
@@ -3860,7 +3860,7 @@
         <td>Deep Biaffine Attenti</br>on</td>
         <td><a href="https://paperswithcode.com/paper/deep-biaffine-attention-for-neural-dependency">Deep Biaffine Attention for Neural Dependency Parsing</a></td>
         <td><details><summary>Abstract</summary><div>This paper builds off recent work from Kiperwasser & Goldberg (2016) using neural attention in a simple graph-based dependency parser. We use a larger but more thoroughly regularized parser than other recent BiLSTM-based approaches, with biaffine classifiers to predict arcs and labels. Our parser gets state of the art or near state of the art performance on standard treebanks for six different languages, achieving 95.7% UAS and 94.1% LAS on the most popular English PTB dataset. This makes it the highest-performing graph-based parser on this benchmark---outperforming Kiperwasser Goldberg (2016) by 1.8% and 2.2%---and comparable to the highest performing transition-based parser (Kuncoro et al., 2016), which achieves 95.8% UAS and 94.6% LAS. We also show which hyperparameter choices had a significant effect on parsing accuracy, allowing us to achieve large gains over other graph-based approaches.</div></details></td>
-        <td>NLPCC2013_EVSAM05_THU UAS:92.20 LAS:85.10</td>
+        <td>NLPCC2013_EVSAM05_THU</br> UAS:92.20 LAS:85.10</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/dependency_parsing/ddparser">快速开始</a></td>
         <td></td>
     </tr>
@@ -3869,7 +3869,7 @@
         <td>ERNIE-CSC</td>
         <td><a href="https://paperswithcode.com/paper/correcting-chinese-spelling-errors-with">Correcting Chinese Spelling Errors with Phonetic Pre-training</a></td>
         <td><details><summary>Abstract</summary><div>Chinese spelling correction (CSC) is an important yet challenging task. Existing state-ofthe-art methods either only use a pre-trained language model or incorporate phonological information as external knowledge. In this paper, we propose a novel end-to-end CSC model that integrates phonetic features into language model by leveraging the powerful pre-training and fine-tuning method. Instead of conventionally masking words with a special token in training language model, we replace words with phonetic features and their sound-alike words. We further propose an adaptive weighted objective to jointly train error detection and correction in a unified framework. Experimental results show that our model achieves significant improvements on SIGHAN datasets and outperforms the previous state-of-the-art methods.</div></details></td>
-        <td>SIGHAN 13/ Detection F1: 0.8348 Correction F1: 0.8217</td>
+        <td>SIGHAN 13/ Detection </br>F1: 0.8348 Correction F1: 0.8217</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_correction/ernie-csc">快速开始</a></td>
         <td></td>
     </tr>
@@ -3887,7 +3887,7 @@
         <td>Seq2Seq</td>
         <td><a href="Neural Machine Translation By Jointly Learning To Align And Translate">Neural Machine Translation By Jointly Learning To Align And Translate</a></td>
         <td><details><summary>Abstract</summary><div>Neural Machine Translation By Jointly Learning To Align And Translate</div></details></td>
-        <td>IWSLT 15 en-vi翻译模型 BLEU: 24.33</td>
+        <td>IWSLT 15 en-vi翻译模型 BL</br>EU: 24.33</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/machine_translation/seq2seq">快速开始</a></td>
         <td></td>
     </tr>
@@ -3896,7 +3896,7 @@
         <td>Transformer</td>
         <td><a href="https://paperswithcode.com/paper/attention-is-all-you-need">attention is all you need</a></td>
         <td><details><summary>Abstract</summary><div>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.</div></details></td>
-        <td>WMT14 en-de翻译 base模型 BLEU: 26.89</td>
+        <td>WMT14 en-de翻译 base模型 </br>BLEU: 26.89</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/machine_translation/transformer">快速开始</a></td>
         <td>支持 Paddle Inference</td>
     </tr>
@@ -3932,7 +3932,7 @@
         <td>Sentence-Transformer</td>
         <td><a href="https://paperswithcode.com/paper/sentence-bert-sentence-embeddings-using">Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks</a></td>
         <td><details><summary>Abstract</summary><div>BERT (Devlin et al., 2018) and RoBERTa (Liu et al., 2019) has set a new state-of-the-art performance on sentence-pair regression tasks like semantic textual similarity (STS). However, it requires that both sentences are fed into the network, which causes a massive computational overhead: Finding the most similar pair in a collection of 10,000 sentences requires about 50 million inference computations (~65 hours) with BERT. The construction of BERT makes it unsuitable for semantic similarity search as well as for unsupervised tasks like clustering.In this publication, we present Sentence-BERT (SBERT), a modification of the pretrained BERT network that use siamese and triplet network structures to derive semantically meaningful sentence embeddings that can be compared using cosine-similarity. This reduces the effort for finding the most similar pair from 65 hours with BERT / RoBERTa to about 5 seconds with SBERT, while maintaining the accuracy from BERT. We evaluate SBERT and SRoBERTa on common STS tasks and transfer learning tasks, where it outperforms other state-of-the-art sentence embeddings methods.</div></details></td>
-        <td>STS12 / SRoBERTa-NLI-large / 74.53</td>
+        <td>STS12 / SRoBERTa-NLI-</br>large / 74.53</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_matching/sentence_transformers">快速开始</a></td>
         <td></td>
     </tr>
@@ -3968,7 +3968,7 @@
         <td>Pointer Generator Net</br>work</td>
         <td><a href="https://paperswithcode.com/paper/get-to-the-point-summarization-with-pointer">Get To The Point: Summarization with Pointer-Generator Networks</a></td>
         <td><details><summary>Abstract</summary><div>Neural sequence-to-sequence models have provided a viable new approach for abstractive text summarization (meaning they are not restricted to simply selecting and rearranging passages from the original text). However, these models have two shortcomings: they are liable to reproduce factual details inaccurately, and they tend to repeat themselves. In this work we propose a novel architecture that augments the standard sequence-to-sequence attentional model in two orthogonal ways. First, we use a hybrid pointer-generator network that can copy words from the source text via pointing, which aids accurate reproduction of information, while retaining the ability to produce novel words through the generator. Second, we use coverage to keep track of what has been summarized, which discourages repetition. We apply our model to the CNN / Daily Mail summarization task, outperforming the current abstractive state-of-the-art by at least 2 ROUGE points.</div></details></td>
-        <td>CNN/DailyMail / Rouge-L: 0.3953</td>
+        <td>CNN/DailyMail / Rouge</br>-L: 0.3953</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_summarization/pointer_summarizer">快速开始</a></td>
         <td></td>
     </tr>
@@ -3986,7 +3986,7 @@
         <td>ERNIE-DOC</td>
         <td><a href="https://paperswithcode.com/paper/ernie-doc-the-retrospective-long-document">ERNIE-Doc: A Retrospective Long-Document Modeling Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformers are not suited for processing long documents, due to their quadratically increasing memory and time consumption. Simply truncating a long document or applying the sparse attention mechanism will incur the context fragmentation problem or lead to an inferior modeling capability against comparable model sizes. In this paper, we propose ERNIE-Doc, a document-level language pretraining model based on Recurrence Transformers. Two well-designed techniques, namely the retrospective feed mechanism and the enhanced recurrence mechanism, enable ERNIE-Doc, which has a much longer effective context length, to capture the contextual information of a complete document. We pretrain ERNIE-Doc to explicitly learn the relationships among segments with an additional document-aware segment-reordering objective. Various experiments were conducted on both English and Chinese document-level tasks. ERNIE-Doc improved the state-of-the-art language modeling result of perplexity to 16.8 on WikiText-103. Moreover, it outperformed competitive pretraining models by a large margin on most language understanding tasks, such as text classification and question answering.</div></details></td>
-        <td>IMDB/ERNIE-DOC-Large/acc: 97.1</td>
+        <td>IMDB/ERNIE-DOC-Large/</br>acc: 97.1</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/language_model/ernie-doc">快速开始</a></td>
         <td></td>
     </tr>
@@ -3995,7 +3995,7 @@
         <td>ERNIE-GEN</td>
         <td><a href="https://paperswithcode.com/paper/ernie-gen-an-enhanced-multi-flow-pre-training">ERNIE-GEN: An Enhanced Multi-Flow Pre-training and Fine-tuning Framework for Natural Language Generation</a></td>
         <td><details><summary>Abstract</summary><div>Current pre-training works in natural language generation pay little attention to the problem of exposure bias on downstream tasks. To address this issue, we propose an enhanced multi-flow sequence to sequence pre-training and fine-tuning framework named ERNIE-GEN, which bridges the discrepancy between training and inference with an infilling generation mechanism and a noise-aware generation method. To make generation closer to human writing patterns, this framework introduces a span-by-span generation flow that trains the model to predict semantically-complete spans consecutively rather than predicting word by word. Unlike existing pre-training methods, ERNIE-GEN incorporates multi-granularity target sampling to construct pre-training data, which enhances the correlation between encoder and decoder. Experimental results demonstrate that ERNIE-GEN achieves state-of-the-art results with a much smaller amount of pre-training data and parameters on a range of language generation tasks, including abstractive summarization (Gigaword and CNN/DailyMail), question generation (SQuAD), dialogue generation (Persona-Chat) and generative question answering (CoQA).</div></details></td>
-        <td> 10k training samples : Gigaword 10k/ERNIE-GEN LARGE// RG-L: 32.50</td>
+        <td> 10k training samples</br> : Gigaword 10k/ERNIE-GEN LARGE// RG-L: 32.50</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_generation/ernie-gen">快速开始</a></td>
         <td></td>
     </tr>
@@ -4022,7 +4022,7 @@
         <td>BART</td>
         <td><a href="https://paperswithcode.com/paper/bart-denoising-sequence-to-sequence-pre">BART: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension</a></td>
         <td><details><summary>Abstract</summary><div>We present BART, a denoising autoencoder for pretraining sequence-to-sequence models. BART is trained by (1) corrupting text with an arbitrary noising function, and (2) learning a model to reconstruct the original text. It uses a standard Tranformer-based neural machine translation architecture which, despite its simplicity, can be seen as generalizing BERT (due to the bidirectional encoder), GPT (with the left-to-right decoder), and many other more recent pretraining schemes. We evaluate a number of noising approaches, finding the best performance by both randomly shuffling the order of the original sentences and using a novel in-filling scheme, where spans of text are replaced with a single mask token. BART is particularly effective when fine tuned for text generation but also works well for comprehension tasks. It matches the performance of RoBERTa with comparable training resources on GLUE and SQuAD, achieves new state-of-the-art results on a range of abstractive dialogue, question answering, and summarization tasks, with gains of up to 6 ROUGE. BART also provides a 1.1 BLEU increase over a back-translation system for machine translation, with only target language pretraining. We also report ablation experiments that replicate other pretraining schemes within the BART framework, to better measure which factors most influence end-task performance.</div></details></td>
-        <td>CNN/DailyMail /bart-base/Rouge-L: 41.0132</td>
+        <td>CNN/DailyMail /bart-b</br>ase/Rouge-L: 41.0132</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/examples/text_summarization/bart">快速开始</a></td>
         <td></td>
     </tr>
