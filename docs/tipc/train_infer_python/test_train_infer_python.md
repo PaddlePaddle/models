@@ -107,9 +107,9 @@ python   run_script    set_configs
 | 4  | gpu_list:0                          | gpu id        | 否         | 是           | value修改为自己的GPU ID                |
 | 5  | use_gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为可以设置GPU的内容，value修改为设置GPU的值         |
 | 6  | auto_cast:null                      | 是否使用混合精度      | 否         | 否           | -                                |
-| 7  | epoch_num:lite_train_infer=1        | 迭代的epoch数目    | 是         | 否           | key修改为可以设置代码中epoch数量的内容          |
+| 7  | epoch_num:lite_train_lite_infer=1        | 迭代的epoch数目    | 是         | 否           | key修改为可以设置代码中epoch数量的内容          |
 | 8  | output_dir:./output/                | 输出目录          | 是         | 否           | key修改为代码中可以设置输出路径的内容             |
-| 9  | train_batch_size:lite_train_infer=1 | 训练的batch size | 是         | 否           | key修改为可以设置代码中batch size的内容       |
+| 9  | train_batch_size:lite_train_lite_infer=1 | 训练的batch size | 是         | 否           | key修改为可以设置代码中batch size的内容       |
 | 10 | pretrained_model:null               | 预训练模型         | 是         | 是           | 如果训练时指定了预训练模型，则需要key和value需要对应修改 |
 | 11 | train_model_name:latest             | 训练结果的模型名字     | 否         | 是           | value需要修改为训练完成之后保存的模型名称，用于后续的动转静 |
 | 12 | null:null                           | 预留字段          | 否         | 否           | -                                |
@@ -117,11 +117,11 @@ python   run_script    set_configs
 
 </details>
 
-以训练命令`python3.7 train.py --device=gpu --epochs=1 --data-path=./lite_data --lr=0.001 `为例，总共包含4个超参数。
+以训练命令`python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001 `为例，总共包含4个超参数。
 
 * 运行设备：`--device=gpu`，则需要修改为配置文件的第5行，`key`为`--device`， `value`为`gpu`，修改后内容为`--device:gpu`
-* 迭代轮数：`--epochs=2`，则需要修改配置文件的第7行，修改后内容为`--epochs:lite_train_infer=2`（`lite_train_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
-* 数据路径：`--data-path=./lite_data`，由于配置文件中不包含该项配置，因此可以将其和`train.py`字段放在一起（2.2.），或者在第12行添加自定义字段，内容为`--data-path:./lite_data`
+* 迭代轮数：`--epochs=2`，则需要修改配置文件的第7行，修改后内容为`--epochs:lite_train_lite_infer=2`（`lite_train_lite_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
+* 数据路径：`--data-path=./lite_data`，由于配置文件中不包含该项配置，因此可以将其和`train.py`字段放在一起（2.2.2节中会详细介绍），或者在第12行添加自定义字段，内容为`--data-path:./lite_data`，
 * 学习率：`--lr=0.001`，同数据路径配置
 
 #### 2.2.2 训练命令配置参数
@@ -147,14 +147,14 @@ python   run_script    set_configs
 以训练命令`python3.7 train.py --device=gpu --epochs=1 --data-path=./lite_data --lr=0.001`为例，该命令是正常训练（非裁剪、量化、蒸馏等方式），因此
 
 * 配置文件的第15行直接写`norm_train`即可。
-* 第16行配置`norm_train`的具体运行脚本/入口，即上述命令中的`train.py`因此配置文件的16行内容修改为`norm_train:train.py`，考虑到`-data-path=./lite_data --lr=0.001`超参数无法在
+* 第16行配置`norm_train`的具体运行脚本/入口，即上述命令中的`train.py`因此配置文件的16行内容初步可以修改为`norm_train:train.py`，考虑到`-data-path=./lite_data --lr=0.001`超参数无法在配置文件中配置，因此可以在这里添加，修改后内容为`norm_train:train.py -data-path=./lite_data --lr=0.001`
 * 由于其他训练方式目前不支持，因此在17~21行的对应内容无需改动（默认为null）
 
 #### 2.2.3 模型动转静配置参数
 
 下面给出了配置文件中的模型动转静配置参数。
 
-**【注意：】** 在模型动转静过程中，为方便管理输入输出，程序会自动指定输入和输出目录，因此我们只需要提供可以配置输入输出目录的参数即可。
+**【注意】：** 在模型动转静过程中，为方便管理输入输出，程序会自动指定输入和输出目录，因此我们只需要提供可以配置输入输出目录的参数即可。
 
 <details>
 <summary><b>模型动转静配置参数（点击以展开详细内容或者折叠）</b></summary>

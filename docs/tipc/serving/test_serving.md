@@ -30,7 +30,7 @@
 具体地，本文档主要关注Linux GPU/CPU 下模型的服务化部署能力，具体测试点如下：
 
 - Inference 模型转 Serving 模型
-- Paddle Inference 推理过程跑通
+- Paddle Serving 服务化部署开发
 
 <a name="2"></a>
 
@@ -103,7 +103,7 @@ Serving服务化部署主要分为以下5个步骤。
 
 </details>
 
-以命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving/alexnet_server --serving_client ./deploy/serving/alexnet_server`为例。
+以命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving/alexnet_server --serving_client ./deploy/serving/alexnet_client`为例。
 
 * Inference模型路径为`./alexnet_infer/`，因此第5行需要修改为`--dirname:./alexnet_infer/`
 * 模型结构和参数文件名和默认保持一致，因此这里无需修改。
