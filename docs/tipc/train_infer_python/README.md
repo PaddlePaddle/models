@@ -180,5 +180,5 @@ test_tipc
 #### 4.2.2 配置文件和测试文档
 
 * `test_tipc/README.md` 文档中对该模型支持的的功能进行总体介绍。
-* `test_tipc/docs/test_train_inference_python.md` 文档中对**Linux GPU/CPU 基础训练推理**的功能支持情况进行介绍。
+* `test_tipc/docs/test_train_inference_python.md` 文档中对**Linux GPU/CPU 基础训练推理**的功能支持情况和测试说明进行介绍。
 * 根据测试文档，基于配置文件，跑通训练推理全流程测试。

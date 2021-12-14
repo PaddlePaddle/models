@@ -98,5 +98,5 @@ test_tipc
 #### 3.2.2 配置文件和测试文档
 
 * `test_tipc/README.md` 文档中对该模型支持的的部署功能进行总体介绍。
-* `test_tipc/docs/test_serving.md` 文档中对**Linux GPU/CPU Serving部署**的功能支持情况进行介绍。
+* `test_tipc/docs/test_serving.md` 文档中对**Linux GPU/CPU Serving部署**的功能支持情况和测试说明进行介绍。
 * 根据测试文档，基于配置文件，跑通Serving部署测试过程，在文档中记录`运行成功的输出日志`。
