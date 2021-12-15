@@ -7,27 +7,19 @@
     - [2.1 命令解析](#2.1)
     - [2.2 配置文件解析](#2.2)
 - [3. 测试功能开发](#3)
-    - [3.1 准备数据与环境](#3.1)
-    - [3.2 准备开发所需脚本](#3.2)
-    - [3.3 填写配置文件](#3.3)
-    - [3.4 验证配置正确性](#3.4)
-    - [3.5 撰写说明文档](#3.5)
+    - [3.1 准备待测试的命令](#3.1)
+    - [3.2 准备数据与环境](#3.2)
+    - [3.3 准备开发所需脚本](#3.3)
+    - [3.4 填写配置文件](#3.4)
+    - [3.5 验证配置正确性](#3.5)
+    - [3.6 撰写说明文档](#3.6)
 - [4. 附录](#4)
 
 <a name="1"></a>
 
 ## 1. 简介
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的测试开发过程。主要内容为
-
-（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md)，完成模型的训练和基于Paddle Inference的模型推理开发。
-
-（2）参考[《Linux GPU/CPU 服务化部署功能开发文档》](./serving.md)，在Paddle Inference的模型推理基础上，完成服务化部署能力的开发。
-
-（3）完成 TIPC 服务化部署测试开发（**本文档**）。
-
-
-具体地，本文档主要关注Linux GPU/CPU 下模型的服务化部署能力，具体测试点如下：
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的测试开发过程。主要关注点点如下：
 
 - Inference 模型转 Serving 模型
 - Paddle Serving 服务化部署开发
@@ -161,9 +153,35 @@ Serving服务化部署主要分为以下5个步骤。
 
 ## 3. 测试功能开发
 
+
 <a name="3.1"></a>
 
-### 3.1 准备小数据集与环境
+### 3.1 准备待测试的命令
+
+**【基本内容】**
+
+准备模型转换、Serving服务启动、Serving服务访问的命令，后续会将这些命令按照[第2章](#2)所述内容，映射到配置文件中。
+
+**【实战】**
+
+AlexNet中，具体命令如下所示。
+
+```bash
+# 模型转换：Inference 模型转为 Serving 模型
+python3.7 -m paddle_serving_client.convert --dirname  ../../alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server alexnet_server --serving_client alexnet_client
+
+# 启动服务
+python3.7 web_service.py
+
+# 启动客户端访问
+python3.7 pipeline_http_client.py --img-path=../../images/demo.jpg
+```
+
+
+
+<a name="3.2"></a>
+
+### 3.2 准备数据与环境
 
 **【基本内容】**
 
@@ -172,9 +190,9 @@ Serving服务化部署主要分为以下5个步骤。
 * 环境：可以参考[Linux GPU/CPU 服务化部署功能开发规范](./serving.md)完成Serving部署环境的准备。
 
 
-<a name="=3.2"></a>
+<a name="=3.3"></a>
 
-### 3.2 准备开发所需脚本
+### 3.3 准备开发所需脚本
 
 **【基本内容】**
 
@@ -184,9 +202,9 @@ Serving服务化部署主要分为以下5个步骤。
 
 * 上述脚本文件无需改动，在实际使用时，直接修改配置文件即可。
 
-<a name="3.3"></a>
+<a name="3.4"></a>
 
-### 3.3 填写配置文件
+### 3.4 填写配置文件
 
 **【基本内容】**
 
@@ -198,9 +216,9 @@ Serving服务化部署主要分为以下5个步骤。
 
 AlexNet的测试开发配置文件可以参考：[model_linux_gpu_normal_normal_serving_python_linux_gpu_cpu.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/model_linux_gpu_normal_normal_serving_python_linux_gpu_cpu.txt)。
 
-<a name="3.4"></a>
+<a name="3.5"></a>
 
-### 3.4 验证配置正确性
+### 3.5 验证配置正确性
 
 **【基本内容】**
 
@@ -223,9 +241,9 @@ AlexNet中验证配置正确性的脚本：[AlexNet Serving 部署功能测试](
 
 基于修改后的配置文件，命令运行成功，测试通过。
 
-<a name="3.5"></a>
+<a name="3.6"></a>
 
-### 3.5 撰写说明文档
+### 3.6 撰写说明文档
 
 **【基本内容】**
 

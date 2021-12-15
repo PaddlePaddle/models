@@ -1,7 +1,13 @@
 *.DS_Store
 *.vs
 *.user
-*.pyc
 *~
 *.vscode
 *.idea
+__pycache__/
+.ipynb_checkpoints/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so

@@ -7,23 +7,19 @@
     - [2.1 命令解析](#2.1)
     - [2.2 配置文件和运行命令映射解析](#2.2)
 - [3. 测试功能开发](#3)
-    - [3.1 准备数据与环境](#3.1)
-    - [3.2 准备开发所需脚本](#3.2)
-    - [3.3 填写配置文件](#3.3)
-    - [3.4 验证配置正确性](#3.4)
-    - [3.5 撰写说明文档](#3.5)
+    - [3.1 准备待测试的命令](#3.1)
+    - [3.2 准备数据与环境](#3.2)
+    - [3.3 准备开发所需脚本](#3.3)
+    - [3.4 填写配置文件](#3.4)
+    - [3.5 验证配置正确性](#3.5)
+    - [3.6 撰写说明文档](#3.6)
 - [4. 附录](#4)
 
 <a name="1"></a>
 
 ## 1. 简介
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下推理能力的测试开发过程。主要内容为
-
-* 在基于训练引擎预测的基础上，完成基于Paddle Inference的推理过程测试开发。
-
-
-具体地，本文档主要关注Linux GPU/CPU 下模型的基础训练推理全流程测试，具体测试点如下：
+本文档主要关注Linux GPU/CPU 下模型的基础训练推理全流程测试，具体测试点如下：
 
 - 模型训练方面：单机单卡/多卡训练跑通
 - 飞桨模型转换：保存静态图模型
@@ -63,7 +59,7 @@ python   run_script    set_configs
 其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以拼凑出一条完整的命令。
 
 
-基础训练推理测试开发过程主要分为以下5个步骤。
+基础训练推理测试开发过程主要分为以下6个步骤。
 
 <div align="center">
     <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
@@ -117,7 +113,7 @@ python   run_script    set_configs
 
 </details>
 
-以训练命令`python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001 `为例，总共包含4个超参数。
+以训练命令`python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001`为例，总共包含4个超参数。
 
 * 运行设备：`--device=gpu`，则需要修改为配置文件的第5行，`key`为`--device`， `value`为`gpu`，修改后内容为`--device:gpu`
 * 迭代轮数：`--epochs=2`，则需要修改配置文件的第7行，修改后内容为`--epochs:lite_train_lite_infer=2`（`lite_train_lite_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
@@ -192,11 +188,11 @@ python   run_script    set_configs
 | 39 | infer_quant:False                                    | 是否量化推理          | 否         | 否           | -                                 |
 | 40 | inference:infer.py                                   | 推理脚本            | 否         | 是           | value修改为自己的推理脚本                   |
 | 41 | --use_gpu:True|False                                 | 是否使用GPU         | 是         | 是           | key和value修改为GPU设置的参数和值            |
-| 42 | --use_mkldnn:True|False                              | 是否使用MKLDNN      | 是         | 是           | key和value修改为MKLNN设置的参数和值          |
-| 43 | --cpu_threads:1|6                                    | 开启MKLDNN时使用的线程数 | 是         | 是           | key和value修改为CPU线程数设置的参数和值         |
+| 42 | null:null                              | 预留项，用于设置是否使用MKLDNN      | 否         | 否           | -          |
+| 43 | null:null                                    | 预留项，用于设置开启MKLDNN时使用的线程数 | 否         | 否           | -         |
 | 44 | --batch_size:1                                       | 推理batch size    | 是         | 否           | key修改为代码中可以修改为batch size的内容       |
-| 45 | --use_tensorrt:null                                  | 是否开启TensorRT预测  | 否         | 否           | 不对该项进行测试                          |
-| 46 | --precision:null                                     | 精度范围            | 否         | 否           | 不对该项进行测试                          |
+| 45 | null:null                                  | 预留项，是否开启TensorRT预测  | 否         | 否           | -                          |
+| 46 | null:null                                     | 精度范围            | 否         | 否           | 不对该项进行测试                          |
 | 47 | --model_dir:./infer                                  | 模型目录            | 是         | 否           | key修改为代码中可以设置inference model目录的内容 |
 | 48 | --image_dir:./lite_data/1.jpg                        | 图片路径或者图片文件夹路径   | 是         | 否           | key和value修改为自己的CPU线程数设置参数和值       |
 | 49 | --save_log_path:null                                 | 推理日志输出路径        | 否         | 否           | -                                 |
@@ -217,7 +213,28 @@ python   run_script    set_configs
 
 <a name="3.1"></a>
 
-### 3.1 准备小数据集与环境
+### 3.1 准备待测试的命令
+
+**【基本内容】**
+
+准备训练、模型动转静、模型推理的命令，后续会将这些命令按照[第2章](#2)所述内容，映射到配置文件中。
+
+**【实战】**
+
+AlexNet的训练、动转静、推理示例运行命令如下所示。
+
+```bash
+# 模型训练
+python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001
+# 模型动转静
+python tools/export_model.py --pretrained=./alexnet_paddle.pdparams --save-inference-dir="./alexnet_infer" --model=alexnet
+# 推理
+python deploy/inference/python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg
+```
+
+<a name="3.2"></a>
+
+### 3.2 准备数据与环境
 
 **【基本内容】**
 
@@ -227,16 +244,15 @@ python   run_script    set_configs
 
 2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
 
-
 **【注意事项】**
 
 * 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
     * 压缩命令： `tar -zcf lite_data.tar lite_data`
     * 解压命令： `tar -xf lite_data.tar`
 
-<a name="=3.2"></a>
+<a name="=3.3"></a>
 
-### 3.2 准备开发所需脚本
+### 3.3 准备开发所需脚本
 
 **【基本内容】**
 
@@ -247,9 +263,9 @@ python   run_script    set_configs
 
 * 上述2个脚本文件无需改动，在实际使用时，直接修改配置文件即可。
 
-<a name="3.3"></a>
+<a name="3.4"></a>
 
-### 3.3 填写配置文件
+### 3.4 填写配置文件
 
 **【基本内容】**
 
@@ -264,9 +280,9 @@ python   run_script    set_configs
 
 AlexNet的测试开发配置文件可以参考：[train_infer_python.txt](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/test_tipc/configs/AlexNet/train_infer_python.txt)。
 
-<a name="3.4"></a>
+<a name="3.5"></a>
 
-### 3.4 验证配置正确性
+### 3.5 验证配置正确性
 
 **【基本内容】**
 
@@ -293,9 +309,9 @@ AlexNet中验证配置正确性的脚本：[Linux端基础训练推理功能测�
 
 基于修改后的配置文件，测试通过，全部命令成功
 
-<a name="3.5"></a>
+<a name="3.6"></a>
 
-### 3.5 撰写说明文档
+### 3.6 撰写说明文档
 
 **【基本内容】**
 
