@@ -232,9 +232,9 @@ python tools/export_model.py --pretrained=./alexnet_paddle.pdparams --save-infer
 python deploy/inference/python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg
 ```
 
-<a name="3.1"></a>
+<a name="3.2"></a>
 
-### 3.2 准备小数据集与环境
+### 3.2 准备数据与环境
 
 **【基本内容】**
 
