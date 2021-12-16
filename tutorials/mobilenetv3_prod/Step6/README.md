@@ -14,8 +14,6 @@
     - [4.2 模型评估]()
     - [4.3 模型预测]()
 - [5. 模型推理部署]()
-    - [5.1 基于Inference的推理]()
-    - [5.2 基于Serving的服务化部署]()
 - [6. TIPC自动化测试脚本]()
 - [7. 参考链接与文献]()
 
@@ -159,81 +157,12 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 ## 5. 模型推理部署
 
-### 5.1 基于Inference的推理
-
-#### 5.1.1 模型动转静导出
-
-使用下面的命令完成`mobilenet_v3_small`模型的动转静导出。
-
-```bash
-python tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams --save-inference-dir="./mv3_small_infer"
-```
-
-最终在`mv3_small_infer/`文件夹下会生成下面的3个文件。
-
-```
-mv3_small_infer
-     |----inference.pdiparams     : 模型参数文件
-     |----inference.pdmodel       : 模型结构文件
-     |----inference.pdiparams.info: 模型参数信息文件
-```
-
-#### 5.1.2 模型推理
-
-
-```bash
-python deploy/inference/python/infer.py --model-dir=./mv3_small_infer/ --img-path=./images/demo.jpg
-```
-
-对于下面的图像进行预测
-
-<div align="center">
-    <img src="./images/demo.jpg" width=300">
-</div>
-
-在终端中输出结果如下。
-
-```
-image_name: ./images/demo.jpg, class_id: 8, prob: 0.9503441452980042
-```
-
-表示预测的类别ID是`8`，置信度为`0.950`，该结果与基于训练引擎的结果完全一致。
-
-
-### 5.2 基于Serving的服务化部署
-
-Serving部署教程可参考：[链接](deploy/serving/README.md)。
+coming soon!
 
 
 ## 6. TIPC自动化测试脚本
 
-以Linux基础训练推理测试为例，测试流程如下。
-
-* 准备数据
-
-```bash
-# 解压数据，如果您已经解压过，则无需再次运行该步骤
-tar -xf test_images/lite_data.tar
-```
-
-* 运行测试命令
-
-```bash
-bash test_tipc/test_train_inference_python.sh test_tipc/configs/AlexNet/train_infer_python.txt lite_train_lite_infer
-```
-
-如果运行成功，在终端中会显示下面的内容，具体的日志也会输出到`test_tipc/output/`文件夹中的文件中。
-
-```
-Run successfully with command - python3.7 -m paddle.distributed.launch --gpus=0,1 train.py --lr=0.001 --data-path=./lite_data --device=cpu --output-dir=./test_tipc/output/norm_train_gpus_0,1_autocast_null --epochs=1     --batch-size=1    !  
- ...
-Run successfully with command - python3.7 deploy/py_inference/infer.py --use-gpu=False --use-mkldnn=False --cpu-threads=6 --model-dir=./test_tipc/output/norm_train_gpus_0_autocast_null/ --batch-size=1     --benchmark=False     > ./test_tipc/output/python_infer_cpu_usemkldnn_False_threads_6_precision_null_batchsize_1.log 2>&1 !  
-```
-
-
-* 更多详细内容，请参考：[MobileNetV3 TIPC测试文档](./test_tipc/README.md)。
-* 如果运行失败，可以先根据报错的具体命令，自查下配置文件是否正确，如果无法解决，可以给Paddle提ISSUE：[https://github.com/PaddlePaddle/Paddle/issues/new/choose](https://github.com/PaddlePaddle/Paddle/issues/new/choose)；如果您在微信群里的话，也可以在群里及时提问。
-
+coming soon!
 
 ## 7. 参考链接与文献
 
