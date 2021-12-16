@@ -18,13 +18,7 @@
 
 Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发者和企业提供高性能、灵活易用的工业级在线推理服务。Paddle Serving支持RESTful、gRPC、bRPC等多种协议，提供多种异构硬件和多种操作系统环境下推理解决方案，和多种经典预训练模型示例。
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。主要包含三个步骤：
-
-（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md) 完成模型的训练和基于Paddle Inference的模型推理开发。
-
-（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（**本文档**）。
-
-（3）参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_serving.md)，完成TIPC 服务化部署测试开发。
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。
 
 <a name="2---"></a>
 
