@@ -68,7 +68,7 @@ class InferenceEngine(object):
         Args:
             x: Inference engine output.
 
-        Returns: Input data after postprocess.
+        Returns: Output data after postprocess.
         """
         pass
 
