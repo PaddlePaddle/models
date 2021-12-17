@@ -14,15 +14,21 @@ class InferenceEngine(object):
         pass
 
     def load_predictor(self, model_file_path, params_file_path):
+        """
+        initialize the inference engine
+        """
         pass
 
     def preprocess(self, img_path):
+        # preprocess for data
         pass
 
     def postprocess(self, x):
+        # postprocess for the inference engine output
         pass
 
     def run(self, x):
+        # run using the infer
         pass
 
 
@@ -43,7 +49,7 @@ def infer_main(args):
     # init inference engine
     inference_engine = InferenceEngine(args)
 
-    # init benchmark
+    # init benchmark log
     if args.benchmark:
         import auto_log
         autolog = auto_log.AutoLogger(

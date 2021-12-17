@@ -16,13 +16,22 @@ from paddle_serving_server.web_service import WebService, Op
 
 
 class TIPCExampleOp(Op):
+    """
+    ExampleOp for serving server, you can rename by yourself
+    """
+
     def init_op(self):
+        """
+        initialize the class
+        """
         pass
 
     def preprocess(self, input_dicts, data_id, log_id):
+        # preprocess for the inputs
         pass
 
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
+        # postprocess for the service output
         pass
 
 
@@ -33,6 +42,9 @@ class TIPCExampleService(WebService):
         return tipc_example_op
 
 
+# define the service class
 uci_service = TIPCExampleService(name="tipc_example")
+# load config and prepare the service
 uci_service.prepare_pipeline_config("config.yml")
+# start the service
 uci_service.run_service()

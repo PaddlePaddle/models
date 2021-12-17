@@ -7,6 +7,7 @@ import sys
 import numpy as np
 
 
+# parse args
 def get_args(add_help=True):
     import argparse
     parser = argparse.ArgumentParser(
@@ -16,6 +17,9 @@ def get_args(add_help=True):
 
 
 def build_model(args):
+    """
+    build model
+    """
     pass
 
 
@@ -32,6 +36,7 @@ def export(args):
         ])
     # save inference model
     paddle.jit.save(model, os.path.join(args.save_inference_dir, "inference"))
+    print(f"inference model is saved in {args.save_inference_dir}")
 
 
 if __name__ == "__main__":
