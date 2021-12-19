@@ -221,7 +221,6 @@ def main(args):
         lr_scheduler.step()
         if paddle.distributed.get_rank() == 0:
             top1 = evaluate(model, criterion, data_loader_test, device=device)
-            best_top1 = max(best_top1, top1)
             if args.output_dir:
                 paddle.save(model.state_dict(),
                             os.path.join(args.output_dir,
@@ -233,6 +232,12 @@ def main(args):
                             os.path.join(args.output_dir, 'latest.pdparams'))
                 paddle.save(optimizer.state_dict(),
                             os.path.join(args.output_dir, 'latest.pdopt'))
+                if top1 > best_top1:
+                    best_top1 = top1
+                    paddle.save(model.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdparams'))
+                    paddle.save(optimizer.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdopt'))
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -286,7 +291,7 @@ def get_args_parser(add_help=True):
         type=float,
         help='decrease lr by a factor of lr-gamma')
     parser.add_argument(
-        '--print-freq', default=1, type=int, help='print frequency')
+        '--print-freq', default=10, type=int, help='print frequency')
     parser.add_argument('--output-dir', default='.', help='path where to save')
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument(
