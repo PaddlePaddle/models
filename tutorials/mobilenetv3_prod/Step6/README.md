@@ -29,6 +29,13 @@
 
 在此感谢[vision](https://github.com/pytorch/vision)，提高了MobileNetV3论文复现的效率。
 
+注意：在这里为了简化流程，仅关于`ImageNet标准训练过程`做训练对齐，具体地：
+* 训练总共120epoch，总的batch size是256*8=2048，学习率为0.8，下降策略为Piecewise Decay(30epoch下降10倍)
+* 训练预处理：RandomResizedCrop(size=224) + RandomFlip(p=0.5) + Normalize
+* 评估预处理：Resize(256) + CenterCrop(224) + Normalize
+
+这里`mobilenet_v3_small`的参考指标也是重新训练得到的。
+
 ## 2. 数据集和复现精度
 
 数据集为ImageNet，训练集包含1281167张图像，验证集包含50000张图像。
@@ -41,7 +48,6 @@
 | Mo | 0.677/0.874   | 0.677/0.874   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_paddle_pretrained.pdparams) \|  [Inference模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_paddle_infer.tar) \| [日志(coming soon)]() |
 
 * 注：目前提供的预训练模型是从参考代码提供的权重转过来的，完整的训练结果和日志敬请期待！
-
 
 ## 3. 准备环境与数据
 
