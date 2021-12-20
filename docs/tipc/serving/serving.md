@@ -35,11 +35,13 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 <a name="21---"></a>
 ### 2.1 准备测试数据和部署环境
 
-【基本流程】
+**【基本流程】**
 
 **（1）准备测试数据：** 从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证。
 
 **（2）准备部署环境**
+
+docker是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。建议在docker中进行Serving服务化部署。
 
 首先准备docker环境，AIStudio环境已经安装了合适的docker。如果是非AIStudio环境，请[参考文档](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.3/doc/doc_ch/environment.md#2)中的 "1.3.2 Docker环境配置" 安装docker环境。
 
@@ -68,7 +70,7 @@ Paddle Serving Server更多不同运行环境的whl包下载地址，请参考�
 ```
 python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --model_filename {模型结构文件} --params_filename {模型参数文件} --serving_server {转换后的服务器端模型和配置文件存储路径} --serving_client {转换后的客户端模型和配置文件存储路径}
 ```
-上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。
+上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。其中`paddle_serving_client.convert`命令是`paddle_serving_client` whl包内置的转换函数，无需修改。
 
 【实战】
 

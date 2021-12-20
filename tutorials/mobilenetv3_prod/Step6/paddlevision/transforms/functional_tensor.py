@@ -268,3 +268,7 @@ def resize(img: Tensor,
         out_dtype=out_dtype)
 
     return img
+
+
+def hflip(img):
+    return img.flip(-1)

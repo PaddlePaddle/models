@@ -1,34 +1,87 @@
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import paddle
 from paddle import inference
 import numpy as np
 from PIL import Image
 
-from reprod_log import ReprodLogger
-from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
-
 
 class InferenceEngine(object):
+    """InferenceEngine
+    
+    Inference engina class which contains preprocess, run, postprocess
+
+    """
+
     def __init__(self, args):
+        """
+        Args:
+            args: Parameters generated using argparser.
+
+        Returns: None
+        """
         super().__init__()
         pass
 
     def load_predictor(self, model_file_path, params_file_path):
-        """
+        """load_predictor
+
         initialize the inference engine
+
+        Args:
+            model_file_path: inference model path (*.pdmodel)
+            model_file_path: inference parmaeter path (*.pdiparams)
+        Returns: None
         """
         pass
 
-    def preprocess(self, img_path):
-        # preprocess for data
+    def preprocess(self, x):
+        """preprocess
+
+        Preprocess to the input.
+
+        Args:
+            x: Raw input, it can be an image path, a numpy array and so on.
+
+        Returns: Input data after preprocess.
+        """
         pass
 
     def postprocess(self, x):
-        # postprocess for the inference engine output
+        """postprocess
+
+        Postprocess to the inference engine output.
+
+        Args:
+            x: Inference engine output.
+
+        Returns: Output data after postprocess.
+        """
         pass
 
     def run(self, x):
-        # run using the infer
+        """run
+
+        Inference process using inference engine.
+
+        Args:
+            x: Input data after preprocess.
+
+        Returns: Inference engine output
+        """
         pass
 
 
@@ -46,6 +99,17 @@ def get_args(add_help=True):
 
 
 def infer_main(args):
+    """infer_main
+
+    Main inference function.
+
+    Args:
+        args: Parameters generated using argparser.
+
+    Returns:
+        class_id: Class index of the input.
+        prob: : Probability of the input.
+    """
     # init inference engine
     inference_engine = InferenceEngine(args)
 

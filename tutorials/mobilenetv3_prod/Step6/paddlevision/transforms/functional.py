@@ -397,3 +397,19 @@ def resized_crop(
     img = crop(img, top, left, height, width)
     img = resize(img, size, interpolation)
     return img
+
+
+def hflip(img):
+    """Horizontally flip the given image.
+    Args:
+        img (PIL Image or Tensor): Image to be flipped. If img
+            is a Tensor, it is expected to be in [..., H, W] format,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+    Returns:
+        PIL Image or Tensor:  Horizontally flipped image.
+    """
+    if not isinstance(img, paddle.Tensor):
+        return F_pil.hflip(img)
+
+    return F_t.hflip(img)
