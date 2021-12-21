@@ -1,4 +1,4 @@
-# Linux GPU/CPU 服务化部署开发规范
+# Linux GPU/CPU 服务化部署开发文档
 
 # 目录
 
