@@ -10,7 +10,7 @@
 
 ## 2. 不同环境不同训练推理方式的开发文档 
 
-- Linux GPU/CPU 基础训练推理开发文档 (coming soon)
+- [Linux GPU/CPU 基础训练推理测试开发文档](./development_specification_docs/train_infer_python.md) 
      
 - 更多训练方式开发文档
     - Linux GPU 多机多卡训练推理开发文档 (coming soon)
