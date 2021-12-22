@@ -184,15 +184,13 @@ python export_model.py --pretrained=../mobilenet_v3_small_paddle_pretrained.pdpa
 
 - 准备编译环境
 
+```
 gcc、g++（推荐版本为 8.2.0)   
-
 git、make、wget、python、adb   
-
 Java Environment   
-
 CMake（请使用 3.10 或以上版本）  
-
 Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 开始，NDK 交叉编译工具仅支持 Clang, 不支持 GCC）  
+```
 
 - 环境安装命令
 
