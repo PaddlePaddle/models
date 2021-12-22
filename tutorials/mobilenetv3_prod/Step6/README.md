@@ -164,20 +164,24 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 ### 5.1 使用paddle lite 部署
 (1) 获取inference model
+
 在tools文件夹下提供了输出inference model的脚本文件export_model.py，运行如下命令即可获取inference model。
 ```
 python export_model.py --pretrained=../mobilenet_v3_small_paddle_pretrained.pdparams  --save-inference-dir=./inference_model
 ```
-运行完之后就会在inference_model文件夹下有inference.pdmodel和inference.pdiparams文件。
-(2)准备模型转换工具生成可用于paddle-lite的部署模型
+在inference_model文件夹下有inference.pdmodel和inference.pdiparams文件。
+
+(2) 准备模型转换工具生成可用于paddle-lite的部署模型
+
 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具。使用如下命令转换可以转换inference model到paddle lite的nb模型：
 
 ```
 ./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3
 ```
-运行之后即可在当前文件夹下发现mobilenet_v3.nb文件。
+在当前文件夹下可以发现mobilenet_v3.nb文件。
 
 (3)以arm v8 、android系统为例进行部署。
+
 - 准备编译环境
 
 gcc、g++（推荐版本为 8.2.0）
@@ -268,7 +272,7 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 ```
 tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz
 ```
-即可获取编译好的lib包。注意，即使获取编译好的lib包依然要进行上述步骤安装环境的步骤，因为下面编译demo时候会用到。
+即可获取编译好的lib包。注意，即使获取编译好的lib包依然要进行上述**安装环境**的步骤，因为下面编译demo时候会用到。
 
 - 连接一台开启了**USB调试功能**的手机，运行
 ```
@@ -347,6 +351,7 @@ output tensor 0 mean value:0.001
 代表在android手机上推理部署完成。
 
 (4) lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法：
+
 ```c++
 #include <iostream>
 // 引入 C++ API
