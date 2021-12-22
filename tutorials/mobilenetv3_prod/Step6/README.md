@@ -171,7 +171,7 @@ python export_model.py --pretrained=../mobilenet_v3_small_paddle_pretrained.pdpa
 ```
 在inference_model文件夹下有inference.pdmodel和inference.pdiparams文件。
 
-(2) 准备模型转换工具生成可用于paddle-lite的部署模型
+(2) 准备模型转换工具并生成paddle-lite的部署模型
 
 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具。使用如下命令转换可以转换inference model到paddle lite的nb模型：
 
@@ -184,11 +184,15 @@ python export_model.py --pretrained=../mobilenet_v3_small_paddle_pretrained.pdpa
 
 - 准备编译环境
 
-gcc、g++（推荐版本为 8.2.0）
-git、make、wget、python、adb
-Java Environment
-CMake（请使用 3.10 或以上版本）
-Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 开始，NDK 交叉编译工具仅支持 Clang, 不支持 GCC）
+gcc、g++（推荐版本为 8.2.0)   
+
+git、make、wget、python、adb   
+
+Java Environment   
+
+CMake（请使用 3.10 或以上版本）  
+
+Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 开始，NDK 交叉编译工具仅支持 Clang, 不支持 GCC）  
 
 - 环境安装命令
 
@@ -239,7 +243,7 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
    ./lite/tools/build_android.sh
 ```
 
-如果按\ ``./lite/tools/build_android.sh``\ 中的默认参数执行，成功后会在 ``Paddle-Lite/build.lite.android.armv8.gcc/inference_lite_lib.android.armv8`` 生成 Paddle Lite 编译包，文件目录如下。
+如果按 ``./lite/tools/build_android.sh`` 中的默认参数执行，成功后会在 ``Paddle-Lite/build.lite.android.armv8.gcc/inference_lite_lib.android.armv8`` 生成 Paddle Lite 编译包，文件目录如下。
 
 ```
    inference_lite_lib.android.armv8/
@@ -284,7 +288,7 @@ List of devices attached
 1ddcf602	device
 ```
 
-- 执行以下命令即可运行demo。
+- 执行以下命令即可在手机上运行demo。
 
 ```bash
 #################################
