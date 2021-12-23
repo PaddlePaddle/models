@@ -66,7 +66,7 @@ git clone https://github.com/PaddlePaddle/models.git
 cd models/tutorials/mobilenetv3_prod/Step6
 ```
 
-* 安装paddlepaddle：如果您已经安装了2.2或者以上版本的paddle，那么无需安装下面的命令。
+* 安装paddlepaddle：如果您已经安装了2.2或者以上版本的paddlepaddle，那么无需运行下面的命令安装paddlepaddle。
 
 ```bash
 # 需要安装2.2及以上版本的Paddle，如果
