@@ -404,7 +404,7 @@ python3 web_service.py &
 
 针对AlexNet网络, 启动成功的界面如下：
 
-![](../../images/serving_startup_visualization.jpg)    
+![](./images/serving_startup_visualization.png)    
                                
 ### 2.8 开发客户端访问服务的程序
 
@@ -435,7 +435,7 @@ unset https_proxy
 ```
 访问成功的界面如下：
 
-![](../../images/serving_client_results.jpg)
+![](./images/serving_client_results.png)
                                                   
 ## 6. TIPC自动化测试脚本
 
