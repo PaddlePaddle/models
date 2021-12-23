@@ -1,2 +1,2 @@
-reprod-log
+reprod-log>=1.0.1
 
