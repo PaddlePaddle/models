@@ -374,7 +374,7 @@ result, None, ""
 
 【实战】
 
-针对AlexNet网络的预测结果后处理开发，修改web_service.py文件中AlexNetOp中的postprocess函数相关代码如下：
+针对MobileNet网络的预测结果后处理开发，修改web_service.py文件中MobileNetOp中的postprocess函数相关代码如下：
 
 ```py
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
@@ -402,7 +402,7 @@ python3 web_service.py &
 ```                               
 **【实战】**
 
-针对AlexNet网络, 启动成功的界面如下：
+针对MobileNet网络, 启动成功的界面如下：
 
 ![](./images/serving_startup_visualization.png)    
                                
@@ -414,7 +414,7 @@ python3 web_service.py &
 
 **【实战】**
 
-针对AlexNet网络, 修改pipeline_http_client.py程序中的url（服务地址）、logid（日志ID）和测试图像地址，其中url改为：
+针对MobileNet网络, 修改pipeline_http_client.py程序中的url（服务地址）、logid（日志ID）和测试图像地址，其中url改为：
 
 ```
 url = "http://127.0.0.1:18080/imagenet/prediction"
