@@ -40,6 +40,7 @@ MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为
 这里`mobilenet_v3_small`的参考指标也是重新训练得到的。
 
 <a name="2"></a>
+
 ## 2. 数据集和复现精度
 
 数据集为ImageNet，训练集包含1281167张图像，验证集包含50000张图像。
@@ -488,7 +489,8 @@ unset https_proxy
 
 ![](./images/serving_client_results.png)                                                  
 
-<a name="6"></a>                                                  
+<a name="6"></a>    
+           
 ## 6. TIPC自动化测试脚本
 
 coming soon!
