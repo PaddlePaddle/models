@@ -253,7 +253,7 @@ def get_args_parser(add_help=True):
     parser.add_argument('--data-path', default='./data', help='dataset')
     parser.add_argument('--model', default='mobilenet_v3_small', help='model')
     parser.add_argument('--device', default='gpu', help='device')
-    parser.add_argument('-b', '--batch-size', default=32, type=int)
+    parser.add_argument('-b', '--batch-size', default=256, type=int)
     parser.add_argument(
         '--epochs',
         default=90,
@@ -269,7 +269,7 @@ def get_args_parser(add_help=True):
         help='number of data loading workers (default: 16)')
     parser.add_argument('--opt', default='sgd', type=str, help='optimizer')
     parser.add_argument(
-        '--lr', default=0.00125, type=float, help='initial learning rate')
+        '--lr', default=0.1, type=float, help='initial learning rate')
     parser.add_argument(
         '--momentum', default=0.9, type=float, metavar='M', help='momentum')
     parser.add_argument(

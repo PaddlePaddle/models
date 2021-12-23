@@ -3,24 +3,27 @@
 ## 目录
 
 
-- [1. 简介]()
-- [2. 数据集和复现精度]()
-- [3. 准备数据与环境]()
-    - [3.1 准备环境]()
-    - [3.2 准备数据]()
-    - [3.3 准备模型]()
-- [4. 开始使用]()
-    - [4.1 模型训练]()
-    - [4.2 模型评估]()
-    - [4.3 模型预测]()
-- [5. 模型推理部署]()
-- [6. TIPC自动化测试脚本]()
-- [7. 参考链接与文献]()
+- [1. 简介](#1)
+- [2. 数据集和复现精度](#2)
+- [3. 准备数据与环境](#3)
+    - [3.1 准备环境](#3.1)
+    - [3.2 准备数据](#3.2)
+    - [3.3 准备模型](#3.3)
+- [4. 开始使用](#4)
+    - [4.1 模型训练](#4.1)
+    - [4.2 模型评估](#4.2)
+    - [4.3 模型预测](#4.3)
+- [5. 模型推理部署](#5)
+- [6. TIPC自动化测试脚本](#6)
+- [7. 参考链接与文献](#7)
 
+<a name="1"></a>
 
 ## 1. 简介
 
-* coming soon!
+MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为了进一步提升效果，将 relu 和 sigmoid 激活函数分别替换为 hard_swish 与 hard_sigmoid 激活函数，同时引入了一些专门减小网络计算量的改进策略，最终性能超越了当时其他的轻量级骨干网络。
+
+
 
 **论文:** [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
 
@@ -48,19 +51,23 @@
 |:---------:|:------:|:----------:|:----------:|
 | Mo | -/-   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型(coming soon!)]() \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
 
+<a name="3"></a>
 
 ## 3. 准备环境与数据
+
+
+<a name="3.1"></a>
 
 ### 3.1 准备环境
 
 * 下载代码
 
 ```bash
-https://github.com/PaddlePaddle/models.git
-cd model/tutorials/mobilenetv3_prod/Step6
+git clone https://github.com/PaddlePaddle/models.git
+cd models/tutorials/mobilenetv3_prod/Step6
 ```
 
-* 安装paddlepaddle
+* 安装paddlepaddle：如果您已经安装了2.2或者以上版本的paddlepaddle，那么无需运行下面的命令安装paddlepaddle。
 
 ```bash
 # 需要安装2.2及以上版本的Paddle，如果
@@ -70,6 +77,24 @@ pip install paddlepaddle-gpu==2.2.0
 pip install paddlepaddle==2.2.0
 ```
 
+安装完成之后，可以使用下面的命令验证是否安装成功
+
+```python
+import paddle
+paddle.utils.run_check()
+```
+
+如果出现了`PaddlePaddle is installed successfully!`等输出内容，如下所示，则说明安装成功。
+
+```
+W1223 02:51:03.061575 33723 device_context.cc:447] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 10.2, Runtime API Version: 10.2
+W1223 02:51:03.070878 33723 device_context.cc:465] device: 0, cuDNN Version: 7.6.
+PaddlePaddle works well on 1 GPU.
+W1223 02:51:33.185979 33723 fuse_all_reduce_op_pass.cc:76] Find all_reduce operators: 2. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is 2.
+PaddlePaddle works well on 8 GPUs.
+PaddlePaddle is installed successfully! Let's start deep learning with PaddlePaddle now.
+```
+
 更多安装方法可以参考：[Paddle安装指南](https://www.paddlepaddle.org.cn/)。
 
 * 安装requirements
@@ -77,6 +102,8 @@ pip install paddlepaddle==2.2.0
 ```bash
 pip install -r requirements.txt
 ```
+
+<a name="3.2"></a>
 
 ### 3.2 准备数据
 
@@ -88,12 +115,30 @@ pip install -r requirements.txt
 tar -xf test_images/lite_data.tar
 ```
 
+执行该命令后，会在当前路径下解压出对应的数据集文件夹lite_data
+
+
+<a name="3.3"></a>
+
 ### 3.3 准备模型
 
-如果您希望直接体验评估或者预测推理过程，可以直接根据第2章的内容下载提供的预训练模型，直接体验模型评估、预测、推理部署等内容。
+如果您希望直接体验评估或者预测推理过程，可以直接根据[第2节：数据集和复现精度]()的内容下载提供的预训练模型，直接体验模型评估、预测、推理部署等内容。
 
+使用下面的命令下载模型
+
+```bash
+# 下载预训练模型
+wget https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams
+# 下载推理模型
+# coming soon!
+```
+
+
+<a name="4"></a>
 
 ## 4. 开始使用
+
+<a name="4.1"></a>
 
 ### 4.1 模型训练
 
@@ -101,7 +146,7 @@ tar -xf test_images/lite_data.tar
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
-python3.7 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
+python3 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
 ```
 
 部分训练日志如下所示。
@@ -115,10 +160,12 @@ python3.7 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
-python3.7 -m paddle.distributed.launch --gpus="0,1,2,3" train.py --data-path="./ILSVRC2012" --lr=0.4 --batch-size=256
+python3 -m paddle.distributed.launch --gpus="0,1,2,3" train.py --data-path="./ILSVRC2012" --lr=0.4 --batch-size=256
 ```
 
 更多配置参数可以参考[train.py](./train.py)的`get_args_parser`函数。
+
+<a name="4.2"></a>
 
 ### 4.2 模型评估
 
@@ -138,12 +185,14 @@ Test: Total time: 0:02:05
  * Acc@1 0.564 Acc@5 0.790
 ```
 
+<a name="4.3"></a>
+
 ### 4.3 模型预测
 
 * 使用GPU预测
 
 ```
-python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams --img-path=images/demo.jpg
+python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --img-path=images/demo.jpg
 ```
 
 对于下面的图像进行预测
@@ -157,9 +206,10 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 * 使用CPU预测
 
 ```
-python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams --img-path=images/demo.jpg --device=cpu
+python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --img-path=images/demo.jpg --device=cpu
 ```
 
+<a name="5"></a>
 
 ## 5. 模型推理部署
 
@@ -270,6 +320,7 @@ class MobileNetOp(Op):
 
     def preprocess(self, input_dicts, data_id, log_id):
         pass
+
 
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
         pass
@@ -435,11 +486,14 @@ unset https_proxy
 ```
 访问成功的界面如下：
 
-![](./images/serving_client_results.png)
-                                                  
+![](./images/serving_client_results.png)                                                  
+
+<a name="6"></a>                                                  
 ## 6. TIPC自动化测试脚本
 
 coming soon!
+
+<a name="7"></a>
 
 ## 7. 参考链接与文献
 
