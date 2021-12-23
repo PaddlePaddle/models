@@ -36,7 +36,7 @@
 
 这里`mobilenet_v3_small`的参考指标也是重新训练得到的。
 
-<a name="2---"></a>
+<a name="2"></a>
 ## 2. 数据集和复现精度
 
 数据集为ImageNet，训练集包含1281167张图像，验证集包含50000张图像。
@@ -210,7 +210,7 @@ python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --mod
 git clone https://github.com/PaddlePaddle/models.git
 cd models/tutorials/mobilenetv3_prod/Step6
 ```
-由于[MobileNetV3](#2---)暂时只提供了预训练模型，因此需要先转换为Inference模型。若后期提供，可省略该步骤。
+由于[MobileNetV3](#2)暂时只提供了预训练模型，因此需要先转换为Inference模型。若后期提供，可省略该步骤。
                        
 在tools文件夹下提供了输出inference模型的脚本文件export_model.py，运行如下命令即可获取inference模型。
 
@@ -406,7 +406,7 @@ python3 web_service.py &
 
 ![](./images/serving_startup_visualization.png)    
                                
-### 2.8 开发客户端访问服务的程序
+#### 5.2.8 开发客户端访问服务的程序
 
 **【基本流程】**
 
