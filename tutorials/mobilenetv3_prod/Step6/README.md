@@ -167,20 +167,32 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 在tools文件夹下提供了输出inference model的脚本文件export_model.py，运行如下命令即可获取inference model。
 ```
-python export_model.py --pretrained=../mobilenet_v3_small_paddle_pretrained.pdparams  --save-inference-dir=./inference_model
+python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams  --save-inference-dir=./inference_model
 ```
-在inference_model文件夹下有inference.pdmodel和inference.pdiparams文件。
+在inference_model文件夹下有inference.pdmodel、inference.pdiparams和inference.pdiparams.info文件。
 
 (2) 准备模型转换工具并生成paddle-lite的部署模型
 
-模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具。使用如下命令转换可以转换inference model到paddle lite的nb模型：
+- 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具
+
+- 使用如下命令转换可以转换inference model到paddle lite的nb模型：
 
 ```
 ./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3
 ```
 在当前文件夹下可以发现mobilenet_v3.nb文件。
 
-(3)以arm v8 、android系统为例进行部署。
+注：在mac上运行opt_mac可能会有如下错误：
+
+<div align="center">
+    <img src="./images/Paddle-Lite/pic1.jpg" width=300">
+</div>
+需要搜索**安全性与隐私**，点击通用，点击**仍然允许**，即可。
+<div align="center">
+    <img src="./images/Paddle-Lite/pic2.jpg" width=300">
+</div>
+
+(3)以arm v8 、android系统为例进行部署,开发机为ubuntu。
 
 - 准备编译环境
 
@@ -194,7 +206,7 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 - 环境安装命令
 
-以 Ubuntu 为例介绍安装命令。注意需要 root 用户权限执行如下命令。
+以 Ubuntu 为例介绍安装命令。注意需要 root 用户权限执行如下命令。mac环境下编译android库参考[链接](https://paddle-lite.readthedocs.io/zh/develop/source_compile/macos_compile_android.html)，windows下暂不支持变异android版本库。
 
 ```
    # 1. 安装 gcc g++ git make wget python unzip adb curl 等基础软件
