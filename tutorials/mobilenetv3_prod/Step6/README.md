@@ -21,7 +21,9 @@
 
 ## 1. 简介
 
-* coming soon!
+MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为了进一步提升效果，将 relu 和 sigmoid 激活函数分别替换为 hard_swish 与 hard_sigmoid 激活函数，同时引入了一些专门减小网络计算量的改进策略，最终性能超越了当时其他的轻量级骨干网络。
+
+
 
 **论文:** [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
 
