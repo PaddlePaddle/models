@@ -9,7 +9,7 @@
 ## 1. 简介
 Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算子目前稳定支持导出 ONNX Opset 9~11，部分Paddle算子支持更低的ONNX Opset转换。
 
-本文档主要介绍 PaddleOCR 模型如何转化为 ONNX 模型，并基于 ONNX 引擎预测。
+本文档主要介绍 MobileNetV3 模型如何转化为 ONNX 模型，并基于 ONNX 引擎预测。
 
 更多细节可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
 
