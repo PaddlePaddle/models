@@ -106,7 +106,7 @@ print('ONNXRuntime predict time: %.04f s' % (end - start))
 对于下面的图像进行预测
 
 <div align="center">
-    <img src="../../images/demo.jpg" width=300">
+    <img src="../../mobilenetv3_prod/Step6/images/demo.jpg" width=300">
 </div>
 
 在终端中输出结果如下。
