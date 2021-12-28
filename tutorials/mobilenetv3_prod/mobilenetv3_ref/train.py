@@ -371,6 +371,7 @@ def get_args_parser(add_help=True):
     )
 
     # distributed training parameters
+    parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument(
         '--world-size',
         default=1,
