@@ -215,7 +215,7 @@ def test_data_pipeline():
 ```
 
 【**运行文件**】
-通过运行以下指令，我们进行测试，测试数据可以解压我们准备的 lite_data.tar 获得，对于自身的数据，也可以抽取几张 validationset 的图片用作验证。
+通过运行以下指令，我们进行测试，测试数据可以解压我们准备的 [lite_data.tar](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/test_images/lite_data.tar) 获得，对于自身的数据，也可以抽取几张 validationset 的图片用作验证。
 
 ```python
 cd models/tutorials/mobilenetv3_prod/

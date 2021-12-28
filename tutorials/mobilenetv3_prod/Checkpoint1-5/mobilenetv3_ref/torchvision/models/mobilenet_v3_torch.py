@@ -9,48 +9,48 @@ from torch import nn, Tensor
 from .misc_torch import ConvNormActivation, SqueezeExcitation as SElayer
 from ._utils import _make_divisible
 
-
 __all__ = ["MobileNetV3", "mobilenet_v3_large", "mobilenet_v3_small"]
 
-
 model_urls = {
-    "mobilenet_v3_large": "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
-    "mobilenet_v3_small": "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
+    "mobilenet_v3_large":
+    "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
+    "mobilenet_v3_small":
+    "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
 }
 
 
 class SqueezeExcitation(SElayer):
     """DEPRECATED"""
 
-    def __init__(self, input_channels: int, squeeze_factor: int = 4):
+    def __init__(self, input_channels: int, squeeze_factor: int=4):
         squeeze_channels = _make_divisible(input_channels // squeeze_factor, 8)
-        super().__init__(input_channels, squeeze_channels, scale_activation=nn.Hardsigmoid)
+        super().__init__(
+            input_channels, squeeze_channels, scale_activation=nn.Hardsigmoid)
         self.relu = self.activation
         delattr(self, "activation")
         warnings.warn(
             "This SqueezeExcitation class is deprecated and will be removed in future versions. "
             "Use torchvision.ops.misc.SqueezeExcitation instead.",
-            FutureWarning,
-        )
+            FutureWarning, )
 
 
 class InvertedResidualConfig:
     # Stores information listed at Tables 1 and 2 of the MobileNetV3 paper
     def __init__(
-        self,
-        input_channels: int,
-        kernel: int,
-        expanded_channels: int,
-        out_channels: int,
-        use_se: bool,
-        activation: str,
-        stride: int,
-        dilation: int,
-        width_mult: float,
-    ):
+            self,
+            input_channels: int,
+            kernel: int,
+            expanded_channels: int,
+            out_channels: int,
+            use_se: bool,
+            activation: str,
+            stride: int,
+            dilation: int,
+            width_mult: float, ):
         self.input_channels = self.adjust_channels(input_channels, width_mult)
         self.kernel = kernel
-        self.expanded_channels = self.adjust_channels(expanded_channels, width_mult)
+        self.expanded_channels = self.adjust_channels(expanded_channels,
+                                                      width_mult)
         self.out_channels = self.adjust_channels(out_channels, width_mult)
         self.use_se = use_se
         self.use_hs = activation == "HS"
@@ -65,11 +65,11 @@ class InvertedResidualConfig:
 class InvertedResidual(nn.Module):
     # Implemented as described at section 5 of MobileNetV3 paper
     def __init__(
-        self,
-        cnf: InvertedResidualConfig,
-        norm_layer: Callable[..., nn.Module],
-        se_layer: Callable[..., nn.Module] = partial(SElayer, scale_activation=nn.Hardsigmoid),
-    ):
+            self,
+            cnf: InvertedResidualConfig,
+            norm_layer: Callable[..., nn.Module],
+            se_layer: Callable[..., nn.Module]=partial(
+                SElayer, scale_activation=nn.Hardsigmoid), ):
         super().__init__()
         if not (1 <= cnf.stride <= 2):
             raise ValueError("illegal stride value")
@@ -87,9 +87,7 @@ class InvertedResidual(nn.Module):
                     cnf.expanded_channels,
                     kernel_size=1,
                     norm_layer=norm_layer,
-                    activation_layer=activation_layer,
-                )
-            )
+                    activation_layer=activation_layer, ))
 
         # depthwise
         stride = 1 if cnf.dilation > 1 else cnf.stride
@@ -102,9 +100,7 @@ class InvertedResidual(nn.Module):
                 dilation=cnf.dilation,
                 groups=cnf.expanded_channels,
                 norm_layer=norm_layer,
-                activation_layer=activation_layer,
-            )
-        )
+                activation_layer=activation_layer, ))
         if cnf.use_se:
             squeeze_channels = _make_divisible(cnf.expanded_channels // 4, 8)
             layers.append(se_layer(cnf.expanded_channels, squeeze_channels))
@@ -112,9 +108,11 @@ class InvertedResidual(nn.Module):
         # project
         layers.append(
             ConvNormActivation(
-                cnf.expanded_channels, cnf.out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=None
-            )
-        )
+                cnf.expanded_channels,
+                cnf.out_channels,
+                kernel_size=1,
+                norm_layer=norm_layer,
+                activation_layer=None))
 
         self.block = nn.Sequential(*layers)
         self.out_channels = cnf.out_channels
@@ -129,15 +127,14 @@ class InvertedResidual(nn.Module):
 
 class MobileNetV3(nn.Module):
     def __init__(
-        self,
-        inverted_residual_setting: List[InvertedResidualConfig],
-        last_channel: int,
-        num_classes: int = 1000,
-        block: Optional[Callable[..., nn.Module]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
-        dropout: float = 0.2,
-        **kwargs: Any,
-    ) -> None:
+            self,
+            inverted_residual_setting: List[InvertedResidualConfig],
+            last_channel: int,
+            num_classes: int=1000,
+            block: Optional[Callable[..., nn.Module]]=None,
+            norm_layer: Optional[Callable[..., nn.Module]]=None,
+            dropout: float=0.2,
+            **kwargs: Any, ) -> None:
         """
         MobileNet V3 main class
 
@@ -152,12 +149,15 @@ class MobileNetV3(nn.Module):
         super().__init__()
 
         if not inverted_residual_setting:
-            raise ValueError("The inverted_residual_setting should not be empty")
-        elif not (
-            isinstance(inverted_residual_setting, Sequence)
-            and all([isinstance(s, InvertedResidualConfig) for s in inverted_residual_setting])
-        ):
-            raise TypeError("The inverted_residual_setting should be List[InvertedResidualConfig]")
+            raise ValueError(
+                "The inverted_residual_setting should not be empty")
+        elif not (isinstance(inverted_residual_setting, Sequence) and all([
+                isinstance(s, InvertedResidualConfig)
+                for s in inverted_residual_setting
+        ])):
+            raise TypeError(
+                "The inverted_residual_setting should be List[InvertedResidualConfig]"
+            )
 
         if block is None:
             block = InvertedResidual
@@ -176,9 +176,7 @@ class MobileNetV3(nn.Module):
                 kernel_size=3,
                 stride=2,
                 norm_layer=norm_layer,
-                activation_layer=nn.Hardswish,
-            )
-        )
+                activation_layer=nn.Hardswish, ))
 
         # building inverted residual blocks
         for cnf in inverted_residual_setting:
@@ -193,18 +191,16 @@ class MobileNetV3(nn.Module):
                 lastconv_output_channels,
                 kernel_size=1,
                 norm_layer=norm_layer,
-                activation_layer=nn.Hardswish,
-            )
-        )
+                activation_layer=nn.Hardswish, ))
 
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Sequential(
             nn.Linear(lastconv_output_channels, last_channel),
             nn.Hardswish(inplace=True),
-            nn.Dropout(p=dropout, inplace=True),
-            nn.Linear(last_channel, num_classes),
-        )
+            nn.Dropout(
+                p=dropout, inplace=True),
+            nn.Linear(last_channel, num_classes), )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -232,14 +228,17 @@ class MobileNetV3(nn.Module):
         return self._forward_impl(x)
 
 
-def _mobilenet_v3_conf(
-    arch: str, width_mult: float = 1.0, reduced_tail: bool = False, dilated: bool = False, **kwargs: Any
-):
+def _mobilenet_v3_conf(arch: str,
+                       width_mult: float=1.0,
+                       reduced_tail: bool=False,
+                       dilated: bool=False,
+                       **kwargs: Any):
     reduce_divider = 2 if reduced_tail else 1
     dilation = 2 if dilated else 1
 
     bneck_conf = partial(InvertedResidualConfig, width_mult=width_mult)
-    adjust_channels = partial(InvertedResidualConfig.adjust_channels, width_mult=width_mult)
+    adjust_channels = partial(
+        InvertedResidualConfig.adjust_channels, width_mult=width_mult)
 
     if arch == "mobilenet_v3_large":
         inverted_residual_setting = [
@@ -255,9 +254,12 @@ def _mobilenet_v3_conf(
             bneck_conf(80, 3, 184, 80, False, "HS", 1, 1),
             bneck_conf(80, 3, 480, 112, True, "HS", 1, 1),
             bneck_conf(112, 3, 672, 112, True, "HS", 1, 1),
-            bneck_conf(112, 5, 672, 160 // reduce_divider, True, "HS", 2, dilation),  # C4
-            bneck_conf(160 // reduce_divider, 5, 960 // reduce_divider, 160 // reduce_divider, True, "HS", 1, dilation),
-            bneck_conf(160 // reduce_divider, 5, 960 // reduce_divider, 160 // reduce_divider, True, "HS", 1, dilation),
+            bneck_conf(112, 5, 672, 160 // reduce_divider, True, "HS", 2,
+                       dilation),  # C4
+            bneck_conf(160 // reduce_divider, 5, 960 // reduce_divider,
+                       160 // reduce_divider, True, "HS", 1, dilation),
+            bneck_conf(160 // reduce_divider, 5, 960 // reduce_divider,
+                       160 // reduce_divider, True, "HS", 1, dilation),
         ]
         last_channel = adjust_channels(1280 // reduce_divider)  # C5
     elif arch == "mobilenet_v3_small":
@@ -270,9 +272,12 @@ def _mobilenet_v3_conf(
             bneck_conf(40, 5, 240, 40, True, "HS", 1, 1),
             bneck_conf(40, 5, 120, 48, True, "HS", 1, 1),
             bneck_conf(48, 5, 144, 48, True, "HS", 1, 1),
-            bneck_conf(48, 5, 288, 96 // reduce_divider, True, "HS", 2, dilation),  # C4
-            bneck_conf(96 // reduce_divider, 5, 576 // reduce_divider, 96 // reduce_divider, True, "HS", 1, dilation),
-            bneck_conf(96 // reduce_divider, 5, 576 // reduce_divider, 96 // reduce_divider, True, "HS", 1, dilation),
+            bneck_conf(48, 5, 288, 96 // reduce_divider, True, "HS", 2,
+                       dilation),  # C4
+            bneck_conf(96 // reduce_divider, 5, 576 // reduce_divider,
+                       96 // reduce_divider, True, "HS", 1, dilation),
+            bneck_conf(96 // reduce_divider, 5, 576 // reduce_divider,
+                       96 // reduce_divider, True, "HS", 1, dilation),
         ]
         last_channel = adjust_channels(1024 // reduce_divider)  # C5
     else:
@@ -282,23 +287,26 @@ def _mobilenet_v3_conf(
 
 
 def _mobilenet_v3(
-    arch: str,
-    inverted_residual_setting: List[InvertedResidualConfig],
-    last_channel: int,
-    pretrained: bool,
-    progress: bool,
-    **kwargs: Any,
-):
+        arch: str,
+        inverted_residual_setting: List[InvertedResidualConfig],
+        last_channel: int,
+        pretrained: bool,
+        progress: bool,
+        **kwargs: Any, ):
     model = MobileNetV3(inverted_residual_setting, last_channel, **kwargs)
     if pretrained:
         if model_urls.get(arch, None) is None:
-            raise ValueError(f"No checkpoint is available for model type {arch}")
-        state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
+            raise ValueError(
+                f"No checkpoint is available for model type {arch}")
+        state_dict = load_state_dict_from_url(
+            model_urls[arch], progress=progress)
         model.load_state_dict(state_dict)
     return model
 
 
-def mobilenet_v3_large(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> MobileNetV3:
+def mobilenet_v3_large(pretrained: bool=False,
+                       progress: bool=True,
+                       **kwargs: Any) -> MobileNetV3:
     """
     Constructs a large MobileNetV3 architecture from
     `"Searching for MobileNetV3" <https://arxiv.org/abs/1905.02244>`_.
@@ -308,11 +316,15 @@ def mobilenet_v3_large(pretrained: bool = False, progress: bool = True, **kwargs
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     arch = "mobilenet_v3_large"
-    inverted_residual_setting, last_channel = _mobilenet_v3_conf(arch, **kwargs)
-    return _mobilenet_v3(arch, inverted_residual_setting, last_channel, pretrained, progress, **kwargs)
+    inverted_residual_setting, last_channel = _mobilenet_v3_conf(arch,
+                                                                 **kwargs)
+    return _mobilenet_v3(arch, inverted_residual_setting, last_channel,
+                         pretrained, progress, **kwargs)
 
 
-def mobilenet_v3_small(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> MobileNetV3:
+def mobilenet_v3_small(pretrained: bool=False,
+                       progress: bool=True,
+                       **kwargs: Any) -> MobileNetV3:
     """
     Constructs a small MobileNetV3 architecture from
     `"Searching for MobileNetV3" <https://arxiv.org/abs/1905.02244>`_.
@@ -322,5 +334,7 @@ def mobilenet_v3_small(pretrained: bool = False, progress: bool = True, **kwargs
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     arch = "mobilenet_v3_small"
-    inverted_residual_setting, last_channel = _mobilenet_v3_conf(arch, **kwargs)
-    return _mobilenet_v3(arch, inverted_residual_setting, last_channel, pretrained, progress, **kwargs)
+    inverted_residual_setting, last_channel = _mobilenet_v3_conf(arch,
+                                                                 **kwargs)
+    return _mobilenet_v3(arch, inverted_residual_setting, last_channel,
+                         pretrained, progress, **kwargs)
