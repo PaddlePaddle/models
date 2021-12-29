@@ -20,7 +20,7 @@
     - [3.2 准备小数据集，验证集数据读取对齐](#3.2)
     - [3.3 评估指标对齐](#3.3)
     - [3.4 损失函数对齐](#3.4)
-    - [3.5 优化部分对齐](#3.5)
+    - [3.5 优化器部分对齐](#3.5)
     - [3.6 反向对齐](#3.6)
     - [3.7 训练集数据读取对齐](#3.7)
     - [3.8 网络初始化对齐](#3.8)
@@ -29,7 +29,7 @@
     - [3.11 预测程序开发](#3.11)
     - [3.12 单机多卡训练](#3.12)
 
-- [4. 常见bug及解决方式](#4)
+- [4. 通用问题FAQ](#4)
     - [4.1 显存泄露](#4.1)
     - [4.2 内存泄露](#4.2)
     - [4.3 dataloader 加载数据时间长](#4.3)
@@ -187,7 +187,7 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3-pytorch](TODO)
 
 **【FAQ】**
 
-1. 遇到 paddle 不支持的API怎么办？
+- 遇到 paddle 不支持的API怎么办？
 
     1. 进一步参考[API映射表](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/08_api_mapping/pytorch_api_mapping_cn.html) ：由于PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) ，因此需要进一步确认当前的确API没有实现。
     2. 尝试使用替代实现进行复现：如下面的PyTorch代码，PaddlePaddle中可以通过slice + concat API的组合形式进行功能实现。在第二个问题，我们还可以看到其他一些torch API可用 PaddlePaddle API 实现。
@@ -199,22 +199,23 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3-pytorch](TODO)
         per_locations[:, 1] + per_box_regression[:, 3],
       ], dim=1)
     ```
-    3. 尝试自己开发算子：我们非常欢迎开发者向我们贡献代码：）。
+    3. 尝试自己开发算子：我们非常欢迎开发者向我们贡献代码：）如果您不希望或者暂时没有时间开发新的算子，可以参照第 4 点向paddle提交issue。
     4. 在[这里](https://github.com/PaddlePaddle/Paddle/issues/new/choose)向paddle 提交issue：列出Paddle不支持的实现，开发人员会根据优先级进行开发。
-    6. 得知API开发完成之后，安装编译环境：  
+    5. 得知API开发完成之后，安装编译环境：  
         * 进入 [Paddle 官网](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html)，选择develop版本，并根据自己的情况选择其他字段，根据生成的安装信息安装，当选择 Linux-pip-CUDA5.2字段后，就可以按照下面的信息安装。
           ```shell
           python -m pip install paddlepaddle-gpu==0.0.0.post102 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html
           ```
 
         * 如果不确定自己安装的是否是最新版本，可以进入[这里](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html)下载对应的包并查看时间戳。
-2. 有什么其他torch 的API是可以用paddle中API实现的呢？
+- 有什么其他torch 的API是可以用paddle中API实现的呢？
 
     有的，例如：
-     1. `torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
-     2. `pack_padded_sequence`和`pad_packed_sequence`这两个API目前PaddlePaddle中没有实现，可以直接在RNN或者LSTM的输入中传入`sequence_length`来实现等价的功能。
- 3. 为什么`nn.AvgPool2D` 存在不能对齐的问题？
-     * [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
+     * `torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
+     * `pack_padded_sequence`和`pad_packed_sequence`这两个API目前PaddlePaddle中没有实现，可以直接在RNN或者LSTM的输入中传入`sequence_length`来实现等价的功能。
+
+- 为什么`nn.AvgPool2D` 存在不能对齐的问题？
+    * [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
 
 #### 3.1.2 权重转换
 
@@ -227,10 +228,9 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3-pytorch](TODO)
 在权重转换的时候，需要注意`paddle.nn.Linear`以及`paddle.nn.BatchNorm2D`等API的权重保存格式和名称等与PyTorch稍有diff，具体内容可以参考本节的`FAQ`。
 
 **【实战】**
-将mobilenetv3-torch的[模型参数](https://download.pytorch.org/models/alexnet-owt-7be5be79.pth)保存在本地之后，就可以通过下面的权重转换示例进行转换：
+将mobilenetv3-torch的[模型参数](https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth)保存在本地之后，就可以通过下面的权重转换示例进行转换：
 
 ```python
-# todo torch2paddle.py
 
 import numpy as np
 import torch
@@ -267,7 +267,8 @@ if __name__ == "__main__":
 运行完成之后，会在当前目录生成`mv3_small_paddle.pdparams`文件，即为转换后的PaddlePaddle预训练模型。
 
 **【FAQ】**
-1. 权重转换过程中，torch 和 Paddle 有什么不同的参数需要注意么？
+
+- 权重转换过程中，torch 和 Paddle 有什么不同的参数需要注意么？
 
     有的，主要是这两个参数存在差异：
      1.  `nn.Linear` 层的weight参数：PaddlePaddle与PyTorch的参数存在互为转置的关系，因此在转换时需要进行转置，示例代码可以参考[Mobilenetv3 权重转换脚本](todo)。有时会遇到线性层被命名为conv的情况，但是我们依旧需要进行转置。
@@ -630,9 +631,9 @@ random.seed(config.SEED)
 本部分对齐建议对照[PaddlePaddle vision高层API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)与参考代码的数据预处理实现进行对齐，用之后的训练对齐统一验证该模块的正确性。
 
 **【FAQ】**
-1. 数据预处理找不到具体报错怎么办？
+1. 数据预处理时，找不到报错过于复杂怎么办？
 
-    在前向过程中，如果数据预处理过程运行出错，请先将 `paddle.io.DataLoader`的 `num_workers` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。（什么意思？）
+    在前向过程中，如果数据预处理过程运行出错，请先将 `paddle.io.DataLoader`的 `num_workers` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。
 
 2. 数据读取无法对齐怎么办？
 * 数据读取需要注意图片读取方式是opencv还是PIL.Image，图片格式是RGB还是BGR，复现时，需要保证复现代码和参考代码完全一致。
@@ -731,9 +732,16 @@ random.seed(config.SEED)
 4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，最终一并打包上传即可。
 
 【FAQ】
-1. 训练过程怎么更好地对齐呢？
-* 有条件的话，复现工作之前最好先基于官方代码完成训练，保证与官方指标能够对齐，并且将训练策略和训练过程中的关键指标记录保存下来，比如每个epoch的学习率、Train Loss、Eval Loss、Eval Acc等，在复现网络的训练过程中，将关键指标保存下来，这样可以将两次训练中关键指标的变化曲线绘制出来，能够很方便的进行对比；
-* 如果训练较大的数据集，1次完整训练的成本比较高，此时可以隔一段时间查看一下，如果精度差异比较大，建议先停掉实验，排查原因。
+- 训练过程怎么更好地对齐呢？
+    * 有条件的话，复现工作之前最好先基于官方代码完成训练，保证与官方指标能够对齐，并且将训练策略和训练过程中的关键指标记录保存下来，比如每个epoch的学习率、Train Loss、Eval Loss、Eval Acc等，在复现网络的训练过程中，将关键指标保存下来，这样可以将两次训练中关键指标的变化曲线绘制出来，能够很方便的进行对比；
+    * 如果训练较大的数据集，1次完整训练的成本比较高，此时可以隔一段时间查看一下，如果精度差异比较大，建议先停掉实验，排查原因。
+
+- 如果训练过程中出现不收敛的情况，怎么办？
+    * 简化网络和数据，实验是否收敛；
+    * 如果是基于原有实现进行改动，可以尝试控制变量法，每次做一个改动，逐个排查；
+    * 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
+    * 保存不同step之间的模型参数，观察模型参数是否更新。
+
 
 2. 如果训练的过程中出nan怎么办？
 
@@ -743,11 +751,7 @@ random.seed(config.SEED)
 * 模型结构中计算loss的部分是否有考虑到正样本为0的情况
 * 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
 
-3. 如果训练过程中出现不收敛的情况，怎么办？
-* 简化网络和数据，实验是否收敛；
-* 如果是基于原有实现进行改动，可以尝试控制变量法，每次做一个改动，逐个排查；
-* 检查学习率是否过大、优化器设置是否合理，排查下weight decay是否设置正确；
-* 保存不同step之间的模型参数，观察模型参数是否更新。
+
 
 4. 其他细分场景下导致训练不对齐的原因？
 * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
@@ -970,7 +974,7 @@ python3.7 -m paddle.distributed.launch \
 
 
 <a name="4"></a>
-## 4. 常见bug 以及解决方式
+## 4. 通用问题FAQ
 
 在论文复现中，可能因为各种原因出现报错，下面我们列举了常见的问题和解决方法，从而提供debug的方向：
 
