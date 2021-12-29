@@ -31,7 +31,7 @@ Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
     <img src="../images/train_amp_guide.png" width="400">
 </div>
 
-其中设置了2个核验点，分别为
+其中设置了2个核验点，分别为：
 
 * 检查混合精度训练环境
 * 验证混合精度训练正确开启
@@ -67,7 +67,7 @@ UserWarning: AMP only support NVIDIA GPU with Compute Capability 7.0 or higher, 
 
 ### 2.2 准备FP32训练模型
 
-Paddle 神经网络训练默认采用FP32数据类型，混合精度训练是在FP32训练网络上添加必要的混合精度策略，因此，准备好可以正确完成训练的FP32网络即可。
+Paddle 神经网络训练默认采用FP32数据类型，混合精度训练是在FP32训练网络上添加必要的策略，因此，准备好可以正确完成训练的FP32网络即可。
 
 
 <a name="2.3"></a>
@@ -84,7 +84,7 @@ Paddle 神经网络训练默认采用FP32数据类型，混合精度训练是在
 
 通常情况下，O2相比O1训练速度会更快，但是训练精度可能会有所降低，您可以首先尝试开启O2模式，如果精度损失严重，您可以再尝试开启O1模式。下面详细介绍如何使用飞桨框架实现混合精度训练。
 
-该小节以MobileNetv3模型为例，该模型混合精度训练的应用代码位于[train.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/train.py)
+该小节以MobileNetv3模型为例，该模型混合精度训练的应用代码位于：[train.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/train.py)
 
 #### 2.3.1 开发AMP-O1训练代码
 
@@ -102,7 +102,7 @@ Paddle 神经网络训练默认采用FP32数据类型，混合精度训练是在
 
 MobileNetv3中添加O1混合精度训练如下所示，参考链接：[train.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/train.py)。
 
-1）在执行训练前初始化`paddle.amp.GradScaler`类：
+1）在执行训练前，初始化`paddle.amp.GradScaler`类：
 
 ```python
 if args.amp_level is not None:
@@ -200,10 +200,10 @@ MobileNetv3中添加O2混合精度训练如下所示，参考链接：[train.py]
 训练代码执行脚本如下：
 
 ```
-GLOG_v=5 python3.8 train.py --data-path=./lite_data/ --lr=0.1 --batch-size=256 --amp_level=O1
+GLOG_v=5 python3.8 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O1
 ```
 
-以`conv2d`op为例，打印的训练日志示例如下：
+以`conv2d`op为例，打印的部分混合精度训练日志示例如下：
 
 ```
 [1] I1228 11:56:41.567701  5904 tracer.cc:162] Trace Op: conv2d
@@ -243,10 +243,10 @@ GLOG_v=5 python3.8 train.py --data-path=./lite_data/ --lr=0.1 --batch-size=256 -
 训练代码执行脚本如下：
 
 ```
-GLOG_v=5 python3.8 train.py --data-path=./lite_data/ --lr=0.1 --batch-size=256 --amp_level=O2
+GLOG_v=5 python3.8 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O2
 ```
 
-以`conv2d`op为例，打印的训练日志示例如下：
+以`conv2d`op为例，打印的部分混合精度训练日志示例如下：
 
 ```
 [1] I1228 12:00:45.373405  7576 tracer.cc:162] Trace Op: conv2d
@@ -270,17 +270,17 @@ GLOG_v=5 python3.8 train.py --data-path=./lite_data/ --lr=0.1 --batch-size=256 -
 
 ## 3. FAQ
 
-* 如果您在使用该文档完成混合精度训练的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle/issues/new/choose)提一个ISSUE，我们会高优跟进。
+如果您在使用该文档完成混合精度训练的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle/issues/new/choose)提一个ISSUE，我们会高优跟进。
 
 <a name="3.1"></a>
 
 ### 3.1 通用问题
 
-(1)、混合精度训练存在如下报错：某个op期望输入数据为FP32，但输入的输入为FP16
+* 混合精度训练存在如下报错：某个op期望输入数据为FP32，但输入的输入为FP16
 
 该问题出现的原因可能是您在组网过程中手动调用了`paddle.cast()`或者`astype()`接口将参数强制进行了数据类型转换，使得混合精度训练失去了对该参数数据类型的管理。建议由框架自动对参数类型进行管理。
 
-(2)、训练结果存在nan：
+* 训练结果存在nan/inf：
 
 由于FP16可表示的数据动态范围较小（最大65504），首先需要确定组网过程中不要出现将参数乘较大系数情况。如果没有上述问题，可通过官网提供的[check_nan_inf](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/flags/check_nan_inf_cn.html)工具进行初步检查，确定出现nan/inf的op，而后可以尝试将上述op添加到`paddle.amp.autocast()`的自定义黑名单中，使该op使用FP32 kernel进行计算。
 `paddle.amp.auto_cast`使用介绍见[API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/amp/auto_cast_cn.html)。
