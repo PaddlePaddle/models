@@ -4,6 +4,9 @@
 
 - [1. 简介](#1---)
 - [2. Paddle2ONNX功能开发](#2---)
+    - [2.1 环境准备](#2.1---)
+    - [2.2 模型转换](#2.2---)
+    - [2.3 ONNX 预测](#2.3---)
 - [3. FAQ](#3---)
 
 ## 1. 简介
@@ -14,7 +17,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 更多细节可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
 
 ## 2. Paddle2ONNX功能开发
-### 2.1. 环境准备
+### 2.1 环境准备
 
 需要准备 Paddle2ONNX 模型转化环境，和 ONNX 模型预测环境
 
@@ -29,7 +32,13 @@ python3.7 -m pip install paddle2onnx
 python3.7 -m pip install onnxruntime==1.9.0
 ```
 
-### 2.2. 模型转换
+- 下载代码
+```bash
+git clone https://github.com/PaddlePaddle/models.git
+cd models/tutorials/mobilenetv3_prod/Step6
+```
+
+### 2.2 模型转换
 
 
 - Paddle 模型动转静导出
@@ -48,7 +57,7 @@ mobilenetv3_model
      |----inference.pdiparams.info: 模型参数信息文件
 ```
 
-- 模型转换
+- ONNX 模型转换
 
 使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
 
@@ -64,7 +73,7 @@ paddle2onnx --model_dir=./mobilenetv3_model/ \
 执行完毕后，ONNX 模型会被保存在 `./inference/mobilenetv3_model/` 路径下
 
 
-### 2.3. onnx 预测
+### 2.3 ONNX 预测
 
 ONNX模型测试：
 
