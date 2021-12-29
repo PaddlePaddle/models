@@ -1,12 +1,12 @@
-### 5.1 使用Paddle Inference部署
-#### 5.1.1 背景
+### 1 使用Paddle Inference部署
+#### 1.1 背景
 
 Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端，提供高性能的推理能力。相比于直接基于预训练模型进行预测，Paddle Inference可使用MKLDNN、CUDNN、TensorRT进行预测加速，从而实现更优的推理性能。
 
 更多关于Paddle Inference推理引擎的介绍，可以参考Paddle Inference[官网教程](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)。
-#### 5.1.2 模型和环境
+#### 1.2 模型和环境
 ---
-##### 5.1.2.1 准备模型
+##### 1.2.1 准备模型
 训练的模型包括反向传播，在推理时候我们需要将模型进行精简，只保留前向传播的流程即可，将动态模型转化为用于推理的静态图模型。这里我们可以利用`export_model.py`脚本来获取该模型，其他模型可以基于该代码进行修改。
 ```python
 cd tools
@@ -17,13 +17,13 @@ python export_model.py --save-inference-dir=model
 * inference.pdiparams     : 模型参数文件
 * inference.pdmodel       : 模型结构文件
 * inference.pdiparams.info: 模型参数信息文件
-##### 5.1.2.2 准备环境
+##### 1.2.2 准备环境
 1. 如果使用GPU的话，需要自己安转Cuda, Cudnn, TensorRT(不使用tensorRT的话可以不安装,不过建议使用加速)，同时要将每个库的动态库配置好，比如Cuda动态库设置：
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64
 2. 去[官网](https://paddleinference.paddlepaddle.org.cn/user_guides/download_lib.html)下载对应版本的推理框架库,假如我们本地安装的环境是:`Cuda=11.1,Cudnn=8.1,TensorRT=7.2.3.4，Python=3.6`,那么就可以下载whl包到本地，然后pip install **.whl就完成了环境的配置
 
-#### 5.1.3 运行代码
-##### 5.1.3.1整体运行代码
+#### 1.3 运行代码
+##### 1.3.1整体运行代码
 ```python
 import numpy as np
 import argparse
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     result = run(pred, [img])
     print(result)
 ```
-##### 5.1.3.2 运行代码分解
+##### 1.3.2 运行代码分解
 使用 Paddle Inference 开发 Python 预测程序仅需以下五个步骤：
 
 
@@ -170,5 +170,5 @@ output_names = predictor.get_output_names()
 output_handle = predictor.get_output_handle(output_names[0])
 output_data = output_handle.copy_to_cpu() # numpy.ndarray类型
 ```
-#### 5.1.4 常见问题
+#### 1.4 常见问题
 常见问题参考如下[链接](https://paddleinference.paddlepaddle.org.cn/introduction/faq.html)
