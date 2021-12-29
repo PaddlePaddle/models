@@ -28,7 +28,7 @@ Paddle 混合精度训练（Auto Mixed Precision, AMP）是指在训练过程中
 Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
 
 <div align="center">
-    <img src="./images/train_amp_guide.png" width="400">
+    <img src="../images/train_amp_guide.png" width="400">
 </div>
 
 其中设置了2个核验点，分别为
