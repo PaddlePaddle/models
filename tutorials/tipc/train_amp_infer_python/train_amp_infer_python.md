@@ -15,7 +15,7 @@
 
 ## 1. 简介
 
-Paddle 混合精度训练（Auto Mixed Precision, AMP）是指在训练过程中同时使用单精度（FP32）和半精度（FP16），基于NVIDIA GPU推出的提供的Tensor Cores技术，混合精度训练使用FP16和FP32即可达到与使用纯FP32训练相同的准确率，并可加速模型的训练速度。
+Paddle 混合精度训练（Auto Mixed Precision, AMP）是指在训练过程中同时使用单精度（FP32）和半精度（FP16），基于NVIDIA GPU提供的Tensor Cores技术，混合精度训练使用FP16和FP32即可达到与使用纯FP32训练相同的准确率，并可加速模型的训练速度。
 
 更多关于Paddle AMP的介绍，可以参考[Paddle AMP官网教程](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html)。
 
