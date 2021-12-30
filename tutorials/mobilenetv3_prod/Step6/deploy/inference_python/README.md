@@ -71,9 +71,9 @@ predictor = create_predictor(config)
 input_names = predictor.get_input_names()
 input_handle = predictor.get_input_handle(input_names[0])
 
-# 设置输入
-fake_input = np.random.randn(args.batch_size, 3, 318, 318).astype("float32")
-input_handle.reshape([args.batch_size, 3, 318, 318])
+# 设置一个假输入
+fake_input = np.random.randn(args.batch_size, 3, 224, 224).astype("float32")
+input_handle.reshape([args.batch_size, 3, 224, 224])
 input_handle.copy_from_cpu(fake_input)
 ```
 
