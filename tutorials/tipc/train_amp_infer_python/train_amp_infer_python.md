@@ -4,7 +4,7 @@
 
 - [1. 简介](#1)
 - [2. 混合精度训练功能开发](#2)
-    - [2.1 检查混合精度训练环境](#2.1)
+    - [2.1 准备混合精度训练环境](#2.1)
     - [2.2 准备FP32训练模型](#2.2)
     - [2.3 开发混合精度训练程序](#2.3)
     - [2.4 验证混合精度训练正确开启](#2.4)
@@ -33,14 +33,20 @@ Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
 
 其中设置了2个核验点，分别为：
 
-* 检查混合精度训练环境
+* 准备混合精度训练环境
 * 验证混合精度训练正确开启
 
 <a name="2.1"></a>
 
-### 2.1 检查混合精度训练环境
+### 2.1 准备混合精度训练环境
 
 混合精度训练的加速依赖于NVIDIA显卡的Tensor Core，目前Tensor Core仅支持Compute Capability在7.0及其以上的显卡，因此在开发混合精度训练之前，首先检查显卡是否支持混合精度训练，检查方法如下：
+
+- 确定已安装paddle，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
+
+```
+pip install paddlepaddle-gpu==2.2.1.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+```
 
 - 进入python环境，执行如下命令：
 
@@ -200,7 +206,7 @@ MobileNetv3中添加O2混合精度训练如下所示，参考链接：[train.py]
 训练代码执行脚本如下：
 
 ```
-GLOG_v=5 python3.8 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O1
+GLOG_v=5 python3 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O1
 ```
 
 以`conv2d`op为例，打印的部分混合精度训练日志示例如下：
@@ -243,7 +249,7 @@ GLOG_v=5 python3.8 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 -
 训练代码执行脚本如下：
 
 ```
-GLOG_v=5 python3.8 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O2
+GLOG_v=5 python3 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --amp_level=O2
 ```
 
 以`conv2d`op为例，打印的部分混合精度训练日志示例如下：
