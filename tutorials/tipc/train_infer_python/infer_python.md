@@ -177,7 +177,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-该模板类对应mobilenet_v3_small的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
+该模板类对应mobilenet_v3_small的实现位于：[infer.py](https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py)。
 
 其中每个子模块的操作在下面详细介绍。
 
@@ -191,31 +191,33 @@ class InferenceEngine(object):
 
 **【实战】**
 
-针对mobilenet模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
+针对mobilenet_v3_small模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L38
+    # https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py#L48
     def load_predictor(self, model_file_path, params_file_path):
         args = self.args
-        config = inference.Config(model_file_path, params_file_path)
-        if args.use_gpu:
-            config.enable_use_gpu(1000, 0)
-        else:
-            config.disable_gpu()
-            if args.use_mkldnn:
-                config.enable_mkldnn()
-                config.set_cpu_math_library_num_threads(args.cpu_threads)
-
-        # enable memory optim
+        config = Config(model_file_path, params_file_path)
         config.enable_memory_optim()
-        config.disable_glog_info()
-
-        config.switch_use_feed_fetch_ops(False)
-        config.switch_ir_optim(True)
-
-        # create predictor
-        predictor = inference.create_predictor(config)
-
+        if args.use_gpu:
+            config.enable_use_gpu(100, 0)
+            config.enable_tensorrt_engine(workspace_size=1 << 30,
+                                      max_batch_size=10,
+                                      min_subgraph_size=5,
+                                      precision_mode=PrecisionType.Float32,
+                                      use_static=False,
+                                      use_calib_mode=False)
+            config.set_trt_dynamic_shape_info(
+                                      min_input_shape={"input": [1, 3, 1, 1]},
+                                      max_input_shape={"input": [10, 3, 1200, 1200]},
+                                      optim_input_shape={"input": [1, 3, 224, 224]})
+        else:
+            # If not specific mkldnn, you can set the blas thread.
+            # The thread num should not be greater than the number of cores in the CPU.
+            config.set_cpu_math_library_num_threads(4)
+            config.enable_mkldnn()
+        # creat predictor
+        predictor = create_predictor(config)
         # get input and output tensor property
         input_names = predictor.get_input_names()
         input_tensor = predictor.get_input_handle(input_names[0])
@@ -243,7 +245,7 @@ class InferenceEngine(object):
 图像分类mobilenet_v3_small为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L68
+    # https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py#L91
     def preprocess(self, img_path):
         with open(img_path, "rb") as f:
             img = Image.open(f)
@@ -263,7 +265,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-AlexNet的推理引擎运行代码如下所示。
+mobilenet_v3_small的推理引擎运行代码如下所示。
 
 ```py
     def run(self, x):
@@ -284,7 +286,7 @@ AlexNet的推理引擎运行代码如下所示。
 
 **【实战】**
 
-AlexNet的后处理代码如下所示。
+mobilenet_v3_small的后处理代码如下所示。
 
 ```py
     def postprocess(self, x):
@@ -305,35 +307,13 @@ AlexNet的后处理代码如下所示。
 **【实战】**
 
 
-AlexNet中，基于训练引擎的预测方法可以参考：[AlexNet 模型预测](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#43-%E6%A8%A1%E5%9E%8B%E9%A2%84%E6%B5%8B)。结果保存逻辑如下。
+mobilenet_v3_smalll中，基于训练引擎的预测方法可以参考：[mobilenet_v3 模型预测](https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/README.md)。结果保存逻辑如下。
 
 ```python
 if __name__ == "__main__":
     args = get_args()
     class_id, prob = infer_main(args)
-
-    reprod_logger = ReprodLogger()
-    reprod_logger.add("class_id", np.array([class_id]))
-    reprod_logger.add("prob", np.array([prob]))
-    reprod_logger.save("output_inference_engine.npy")
 ```
-
-基于预测引擎的模型推理方法可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#511-%E6%A8%A1%E5%9E%8B%E5%8A%A8%E8%BD%AC%E9%9D%99%E5%AF%BC%E5%87%BA)，结果保存逻辑如下。
-
-```python
-if __name__ == "__main__":
-    args = get_args()
-    class_id, prob = main(args)
-
-    reprod_logger = ReprodLogger()
-    reprod_logger.add("class_id", np.array([class_id]))
-    reprod_logger.add("prob", np.array([prob]))
-    reprod_logger.save("output_training_engine.npy")
-```
-
-**【核验】**
-
-* 基于训练引擎和预测引擎的推理结果相同。参考链接：[check_inference.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/check_inference.py)。
 
 <a name="2.9"></a>
 
@@ -353,7 +333,7 @@ AutoLog是一个自动日志记录工具，包含自动计时，统计CPU内存�
 
 **【实战】**
 
-AlexNet推理脚本中，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
+可以参考AlexNet推理脚本，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
 
 ```py
     # init benchmark
