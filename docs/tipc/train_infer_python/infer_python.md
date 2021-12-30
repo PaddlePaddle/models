@@ -72,7 +72,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 该小节的代码模板位于[export_model.py](./template/code/export_model.py)，您可以基于这段代码进行修改。
 
-具体地，关于mobilenet_v3的导出代码可以参考：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
+具体地，关于AlexNet的导出代码可以参考：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
 
 #### 2.2.1 定义模型
 
