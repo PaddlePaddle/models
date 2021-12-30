@@ -72,7 +72,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 该小节的代码模板位于[export_model.py](./template/code/export_model.py)，您可以基于这段代码进行修改。
 
-具体地，关于AlexNet的导出代码可以参考：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
+具体地，关于mobilenet_v3_small的导出代码可以参考：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 #### 2.2.1 定义模型
 
@@ -86,7 +86,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 **【实战】**
 
-AlexNet中模型定义与组网如下所示，参考链接：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
+mobilenet_v3_small中模型定义与组网如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 ```python
     model = paddlevision.models.__dict__[args.model](
@@ -108,7 +108,7 @@ AlexNet中模型定义与组网如下所示，参考链接：[export_model.py](h
 
 **【实战】**
 
-AlexNet中模型动转静代码如下所示，参考链接：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
+mobilenet_v3_small中模型动转静代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 
 ```python
@@ -132,7 +132,7 @@ AlexNet中模型动转静代码如下所示，参考链接：[export_model.py](h
 
 **【实战】**
 
-AlexNet中模型保存代码如下所示，参考链接：[export_model.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/tools/export_model.py)。
+mobilenet_v3_small中模型保存代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 ```python
     paddle.jit.save(model, os.path.join(args.save_inference_dir, "inference"))
@@ -177,7 +177,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-该模板类对应AlexNet的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
+该模板类对应mobilenet_v3_small的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
 
 其中每个子模块的操作在下面详细介绍。
 
@@ -191,7 +191,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-针对AlexNet模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
+针对mobilenet模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
 
 ```py
     # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L38
@@ -240,7 +240,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-图像分类AlexNet为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
+图像分类mobilenet_v3_small为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
 
 ```py
     # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L68
