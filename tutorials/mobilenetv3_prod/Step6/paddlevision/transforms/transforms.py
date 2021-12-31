@@ -17,8 +17,13 @@ from . import functional as F
 from .functional import InterpolationMode, _interpolation_modes_from_int
 
 __all__ = [
-    "Compose", "ToTensor", "Normalize", "Resize", "CenterCrop",
-    "RandomResizedCrop", "RandomHorizontalFlip"
+    "Compose",
+    "ToTensor",
+    "Normalize",
+    "Resize",
+    "CenterCrop",
+    "RandomResizedCrop",
+    "RandomHorizontalFlip",
 ]
 
 
