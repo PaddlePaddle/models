@@ -72,7 +72,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 该小节的代码模板位于[export_model.py](./template/code/export_model.py)，您可以基于这段代码进行修改。
 
-具体地，关于mobilenet_v3_small的导出代码可以参考：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
+具体地，关于mobilenet_v3_small的导出代码可以参考：[export_model.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 #### 2.2.1 定义模型
 
@@ -86,7 +86,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 **【实战】**
 
-mobilenet_v3_small中模型定义与组网如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
+mobilenet_v3_small中模型定义与组网如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 ```python
     model = paddlevision.models.__dict__[args.model](
@@ -108,7 +108,7 @@ mobilenet_v3_small中模型定义与组网如下所示，参考链接：[export_
 
 **【实战】**
 
-mobilenet_v3_small中模型动转静代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
+mobilenet_v3_small中模型动转静代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 
 ```python
@@ -132,7 +132,7 @@ mobilenet_v3_small中模型动转静代码如下所示，参考链接：[export_
 
 **【实战】**
 
-mobilenet_v3_small中模型保存代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/79e14a5935372af1848921c4e12122f0b94c5a50/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
+mobilenet_v3_small中模型保存代码如下所示，参考链接：[export_model.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/tools/export_model.py)。
 
 ```python
     paddle.jit.save(model, os.path.join(args.save_inference_dir, "inference"))
@@ -177,7 +177,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-该模板类对应mobilenet_v3_small的实现位于：[infer.py](https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py)。
+该模板类对应mobilenet_v3_small的实现位于：[infer.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py)。
 
 其中每个子模块的操作在下面详细介绍。
 
@@ -194,7 +194,7 @@ class InferenceEngine(object):
 针对mobilenet_v3_small模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
 
 ```py
-    # https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py#L48
+    # https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py
     def load_predictor(self, model_file_path, params_file_path):
         args = self.args
         config = Config(model_file_path, params_file_path)
@@ -245,7 +245,7 @@ class InferenceEngine(object):
 图像分类mobilenet_v3_small为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
 
 ```py
-    # https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py#L91
+    # https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py
     def preprocess(self, img_path):
         with open(img_path, "rb") as f:
             img = Image.open(f)
@@ -307,7 +307,7 @@ mobilenet_v3_small的后处理代码如下所示。
 **【实战】**
 
 
-mobilenet_v3_smalll中，基于训练引擎的预测方法可以参考：[mobilenet_v3 模型预测](https://github.com/PaddlePaddle/models/blob/ac5589769953bbb4231014061c9a71ecab511491/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/README.md)。结果保存逻辑如下。
+mobilenet_v3_smalll中，基于训练引擎的预测方法可以参考：[mobilenet_v3 模型预测](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/README.md)。结果保存逻辑如下。
 
 ```python
 if __name__ == "__main__":
@@ -333,7 +333,7 @@ AutoLog是一个自动日志记录工具，包含自动计时，统计CPU内存�
 
 **【实战】**
 
-可以参考molinet_v3_small推理脚本，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py]()。
+可以参考molinet_v3_small推理脚本，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/infer.py)。
 
 ```py
     # init benchmark
