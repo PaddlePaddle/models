@@ -32,6 +32,9 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 使用下面的命令完成`mobilenet_v3_net`模型的动转静导出。
 
 ```bash
+#下载预训练好的参数
+wget https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams
+#生成推理模型
 python tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --save-inference-dir="./mobilenet_v3_small_infer" --model=mobilenet_v3_small
 ```
 
