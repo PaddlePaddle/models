@@ -50,7 +50,7 @@ MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为
 
 | 模型      | top1/5 acc (参考精度) | top1/5 acc (复现精度) | 下载链接 |
 |:---------:|:------:|:----------:|:----------:|
-| Mo | -/-   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型(coming soon!)]() \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
+| Mo | -/-   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar) \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
 
 <a name="3"></a>
 
@@ -157,6 +157,8 @@ python3 train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
 [Epoch 1, iter: 4790] top1: 0.08750, top5: 0.24531, lr: 0.01000, loss: 5.28853, avg_reader_cost: 0.05164 sec, avg_batch_cost: 0.06852 sec, avg_samples: 64.0, avg_ips: 934.08427 images/sec.
 ```
 
+DCU运行需要设置环境变量 `export HIP_VISIBLE_DEVICES=0`，启动命令与Linux GPU完全相同。
+
 * 单机多卡训练
 
 ```bash
@@ -165,6 +167,8 @@ python3 -m paddle.distributed.launch --gpus="0,1,2,3" train.py --data-path="./IL
 ```
 
 更多配置参数可以参考[train.py](./train.py)的`get_args_parser`函数。
+
+DCU运行需要设置环境变量 `export HIP_VISIBLE_DEVICES=0,1,2,3`，启动命令与Linux GPU完全相同。
 
 <a name="4.2"></a>
 
