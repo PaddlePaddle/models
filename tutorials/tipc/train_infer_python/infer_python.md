@@ -333,7 +333,7 @@ AutoLog是一个自动日志记录工具，包含自动计时，统计CPU内存�
 
 **【实战】**
 
-可以参考AlexNet推理脚本，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
+可以参考molinet_v3_small推理脚本，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py]()。
 
 ```py
     # init benchmark
@@ -373,34 +373,34 @@ AutoLog是一个自动日志记录工具，包含自动计时，统计CPU内存�
 使用AutoLog打印出的日志demo如下所示。
 
 ```
-[2021/12/14 10:57:28] root INFO:
-[2021/12/14 10:57:28] root INFO: ---------------------- Env info ----------------------
-[2021/12/14 10:57:28] root INFO:  OS_version: Ubuntu 16.04
-[2021/12/14 10:57:28] root INFO:  CUDA_version: 10.2.89
-[2021/12/14 10:57:28] root INFO:  CUDNN_version: 7.6.5
-[2021/12/14 10:57:28] root INFO:  drivier_version: 440.33.01
-[2021/12/14 10:57:28] root INFO: ---------------------- Paddle info ----------------------
-[2021/12/14 10:57:28] root INFO:  paddle_version: 0.0.0
-[2021/12/14 10:57:28] root INFO:  paddle_commit: aff7397bbf2290c8cdff2e2b2202cbb286d3ae93
-[2021/12/14 10:57:28] root INFO:  log_api_version: 1.0
-[2021/12/14 10:57:28] root INFO: ----------------------- Conf info -----------------------
-[2021/12/14 10:57:28] root INFO:  runtime_device: cpu
-[2021/12/14 10:57:28] root INFO:  ir_optim: True
-[2021/12/14 10:57:28] root INFO:  enable_memory_optim: True
-[2021/12/14 10:57:28] root INFO:  enable_tensorrt: False
-[2021/12/14 10:57:28] root INFO:  enable_mkldnn: False
-[2021/12/14 10:57:28] root INFO:  cpu_math_library_num_threads: 1
-[2021/12/14 10:57:28] root INFO: ----------------------- Model info ----------------------
-[2021/12/14 10:57:28] root INFO:  model_name: classification
-[2021/12/14 10:57:28] root INFO:  precision: fp32
-[2021/12/14 10:57:28] root INFO: ----------------------- Data info -----------------------
-[2021/12/14 10:57:28] root INFO:  batch_size: 1
-[2021/12/14 10:57:28] root INFO:  input_shape: dynamic
-[2021/12/14 10:57:28] root INFO:  data_num: 1
-[2021/12/14 10:57:28] root INFO: ----------------------- Perf info -----------------------
-[2021/12/14 10:57:28] root INFO:  cpu_rss(MB): 717.3633, gpu_rss(MB): None, gpu_util: None%
-[2021/12/14 10:57:28] root INFO:  total time spent(s): 0.3135
-[2021/12/14 10:57:28] root INFO:  preprocess_time(ms): 47.2865, inference_time(ms): 266.1366, postprocess_time(ms): 0.061
+[2021/12/31 04:12:11] root INFO: ---------------------- Env info ----------------------
+[2021/12/31 04:12:11] root INFO:  OS_version: CentOS Linux 7
+[2021/12/31 04:12:11] root INFO:  CUDA_version: 11.1.105
+Build cuda_11.1.TC455_06.29190527_0
+[2021/12/31 04:12:11] root INFO:  CUDNN_version: None.None.None
+[2021/12/31 04:12:11] root INFO:  drivier_version: 460.32.03
+[2021/12/31 04:12:11] root INFO: ---------------------- Paddle info ----------------------
+[2021/12/31 04:12:11] root INFO:  paddle_version: 2.2.1
+[2021/12/31 04:12:11] root INFO:  paddle_commit: a5cf2e305b744e3ebd2f2210341f88d349d4ec5e
+[2021/12/31 04:12:11] root INFO:  log_api_version: 1.0
+[2021/12/31 04:12:11] root INFO: ----------------------- Conf info -----------------------
+[2021/12/31 04:12:11] root INFO:  runtime_device: cpu
+[2021/12/31 04:12:11] root INFO:  ir_optim: True
+[2021/12/31 04:12:11] root INFO:  enable_memory_optim: True
+[2021/12/31 04:12:11] root INFO:  enable_tensorrt: False
+[2021/12/31 04:12:11] root INFO:  enable_mkldnn: False
+[2021/12/31 04:12:11] root INFO:  cpu_math_library_num_threads: 1
+[2021/12/31 04:12:11] root INFO: ----------------------- Model info ----------------------
+[2021/12/31 04:12:11] root INFO:  model_name: classification
+[2021/12/31 04:12:11] root INFO:  precision: fp32
+[2021/12/31 04:12:11] root INFO: ----------------------- Data info -----------------------
+[2021/12/31 04:12:11] root INFO:  batch_size: 1
+[2021/12/31 04:12:11] root INFO:  input_shape: dynamic
+[2021/12/31 04:12:11] root INFO:  data_num: 1
+[2021/12/31 04:12:11] root INFO: ----------------------- Perf info -----------------------
+[2021/12/31 04:12:11] root INFO:  cpu_rss(MB): 303.7695, gpu_rss(MB): None, gpu_util: None%
+[2021/12/31 04:12:11] root INFO:  total time spent(s): 0.0682
+[2021/12/31 04:12:11] root INFO:  preprocess_time(ms): 18.0321, inference_time(ms): 50.0889, postprocess_time(ms): 0.0579
 ```
 
 <a name="3"></a>
