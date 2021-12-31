@@ -23,9 +23,14 @@ import sys
 import argparse
 import math
 
+sys.path[0] = os.path.join(
+    os.path.dirname("__file__"), os.path.pardir, os.path.pardir)
+
 import paddle
 import paddle.inference as paddle_infer
-from post_quant import ImageNetValDataset
+
+from presets import ClassificationPresetEval
+import paddlevision
 
 
 def eval():
@@ -46,7 +51,12 @@ def eval():
     output_handle = predictor.get_output_handle(output_names[0])
 
     # prepare data
-    val_dataset = ImageNetValDataset(FLAGS.data_dir)
+    resize_size, crop_size = (256, 224)
+    val_dataset = paddlevision.datasets.ImageFolder(
+        os.path.join(FLAGS.data_dir, 'val'),
+        ClassificationPresetEval(
+            crop_size=crop_size, resize_size=resize_size))
+
     eval_loader = paddle.io.DataLoader(
         val_dataset, batch_size=FLAGS.batch_size, num_workers=5)
 

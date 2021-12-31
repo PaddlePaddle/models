@@ -5,7 +5,7 @@
 
 - [1. 简介](#1)
 - [2. 离线量化](#2)
-    - [2.1 准备Inference模型](#2.1)
+    - [2.1 准备Inference模型及环境](#2.1)
     - [2.2 开始离线量化](#2.2)
     - [2.3 验证推理结果](#2.3)
 - [3. FAQ](#3)
@@ -28,7 +28,7 @@ Paddle中静态离线量化，使用少量校准数据计算量化因子，可�
 
 <a name="2.1"></a>
 
-### 2.1 准备Inference模型
+### 2.1 准备Inference模型及环境
 
 由于离线量化直接使用Inference模型进行量化，不依赖模型组网，所以需要提前准备好Inference模型.
 我们准备好了动转静后的MobileNetv3 small的Inference模型，可以从[mobilenet_v3_small_infer](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar)直接下载。
@@ -42,6 +42,22 @@ tar -xf mobilenet_v3_small_infer.tar
 
 <a name="2.2"></a>
 
+环境准备：
+
+- 安装PaddleSlim：
+```shell
+pip install paddleslim==2.2.1
+```
+
+- 安装PaddlePaddle：
+```shell
+pip install paddlepaddle-gpu==2.2.1.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+```
+
+- 准备数据：
+
+请参考[数据准备文档](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6#32-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE)。
+
 ### 2.2 开始离线量化
 
 启动离线量化：
@@ -50,10 +66,10 @@ tar -xf mobilenet_v3_small_infer.tar
 python post_quant.py --model_path=mobilenet_v3_small_infer/ \
             --model_filename=inference.pdmodel \
             --params_filename=inference.pdiparams  \
-            --data=/path/dataset/ILSVRC2012/ \
+            --data_dir=/path/dataset/ILSVRC2012/ \
             --use_gpu=True \
             --batch_size=32 \
-            --batch_num=10
+            --batch_num=20
 ```
 
 部分离线量化日志如下：
@@ -78,6 +94,23 @@ Thu Dec 30 12:39:49-INFO: The quantized model is saved in output/mv3_int8_infer
 <a name="2.3"></a>
 
 ### 2.3 验证推理结果
+
+- 量化推理模型重新命名：
+
+需要将`__model__`重命名为`inference.pdmodel`，将`__params__`重命名为`inference.pdiparams`。
+
+正确的命名如下：
+```shell
+output/mv3_int8_infer/
+    |----inference.pdiparams     : 模型参数文件(原__params__文件)
+    |----inference.pdmodel       : 模型结构文件(原__model__文件)
+```
+
+- 使用Paddle Inference测试模型推理结果是否正确：
+
+具体测试流程请参考[Inference推理文档](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_python/README.md)
+
+如果您希望验证量化模型的在全量验证集上的精度，也可以按照下面的步骤进行操作:
 
 使用如下命令验证MobileNetv3 small模型的精度：
 
@@ -121,18 +154,18 @@ python eval.py --model_path=output/mv3_int8_infer/ \
 量化后模型精度验证日志如下：
 
 ```
-batch_id 300, acc1 0.546, acc5 0.786, avg time 0.00005 sec/img
-batch_id 310, acc1 0.546, acc5 0.787, avg time 0.00005 sec/img
-batch_id 320, acc1 0.546, acc5 0.786, avg time 0.00005 sec/img
-batch_id 330, acc1 0.546, acc5 0.786, avg time 0.00005 sec/img
-batch_id 340, acc1 0.546, acc5 0.786, avg time 0.00005 sec/img
-batch_id 350, acc1 0.546, acc5 0.786, avg time 0.00005 sec/img
-batch_id 360, acc1 0.547, acc5 0.786, avg time 0.00005 sec/img
-batch_id 370, acc1 0.547, acc5 0.786, avg time 0.00005 sec/img
-batch_id 380, acc1 0.547, acc5 0.786, avg time 0.00005 sec/img
-batch_id 390, acc1 0.547, acc5 0.786, avg time 0.00005 sec/img
+batch_id 300, acc1 0.564, acc5 0.800, avg time 0.00006 sec/img
+batch_id 310, acc1 0.562, acc5 0.798, avg time 0.00006 sec/img
+batch_id 320, acc1 0.560, acc5 0.796, avg time 0.00006 sec/img
+batch_id 330, acc1 0.556, acc5 0.792, avg time 0.00006 sec/img
+batch_id 340, acc1 0.554, acc5 0.792, avg time 0.00006 sec/img
+batch_id 350, acc1 0.552, acc5 0.790, avg time 0.00006 sec/img
+batch_id 360, acc1 0.550, acc5 0.789, avg time 0.00006 sec/img
+batch_id 370, acc1 0.551, acc5 0.789, avg time 0.00006 sec/img
+batch_id 380, acc1 0.551, acc5 0.789, avg time 0.00006 sec/img
+batch_id 390, acc1 0.553, acc5 0.790, avg time 0.00006 sec/img
 End test: test image 50000.0
-test_acc1 0.5470, test_acc5 0.7857, avg time 0.00005 sec/img
+test_acc1 0.5530, test_acc5 0.7905, avg time 0.00006 sec/img
 ```
 
 <a name="3"></a>
