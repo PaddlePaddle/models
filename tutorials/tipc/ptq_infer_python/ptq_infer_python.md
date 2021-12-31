@@ -42,13 +42,9 @@ Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
 
 **【准备校准数据】**
 
-将``ImageNet``数据集解压在``data``文件夹下，解压后``data/ILSVRC2012``文件夹下应包含以下文件：
-- ``'train'``文件夹，训练图片
-- ``'train_list.txt'``文件
-- ``'val'``文件夹，验证图片
-- ``'val_list.txt'``文件
+由于离线量化需要获得网络预测的每层的scale值，用来做数值范围的映射，所以需要适量的数据执行网络前向，故需要事先准备好校准数据集。
 
-选择适量训练集或验证集
+以ImageNet1k数据集为例，可参考[数据准备文档](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6#32-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE)。
 
 **【准备开发环境】**
 
@@ -66,7 +62,7 @@ pip install paddleslim==2.2.1
 
 **【基本流程】**
 
-在飞桨框架中，使用AMP-O1训练训练，需要在FP32代码的基础上改动三处：
+准备推理模型分为三步：
 
 - Step1：定义继承自`paddle.nn.Layer`的网络模型
 
@@ -103,11 +99,10 @@ paddle.jit.save(fp32_model, fp32_output_model_path, [input_spec])
 
 基于PaddleSlim，使用接口``paddleslim.quant.quant_post_static``对模型进行离线量化：
 
-- Step1：定义`sample_generator`，传入reader，用来遍历校准数据集
+- Step1：定义`sample_generator`，传入paddle.io.Dataloader实例化对象，用来遍历校准数据集
 
-- Step2：定义Executor，用来执行离线量化校准执行
+- Step2：定义Executor，由于离线量化模型是Inference模型，量化校准过程也需要在静态图下执行，所以需要定义静态图Executor，用来执行离线量化校准执行
 
-- Step3：在训练代码中使用Step1中定义的`GradScaler`完成loss的缩放，用缩放后的loss进行反向传播，完成训练
 
 **【实战】**
 
@@ -143,33 +138,34 @@ exe = paddle.static.Executor(place)
 使用飞桨PaddleSlim中的`quant_post_static`接口开始进行离线量化：
 
 - Step1：导入`quant_post_static`接口
+```python
+from paddleslim.quant import quant_post_static
+```
 
 - Step2：配置传入`quant_post_static`接口参数，开始离线量化
 
-- Step2：检查输出结果，确保离线量化后生成`__model__`和`__params__`文件。
-
-
-**【实战】**
-
-选择合适的离线量化方法，比如`KL`、`hist`、`mse`等，具体离线量化方法选择可以参考API文档：[quant_post_static API文档](https://github.com/PaddlePaddle/PaddleSlim/blob/develop/docs/zh_cn/api_cn/static/quant/quantization_api.rst#quant_post_static)。
-
-开始离线量化：
-
 ```python
-from paddleslim.quant import quant_post_static
 fp32_model_dir = 'mv3_fp32_infer'
 quant_output_dir = 'quant_model'
 quant_post_static(
         executor=exe,
-        model_dir=fp32_model_dir,
-        quantize_model_path=quant_output_dir,
-        sample_generator=sample_generator(data_loader),
-        model_filename='model.pdmodel',
-        params_filename='model.pdiparams',
-        batch_size=32,
-        batch_nums=10,
-        algo='KL')
+	model_dir=fp32_model_dir,
+	quantize_model_path=quant_output_dir,
+	sample_generator=sample_generator(data_loader),
+	model_filename='model.pdmodel',
+	params_filename='model.pdiparams',
+	batch_size=32,
+	batch_nums=10,
+	algo='KL')
 ```
+
+- Step3：检查输出结果，确保离线量化后生成`__model__`和`__params__`文件。
+
+
+**【实战】**
+
+开始离线量化，具体可参考MobileNetv3[离线量化代码](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/ptq_python/post_quant.py)。
+
 
 <a name="2.5"></a>
 
@@ -180,17 +176,6 @@ quant_post_static(
 使用Paddle Inference库测试离线量化模型，确保模型精度符合预期。
 
 - Step1：初始化`paddle.inference`库并配置相应参数
-
-- Step2：配置传入`quant_post_static`接口参数，开始离线量化
-
-- Step2：检查输出结果，确保离线量化后生成`__model__`和`__params__`文件。
-
-
-**【实战】**
-
-选择合适的离线量化方法，比如`KL`、`hist`、`mse`等，具体离线量化方法选择可以参考API文档：[quant_post_static API文档](https://github.com/PaddlePaddle/PaddleSlim/blob/develop/docs/zh_cn/api_cn/static/quant/quantization_api.rst#quant_post_static)。
-
-1）初始化`paddle.inference`库并配置相应参数：
 
 ```python
 import paddle.inference as paddle_infer
@@ -205,8 +190,9 @@ if not FLAGS.ir_optim:
 predictor = paddle_infer.create_predictor(config)
 ```
 
-2）配置预测库输入输出：
+- Step2：配置预测库输入输出
 
+```python
 ```python
 input_names = predictor.get_input_names()
 input_handle = predictor.get_input_handle(input_names[0])
@@ -214,18 +200,41 @@ output_names = predictor.get_output_names()
 output_handle = predictor.get_output_handle(output_names[0])
 ```
 
-3）开始预测：
+- Step3：开始预测并检验结果正确性
 
+```python
 ```python
 input_handle.copy_from_cpu(img_np)
 predictor.run()
  output_data = output_handle.copy_to_cpu()
 ```
 
-4）同时测试量化模型和FP32模型的精度，确保量化后模型精度损失符合预期。
+**【实战】**
+
+
+1）初始化`paddle.inference`库并配置相应参数：
+
+具体可以参考MobileNetv3 [Inference模型测试代码](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/ptq_python/eval.py)
+
+2）配置预测库输入输出：
+
+具体可以参考MobileNetv3 [Inference模型测试代码](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/ptq_python/eval.py)
+
+3）开始预测：
+
+具体可以参考MobileNetv3 [Inference模型测试代码](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/ptq_python/eval.py)
+
+4）测试单张图像预测结果是否正确，可参考[Inference预测文档](https://github.com/PaddlePaddle/models/blob/release/2.2/docs/tipc/train_infer_python/infer_python.md)
+
+5）同时也可以测试量化模型和FP32模型的精度，确保量化后模型精度损失符合预期。参考[MobileNet量化模型精度验证文档](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/ptq_python/README.md)
 
 <a name="3"></a>
 
 ## 3. FAQ
 
 如果您在使用该文档完成离线量化的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/PaddleSlim/issues)提一个ISSUE，我们会高优跟进。
+
+## 3.1 通用问题
+
+- 如何选择离线量化方法？
+选择合适的离线量化方法，比如`KL`、`hist`、`mse`等，具体离线量化方法选择可以参考API文档：[quant_post_static API文档](https://github.com/PaddlePaddle/PaddleSlim/blob/develop/docs/zh_cn/api_cn/static/quant/quantization_api.rst#quant_post_static)。
