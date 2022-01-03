@@ -1,7 +1,6 @@
 # 论文复现指南-CV方向
 
 > 本文为针对 `CV` 方向的复现指南
-[todo]
 > 如果希望查阅 `NLP` 方向的复现指南，可以参考：[NLP方向论文复现指南](./ArticleReproduction_NLP.md)
 >
 > 如果希望查阅 `推荐` 方向的复现指南，可以参考：[推荐方向论文复现指南](./ArticleReproduction_REC.md)
@@ -54,11 +53,11 @@
 * 数据准备：
     1. 下载好训练/验证数据集：用于模型训练与评估。
     2. 了解该模型输入输出格式：以Mobilenet V3图像分类任务为例，通过阅读论文与参考代码，了解到模型输入为`[batch_size, 3, 224, 244]`的tensor，类型为`float32`或者`float16`，label为`[batch, ]`的label，类型为`int64`。
-    3. 准备fake input data以及label：通过运行fake data生成的参考代码：[utilities.py](todo)，生成和模型输入shape、type等保持一致的伪数据，并保存在本地，用于后续模型前反向对齐，这样的方式能帮助我们将模型结构对齐和数据对齐解耦，更为方便地排查问题。
+    3. 准备fake input data以及label：通过运行生成fake data的参考代码：[mobilenetv3_prod/Step1-5/utilities.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/utilities.py)，生成和模型输入shape、type等保持一致的伪数据，并保存在本地，用于后续模型前反向对齐。这样的方式能帮助我们将模型结构对齐和数据对齐解耦，更为方便地排查问题。
 * 运行参考代码：在特定设备(CPU/GPU)上，跑通**参考代码**的预测过程(前向)以及至少2轮(iteration)迭代过程，用于生成和复现代码进行对比的结果。
 * 代码格式：
     * 将复现代码和参考代码分为两个文件夹管理、并在同级目录下书写测试代码用于生成测试结果、 测试结果保留在result文件夹下。
-    * 在核验通过之后，需要删除打卡日志和参考代码，形成最终的干净的复现代码。代码结构可以参考[MobilenetV3-Reprod代码](todo)，同时我们后续的指南也基于MobilenetV3-Reprod代码进行说明。
+    * 在核验通过之后，需要删除打卡日志和参考代码，形成最终的干净的复现代码。代码的目录结构可以参考[mobilenetv3_prod/Step1-5](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step1-5)，我们后续的指南也将基于这部分代码进行说明。
 
 <a name="2"></a>
 ## 2. 整体框图
@@ -75,6 +74,7 @@
 总共包含11个步骤。为了高效复现论文，设置了6个核验点。如上图中黄色框所示。后续章节会详细介绍上述步骤和核验点，具体内容安排如下：
 
 * 第3章：介绍11个复现步骤的理论知识、实战以及核验流程、并对应说明常见问题。常见问题中找不到答案的，欢迎找对应方向RD咨询或者在[这里](https://github.com/PaddlePaddle/Paddle/issues/new/choose)提ISSUE进行讨论。
+* 第4章：对论文复现中的通用问题进行解答。
 
 <a name="2.2"></a>
 
@@ -84,10 +84,10 @@
 #### 2.2.1 reprod_log工具简介
 `reprod_log`是用于论文复现赛中辅助自查和核验工具。查看它的[源代码](https://github.com/WenmuZhou/reprod_log)能对它有个更全面理解。我们常用的功能如下：
 
-* 存取指定节点的输入输出tensor
-* 基于文件的tensor读写
-* 2个字典的对比验证
-* 对比结果的输出与记录
+* 存取指定节点的输入输出tensor；
+* 基于文件的tensor读写；
+* 2个字典的对比验证；
+* 对比结果的输出与记录；
 
 更多API与使用方法可以参考：[reprod_log API使用说明](https://github.com/WenmuZhou/reprod_log/blob/master/README.md)。
 
@@ -134,8 +134,6 @@ result
 ├── loss_ref.npy       # 与loss_paddle.npy作为一并核查的文件对
 ├── losses_paddle.npy
 ├── losses_ref.npy   # 与losses_paddle.npy作为一并核查的文件对
-├── train_align_paddle.npy
-├── train_align_benchmark.npy # PaddlePaddle提供的参考评估指标
 ```
 
 基于reprod_log的`ReprodDiffHelper`模块，产出下面5个日志文件。
@@ -147,13 +145,9 @@ log
 ├── metric_diff.log      # metric_paddle.npy与metric_torch.npy生成的diff结果文件
 ├── loss_diff.log          # loss_paddle.npy与loss_torch.npy生成的diff结果文件
 ├── backward_diff.log    # losses_paddle.npy与losses_torch.npy生成的diff结果文件
-├── train_align_diff.log # train_align_paddle.npy与train_align_benchmark.npy生成的diff结果文件
 ```
 
-上述文件的生成代码可以参考我们的[MobilenetV3-Reprod 代码](todo)进行开发，核验时需要提供`log`下所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
-
-MobilenetV3-Reprod项目提供了基于reprod_log的前5个核验点对齐核验示例，参考代码地址为：[MobilenetV3-Reprod 代码](todo)，项目的README.md文档提供了使用说明。
-
+上述文件的生成代码可以参考我们的[mobilenetv3_prod/Step1-5](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step1-5)进行开发，其中包含了基于 reprod_log 的前5个核验点对齐核验示例，以及使用说明README.md文档。在核验时需要提供[mobilenetv3_prod/Step1-5/result/log](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step1-5/result/log)下所有文件（不需要提供产生这些文件的可运行程序）以及完整的模型训练评估程序和日志。
 
 <a name="3"></a>
 ## 3. 论文复现理论知识及实战
@@ -163,9 +157,9 @@ MobilenetV3-Reprod项目提供了基于reprod_log的前5个核验点对齐核验
 
 对齐模型结构时，一般有3个主要步骤：
 
-* 网络结构代码转换
-* 权重转换
-* 模型组网正确性验证
+* 网络结构代码转换；
+* 权重转换；
+* 模型组网正确性验证；
 
 下面详细介绍这3个部分。
 
@@ -181,9 +175,9 @@ MobilenetV3-Reprod项目提供了基于reprod_log的前5个核验点对齐核验
 
 **【实战】**
 
-MobilnetV3网络结构的PyTorch实现: [mobilenetv3-pytorch](TODO)
+MobilnetV3网络结构的PyTorch实现: [mobilenetv3_prod/Step1-5/mobilenetv3_ref/torchvision/models/mobilenet_v3_torch.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/mobilenetv3_ref/torchvision/models/mobilenet_v3_torch.py)
 
-对应转换后的PaddlePaddle实现: [mobilenetv3-paddle](TODO)
+对应转换后的PaddlePaddle实现: [mobilenetv3_prod/Step1-5/mobilenetv3_paddle/paddlevision/models/mobilenet_v3_paddle.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/mobilenetv3_paddle/paddlevision/models/mobilenet_v3_paddle.py)
 
 **【FAQ】**
 
@@ -208,20 +202,21 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3-pytorch](TODO)
           ```
 
         * 如果不确定自己安装的是否是最新版本，可以进入[这里](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html)下载对应的包并查看时间戳。
-- 有什么其他torch 的API是可以用paddle中API实现的呢？
+
+- 有什么其他没有在映射表中的torch API是可以用paddle中API实现的呢？
 
     有的，例如：
      * `torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
      * `pack_padded_sequence`和`pad_packed_sequence`这两个API目前PaddlePaddle中没有实现，可以直接在RNN或者LSTM的输入中传入`sequence_length`来实现等价的功能。
 
-- 为什么`nn.AvgPool2D` 存在不能对齐的问题？
+- 为什么`nn.AvgPool2D` 会存在不能对齐的问题？
     * [`paddle.nn.AvgPool2D`](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/AvgPool2D_cn.html#avgpool2d)需要将 `exclusive` 参数设为 `False` ，结果才能 PyTorch 的默认行为一致。
 
 #### 3.1.2 权重转换
 
 **【基本流程】**
 
-组网代码转换完成之后，需要对模型权重进行转换，如果PyTorch repo中已经提供权重，那么可以直接下载并进行后续的转换；如果没有提供，则可以基于PyTorch代码，随机生成一个初始化权重(定义完model以后，使用`torch.save()` API保存模型权重)，然后进行权重转换。
+组网代码转换完成之后，需要对模型权重进行转换。如果PyTorch repo中已经提供权重，那么可以直接下载并进行后续的转换；如果没有提供，则可以基于PyTorch代码，随机生成一个初始化权重(定义完model以后，使用`torch.save()` API保存模型权重)，然后进行权重转换。
 
 **【注意事项】**
 
@@ -268,10 +263,10 @@ if __name__ == "__main__":
 
 **【FAQ】**
 
-- 权重转换过程中，torch 和 Paddle 有什么不同的参数需要注意么？
+- 权重转换过程中，torch 和 Paddle 有什么参数存在不同点是需要注意么？
 
     有的，主要是这两个参数存在差异：
-     1.  `nn.Linear` 层的weight参数：PaddlePaddle与PyTorch的参数存在互为转置的关系，因此在转换时需要进行转置，示例代码可以参考[Mobilenetv3 权重转换脚本](todo)。有时会遇到线性层被命名为conv的情况，但是我们依旧需要进行转置。
+     1.  `nn.Linear` 层的weight参数：PaddlePaddle与PyTorch的参数存在互为转置的关系，因此在转换时需要进行转置，这可以参考上述的torch2paddle函数。有时还会遇到线性层被命名为conv的情况，但是我们依旧需要进行转置。
      2. `nn.BatchNorm2D` 参数：这个API在paddle中包含4个参数`weight`, `bias`, `_mean`, `_variance`，torch.nn.BatchNorm2d包含5个参数`weight`,  `bias`, `running_mean`, `running_var`, `num_batches_tracked`。 其中，`num_batches_tracked`在PaddlePaddle中没有用到，剩下4个的对应关系为
          * `weight` -> `weight`
          * `bias` -> `bias`
@@ -282,10 +277,9 @@ if __name__ == "__main__":
 #### 3.1.3 模型组网正确性验证
 
 **【基本流程】**
-
 1. 定义PyTorch模型，加载权重，固定seed，基于numpy生成随机数，转换为PyTorch可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
 2. 定义PaddlePaddle模型，加载权重，固定seed，基于numpy生成随机数，转换为PaddlePaddle可以处理的tensor，送入网络，获取输出，使用reprod_log保存结果。
-3. 使用reprod_log排查diff，小于阈值，即可完成自测。
+3. 使用reprod_log检查两个 tensor 的diff，小于阈值，即可完成自测。
 
 **【注意事项】**
 
@@ -296,7 +290,7 @@ if __name__ == "__main__":
 
 **【实战】**
 
-Mobilenetv3模型组网正确性验证可以参考[示例代码]()。
+Mobilenetv3模型组网正确性验证可以参考[mobilenetv3_prod/Step1-5/01_test_forward.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/01_test_forward.py)。
 
 **【核验】**
 
@@ -315,13 +309,13 @@ Mobilenetv3模型组网正确性验证可以参考[示例代码]()。
 
 **【FAQ】**
 
-1. 在复杂的网络结构中，前向结果对不齐怎么办？
+- 在复杂的网络结构中，前向结果对不齐怎么办？
 
-    可以按照模块排查问题，比如依次获取backbone、neck、head输出等，看下问题具体出现在哪个子模块，再进到子模块详细排查。
+    * 可以按照模块排查问题，比如依次获取backbone、neck、head输出等，看下问题具体出现在哪个子模块，再进到子模块详细排查。
 
-2. PaddlePaddle 已经有了对于经典模型结构的实现，我还要重新实现一遍么？
+- PaddlePaddle 已经有了对于经典模型结构的实现，我还要重新实现一遍么？
 
-    这里建议自己根据PyTorch代码重新实现一遍，一方面是对整体的模型结构更加熟悉，另一方面也保证模型结构和权重完全对齐。
+    * 这里建议自己根据PyTorch代码重新实现一遍，一方面是对整体的模型结构更加熟悉，另一方面也保证模型结构和权重完全对齐。
 
 <a name="3.2"></a>
 ### 3.2 准备小数据集，验证集数据读取对齐
@@ -332,22 +326,21 @@ PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，使用该接口可�
 
 复现完Dataset之后，可以使用`paddle.io.DataLoader`，构建Dataloader，对数据进行组batch、批处理，送进网络进行计算。
 
-为后续的快速验证(训练/评估/预测)，建议准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
+为后续的快速验证(训练/评估/预测)，建议准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下，如若使用imagenet，可以使用我们自带的[lite_data.tar](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/test_images/lite_data.tar)，并解压于Step1-5/lite_data下。
 
 **【注意事项】**
 
 对于一个数据集，一般有以下一些信息需要重点关注：
 
-* 数据集名称、下载地址
-* 训练集/验证集/测试集图像数量、类别数量、分辨率等
-* 数据集标注格式、标注信息
-* 数据集通用的预处理方法
+* 数据集名称、下载地址；
+* 训练集/验证集/测试集图像数量、类别数量、分辨率等；
+* 数据集标注格式、标注信息；
+* 数据集通用的预处理方法；
 
 论文中一般会提供数据集的名称以及基本信息。复现过程中，我们在下载完数据之后，建议先检查下是否和论文中描述一致，否则可能存在的问题有：
 
 * 数据集年份不同，比如论文中使用了MS-COCO2014数据集，但是我们下载的是MS-COCO2017数据集，如果不对其进行检查，可能会导致我们最终训练的数据量等与论文中有diff
 * 数据集使用方式不同，有些论文中，可能只是抽取了该数据集的子集进行方法验证，此时需要注意抽取方法，需要保证抽取出的子集完全相同。
-* 在评估指标对齐时，我们可以固定batch size，关闭Dataloader的shuffle操作。
 
 构建数据集时，也会涉及到一些预处理方法，以CV领域为例，PaddlePaddle提供了一些现成的视觉类操作api，具体可以参考：[paddle.vision类API](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)。对应地，PyTorch中的数据处理api可以参考：[torchvision.transforms类API](https://pytorch.org/vision/stable/transforms.html)。对于其中之一，可以找到另一个平台的实现。
 
@@ -360,17 +353,20 @@ PaddlePaddle中数据集相关的API为`paddle.io.Dataset`，使用该接口可�
 
 Mobilenet v3复现过程中，准备`ImageNet小数据集`的脚本可以参考[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
-Mobilenet v3 模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考[数据测试代码](todo)。
+Mobilenet v3 模型复现过程中，数据预处理和Dataset、Dataloader的检查可以参考[mobilenetv3_prod/Step1-5/02_test_data.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/02_test_data.py)。
 
-使用方法可以参考[数据检查文档](todo)。
+使用方法可以参考[mobilenetv3_prod/Step1-5/README.md](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/README.md#4.2)。
 
 **【FAQ】**
-1. 如果使用PaddlePaddle提供的数据集 API 如`paddle.vision.datasets.Cifar10`，不能实现数据增强完全对齐怎么办？
 
-这些数据集的实现都是经过广泛验证的，可以使用。因此只需要完成数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
+- 如果使用PaddlePaddle提供的数据集 API 如`paddle.vision.datasets.Cifar10`，不能实现数据增强完全对齐怎么办？
 
-2. 还有其他导致不能对齐的因素么？
-* 预处理方法顺序不一致：预处理的方法相同，顺序不同，比如先padding再做归一化与先做归一化再padding，得到的结果是不同的。
+    这些数据集的实现都是经过广泛验证的，可以使用。因此只需要完成数据预处理和后处理进行排查就好。`数据集+数据处理`的部分可以通过评估指标对齐完成自查。
+
+-  还有其他导致不能对齐的因素么？
+
+    * 预处理方法顺序不一致：预处理的方法相同，顺序不同，比如先padding再做归一化与先做归一化再padding，得到的结果是不同的。
+    * 没有关闭shuffle：在评估指标对齐时，需要固定batch size，关闭Dataloader的shuffle操作。
 
 <a name="3.3"></a>
 ### 3.3 评估指标对齐
@@ -379,7 +375,7 @@ Mobilenet v3 模型复现过程中，数据预处理和Dataset、Dataloader的�
 
 PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Precision`, `Recall`等，而PyTorch中，目前可以通过组合的方式实现metric计算，或者调用[torchmetrics](https://torchmetrics.readthedocs.io/en/latest/)，在论文复现的过程中，需要注意保证对于该模块，给定相同的输入，二者输出完全一致。具体流程如下：
 
-1. 定义PyTorch模型，加载训练好的权重（需要是官网repo提供好的），获取评估结果，使用reprod_log保存结果。
+1. 定义PyTorch模型，加载训练好的权重，获取评估结果，使用reprod_log保存结果。
 2. 定义PaddlePaddle模型，加载训练好的权重（需要是从PyTorch转换得到），获取评估结果，使用reprod_log保存结果。
 3. 使用reprod_log排查diff，小于阈值，即可完成自测。
 
@@ -390,7 +386,7 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
 
 **【实战】**
 
-评估指标对齐检查方法可以参考文档：[评估指标对齐检查方法文档](todo)
+评估指标对齐检查方法可以参考文档：[mobilenetv3_prod/Step1-5/README.md](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/README.md#4.3)
 
 
 **【核验】**
@@ -407,7 +403,7 @@ PaddlePaddle提供了一系列Metric计算类，比如说`Accuracy`, `Auc`, `Pre
     * 需要检查论文是否只是抽取了验证集/测试集中的部分文件，如果是的话，则需要保证PaddlePaddle和参考代码中dataset使用的数据集一致。
 
 **【FAQ】**
-1. 有哪些会导致评估出现精度偏差呢？
+- 有哪些会导致评估出现精度偏差呢？
     1. 使用dataloader参数没有保持一致：例如需要检查复现代码与参考代码在`paddle.io.DataLoader` 的 ``drop_last`` 参数上是否保持一致 (文档[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/io/DataLoader_cn.html#dataloader)，如果不一致，最后不够batch-size的数据可能不会参与评估，导致评估结果会有diff。
     2. 转换到不同设备上运行代码：在识别或者检索过程中，为了加速评估过程，往往会将评估函数由CPU实现改为GPU实现，由此会带来评估函数输出的不一致。这是由于sort函数对于相同值的排序结果不同带来的。在复现的过程中，如果可以接受轻微的指标不稳定，可以使用PaddlePaddle的sort函数，如果对于指标非常敏感，同时对速度性能要求很高，可以给PaddlePaddle提[ISSUE](https://github.com/PaddlePaddle/Paddle/issues/new/choose)，由研发人员高优开发。
     3. 评估参数和训练参数不一致：在检测任务中，评估流程往往和训练流程有一定差异，例如RPN阶段NMS的参数等，这里需要仔细检查评估时的超参数，不要将训练超参和评估超参弄混淆。
@@ -436,7 +432,7 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 **【实战】**
 
-本部分可以参考[损失函数对齐文档]()。
+本部分可以参考[mobilenetv3_prod/Step1-5/04_test_loss.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/04_test_loss.py)。
 
 **【核验】**
 
@@ -449,19 +445,19 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 4. 提交内容：将`loss_paddle.npy`、`loss_pytorch.npy`与`loss_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，后续的输出结果和自查日志也放在该文件夹中，一并打包上传即可。
 
 **【FAQ】**
-1. 损失函数中需要使用索引，但是paddle不支持怎么办？
+- 损失函数中需要使用索引，但是paddle不支持怎么办？
 
-    可以使用[paddle.where](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/where_cn.html#where) 代替。
+    * 可以使用[paddle.where](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/where_cn.html#where) 代替。
 
-2. 为什么`nn.CrossEntropyLoss `不能对齐？
+- 为什么`nn.CrossEntropyLoss`出现不能对齐问题？
 
-    `paddle.nn.CrossEntropyLoss` 默认是在最后一维(axis=-1)计算损失函数，而 `torch.nn.CrossEntropyLoss` 是在axis=1的地方计算损失函数，因此如果输入的维度大于2，这里需要保证计算的维(axis)相同，否则可能会出错。
+    * `paddle.nn.CrossEntropyLoss` 默认是在最后一维(axis=-1)计算损失函数，而 `torch.nn.CrossEntropyLoss` 是在axis=1的地方计算损失函数，因此如果输入的维度大于2，这里需要保证计算的维(axis)相同，否则可能会出错。
 
-3. 模型需要求二次梯度，但是`MaxPooling` 算子不支持怎么办？
+- 模型需要求二次梯度，但是`MaxPooling` 算子不支持怎么办？
 
     可以和Paddle官方开发同学反馈，进一步确认解决方案。
 
-4. 损失导致的内存泄露问题？
+- 损失导致的内存泄露问题？
 
     在保存损失函数值的时候，注意要使用`paddle.no_grad`，或者仅仅保存转换成 numpy 的数组，避免损失没有析构导致内存泄漏问题。
 
@@ -504,33 +500,34 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 **【实战】**
 
-本部分对齐建议对照[PaddlePaddle优化器API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/Overview_cn.html)、[PaddlePaddle正则化API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/regularizer/L2Decay_cn.html)与参考代码的优化器实现进行对齐，用之后的反向对齐统一验证该模块的正确性。另外在学习率中还可以参考[学习率对齐代码]()。
+本部分对齐建议对照[PaddlePaddle优化器API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/Overview_cn.html)、[PaddlePaddle正则化API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/regularizer/L2Decay_cn.html)与参考代码的优化器实现进行对齐，用之后的反向对齐统一验证该模块的正确性。另外在学习率中还可以参考学习率对齐代码[Step1-5/05_test_backward.py#L23](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/05_test_backward.py#L23)。
 
 **【FAQ】**
-1. 怎么实现参数分组学习率策略？
+- 怎么实现参数分组学习率策略？
 
-    Paddle目前支持在 `optimizer` 中通过设置 `params_groups` 的方式设置不同参数的更新方式，可以参考[代码示例](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/optimizer/optimizer.py#L107) 。
+    * Paddle目前支持在 `optimizer` 中通过设置 `params_groups` 的方式设置不同参数的更新方式，可以参考[代码示例](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/optimizer/optimizer.py#L107) 。
 
-2. 有没有什么其他影响优化不对齐的原因？
-* 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
-* 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。设置no weight decay 可以参照[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)。
+- 有没有什么其他影响优化不对齐的原因？
+    * 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
+    * 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。设置no weight decay 可以参照[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)。
 
-3. 有没有什么任务不需要进行优化对齐的呢？
+- 有没有什么任务不需要进行优化对齐的呢？
 
     在某些任务中，比如说深度学习可视化、可解释性等任务中，一般只要求模型前向过程，不需要训练，此时优化器、学习率等用于模型训练的模块对于该类论文复现是不需要的。
 
-4. 使用了PaddlePaddle的`Adadelta`优化器不能对齐怎么办？
+- 使用了PaddlePaddle的`Adadelta`优化器不能对齐怎么办？
 
     该优化器与PyTorch实现目前稍有不同，但是不影响模型训练精度对齐，在做前反向对齐时，需要注意可以将该优化器替换为Adam等优化器（PaddlePaddle与参考代码均需要替换）；对齐完成之后，再使用`Adadelta`优化器进行训练对齐。
 
-5. PaddlePaddle的学习率策略对不齐怎么办？
+- PaddlePaddle的学习率策略对不齐怎么办？
 
-* PaddlePaddle 中参数的学习率受到优化器学习率和`ParamAttr`中设置的学习率影响，因此跟踪学习率需要将二者结合进行跟踪。
-* 有些网络的学习率策略比较细致，比如带warmup的学习率策略，这里需要保证起始学习率等参数都完全一致。
+    * PaddlePaddle 中参数的学习率受到优化器学习率和`ParamAttr`中设置的学习率影响，因此跟踪学习率需要将二者结合进行跟踪。
+    * 有些网络的学习率策略比较细致，比如带warmup的学习率策略，这里需要保证起始学习率等参数都完全一致。
 
-6. 需要使用`torch.optim.lr_scheduler.MultiplicativeLR` API 怎么办？
+- 需要使用`torch.optim.lr_scheduler.MultiplicativeLR` API 怎么办？
 
-    `torch.optim.lr_scheduler.MultiplicativeLR` API目前PaddlePaddle中没有实现，可以使用`paddle.optimizer.lr.LambdaDecay`替换实现，参考代码：[链接](https://github.com/Paddle-Team-7/PixelCNN-Paddle/blob/607ef1d1ca6a489cecdcd2182d3acc5b2df7c779/src/pixel_cnn.py#L161)。
+    * `torch.optim.lr_scheduler.MultiplicativeLR` API目前PaddlePaddle中没有实现，可以使用`paddle.optimizer.lr.LambdaDecay`替换实现，参考代码：[链接](https://github.com/Paddle-Team-7/PixelCNN-Paddle/blob/607ef1d1ca6a489cecdcd2182d3acc5b2df7c779/src/pixel_cnn.py#L161)。
+
 
 <a name="3.6"></a>
 ### 3.6 反向对齐
@@ -573,7 +570,7 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 **【实战】**
 
-本部分可以参考文档：[反向对齐操作文档](todo)。
+本部分可以参考文档：[mobilenetv3_prod/Step1-5/README.md](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step1-5/README.md#4.5)。
 
 **【核验】**
 
@@ -590,12 +587,12 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
     * 在迭代的过程中，需要设置`model.eval()`，使用固定的假数据，同时加载相同权重的预训练模型。
 
 **【FAQ】**
-1. 怎么打印反向梯度？
-* Paddle打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/PaddleDetection/blob/debug_gfl/ppdet/modeling/backbones/resnet.py#L581)；
-* PyTorch打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/mmdetection/blob/debug_gfl/mmdet/models/backbones/resnet.py#L630)。
+- 怎么打印反向梯度？
+    * Paddle打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/PaddleDetection/blob/debug_gfl/ppdet/modeling/backbones/resnet.py#L581)；
+    * PyTorch打印反向和参数更新，可以参考[代码实例](https://github.com/jerrywgz/mmdetection/blob/debug_gfl/mmdet/models/backbones/resnet.py#L630)。
 
-2. 反向没有对齐怎么办？
-* 反向对齐时，如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`loss.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证。梯度打印方法可以参考上面的示例。
+- 反向没有对齐怎么办？
+    * 反向对齐时，如果第二轮开始，loss开始无法对齐，则首先需要排查下超参数的差异，没问题的话，在`loss.backward()`方法之后，使用`tensor.grad`获取梯度值，二分的方法查找diff，定位出PaddlePaddle与PyTorch梯度无法对齐的API或者操作，然后进一步验证。梯度打印方法可以参考上面的示例。
 
 
 <a name="3.7"></a>
@@ -631,16 +628,17 @@ random.seed(config.SEED)
 本部分对齐建议对照[PaddlePaddle vision高层API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/vision/Overview_cn.html)与参考代码的数据预处理实现进行对齐，用之后的训练对齐统一验证该模块的正确性。
 
 **【FAQ】**
-1. 数据预处理时，找不到报错过于复杂怎么办？
+- 数据预处理时，找不到报错过于复杂怎么办？
 
-    在前向过程中，如果数据预处理过程运行出错，请先将 `paddle.io.DataLoader`的 `num_workers` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。
+    * 在前向过程中，如果数据预处理过程运行出错，请先将 `paddle.io.DataLoader`的 `num_workers` 参数设为0，然后根据单个进程下的报错日志定位出具体的bug。
 
-2. 数据读取无法对齐怎么办？
-* 数据读取需要注意图片读取方式是opencv还是PIL.Image，图片格式是RGB还是BGR，复现时，需要保证复现代码和参考代码完全一致。
-* 对于使用PaddlePaddle 内置数据集，比如`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，如果是全量数据使用，对结果不会有影响，如果是按照比例选取子集进行训练，则建议重新根据参考代码实现数据读取部分，保证子集完全一致。
-* 如果数据处理过程中涉及到随机数生成，建议固定seed (`np.random.seed(0)`, `random.seed(0)`)，查看复现代码和参考代码处理后的数据是否有diff。
-* 不同的图像预处理库，使用相同的插值方式可能会有diff，建议使用相同的库对图像进行resize。
-* 视频解码时，不同库解码出来的图像数据会有diff，注意区分解码库是opencv、decord还是pyAV，需要保证复现代码和参考代码完全一致。
+- 数据读取无法对齐怎么办？
+
+    * 数据读取需要注意图片读取方式是opencv还是PIL.Image，图片格式是RGB还是BGR，复现时，需要保证复现代码和参考代码完全一致。
+    * 对于使用PaddlePaddle 内置数据集，比如`paddle.vision.datasets.Cifar10`等，可能无法完全与参考代码在数据顺序上保持一致，如果是全量数据使用，对结果不会有影响，如果是按照比例选取子集进行训练，则建议重新根据参考代码实现数据读取部分，保证子集完全一致。
+    * 如果数据处理过程中涉及到随机数生成，建议固定seed (`np.random.seed(0)`, `random.seed(0)`)，查看复现代码和参考代码处理后的数据是否有diff。
+    * 不同的图像预处理库，使用相同的插值方式可能会有diff，建议使用相同的库对图像进行resize。
+    * 视频解码时，不同库解码出来的图像数据会有diff，注意区分解码库是opencv、decord还是pyAV，需要保证复现代码和参考代码完全一致。
 
 
 <a name="3.8"></a>
@@ -665,12 +663,12 @@ random.seed(config.SEED)
 
 本部分对齐建议对照[PaddlePaddle 初始化API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/Overview_cn.html#chushihuaxiangguan)与参考代码的初始化实现对齐。
 
-【FAQ】
-1. 使用相同的分布初始化模型还是不能对齐怎么办？
+**【FAQ】**
+- 使用相同的分布初始化模型还是不能对齐怎么办？
 
     对于不同的深度学习框架，网络初始化在大多情况下，即使值的分布完全一致，也无法保证值完全一致，这里也是论文复现中不确定性比较大的地方。如果十分怀疑初始化导致的问题，建议将参考的初始化权重转成paddle模型，加载该初始化模型训练，看下收敛精度。
 
-2. 需要对齐`torch.nn.init.constant_()` 怎么办？
+- 需要对齐`torch.nn.init.constant_()` 怎么办？
 
     Paddle中目前没有`torch.nn.init.constant_()`的方法，如果希望对参数赋值为常数，可以使用[paddle.nn.initializer.Constant](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/initializer/Constant_cn.html#constant)API；或者可以参考下面的实现。更加具体的解释可以参考：[链接](https://github.com/PaddlePaddle/Paddle/issues/37578)。
 
@@ -689,6 +687,7 @@ random.seed(config.SEED)
     ```
 
 3. 初始化是怎么影响不同类型的模型的？
+
 * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；
 * transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查；
 * 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查；
@@ -701,8 +700,8 @@ random.seed(config.SEED)
 
 完成前面的步骤之后，就可以开始全量数据的训练对齐任务了。按照下面的步骤可以进行训练对齐：
 
-1. 准备train/eval data, loader, model
-2. 对model按照论文所述进行初始化(如果论文中提到加载pretrain，则按需加载pretrained model)
+1. 准备train/eval data，loader，model。
+2. 对model按照论文所述进行初始化(如果论文中提到加载pretrain，则按需加载pretrained model)。
 3. 加载配置，开始训练，迭代得到最终模型与评估指标，将评估指标使用reprod_log保存到文件中。
 4. 将PaddlePaddle提供的参考指标使用reprod_log提交到另一个文件中。
 5. 使用reprod_log排查diff，小于阈值，即可完成自测。
@@ -717,21 +716,18 @@ random.seed(config.SEED)
     * 使用参考代码的Dataloader生成的数据，进行模型训练，排查train dataloader的影响。
 
 **【实战】**
-
-本部分可以参考文档：[训练对齐操作文档]()。
+【todo】
+本部分可以参考代码：[mobilenetv3_prod/Step6/train.py#L371](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/train.py#L371)。
 
 **【核验】**
 
 对于待复现的项目，训练对齐核验流程如下：
 
-1. 输入：train/eval dataloader, model
-2. 输出：
-    * PaddlePaddle：dict，key为保存值的name（自定义），value为具体评估指标的值。最后将dict使用reprod_log保存到文件中，建议命名为`train_align_paddle.npy`。
-    * benchmark：dict，key为保存值的name（自定义），value为论文复现赛的评估指标要求的值。最后将dict使用reprod_log保存到文件中，建议命名为`train_align_benchmark.npy`。
-3. 自测：使用reprod_log加载2个文件，使用report功能，记录结果到日志文件中，建议命名为`train_align_diff_log.txt`，观察diff，二者diff小于特定的阈值即可。
-4. 提交内容：将`train_align_paddle.npy`、`train_align_benchmark.npy`与`train_align_diff_log.txt`文件备份到`3.1节核验环节`新建的文件夹中，最终一并打包上传即可。
+1. 输入：train/eval dataloader, model。
+2. 输出：训练结果和模型。
+3. 自测：训练结果和官网精度或参考代码精度在误差范围内即可。
 
-【FAQ】
+**【FAQ】**
 - 训练过程怎么更好地对齐呢？
     * 有条件的话，复现工作之前最好先基于官方代码完成训练，保证与官方指标能够对齐，并且将训练策略和训练过程中的关键指标记录保存下来，比如每个epoch的学习率、Train Loss、Eval Loss、Eval Acc等，在复现网络的训练过程中，将关键指标保存下来，这样可以将两次训练中关键指标的变化曲线绘制出来，能够很方便的进行对比；
     * 如果训练较大的数据集，1次完整训练的成本比较高，此时可以隔一段时间查看一下，如果精度差异比较大，建议先停掉实验，排查原因。
@@ -743,31 +739,29 @@ random.seed(config.SEED)
     * 保存不同step之间的模型参数，观察模型参数是否更新。
 
 
-2. 如果训练的过程中出nan怎么办？
+- 如果训练的过程中出nan怎么办？
 
-一般是因为除0或者log0的情况， 可以着重看下几个部分：
-* 如果有预训练模型的话，可以确认下是否加载正确
-* 确认下reader的预处理中是否会出现box（或mask）为空的
-* 模型结构中计算loss的部分是否有考虑到正样本为0的情况
-* 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
+    一般是因为除0或者log0的情况， 可以着重看下几个部分：
+    1. 如果有预训练模型的话，可以确认下是否加载正确
+    2. 确认下reader的预处理中是否会出现box（或mask）为空的
+    3. 模型结构中计算loss的部分是否有考虑到正样本为0的情况
+    4. 也可能是某个API的数值越界导致的，可以测试较小的输入是否还会出现nan。
 
+- 其他细分场景下有什么导致训练不对齐的原因？
+    * 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
+    * transformer 系列模型对于数据增广与模型初始化非常敏感，因此在保证前反向对齐后，如果训练仍无法对齐，可以考虑使用官方的PyTorch模型训练代码，结合复现的Paddle组网代码进行训练，这样可以验证是否是数据预处理/数据增强策略存在问题。
+    * 检测、分割等任务中，训练通常需要加载backbone的权重作为预训练模型，注意在完成模型对齐后，将转换的权重修改为backbone权重。
+    * 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
+    * 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
+    * 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
 
-
-4. 其他细分场景下导致训练不对齐的原因？
-* 小数据上指标波动可能比较大，时间允许的话，可以跑多次实验，取平均值。
-* transformer 系列模型对于数据增广与模型初始化非常敏感，因此在保证前反向对齐后，如果训练仍无法对齐，可以考虑使用官方的PyTorch模型训练代码，结合复现的Paddle组网代码进行训练，这样可以验证是否是数据预处理/数据增强策略存在问题。
-* 检测、分割等任务中，训练通常需要加载backbone的权重作为预训练模型，注意在完成模型对齐后，将转换的权重修改为backbone权重。
-* 生成任务中，训练时经常需要固定一部分网络参数。对于一个参数`param`，可以通过`param.trainable = False`来固定。
-* 在训练GAN时，通常通过GAN的loss较难判断出训练是否收敛，建议每训练几次迭代保存一下训练生成的图像，通过可视化判断训练是否收敛。
-* 在训练GAN时，如果PaddlePaddle实现的代码已经可以与参考代码完全一致，参考代码和PaddlePaddle代码均难以收敛，则可以在训练的时候，可以判断一下loss，如果loss大于一个阈值或者直接为NAN，说明训崩了，就终止训练，使用最新存的参数重新继续训练。可以参考该链接的实现：[链接](https://github.com/JennyVanessa/Paddle-GI)。
-
-5. 怎样设置运行设备?
+- 怎样设置运行设备?
 
     对于PaddlePaddle来说，通过`paddle.set_device`函数（全局）来确定模型结构是运行在什么设备上，对于torch来说，则是通过`model.to("device")` （局部）来确定模型结构的运行设备。
 
-6. 遇到复现时间较长的论文怎么办？
-* 根据自己的时间、资源、战略部署评估是否复现这个论文复现；
-* 在决定复现的情况下，参照本复现指南中的对齐操作对模型、数据、优化方式等对齐，以最快的时间排除问题。
+- 遇到复现时间较长的论文怎么办？
+    * 根据自己的时间、资源、战略部署评估是否复现这个论文复现；
+    * 在决定复现的情况下，参照本复现指南中的对齐操作对模型、数据、优化方式等对齐，以最快的时间排除问题。
 
 
 <a name="3.10"></a>
@@ -779,17 +773,17 @@ random.seed(config.SEED)
 
 **【基本流程】**
 
-1. 在训练代码中添加日志统计信息，对训练中的信息进行统计。
+ - 在训练代码中添加日志统计信息，对训练中的信息进行统计。
 
-* 必选项：损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
-* 建议项：当前`epoch`, 当前迭代次数`iter`，学习率(`lr`), 准确率(`acc`)等。
+    * 必选项：损失值`loss`, 训练耗时`batch_cost`, 数据读取耗时`reader_cost`。
+    * 建议项：当前`epoch`, 当前迭代次数`iter`，学习率(`lr`), 准确率(`acc`)等。
 
 ```
 [2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010543 sec, avg_batch_cost: 0.0111100 sec, loss: 0.3450000 , avg_ips: 2880.2952878 images/sec
 [2021/12/04 05:16:13] root INFO: [epoch 0, iter 0][TRAIN]avg_samples: 32.0 , avg_reader_cost: 0.0010542 sec, avg_batch_cost: 0.0111101 sec, loss: 0.2450000 , avg_ips: 2880.2582019 images/sec
 ```
 
-2. 如果训练中同时包含评估过程，则也需要在日志里添加模型的`评估结果`信息。
+- 如果训练中同时包含评估过程，则也需要在日志里添加模型的`评估结果`信息。
 
 **【注意事项】**
 
@@ -797,7 +791,7 @@ random.seed(config.SEED)
 
 **【实战】**
 
-参考代码：[train.py](todo)。
+参考代码：[mobilenetv3_prod/Step1-5/mobilenetv3_ref/train.py](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step1-5/mobilenetv3_ref/train.py)。
 
 具体地，规范化的训练日志可以按照如下所示的方式实现。
 
@@ -851,10 +845,10 @@ def train_one_epoch(model,
         reader_start = time.time()
 ```
 
-【FAQ】
-1. 有什么工具可以帮助训练日志规范化的么？
+**【FAQ】**
+* 有什么工具可以帮助训练日志规范化的么？
 
-    `autolog`支持训练和预测的日志规范化，更多关于`autolog`的使用可以参考：[https://github.com/LDOUBLEV/AutoLog](https://github.com/LDOUBLEV/AutoLog)。
+    * `autolog`支持训练和预测的日志规范化，更多关于`autolog`的使用可以参考：[https://github.com/LDOUBLEV/AutoLog](https://github.com/LDOUBLEV/AutoLog)。
 
 
 <a name="3.11"></a>
@@ -875,7 +869,7 @@ def train_one_epoch(model,
 
 **【实战】**
 
-MobilenetV3的预测程序：[predict.py]()。
+MobilenetV3的预测程序：[Step6/tools/predict.py](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/tools/predict.py)。
 
 
 **【核验】**
