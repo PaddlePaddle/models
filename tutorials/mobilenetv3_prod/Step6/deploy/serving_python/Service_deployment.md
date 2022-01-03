@@ -11,7 +11,7 @@
     - [2.6 服务端修改](#2.6)
     - [2.7 客户端修改](#2.7)
     - [2.8 启动服务端模型预测服务 & 启动客服端](#2.8)
--[3. FAQ](#3)
+- [3. FAQ](#3)
 
 ## 1. 简介
 
@@ -23,6 +23,12 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
 本文档主要介绍利用Paddle Serving框架实现飞桨模型（以MobilenetV3为例）的服务化部署。
 
 ## 2. Paddle Serving服务化部署
+Paddle Serving服务化部署主要包括以下步骤：
+<img width="729" alt="图片" src="https://user-images.githubusercontent.com/54695910/147932862-63f6804b-9030-4b5b-8901-59097c33a0ec.png">
+
+其中设置了2个其中设置了2个核验点，分别为：
+* 启动服务端
+* 启动客户端
 
 ### 2.1 准备测试数据
 从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证，同时长传对应数据集的标签。
@@ -303,7 +309,8 @@ python3 web_service.py &
 
 针对MobileNet网络, 启动成功的界面如下：
 
-![](./images/serving_startup_visualization.png)    
+![图片](https://user-images.githubusercontent.com/54695910/147933042-13279f61-b5ba-4b4a-8841-8aaa29ec2bfa.png)
+   
 
 #### 2.8.2 启动客户端，访问服务
 
@@ -320,7 +327,10 @@ python3 web_service.py &
 ```
 python3 pipeline_http_client.py
 ```                                                  
-访问成功的界面如下图（tutorials/mobilenetv3_prod/Step6/images/client_res.png）
+访问成功的界面如下图：
+
+![图片](https://user-images.githubusercontent.com/54695910/147933077-e07e19fc-0884-4341-a1f3-4d090c1e9608.png)
+
 
 【注意事项】
 如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
