@@ -40,18 +40,16 @@ Paddle Serving服务化部署主要包括以下步骤：
 
 （1）以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可。
 
-    1）docker环境安装（CPU版本）
-  
-    
+ 1）docker环境安装（CPU版本）
+   
   ```
   # 拉取并进入 Paddle Serving的 CPU Docker
   docker pull paddlepaddle/serving:0.7.0-devel
   docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-devel bash
   docker exec -it test bash
-  ```
+  ````
   
-  
-    2)docker环境安装（GPU版本）
+  2)docker环境安装（GPU版本）
     
   ```
   # 拉取并进入 Paddle Serving的GPU Docker
@@ -73,7 +71,7 @@ Paddle Serving服务化部署主要包括以下步骤：
 
   Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
 
-(3)为docker环境下载工程
+(3)在docker中下载工程
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
@@ -81,7 +79,8 @@ cd models/tutorials/mobilenetv3_prod/Step6
 ```
 **【注意】**：为了便于管理，后续Paddle Serving部署文件都会保存到`models/tutorials/mobilenetv3_prod/Step6/deploy/Serving_python/`路径下。
 
-### 2.3 准备inference模型 (根据模型情况确认是否跳过该步骤)
+### 2.3 准备服务化部署模型
+#### 2.3.1 转换inference模型 (根据模型情况确认是否跳过该步骤)
 
 由于MobileNetV3暂时只提供了预训练模型，因此需要先转换为Inference模型。若后期提供，可省略该步骤。在tools文件夹下提供了输出inference模型的脚本文件export_model.py，运行如下命令即可获取inference模型。
 
@@ -90,7 +89,7 @@ python3 ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdp
 ```
 在mobilenetv3_model文件夹下有inference.pdmodel、inference.pdiparams和inference.pdiparams.info文件。
 
-### 2.4 准备服务化部署模型
+#### 2.3.2 准备服务化部署模型
 
 【基本流程】
 
@@ -116,7 +115,7 @@ python3 -m paddle_serving_client.convert \
 ```
 【注意】：0.7.0版本的 PaddleServing 需要和PaddlePaddle 2.2之后的版本搭配进行模型转换.如果最开始使用docker安装整个环境，则Paddle Serving和PaddlePaddle版本已做好对应。   
 
-### 2.5 复制部署样例程序
+### 2.4 复制部署样例程序
 **【基本流程】**
 
 服务化部署的样例程序的目录地址为：`**/models/docs/tipc/serving/template/code`
@@ -136,14 +135,14 @@ python3 -m paddle_serving_client.convert \
 cp -r **/models/community/repo_template/deploy/pdserving/*  ./
 
 ```
-### 2.6 服务端修改
+### 2.5 服务端修改
 
 服务端修改包括服务端代码修改（即对web_service.py代码进行修改）和服务端配置文件（即对config.yml代码进行修改）修改。
 服务端代码修改主要修改：初始化部署引擎、开发数据预处理程序、开发预测结果后处理程序三个模块。
 服务端配置文件主要修改：
 【注意】后续代码修改，主要修改包含`TIPC`字段的代码模块。
 
-#### 2.6.1 初始化服务端部署配置引擎
+#### 2.5.1 初始化服务端部署配置引擎
 **【基本流程】**
 
 针对模型名称，修改web_service.py中类TIPCExampleService、TIPCExampleOp的名称，以及这些类初始化中任务名称name。
@@ -174,7 +173,7 @@ uci_service.prepare_pipeline_config("config.yml")
 uci_service.run_service()
 ```
 
-#### 2.6.2 开发数据预处理程序
+#### 2.5.2 开发数据预处理程序
 
 **【基本流程】**
 
@@ -238,7 +237,7 @@ class MobileNetOp(Op):
         return {"input": input_imgs}, False, None, ""
 ```
 
-#### 2.6.3 开发预测结果后处理程序
+#### 2.5.3 开发预测结果后处理程序
 
 【基本流程】
 
@@ -272,7 +271,7 @@ result, None, ""
         result["prob"] = str(result["prob"])
         return result, None, ""
 ```
-#### 2.6.4 修改服务配置文件config.yml
+#### 2.5.4 修改服务配置文件config.yml
 
 - http_port：使用默认的端口号18080
 - OP名称：第14行修改成imagenet； （实际自己项目中，与2.6.1中name设置保持一致）
@@ -280,7 +279,7 @@ result, None, ""
 - device_type：使用默认配置1，基于GPU预测；使用参数0，基于CPU预测。
 - devices：使用默认配置"0"，0号卡预测     
 
-### 2.7 客户端修改
+### 2.6 客户端修改
 
 修改pipeline_http_client.py程序，用于访问2.6中的服务端服务。
 
@@ -295,9 +294,9 @@ result, None, ""
 url = "http://127.0.0.1:18080/imagenet/prediction"
 ``` 
 
-### 2.8 启动服务端模型预测服务 & 启动客服端
+### 2.7 启动服务端模型预测服务 & 启动客服端
 
-### 2.8.1 启动服务端模型预测服务
+### 2.7.1 启动服务端模型预测服务
 **【基本流程】**
 
 当完成服务化部署引擎初始化、数据预处理和预测结果后处理开发，则可以按如下命令启动模型预测服务：
@@ -312,7 +311,7 @@ python3 web_service.py &
 ![图片](https://user-images.githubusercontent.com/54695910/147933042-13279f61-b5ba-4b4a-8841-8aaa29ec2bfa.png)
    
 
-#### 2.8.2 启动客户端，访问服务
+#### 2.7.2 启动客户端，访问服务
 
 **【基本流程】**
 
