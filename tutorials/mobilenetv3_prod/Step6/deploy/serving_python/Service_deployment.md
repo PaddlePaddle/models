@@ -31,12 +31,13 @@ Paddle Serving服务化部署主要包括以下步骤：
 * 启动客户端
 
 ### 2.1 准备测试数据
-从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证，同时长传对应数据集的标签。
-以上传daisy.jpg图像和[数据集对应的标签文件](imagenet.label)到 ‘community/repo_template/images/’路径。
+准备测试数据及对应数据的标签，用于后续（#2.8）推理过程验证。
+
+本教程以`models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg` 及 `models/tutorials/mobilenetv3_prod/Step6/images/imagenet.label`作为测试用例，在#2.8客户端代码中测试。
 
 ### 2.2 准备环境
 
-**docker**是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。Paddle Serving容器化部署建议在docker中进行Serving服务化部署。以下教程均以docker环境展开说明。
+**docker**是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。Paddle Serving容器化部署建议在docker中进行Serving服务化部署。本教程在docker环境运行。
 
 （1）以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可。
 
