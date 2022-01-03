@@ -3,6 +3,15 @@
 
 - [1. 简介](#1---)
 - [2. Paddle Serving服务化部署](#2---)
+    - [2.1 准备测试数据](#2.1)
+    - [2.2 准备环境](#2.2)
+    - [2.3 准备inference模型](#2.3)
+    - [2.4 准备服务化部署模型](#2.4)
+    - [2.5 复制部署样例程序](#2.5)
+    - [2.6 服务端修改](#2.6)
+    - [2.7 客户端修改](#2.7)
+    - [2.8 启动服务端模型预测服务 & 启动客服端](#2.8)
+-[3. FAQ](#3)
 
 ## 1. 简介
 
@@ -280,7 +289,7 @@ result, None, ""
 url = "http://127.0.0.1:18080/imagenet/prediction"
 ``` 
 
-### 2.8 启动服务端模型预测服务 & 客服端访问代码
+### 2.8 启动服务端模型预测服务 & 启动客服端
 
 ### 2.8.1 启动服务端模型预测服务
 **【基本流程】**
@@ -296,7 +305,7 @@ python3 web_service.py &
 
 ![](./images/serving_startup_visualization.png)    
 
-#### 2.8.2 开发客户端访问服务的程序
+#### 2.8.2 启动客户端，访问服务
 
 **【基本流程】**
 
@@ -311,6 +320,7 @@ python3 web_service.py &
 ```
 python3 pipeline_http_client.py
 ```                                                  
+访问成功的界面如下图（tutorials/mobilenetv3_prod/Step6/images/client_res.png）
 
 【注意事项】
 如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
@@ -319,4 +329,9 @@ python3 pipeline_http_client.py
 unset http_proxy
 unset https_proxy
 ```
-访问成功的界面如下：
+
+
+
+## 3. FAQ
+
+如果您在使用该文档完成Paddle Serving服务化部署的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Serving/issues)提一个ISSUE，我们会高优跟进。
