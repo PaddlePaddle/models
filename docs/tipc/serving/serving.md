@@ -308,9 +308,9 @@ unset https_proxy
 
 **【实战】**
 
-AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#512-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
+AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/tree/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python#23-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
 
-模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
+模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving_python/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
 
 **【核验】**
 

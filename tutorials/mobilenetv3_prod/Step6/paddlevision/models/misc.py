@@ -41,18 +41,21 @@ class ConvNormActivation(nn.Sequential):
 
 
 class SqueezeExcitation(nn.Layer):
-    def __init__(
-            self,
-            input_channels: int,
-            squeeze_channels: int,
-            activation: Callable[..., nn.Layer]=nn.ReLU,
-            scale_activation: Callable[..., nn.Layer]=nn.Sigmoid, ) -> None:
+    def __init__(self,
+                 input_channels: int,
+                 squeeze_channels: int,
+                 activation: Callable[..., nn.Layer]=nn.ReLU,
+                 scale_activation: Callable[..., nn.Layer]=nn.Sigmoid,
+                 skip_se_quant: bool=True) -> None:
         super().__init__()
         self.avgpool = nn.AdaptiveAvgPool2D(1)
         self.fc1 = nn.Conv2D(input_channels, squeeze_channels, 1)
         self.fc2 = nn.Conv2D(squeeze_channels, input_channels, 1)
         self.activation = activation()
         self.scale_activation = scale_activation()
+        if skip_se_quant:
+            self.fc1.skip_quant = True
+            self.fc2.skip_quant = True
 
     def _scale(self, input: paddle.Tensor) -> paddle.Tensor:
         scale = self.avgpool(input)
