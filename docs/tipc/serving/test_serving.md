@@ -90,17 +90,17 @@ Serving服务化部署主要分为以下5个步骤。
 | 5  | --dirname:./model_infer/                         | 配置Inference模型输入路径   | 否         | 是           | value修改为自己的Inference模型所在文件夹 |
 | 6  | --model_filename:inference.pdmodel               | 配置模型结构文件名           | 否         | 是           | value修改为自己的模型结构文件名          |
 | 7  | --params_filename:inference.pdiparams            | 配置模型参数文件名           | 否         | 是           | value修改为自己的模型参数文件名          |
-| 8  | --serving_server:./deploy/serving/serving_server | 配置输出的Serving服务端模型路径 | 否         | 是           | value修改为自己的输出Serving服务端模型路径 |
-| 9  | --serving_client:./deploy/serving/serving_client | 配置输出的Serving客户端模型路径 | 否         | 是           | value修改为自己的输出Serving客户端模型路径 |
+| 8  | --serving_server:./deploy/serving_python/serving_server | 配置输出的Serving服务端模型路径 | 否         | 是           | value修改为自己的输出Serving服务端模型路径 |
+| 9  | --serving_client:./deploy/serving_python/serving_client | 配置输出的Serving客户端模型路径 | 否         | 是           | value修改为自己的输出Serving客户端模型路径 |
 
 </details>
 
-以命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving/alexnet_server --serving_client ./deploy/serving/alexnet_client`为例。
+以命令`python -m paddle_serving_client.convert --dirname  ./alexnet_infer/ --model_filename inference.pdmodel --params_filename inference.pdiparams --serving_server ./deploy/serving_python/alexnet_server --serving_client ./deploy/serving_python/alexnet_client`为例。
 
 * Inference模型路径为`./alexnet_infer/`，因此第5行需要修改为`--dirname:./alexnet_infer/`
 * 模型结构和参数文件名和默认保持一致，因此这里无需修改。
-* 服务端保存的目录名称为`deploy/serving/alexnet_server`，因此第8行需要修改为`deploy/serving/alexnet_server`
-* 客户端保存的目录名称为`deploy/serving/alexnet_client`，因此第9行需要修改为`deploy/serving/alexnet_client`
+* 服务端保存的目录名称为`deploy/serving_python/alexnet_server`，因此第8行需要修改为`deploy/serving_python/alexnet_server`
+* 客户端保存的目录名称为`deploy/serving_python/alexnet_client`，因此第9行需要修改为`deploy/serving_python/alexnet_client`
 
 
 #### 2.2.2 服务启动配置参数

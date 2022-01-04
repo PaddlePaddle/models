@@ -201,9 +201,9 @@ python   run_script    set_configs
 
 </details>
 
-以推理命令`python deploy/inference/python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg`为例。
+以推理命令`python deploy/inference_python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg`为例。
 
-* 推理的入口脚本为`deploy/inference/python/infer.py`，因此40行需要修改为`inference:deploy/inference/python/infer.py`。
+* 推理的入口脚本为`deploy/inference_python/infer.py`，因此40行需要修改为`inference:deploy/inference_python/infer.py`。
 * Inference模型目录配置为`--model-dir=./alexnet_infer/`，而运行该命令时，会直接基于已经生成的Inference模型，因此47行需要修改为`--model-dir:./alexnet_infer/`
 * 测试图像目录配置为`--img-path=./lite_data/test/demo.jpg`，因此48行修改为`--img-path:./lite_data/test/demo.jpg`
 
@@ -229,7 +229,7 @@ python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001
 # 模型动转静
 python tools/export_model.py --pretrained=./alexnet_paddle.pdparams --save-inference-dir="./alexnet_infer" --model=alexnet
 # 推理
-python deploy/inference/python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg
+python deploy/inference_python/infer.py --model-dir=./alexnet_infer/ --img-path=./lite_data/test/demo.jpg
 ```
 
 <a name="3.2"></a>
