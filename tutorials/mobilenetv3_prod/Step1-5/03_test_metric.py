@@ -1,5 +1,3 @@
-# add test metric code paddle vs torch
-
 import torch
 import paddle
 import numpy as np
@@ -10,18 +8,8 @@ from mobilenetv3_paddle.paddlevision.models import mobilenet_v3_small as mv3_sma
 from mobilenetv3_ref.torchvision.models import mobilenet_v3_small as mv3_small_torch
 from mobilenetv3_ref import accuracy_torch
 from mobilenetv3_paddle import accuracy_paddle
-
-
-def evaluate(image, labels, model, acc, tag, reprod_logger):
-    model.eval()
-    output = model(image)
-
-    accracy = acc(output, labels, topk=(1, 5))
-
-    reprod_logger.add("acc_top1", np.array(accracy[0]))
-    reprod_logger.add("acc_top5", np.array(accracy[1]))
-
-    reprod_logger.save("./result/metric_{}.npy".format(tag))
+from utilities import build_paddle_data_pipeline, build_torch_data_pipeline
+from utilities import evaluate
 
 
 def test_forward():
@@ -39,29 +27,16 @@ def test_forward():
 
     # prepare logger & load data
     reprod_logger = ReprodLogger()
-    inputs = np.load("./data/fake_data.npy")
-    labels = np.load("./data/fake_label.npy")
-    image = paddle.to_tensor(inputs, dtype="float32")
-    target = paddle.to_tensor(labels, dtype="int64")
-
-    evaluate(
-        paddle.to_tensor(
-            inputs, dtype="float32"),
-        paddle.to_tensor(
-            labels, dtype="int64"),
-        paddle_model,
-        accuracy_paddle,
-        'paddle',
-        reprod_logger)
-    evaluate(
-        torch.tensor(
-            inputs, dtype=torch.float32),
-        torch.tensor(
-            labels, dtype=torch.int64),
-        torch_model,
-        accuracy_torch,
-        'ref',
-        reprod_logger)
+    paddle_dataset, paddle_dataloader = build_paddle_data_pipeline()
+    torch_dataset, torch_dataloader = build_torch_data_pipeline()
+    for idx, (paddle_batch, torch_batch
+              ) in enumerate(zip(paddle_dataloader, torch_dataloader)):
+        if idx > 0:
+            break
+        evaluate(paddle_batch[0], paddle_batch[1], paddle_model,
+                 accuracy_paddle, 'paddle', reprod_logger)
+        evaluate(torch_batch[0], torch_batch[1], torch_model, accuracy_torch,
+                 'ref', reprod_logger)
 
 
 if __name__ == "__main__":
@@ -71,6 +46,7 @@ if __name__ == "__main__":
     diff_helper = ReprodDiffHelper()
     torch_info = diff_helper.load_info("./result/metric_ref.npy")
     paddle_info = diff_helper.load_info("./result/metric_paddle.npy")
+    print(torch_info, paddle_info)
 
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
