@@ -15,10 +15,11 @@
     - [4.3 模型预测]()
 - [5. 模型推理部署]()
     - [5.1 使用paddle-lite部署]()
-        - [5.1.1 获取inference model]()
-        - [5.1.2 准备模型转换工具并生成paddle-lite的部署模型]()
-        - [5.1.3 以arm v8 、android系统为例进行部署,开发机为ubuntu]()
-        - [5.1.4 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法]()
+        - [5.1.1 整体流程]()
+        - [5.1.2 获取inference model]()
+        - [5.1.3 准备模型转换工具并生成paddle-lite的部署模型]()
+        - [5.1.4 以arm v8 、android系统为例进行部署,开发机为ubuntu]()
+        - [5.1.5 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法]()
 - [6. TIPC自动化测试脚本]()
 - [7. 参考链接与文献]()
 
@@ -167,14 +168,16 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 ## 5. 模型推理部署
 
+### 5.1 使用paddle lite 部署
+
+#### 5.1.1 整体流程
+
 <div align="center">
-    <img src="./images/Paddle-Lite/paddle-lite部署流程图.png" width=700">
+    <img src="./images/Paddle-Lite/paddle-lite部署流程图.png" width=600">
 </div>
 
 
-### 5.1 使用paddle lite 部署
-
-#### 5.1.1 获取inference model
+#### 5.1.2 获取inference model
 
 在tools文件夹下提供了输出inference model的脚本文件export_model.py，运行如下命令即可获取inference model。
 ```
@@ -182,7 +185,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
 ```
 在inference_model文件夹下有inference.pdmodel、inference.pdiparams和inference.pdiparams.info文件。
 
-#### 5.1.2 准备模型转换工具并生成paddle-lite的部署模型
+#### 5.1.3 准备模型转换工具并生成paddle-lite的部署模型
 
 - 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具
 
@@ -203,7 +206,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
     <img src="./images/Paddle-Lite/pic2.png" width=500">
 </div>
 
-#### 5.1.3 以arm v8 、android系统为例进行部署,开发机为ubuntu。
+#### 5.1.4 以arm v8 、android系统为例进行部署,开发机为ubuntu。
 
 - 准备编译环境
 
@@ -382,7 +385,7 @@ output tensor 0 mean value:0.001
 ```
 代表在android手机上推理部署完成。
 
-#### 5.1.4 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法
+#### 5.1.5 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法
 
 ```c++
 #include <iostream>
