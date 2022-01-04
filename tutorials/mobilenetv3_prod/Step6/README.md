@@ -167,6 +167,11 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 ## 5. 模型推理部署
 
+<div align="center">
+    <img src="./images/Paddle-Lite/paddle-lite部署流程图.png" width=700">
+</div>
+
+
 ### 5.1 使用paddle lite 部署
 
 #### 5.1.1 获取inference model
@@ -195,7 +200,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
 </div>
 需要搜索**安全性与隐私**，点击通用，点击**仍然允许**，即可。
 <div align="center">
-    <img src="./images/Paddle-Lite/pic2.png" width=700">
+    <img src="./images/Paddle-Lite/pic2.png" width=500">
 </div>
 
 #### 5.1.3 以arm v8 、android系统为例进行部署,开发机为ubuntu。
