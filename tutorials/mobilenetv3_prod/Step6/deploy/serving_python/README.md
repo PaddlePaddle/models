@@ -167,11 +167,11 @@ class MobileNetOp(Op):
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
         pass
         
-class MobileNetv3Service(WebService):
+class MobileNetService(WebService):
     def get_pipeline_response(self, read_op):
         mobilenet_op = MobileNetOp(name="imagenet", input_ops=[read_op])
         return mobilenet_op
-uci_service = MobileNetv3Service(name="imagenet")
+uci_service = MobileNetService(name="imagenet")
 uci_service.prepare_pipeline_config("config.yml")
 uci_service.run_service()
 ```
