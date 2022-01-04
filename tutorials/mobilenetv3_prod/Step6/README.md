@@ -243,18 +243,18 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 可以使用下面两种方式获得预测库。
 
-(1) 使用预编译包
+(1) 使用预编译包 
 
-推荐使用Paddle-Lite仓库提供的release的lib包，[下载链接](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的lib包。
+ 推荐使用Paddle-Lite仓库提供的release的lib包，[下载链接](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的lib包。
 
 ```
 tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz
 ```
 即可获取编译好的lib包。注意，即使获取编译好的lib包依然要进行上述**环境安装**的步骤，因为下面编译demo时候会用到。
 
-(2) 编译预测库
+(2) 编译预测库 
 
-运行编译脚本之前，请先检查系统环境变量 ``NDK_ROOT`` 指向正确的 Android NDK 安装路径。
+ 运行编译脚本之前，请先检查系统环境变量 ``NDK_ROOT`` 指向正确的 Android NDK 安装路径。
 之后可以下载并构建 Paddle Lite 编译包。
 
 ```
