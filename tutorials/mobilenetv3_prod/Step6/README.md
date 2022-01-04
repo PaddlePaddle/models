@@ -173,7 +173,7 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 #### 5.1.1 整体流程
 
 <div align="center">
-    <img src="./images/Paddle-Lite/paddle-lite部署流程图.png" width=600">
+    <img src="./images/Paddle-Lite/paddle-lite部署流程.png" width=600">
 </div>
 
 
