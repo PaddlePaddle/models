@@ -14,12 +14,12 @@
     - [4.2 模型评估]()
     - [4.3 模型预测]()
 - [5. 模型推理部署]()
-    - [5.1 使用paddle-lite部署]()
+    - [5.1 使用 Paddle Lite 部署]()
         - [5.1.1 整体流程]()
-        - [5.1.2 获取inference model]()
-        - [5.1.3 准备模型转换工具并生成paddle-lite的部署模型]()
-        - [5.1.4 以arm v8 、android系统为例进行部署,开发机为ubuntu]()
-        - [5.1.5 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法]()
+        - [5.1.2 获取 inference model]()
+        - [5.1.3 准备模型转换工具并生成 Paddle Lite 的部署模型]()
+        - [5.1.4 以 arm v8 、Android 系统为例进行部署,开发机系统为 Ubuntu]()
+        - [5.1.5 Paddle Lite 提供的 mobilenet_light demo 的预测步骤分析以及添加前处理方法]()
 - [6. TIPC自动化测试脚本]()
 - [7. 参考链接与文献]()
 
@@ -168,7 +168,7 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 ## 5. 模型推理部署
 
-### 5.1 使用paddle lite 部署
+### 5.1 使用 Paddle Lite 部署
 
 #### 5.1.1 整体流程
 
@@ -177,36 +177,36 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 </div>
 
 
-#### 5.1.2 获取inference model
+#### 5.1.2 获取 inference model
 
-在tools文件夹下提供了输出inference model的脚本文件export_model.py，运行如下命令即可获取inference model。
+在 tools 文件夹下提供了输出 inference model 的脚本文件 export_model.py，运行如下命令即可获取 inference model。
 ```
 python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams  --save-inference-dir=./inference_model
 ```
-在inference_model文件夹下有inference.pdmodel、inference.pdiparams和inference.pdiparams.info文件。
+在 inference_model 文件夹下有 inference.pdmodel、inference.pdiparams 和 inference.pdiparams.info 文件。
 
-#### 5.1.3 准备模型转换工具并生成paddle-lite的部署模型
+#### 5.1.3 准备模型转换工具并生成 Paddle Lite 的部署模型
 
 - 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具
 
-- 使用如下命令转换可以转换inference model到paddle lite的nb模型：
+- 使用如下命令转换可以转换 inference model 到 Paddle Lite 的 nb 模型：
 
 ```
 ./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3
 ```
 在当前文件夹下可以发现mobilenet_v3.nb文件。
 
-注：在mac上运行opt_mac可能会有如下错误：
+注：在 mac 上运行 opt_mac 可能会有如下错误：
 
 <div align="center">
     <img src="./images/Paddle-Lite/pic1.png" width=400">
 </div>
-需要搜索**安全性与隐私**，点击通用，点击**仍然允许**，即可。
+需要搜索安全性与隐私，点击通用，点击仍然允许，即可。
 <div align="center">
     <img src="./images/Paddle-Lite/pic2.png" width=500">
 </div>
 
-#### 5.1.4 以arm v8 、android系统为例进行部署,开发机为ubuntu。
+#### 5.1.4 以 arm v8 、Android 系统为例进行部署,开发机系统为 Ubuntu 
 
 - 准备编译环境
 
@@ -220,7 +220,7 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 - 环境安装命令
 
-以 Ubuntu 为例介绍安装命令。注意需要 root 用户权限执行如下命令。mac环境下编译android库参考[链接](https://paddle-lite.readthedocs.io/zh/develop/source_compile/macos_compile_android.html)，windows下暂不支持编译android版本库。
+以 Ubuntu 为例介绍安装命令。注意需要 root 用户权限执行如下命令。mac 环境下编译 Android 库参考[Android 源码编译](https://paddle-lite.readthedocs.io/zh/develop/source_compile/macos_compile_android.html)，Windows 下暂不支持编译 Android 版本库。
 
 ```
    # 1. 安装 gcc g++ git make wget python unzip adb curl 等基础软件
@@ -253,12 +253,12 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 (1) 使用预编译包 
 
- 推荐使用Paddle-Lite仓库提供的release的lib包，[下载链接](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的lib包。
+ 推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库。
 
 ```
 tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz
 ```
-即可获取编译好的lib包。注意，即使获取编译好的lib包依然要进行上述**环境安装**的步骤，因为下面编译demo时候会用到。
+即可获取编译好的库。注意，即使获取编译好的库依然要进行上述**环境安装**的步骤，因为下面编译 demo 时候会用到。
 
 (2) 编译预测库 
 
@@ -385,7 +385,7 @@ output tensor 0 mean value:0.001
 ```
 代表在android手机上推理部署完成。
 
-#### 5.1.5 lite提供的mobilenet_light demo 的预测步骤分析以及添加前处理方法
+#### 5.1.5 Paddle Lite 提供的 mobilenet_light demo 的预测步骤分析以及添加前处理方法
 
 ```c++
 #include <iostream>
