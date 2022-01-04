@@ -184,15 +184,7 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3_prod/Step1-5/mobilenetv3_re
 - 遇到 paddle 不支持的API怎么办？
 
     1. 进一步参考[API映射表](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/08_api_mapping/pytorch_api_mapping_cn.html) ：由于PaddlePaddle与PyTorch对于不同名称的API，实现的功能可能是相同的，比如[paddle.optimizer.lr.StepDecay](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/optimizer/lr/StepDecay_cn.html#stepdecay)与[torch.optim.lr_scheduler.StepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html#torch.optim.lr_scheduler.StepLR) ，因此需要进一步确认当前的确API没有实现。
-    2. 尝试使用替代实现进行复现：如下面的PyTorch代码，PaddlePaddle中可以通过slice + concat API的组合形式进行功能实现。在第二个问题，我们还可以看到其他一些torch API可用 PaddlePaddle API 实现。
-    ```python
-      torch.stack([
-        per_locations[:, 0] - per_box_regression[:, 0],
-        per_locations[:, 1] - per_box_regression[:, 1],
-        per_locations[:, 0] + per_box_regression[:, 2],
-        per_locations[:, 1] + per_box_regression[:, 3],
-      ], dim=1)
-    ```
+    2. 尝试使用替代实现进行复现：例如`torch.masked_fill`函数的功能目前可以使用`paddle.where`进行实现，可以参考[链接](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/faq/train_cn.html#paddletorch-masked-fillapi)。
     3. 尝试自己开发算子：我们非常欢迎开发者向我们贡献代码：）如果您不希望或者暂时没有时间开发新的算子，可以参照第 4 点向paddle提交issue。
     4. 在[这里](https://github.com/PaddlePaddle/Paddle/issues/new/choose)向paddle 提交issue：列出Paddle不支持的实现，开发人员会根据优先级进行开发。
     5. 得知API开发完成之后，安装编译环境：  
@@ -509,7 +501,7 @@ PaddlePaddle与PyTorch均提供了很多loss function，用于模型训练，具
 
 - 有没有什么其他影响优化不对齐的原因？
     * 有些模型训练时，会使用梯度累加策略，即累加到一定step数量之后才进行参数更新，这时在实现上需要注意对齐。
-    * 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weigh decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。设置no weight decay 可以参照[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)。
+    * 在图像分类领域，大多数Vision Transformer模型都采用了AdamW优化器，并且会设置weight decay，同时部分参数设置为no weight decay，例如位置编码的参数通常设置为no weight decay，no weight decay参数设置不正确，最终会有明显的精度损失，需要特别注意。一般可以通过分析模型权重来发现该问题，分别计算官方模型和复现模型每层参数权重的平均值、方差，对每一层依次对比，有显著差异的层可能存在问题，因为在weight decay的作用下，参数权重数值会相对较小，而未正确设置no weight decay，则会造成该层参数权重数值异常偏小。设置no weight decay 可以参照[这里](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/arch/backbone/model_zoo/resnest.py#L72)。
 
 - 有没有什么任务不需要进行优化对齐的呢？
 
@@ -686,12 +678,11 @@ random.seed(config.SEED)
         print(m.bias)
     ```
 
-3. 初始化是怎么影响不同类型的模型的？
-
-* CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；
-* transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查；
-* 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查；
-* 领域自适应算法由于需要基于初始模型生成伪标签，因此对初始网络敏感，建议加载预训练的模型进行训练。
+- 初始化是怎么影响不同类型的模型的？
+    * CNN对于模型初始化相对来说没有那么敏感，在迭代轮数与数据集足够的情况下，最终精度指标基本接近；
+    * transformer系列模型对于初始化比较敏感，在transformer系列模型训练对齐过程中，建议对这一块进行重点检查；
+    * 生成模型尤其是超分模型，对初始化比较敏感，建议对初始化重点检查；
+    * 领域自适应算法由于需要基于初始模型生成伪标签，因此对初始网络敏感，建议加载预训练的模型进行训练。
 
 <a name="3.9"></a>
 ### 3.9 模型训练对齐
@@ -716,8 +707,14 @@ random.seed(config.SEED)
     * 使用参考代码的Dataloader生成的数据，进行模型训练，排查train dataloader的影响。
 
 **【实战】**
-【todo】
+
 本部分可以参考代码：[mobilenetv3_prod/Step6/train.py#L371](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/train.py#L371)。
+
+基于上述代码的训练后，可以获得如下日志：
+
+基于参考代码[训练log](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small_ref.log)
+
+基于 paddle 的[训练log](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log)
 
 **【核验】**
 
