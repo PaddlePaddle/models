@@ -193,7 +193,6 @@ predictor = paddle_infer.create_predictor(config)
 - Step2：配置预测库输入输出
 
 ```python
-```python
 input_names = predictor.get_input_names()
 input_handle = predictor.get_input_handle(input_names[0])
 output_names = predictor.get_output_names()
@@ -202,7 +201,6 @@ output_handle = predictor.get_output_handle(output_names[0])
 
 - Step3：开始预测并检验结果正确性
 
-```python
 ```python
 input_handle.copy_from_cpu(img_np)
 predictor.run()
