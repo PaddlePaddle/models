@@ -5,6 +5,7 @@ import time
 
 import paddle
 from paddle import nn
+from paddle.static import InputSpec
 import paddlevision
 
 import presets
@@ -190,6 +191,42 @@ def main(args):
     model = paddlevision.models.__dict__[args.model](
         pretrained=args.pretrained)
 
+    if args.pact_quant:
+        try:
+            from paddleslim.dygraph.quant import QAT
+        except Exception as e:
+            print(
+                'Unable to QAT, please install paddleslim, for example: `pip install paddleslim`'
+            )
+            return
+
+        quant_config = {
+            # activation preprocess type, default is None and no preprocessing is performed.
+            'activation_preprocess_type': 'PACT',
+            # weight preprocess type, default is None and no preprocessing is performed. 
+            'weight_preprocess_type': None,
+            # weight quantize type, default is 'channel_wise_abs_max'
+            'weight_quantize_type': 'channel_wise_abs_max',
+            # activation quantize type, default is 'moving_average_abs_max'
+            'activation_quantize_type': 'moving_average_abs_max',
+            # weight quantize bit num, default is 8
+            'weight_bits': 8,
+            # activation quantize bit num, default is 8
+            'activation_bits': 8,
+            # data type after quantization, such as 'uint8', 'int8', etc. default is 'int8'
+            'dtype': 'int8',
+            # window size for 'range_abs_max' quantization. default is 10000
+            'window_size': 10000,
+            # The decay coefficient of moving average, default is 0.9
+            'moving_rate': 0.9,
+            # for dygraph quantization, layers of type in quantizable_layer_type will be quantized
+            'quantizable_layer_type': ['Conv2D', 'Linear'],
+        }
+
+        quanter = QAT(config=quant_config)
+        quanter.quantize(model)
+        print("Quanted model")
+
     criterion = nn.CrossEntropyLoss()
 
     lr_scheduler = paddle.optimizer.lr.StepDecay(
@@ -264,6 +301,17 @@ def main(args):
                                 os.path.join(args.output_dir, 'best.pdparams'))
                     paddle.save(optimizer.state_dict(),
                                 os.path.join(args.output_dir, 'best.pdopt'))
+
+                    if args.pact_quant:
+                        input_spec = [
+                            InputSpec(
+                                shape=[None, 3, 224, 224], dtype='float32')
+                        ]
+                        quanter.save_quantized_model(
+                            model,
+                            os.path.join(args.output_dir, "qat_inference"),
+                            input_spec=input_spec)
+                        print("QAT inference model saved in {args.output_dir}")
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -361,6 +409,12 @@ def get_args_parser(add_help=True):
         'O0 for FP32 training, O1 for mixed precision training.'
         'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
     )
+
+    # Quant aware training parameters
+    parser.add_argument(
+        '--pact_quant',
+        action='store_true',
+        help='Use pact for quant aware training')
 
     return parser
 
