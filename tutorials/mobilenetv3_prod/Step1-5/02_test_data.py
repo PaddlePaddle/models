@@ -5,46 +5,7 @@ import paddle
 import numpy as np
 from PIL import Image
 from reprod_log import ReprodLogger, ReprodDiffHelper
-import mobilenetv3_paddle.presets as presets_paddle
-import mobilenetv3_paddle.paddlevision as paddlevision
-import mobilenetv3_ref.presets as presets_torch
-import mobilenetv3_ref.torchvision as torchvision
-
-
-def build_paddle_data_pipeline():
-    # dataset & data_loader
-    dataset_test = paddlevision.datasets.ImageFolder(
-        "./lite_data/val/",
-        presets_paddle.ClassificationPresetEval(
-            crop_size=224, resize_size=256))
-
-    test_sampler = paddle.io.SequenceSampler(dataset_test)
-
-    test_batch_sampler = paddle.io.BatchSampler(
-        sampler=test_sampler, batch_size=4)
-
-    data_loader_test = paddle.io.DataLoader(
-        dataset_test, batch_sampler=test_batch_sampler, num_workers=0)
-
-    return dataset_test, data_loader_test
-
-
-def build_torch_data_pipeline():
-    dataset_test = torchvision.datasets.ImageFolder(
-        "./lite_data/val/",
-        presets_torch.ClassificationPresetEval(
-            crop_size=224, resize_size=256),
-        is_valid_file=None)
-
-    test_sampler = torch.utils.data.SequentialSampler(dataset_test)
-
-    data_loader_test = torch.utils.data.DataLoader(
-        dataset_test,
-        batch_size=4,
-        sampler=test_sampler,
-        num_workers=0,
-        pin_memory=True)
-    return dataset_test, data_loader_test
+from utilities import build_paddle_data_pipeline, build_torch_data_pipeline
 
 
 def test_data_pipeline():

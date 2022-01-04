@@ -7,49 +7,7 @@ from reprod_log import ReprodDiffHelper
 
 from mobilenetv3_paddle.paddlevision.models import mobilenet_v3_small as mv3_small_paddle
 from mobilenetv3_ref.torchvision.models import mobilenet_v3_small as mv3_small_torch
-
-
-def train_one_epoch_paddle(inputs, labels, model, criterion, optimizer,
-                           lr_scheduler, max_iter, reprod_logger):
-    for idx in range(max_iter):
-        image = paddle.to_tensor(inputs, dtype="float32")
-        target = paddle.to_tensor(labels, dtype="int64")
-        # import pdb; pdb.set_trace()
-
-        output = model(image)
-        loss = criterion(output, target)
-
-        reprod_logger.add("loss_{}".format(idx), loss.cpu().detach().numpy())
-        reprod_logger.add("lr_{}".format(idx), np.array(lr_scheduler.get_lr()))
-
-        optimizer.clear_grad()
-        loss.backward()
-        optimizer.step()
-        # lr_scheduler.step() 
-
-    reprod_logger.save("./result/losses_paddle.npy")
-
-
-def train_one_epoch_torch(inputs, labels, model, criterion, optimizer,
-                          lr_scheduler, max_iter, reprod_logger):
-    for idx in range(max_iter):
-        image = torch.tensor(inputs, dtype=torch.float32).cuda()
-        target = torch.tensor(labels, dtype=torch.int64).cuda()
-        model = model.cuda()
-
-        output = model(image)
-        loss = criterion(output, target)
-
-        reprod_logger.add("loss_{}".format(idx), loss.cpu().detach().numpy())
-        reprod_logger.add("lr_{}".format(idx),
-                          np.array(lr_scheduler.get_last_lr()))
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        # lr_scheduler.step()
-
-    reprod_logger.save("./result/losses_ref.npy")
+from utilities import train_one_epoch_paddle, train_one_epoch_torch
 
 
 def test_backward():

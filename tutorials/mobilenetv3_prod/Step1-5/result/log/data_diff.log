@@ -1,11 +1,11 @@
-[2021/12/23 17:21:22] root INFO: length: 
-[2021/12/23 17:21:22] root INFO: 	mean diff: check passed: True, value: 0.0
-[2021/12/23 17:21:22] root INFO: dataloader_0: 
-[2021/12/23 17:21:22] root INFO: 	mean diff: check passed: True, value: 0.0
-[2021/12/23 17:21:22] root INFO: dataloader_1: 
-[2021/12/23 17:21:22] root INFO: 	mean diff: check passed: True, value: 0.0
-[2021/12/23 17:21:22] root INFO: dataloader_2: 
-[2021/12/23 17:21:22] root INFO: 	mean diff: check passed: True, value: 0.0
-[2021/12/23 17:21:22] root INFO: dataloader_3: 
-[2021/12/23 17:21:22] root INFO: 	mean diff: check passed: True, value: 0.0
-[2021/12/23 17:21:22] root INFO: diff check passed
+[2022/01/03 16:51:05] root INFO: length: 
+[2022/01/03 16:51:05] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:05] root INFO: dataloader_0: 
+[2022/01/03 16:51:05] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:05] root INFO: dataloader_1: 
+[2022/01/03 16:51:05] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:05] root INFO: dataloader_2: 
+[2022/01/03 16:51:05] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:05] root INFO: dataloader_3: 
+[2022/01/03 16:51:05] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:05] root INFO: diff check passed
