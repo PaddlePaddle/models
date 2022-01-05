@@ -710,11 +710,6 @@ random.seed(config.SEED)
 
 本部分可以参考代码：[mobilenetv3_prod/Step6/train.py#L371](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/train.py#L371)。
 
-基于上述代码的训练后，可以获得如下日志：
-
-基于参考代码[训练log](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small_ref.log)
-
-基于 paddle 的[训练log](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log)
 
 **【核验】**
 
@@ -722,7 +717,7 @@ random.seed(config.SEED)
 
 1. 输入：train/eval dataloader, model。
 2. 输出：训练结果和模型。
-3. 自测：训练结果和官网精度或参考代码精度在误差范围内即可。
+3. 自测：训练结果和官网精度或参考代码精度在误差范围内即可，以基于ImageNet1k分类数据集或者COCO2017检测数据集的模型训练为例，精度误差在0.1%或者以内是可以接受的。
 
 **【FAQ】**
 - 训练过程怎么更好地对齐呢？
