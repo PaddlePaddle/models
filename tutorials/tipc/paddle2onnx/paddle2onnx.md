@@ -23,13 +23,13 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 
 - 安装 Paddle2ONNX
 ```
-python3.7 -m pip install paddle2onnx
+python3 -m pip install paddle2onnx
 ```
 
 - 安装 ONNX
 ```
 # 建议安装 1.9.0 版本，可根据环境更换版本号
-python3.7 -m pip install onnxruntime==1.9.0
+python3 -m pip install onnxruntime==1.9.0
 ```
 
 - 下载代码
