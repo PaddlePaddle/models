@@ -164,6 +164,7 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 
 coming soon!
 
+
 ## 6. TIPC自动化测试脚本
 
 coming soon!
