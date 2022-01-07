@@ -30,7 +30,7 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
 
 **docker**是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。建议在docker中进行Serving服务化部署。本教程在docker环境运行。
 
-（1）以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可。
+以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可（本教程均采用GPU版本进行部署）。
 
  1）docker环境安装（CPU版本）
    
@@ -59,10 +59,10 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
   pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
   pip3 install paddle-serving-app==0.7.0
   pip3 install paddlepaddle==2.2.1 # CPU
-  pip3 install paddlepaddle-gpu==2.2.1 
+  pip3 install paddlepaddle-gpu==2.2.1 #GPU
   ```
-  您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
-  Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
+  您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。  
+  Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)  
   PaddlePaddle更多版本请参考[官网](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip/linux-pip.html)
 
 (3)在docker中下载工程
@@ -107,7 +107,7 @@ python3 web_service.py &
 
 ![图片](../../images/serving_startup_visualization.png)
    
-
+<a name="2.4"></a>
 #### 2.4 客户端访问服务
 
 **【基本流程】**
@@ -123,7 +123,7 @@ python3 pipeline_http_client.py
 
 ![图片](../../images/serving_client_results.png)
 
-
+<a name="3"></a>
 ## 3. FAQ
 
 1. 如果在模型转换时报错，比如`AttributeError: 'Program' object has no attribute '_remove_training_info'`，可以将paddle更新到2.2版本。
