@@ -39,11 +39,11 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
 注：在 mac 上运行 opt_mac 可能会有如下错误：
 
 <div align="center">
-    <img src="./images/Paddle-Lite/pic1.png" width=400">
+    <img src="../../images/Paddle-Lite/pic1.png" width=400">
 </div>
 需要搜索安全性与隐私，点击通用，点击仍然允许，即可。
 <div align="center">
-    <img src="./images/Paddle-Lite/pic2.png" width=500">
+    <img src="../../images/Paddle-Lite/pic2.png" width=500">
 </div>
 
 ### 2.3 以 arm v8 、Android 系统为例进行部署,开发机系统为 Ubuntu 
