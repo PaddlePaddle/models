@@ -1,2 +1,3 @@
-reprod-log
+reprod-log>=1.0.1
+paddleslim>=2.2.1
 

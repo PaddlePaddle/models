@@ -1,0 +1,13 @@
+[2022/01/03 16:51:46] root INFO: loss_0: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: False, value: 1.9073486328125e-06
+[2022/01/03 16:51:46] root INFO: lr_0: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:46] root INFO: loss_1: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: True, value: 9.5367431640625e-07
+[2022/01/03 16:51:46] root INFO: lr_1: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:46] root INFO: loss_2: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: False, value: 9.5367431640625e-06
+[2022/01/03 16:51:46] root INFO: lr_2: 
+[2022/01/03 16:51:46] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:51:46] root INFO: diff check failed

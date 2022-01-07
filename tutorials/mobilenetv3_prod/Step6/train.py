@@ -5,6 +5,7 @@ import time
 
 import paddle
 from paddle import nn
+from paddle.static import InputSpec
 import paddlevision
 
 import presets
@@ -19,14 +20,14 @@ import numpy as np
 from reprod_log import ReprodLogger
 
 
-def train_one_epoch(
-        model,
-        criterion,
-        optimizer,
-        data_loader,
-        device,
-        epoch,
-        print_freq, ):
+def train_one_epoch(model,
+                    criterion,
+                    optimizer,
+                    data_loader,
+                    epoch,
+                    print_freq,
+                    amp_level=None,
+                    scaler=None):
     model.train()
     # training log
     train_reader_cost = 0.0
@@ -40,10 +41,20 @@ def train_one_epoch(
     for batch_idx, (image, target) in enumerate(data_loader):
         train_reader_cost += time.time() - reader_start
         train_start = time.time()
-        output = model(image)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
+
+        if amp_level is not None:
+            with paddle.amp.auto_cast(level=amp_level):
+                output = model(image)
+                loss = criterion(output, target)
+            scaled = scaler.scale(loss)
+            scaled.backward()
+            scaler.minimize(optimizer, scaled)
+        else:
+            output = model(image)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+
         optimizer.clear_grad()
         train_run_cost += time.time() - train_start
         acc = utils.accuracy(output, target, topk=(1, 5))
@@ -73,15 +84,20 @@ def train_one_epoch(
         reader_start = time.time()
 
 
-def evaluate(model, criterion, data_loader, device, print_freq=100):
+def evaluate(model, criterion, data_loader, print_freq=100, amp_level=None):
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     with paddle.no_grad():
         for image, target in metric_logger.log_every(data_loader, print_freq,
                                                      header):
-            output = model(image)
-            loss = criterion(output, target)
+            if amp_level is not None:
+                with paddle.amp.auto_cast(level=amp_level):
+                    output = model(image)
+                    loss = criterion(output, target)
+            else:
+                output = model(image)
+                loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets
@@ -143,7 +159,10 @@ def main(args):
 
     print(args)
 
-    device = paddle.set_device(args.device)
+    try:
+        paddle.set_device(args.device)
+    except:
+        print("device set error, use default device...")
 
     # multi cards
     if paddle.distributed.get_world_size() > 1:
@@ -171,6 +190,42 @@ def main(args):
     print("Creating model")
     model = paddlevision.models.__dict__[args.model](
         pretrained=args.pretrained)
+
+    if args.pact_quant:
+        try:
+            from paddleslim.dygraph.quant import QAT
+        except Exception as e:
+            print(
+                'Unable to QAT, please install paddleslim, for example: `pip install paddleslim`'
+            )
+            return
+
+        quant_config = {
+            # activation preprocess type, default is None and no preprocessing is performed.
+            'activation_preprocess_type': 'PACT',
+            # weight preprocess type, default is None and no preprocessing is performed. 
+            'weight_preprocess_type': None,
+            # weight quantize type, default is 'channel_wise_abs_max'
+            'weight_quantize_type': 'channel_wise_abs_max',
+            # activation quantize type, default is 'moving_average_abs_max'
+            'activation_quantize_type': 'moving_average_abs_max',
+            # weight quantize bit num, default is 8
+            'weight_bits': 8,
+            # activation quantize bit num, default is 8
+            'activation_bits': 8,
+            # data type after quantization, such as 'uint8', 'int8', etc. default is 'int8'
+            'dtype': 'int8',
+            # window size for 'range_abs_max' quantization. default is 10000
+            'window_size': 10000,
+            # The decay coefficient of moving average, default is 0.9
+            'moving_rate': 0.9,
+            # for dygraph quantization, layers of type in quantizable_layer_type will be quantized
+            'quantizable_layer_type': ['Conv2D', 'Linear'],
+        }
+
+        quanter = QAT(config=quant_config)
+        quanter.quantize(model)
+        print("Quanted model")
 
     criterion = nn.CrossEntropyLoss()
 
@@ -203,12 +258,19 @@ def main(args):
         opt_state_dict = paddle.load(os.path.join(args.resume, '.pdopt'))
         optimizer.load_state_dict(opt_state_dict)
 
+    scaler = None
+    if args.amp_level is not None:
+        scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
+        if args.amp_level == 'O2':
+            model = paddle.amp.decorate(models=model, level='O2')
+
     # multi cards
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
     if args.test_only and paddle.distributed.get_rank() == 0:
-        top1 = evaluate(model, criterion, data_loader_test, device=device)
+        top1 = evaluate(
+            model, criterion, data_loader_test, amp_level=args.amp_level)
         return top1
 
     print("Start training")
@@ -216,11 +278,12 @@ def main(args):
     best_top1 = 0.0
 
     for epoch in range(args.start_epoch, args.epochs):
-        train_one_epoch(model, criterion, optimizer, data_loader, device,
-                        epoch, args.print_freq)
+        train_one_epoch(model, criterion, optimizer, data_loader, epoch,
+                        args.print_freq, args.amp_level, scaler)
         lr_scheduler.step()
         if paddle.distributed.get_rank() == 0:
-            top1 = evaluate(model, criterion, data_loader_test, device=device)
+            top1 = evaluate(
+                model, criterion, data_loader_test, amp_level=args.amp_level)
             if args.output_dir:
                 paddle.save(model.state_dict(),
                             os.path.join(args.output_dir,
@@ -239,6 +302,17 @@ def main(args):
                     paddle.save(optimizer.state_dict(),
                                 os.path.join(args.output_dir, 'best.pdopt'))
 
+                    if args.pact_quant:
+                        input_spec = [
+                            InputSpec(
+                                shape=[None, 3, 224, 224], dtype='float32')
+                        ]
+                        quanter.save_quantized_model(
+                            model,
+                            os.path.join(args.output_dir, "qat_inference"),
+                            input_spec=input_spec)
+                        print("QAT inference model saved in {args.output_dir}")
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -253,13 +327,15 @@ def get_args_parser(add_help=True):
     parser.add_argument('--data-path', default='./data', help='dataset')
     parser.add_argument('--model', default='mobilenet_v3_small', help='model')
     parser.add_argument('--device', default='gpu', help='device')
-    parser.add_argument('-b', '--batch-size', default=32, type=int)
+    parser.add_argument('-b', '--batch-size', default=256, type=int)
     parser.add_argument(
         '--epochs',
         default=90,
         type=int,
         metavar='N',
         help='number of total epochs to run')
+    parser.add_argument(
+        '--amp_level', default=None, help='amp level can set to be : O1/O2')
     parser.add_argument(
         '-j',
         '--workers',
@@ -269,7 +345,7 @@ def get_args_parser(add_help=True):
         help='number of data loading workers (default: 16)')
     parser.add_argument('--opt', default='sgd', type=str, help='optimizer')
     parser.add_argument(
-        '--lr', default=0.00125, type=float, help='initial learning rate')
+        '--lr', default=0.1, type=float, help='initial learning rate')
     parser.add_argument(
         '--momentum', default=0.9, type=float, metavar='M', help='momentum')
     parser.add_argument(
@@ -333,6 +409,12 @@ def get_args_parser(add_help=True):
         'O0 for FP32 training, O1 for mixed precision training.'
         'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
     )
+
+    # Quant aware training parameters
+    parser.add_argument(
+        '--pact_quant',
+        action='store_true',
+        help='Use pact for quant aware training')
 
     return parser
 
