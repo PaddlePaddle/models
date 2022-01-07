@@ -66,17 +66,19 @@ Paddle Serving服务化部署主要包括以下步骤：
   nvidia-docker exec -it test bash
   ```
   
-（2）安装Paddle Serving三个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和。
+（2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
   ```
   pip3 install paddle-serving-client==0.7.0
   pip3 install paddle-serving-server==0.7.0 # CPU
   pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
   pip3 install paddle-serving-app==0.7.0
+  pip3 install paddlepaddle==2.2.1 # CPU
   pip3 install paddlepaddle-gpu==2.2.1 
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
   Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
+  PaddlePaddle更多版本请参考[官网](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip/linux-pip.html)
 
 (3)在docker中下载工程
 
