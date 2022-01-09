@@ -11,7 +11,8 @@
     - [2.4 复制部署样例程序](#2.4)
     - [2.5 服务端修改](#2.5)
     - [2.6 客户端修改](#2.6)
-    - [2.7 启动服务端模型预测服务 & 启动客服端](#2.7)
+    - [2.7 启动服务端模型预测服务](#2.7)
+    - [2.8 启动客服端](#2.7)
 - [3. FAQ](#3)
 
 <a name="1"></a>
@@ -46,11 +47,13 @@ Paddle Serving服务化部署主要包括以下步骤：
 
 **docker**是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。Paddle Serving容器化部署建议在docker中进行Serving服务化部署。本教程在docker环境运行。
 
+**【注意】**：推荐使用docker进行Serving部署。如果您已经准备好了docker环境，那么可以跳过此步骤。
+
 （1）以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可。
 
  1）docker环境安装（CPU版本）
    
-  ```
+  ```bash
   # 拉取并进入 Paddle Serving的 CPU Docker
   docker pull paddlepaddle/serving:0.7.0-devel
   docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-devel bash
@@ -59,7 +62,7 @@ Paddle Serving服务化部署主要包括以下步骤：
   
   2)docker环境安装（GPU版本）
     
-  ```
+  ```bash
   # 拉取并进入 Paddle Serving的GPU Docker
   docker pull paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel
   nvidia-docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel bash
@@ -68,12 +71,12 @@ Paddle Serving服务化部署主要包括以下步骤：
   
 （2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
-  ```
+  ```bash
   pip3 install paddle-serving-client==0.7.0
-  pip3 install paddle-serving-server==0.7.0 # CPU
+  #pip3 install paddle-serving-server==0.7.0 # CPU
   pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
   pip3 install paddle-serving-app==0.7.0
-  pip3 install paddlepaddle==2.2.1 # CPU
+  #pip3 install paddlepaddle==2.2.1 # CPU
   pip3 install paddlepaddle-gpu==2.2.1 
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
@@ -82,7 +85,7 @@ Paddle Serving服务化部署主要包括以下步骤：
 
 (3)在docker中下载工程
 
-```
+```bash
 git clone https://github.com/PaddlePaddle/models.git
 cd models/tutorials/tipc/serving_python
 ```
@@ -99,7 +102,7 @@ cd models/tutorials/tipc/serving_python
 
 为了便于模型服务化部署，需要将静态图模型(模型结构文件：\*.pdmodel和模型参数文件：\*.pdiparams)使用paddle_serving_client.convert按如下命令转换为服务化部署模型：
 
-```
+```bash
 python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --model_filename {模型结构文件} --params_filename {模型参数文件} --serving_server {转换后的服务器端模型和配置文件存储路径} --serving_client {转换后的客户端模型和配置文件存储路径}
 ```
 上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。其中`paddle_serving_client.convert`命令是`paddle_serving_client` whl包内置的转换函数，无需修改。
@@ -108,7 +111,7 @@ python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --mod
 
 针对MobileNetV3网络，将inference模型转换为服务化部署模型的示例命令如下，转换完后在本地生成**serving_server**和**serving_client**两个文件夹。本教程后续主要使用serving_server文件夹中的模型。
 
-```
+```bash
 python3 -m paddle_serving_client.convert \
     --dirname ./mobilenet_v3_small_infer/ \
     --model_filename inference.pdmodel \
@@ -132,10 +135,12 @@ python3 -m paddle_serving_client.convert \
 
 - pipeline_http_client.py：用于**客户端**访问服务的程序，开发者需要设置url（服务地址）、logid（日志ID）和测试图像。
 
+- preprocess_ops.py：用户图片前项处理的一些工具类
+
 **【实战】**
 
 如果服务化部署MobileNetV3网络，拷贝上述三个文件到当前目录，以便做进一步修改。
-```
+```bash
 cp -r ./template/code/*  ./
 
 ```
@@ -160,7 +165,7 @@ cp -r ./template/code/*  ./
 
 （1）修改web_service.py文件后的代码如下：
 
-```
+```python
 from paddle_serving_server.web_service import WebService, Op
 class MobileNetV3Op(Op):
     def init_op(self):
@@ -208,20 +213,19 @@ web_service.py文件中的TIPCExampleOp类的preprocess函数用于开发数据�
 
 ```py
 import sys
-import logging
 import numpy as np
-import base64, cv2
-from paddle_serving_app.reader import Sequential, URL2Image, Resize, CenterCrop, RGB2BGR, Transpose, Div, Normalize, Base64ToImage
+import base64
+from PIL import Image
+import io
+from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 ```     
 修改MobileNetV3Op中的init_op和preprocess函数相关代码：
 
 ```py
 class MobileNetV3Op(Op):
     def init_op(self):
-        self.seq = Sequential([
-            Resize(256), CenterCrop(224), RGB2BGR(), Transpose((2, 0, 1)),
-            Div(255), Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225],
-                                True)
+        self.seq = Compose([
+            ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
         ])
         
     def preprocess(self, input_dicts, data_id, log_id):
@@ -230,9 +234,10 @@ class MobileNetV3Op(Op):
         imgs = []
         for key in input_dict.keys():
             data = base64.b64decode(input_dict[key].encode('utf8'))
-            data = np.fromstring(data, np.uint8)
-            im = cv2.imdecode(data, cv2.IMREAD_COLOR)
-            img = self.seq(im)
+            byte_stream = io.BytesIO(data)
+            img = Image.open(byte_stream)
+            img = img.convert("RGB")
+            img = self.seq(img)
             imgs.append(img[np.newaxis, :].copy())
         input_imgs = np.concatenate(imgs, axis=0)
         return {"input": input_imgs}, False, None, ""
@@ -297,9 +302,8 @@ img_path = "./images/demo.jpg"
 ``` 
 
 <a name="2.7"></a>
-### 2.7 启动服务端模型预测服务 & 启动客服端
+### 2.7 启动服务端模型预测服务
 
-### 2.7.1 启动服务端模型预测服务
 **【基本流程】**
 
 当完成服务化部署引擎初始化、数据预处理和预测结果后处理开发，则可以按如下命令启动模型预测服务：
@@ -313,24 +317,25 @@ python3 web_service.py &
 
 ![图片](./images/py_serving_startup_visualization.jpg)
    
-
-#### 2.7.2 启动客户端，访问服务
+<a name="2.8"></a>
+#### 2.8 启动客户端
 
 **【基本流程】**
 
-当成功启动了模型预测服务，可以启动服务端代码，用于访问2.8.1中的服务端服务。
+当成功启动了模型预测服务，可以启动客户端代码，访问服务。
 
 **【实战】**
        
 客户端访问服务的命令如下：
 
-```
+```bash
 python3 pipeline_http_client.py
 ```                                                  
 访问成功的界面如下图：
 
-![图片](./images/serving_client_results.png)
+![图片](./images/serving_client_result.png)
 
+与基于Paddle Inference的推理结果一致，结果正确。
 
 【注意事项】
 如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
