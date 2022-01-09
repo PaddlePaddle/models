@@ -15,18 +15,16 @@
 from paddle_serving_server.web_service import WebService, Op
 
 import sys
-import logging
 import numpy as np
-import base64, cv2
-from paddle_serving_app.reader import Sequential, URL2Image, Resize, CenterCrop, RGB2BGR, Transpose, Div, Normalize, Base64ToImage
-
+import base64
+from PIL import Image
+import io
+from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 
 class MobileNetV3Op(Op):
     def init_op(self):
-        self.seq = Sequential([
-            Resize(256), CenterCrop(224), RGB2BGR(), Transpose((2, 0, 1)),
-            Div(255), Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225],
-                                True)
+        self.seq = Compose([
+            ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
         ])
 
     def preprocess(self, input_dicts, data_id, log_id):
@@ -35,9 +33,10 @@ class MobileNetV3Op(Op):
         imgs = []
         for key in input_dict.keys():
             data = base64.b64decode(input_dict[key].encode('utf8'))
-            data = np.fromstring(data, np.uint8)
-            im = cv2.imdecode(data, cv2.IMREAD_COLOR)
-            img = self.seq(im)
+            byte_stream = io.BytesIO(data)
+            img = Image.open(byte_stream)
+            img = img.convert("RGB")
+            img = self.seq(img)
             imgs.append(img[np.newaxis, :].copy())
         input_imgs = np.concatenate(imgs, axis=0)
         return {"input": input_imgs}, False, None, ""

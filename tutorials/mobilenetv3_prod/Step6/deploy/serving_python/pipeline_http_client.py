@@ -34,7 +34,7 @@ def cv2_to_base64(image):
 
 
 if __name__ == "__main__":
-    url = "http://127.0.0.1:18087/imagenet/prediction"
+    url = "http://127.0.0.1:18093/imagenet/prediction"
     logid = 10000
     img_path = "../../images/demo.jpg"
     with open(img_path, 'rb') as file:
