@@ -32,9 +32,11 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
 
 以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可（本教程均采用GPU版本进行部署）。
 
+**【注意】**：推荐使用docker进行Serving部署。如果您已经准备好了docker环境，那么可以跳过此步骤。
+
  1）docker环境安装（CPU版本）
    
-  ```
+  ```bash
   # 拉取并进入 Paddle Serving的 CPU Docker
   docker pull paddlepaddle/serving:0.7.0-devel
   docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-devel bash
@@ -43,7 +45,7 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
   
   2)docker环境安装（GPU版本）
     
-  ```
+  ```bash
   # 拉取并进入 Paddle Serving的GPU Docker
   docker pull paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel
   nvidia-docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel bash
@@ -53,12 +55,12 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
   
 （2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
-  ```
+  ```bash
   pip3 install paddle-serving-client==0.7.0
-  pip3 install paddle-serving-server==0.7.0 # CPU
+  #pip3 install paddle-serving-server==0.7.0 # CPU
   pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
   pip3 install paddle-serving-app==0.7.0
-  pip3 install paddlepaddle==2.2.1 # CPU
+  #pip3 install paddlepaddle==2.2.1 # CPU
   pip3 install paddlepaddle-gpu==2.2.1 #GPU
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。  
@@ -67,7 +69,7 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
 
 (3)在docker中下载工程
 
-```
+```bash
 git clone https://github.com/PaddlePaddle/models.git
 cd models/tutorials/mobilenetv3_prod/Step6/deploy/serving_python/
 ```
@@ -84,7 +86,7 @@ cd models/tutorials/mobilenetv3_prod/Step6/deploy/serving_python/
 
 针对MobileNetV3网络，将inference模型转换为服务化部署模型的示例命令如下，转换完后在本地生成**serving_server**和**serving_client**两个文件夹。本教程后续主要使用serving_server文件夹中的模型。
 
-```
+```bash
 python3 -m paddle_serving_client.convert \
     --dirname ./mobilenet_v3_small_infer/ \
     --model_filename inference.pdmodel \
@@ -116,12 +118,14 @@ python3 web_service.py &
        
 客户端访问服务的命令如下：
 
-```
+```bash
 python3 pipeline_http_client.py
 ```                                                  
 访问成功的界面如下图：
 
-![图片](../../images/serving_client_results.png)
+![图片](../../images/serving_client_result.png)
+
+与基于Paddle Inference的推理结果一致，结果正确。
 
 <a name="3"></a>
 ## 3. FAQ
