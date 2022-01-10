@@ -102,6 +102,8 @@ python3 deploy/onnx_python/infer.py \
 在`ONNXRuntime`输出结果如下。
 
 ```
+ONNXRuntime predict:
+
 class_id: 8, prob: 0.9091270565986633
 ```
 
@@ -110,6 +112,8 @@ class_id: 8, prob: 0.9091270565986633
 `ONNXRuntime`预测结果和`Paddle Inference`预测结果对比，如下。
 
 ```
+ONNXRuntime and Paddle Inference result diff:
+
 The difference of results between ONNXRuntime and Paddle looks good!
 max_abs_diff:  1.5646219e-07
 ```
