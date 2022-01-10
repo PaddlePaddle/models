@@ -6,7 +6,7 @@
 - [2. Paddle2ONNX推理过程开发](#2---)
     - [2.1 环境准备](#2.1---)
     - [2.2 模型转换](#2.2---)
-    - [2.3 ONNX 预测](#2.3---)
+    - [2.3 ONNX模型推理](#2.3---)
 - [3. FAQ](#3---)
 
 ## 1. 简介
@@ -31,7 +31,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 python3 -m pip install paddle2onnx
 ```
 
-- 安装 ONNX
+- 安装 onnxruntime
 ```
 # 建议安装 1.9.0 版本，可根据环境更换版本号
 python3 -m pip install onnxruntime==1.9.0
@@ -62,7 +62,7 @@ python3 ./tools/export_model.py --pretrained=${your_pdiparams_file} --save-infer
 
 **【实战】**
 
-参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
 **【核验】**
 
@@ -98,16 +98,20 @@ paddle2onnx --model_dir=${your_inference_model_dir}
   - ${opset_version}指的是ONNX Opset，目前稳定支持9～11，默认是10.
   - ${enable_onnx_checker}指的是否检查导出为ONNX模型的正确性.
 
+更多关于参数的用法，可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
+
 **【实战】**
 
-参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
 **【核验】**
 
 执行完毕后，将产出${output_file} ONNX 模型文件
 
 
-### 2.3 ONNX 预测
+### 2.3 ONNX模型推理
+
+ONNX作为开源的神经网络交换格式，得到大多数推理引擎的部署支持。在本文档中我们采用微软开源的onnxruntime推理引擎，进行转换后模型的正确性较验。
 
 **【基本内容】**
 
@@ -169,7 +173,7 @@ print('max_abs_diff: ', max_abs_diff)
 
 **【实战】**
 
-参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.3章节
+参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.3章节
 
 ## 3. FAQ
 
