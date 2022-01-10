@@ -93,7 +93,10 @@ ONNX模型测试步骤如下：
 执行如下命令：
 
 ```
-python3 deploy/onnx_python/infer.py --onnx_file ./inference/mobilenetv3_model/model.onnx --params_file ./mobilenet_v3_small_pretrained.pdparams --img_path ./images/demo.jpg
+python3 deploy/onnx_python/infer.py \
+  --onnx_file ./inference/mobilenetv3_model/model.onnx \
+  --params_file ./mobilenet_v3_small_pretrained.pdparams \
+  --img_path ./images/demo.jpg
 ```
 
 在`ONNXRuntime`输出结果如下。
