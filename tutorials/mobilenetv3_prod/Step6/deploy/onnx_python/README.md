@@ -79,74 +79,10 @@ paddle2onnx --model_dir=./mobilenetv3_model/ \
 
 ### 2.3 ONNX 推理
 
-ONNX模型测试：
+ONNX模型测试步骤如下：
 
 - Step1：初始化`ONNXRuntime`库并配置相应参数, 并进行预测
-
-```
-import numpy as np
-from PIL import Image
-from onnxruntime import InferenceSession
-from presets import ClassificationPresetEval
-
-# 加载ONNX模型
-sess = InferenceSession('./inference/mobilenetv3_model/model.onnx')
-
-# define transforms
-input_shape = sess.get_inputs()[0].shape[2:]
-eval_transforms = ClassificationPresetEval(crop_size=input_shape,
-                                           resize_size=256)
-# 准备输入
-with open('./images/demo.jpg', 'rb') as f:
-    img = Image.open(f).convert('RGB')
-
-img = eval_transforms(img)
-img = np.expand_dims(img, axis=0)
-
-# 模型预测
-ort_outs = sess.run(output_names=None,
-                    input_feed={sess.get_inputs()[0].name: img})
-
-output = ort_outs[0]
-class_id = output.argmax()
-prob = output[0][class_id]
-print(f"class_id: {class_id}, prob: {prob}")
-
-```
-
 - Step2：`ONNXRuntime`预测结果和`Paddle Inference`预测结果对比
-
-```
-
-import paddle
-import paddle.nn as nn
-# 从模型代码中导入模型
-from paddlevision.models import mobilenet_v3_small
-
-# 实例化模型
-model = mobilenet_v3_small(pretrained="./mobilenet_v3_small_pretrained.pdparams")
-model = nn.Sequential(model, nn.Softmax())
-
-# 将模型设置为推理状态
-model.eval()
-
-# 对比ONNXRuntime和Paddle预测的结果
-paddle_outs = model(paddle.to_tensor(img))
-
-diff = ort_outs[0] - paddle_outs.numpy()
-max_abs_diff = np.fabs(diff).max()
-if max_abs_diff < 1e-05:
-    print("The difference of results between ONNXRuntime and Paddle looks good!")
-else:
-    relative_diff = max_abs_diff / np.fabs(paddle_outs.numpy()).max()
-    if relative_diff < 1e-05:
-        print("The difference of results between ONNXRuntime and Paddle looks good!")
-    else:
-        print("The difference of results between ONNXRuntime and Paddle looks bad!")
-    print('relative_diff: ', relative_diff)
-print('max_abs_diff: ', max_abs_diff)
-
-```
 
 对于下面的图像进行预测
 
@@ -154,12 +90,16 @@ print('max_abs_diff: ', max_abs_diff)
     <img src="../../images/demo.jpg" width=300">
 </div>
 
+执行如下命令：
+
+```
+python3 deploy/onnx_python/infer.py --onnx_file ./inference/mobilenetv3_model/model.onnx --params_file ./mobilenet_v3_small_pretrained.pdparams --img_path ./images/demo.jpg
+```
+
 在`ONNXRuntime`输出结果如下。
 
 ```
-
 class_id: 8, prob: 0.9091270565986633
-
 ```
 
 表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于训练引擎的结果完全一致
@@ -167,10 +107,8 @@ class_id: 8, prob: 0.9091270565986633
 `ONNXRuntime`预测结果和`Paddle Inference`预测结果对比，如下。
 
 ```
-
 The difference of results between ONNXRuntime and Paddle looks good!
 max_abs_diff:  1.5646219e-07
-
 ```
 
 从`ONNXRuntime`和`Paddle Inference`的预测结果diff可见，两者的结果几乎完全一致
