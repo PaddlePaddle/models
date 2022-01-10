@@ -116,10 +116,8 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 - Step1：初始化`ONNXRuntime`库并配置相应参数, 并进行预测
 
 ```
-import time
 from PIL import Image
 from onnxruntime import InferenceSession
-from presets import ClassificationPresetEval
 
 # 加载ONNX模型
 sess = InferenceSession('${your_onnx_model_name}.onnx')
@@ -128,7 +126,7 @@ sess = InferenceSession('${your_onnx_model_name}.onnx')
 x = np.random.random((1, 3, 224, 224)).astype('float32')
 
 # 模型预测
-ort_outs = sess.run(output_names=None, input_feed={'image': x})
+ort_outs = sess.run(output_names=None, input_feed={sess.get_inputs()[0].name: x})
 ```
 
 - Step2：`ONNXRuntime`预测结果和`paddle inference`预测结果对比
@@ -139,10 +137,10 @@ import time
 import paddle
 
 # 从模型代码中导入模型
-from paddle.vision.models import mobilenet_v2
+from paddlevision.models import mobilenet_v3_small
 
 # 实例化模型
-model = mobilenet_v2()
+model = mobilenet_v3_small('${your_paddle_model_name}.pdparams')
 
 # 将模型设置为推理状态
 model.eval()
@@ -162,7 +160,11 @@ else:
         print("The difference of results between ONNXRuntime and Paddle looks bad!")
     print('relative_diff: ', relative_diff)
 print('max_abs_diff: ', max_abs_diff)
+
 ```
+
+**【注意事项】**
+`paddlevision` 模块位于MobileNetV3_prod/Step6目录下
 
 **【实战】**
 
