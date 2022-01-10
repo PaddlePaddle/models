@@ -42,7 +42,7 @@ python3 -m pip install onnxruntime==1.9.0
 
 - Paddle 模型动转静导出
 
-【基本内容】
+**【基本内容】**
 
 `模型动转静`方法可以将训练得到的动态图模型转化为用于推理的静态图模型，下面介绍`模型动转静`流程。
 
@@ -60,11 +60,11 @@ python3 ./tools/export_model.py --pretrained=${your_pdiparams_file} --save-infer
   - ${your_pdiparams_file}指的是模型参数的文件.
   - ${output_dir}指的是需要导出的paddle静态模型的目录.
 
-【实战】
+**【实战】**
 
 参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
-【核验】
+**【核验】**
 
 最终在`${output_dir}`文件夹下会生成下面的3个文件。
 
@@ -77,7 +77,7 @@ ${output_dir}
 
 - ONNX 模型转换
 
-【基本内容】
+**【基本内容】**
 
 使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
 
@@ -98,18 +98,18 @@ paddle2onnx --model_dir=${your_inference_model_dir}
   - ${opset_version}指的是ONNX Opset，目前稳定支持9～11，默认是10.
   - ${enable_onnx_checker}指的是否检查导出为ONNX模型的正确性.
 
-【实战】
+**【实战】**
 
 参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
-【核验】
+**【核验】**
 
 执行完毕后，将产出${output_file} ONNX 模型文件
 
 
 ### 2.3 ONNX 预测
 
-【基本内容】
+**【基本内容】**
 
 使用ONNXRuntime测试ONNX模型模型，确保模型精度符合预期
 
@@ -164,8 +164,10 @@ else:
 print('max_abs_diff: ', max_abs_diff)
 ```
 
-【实战】
+**【实战】**
+
 参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.3章节
 
 ## 3. FAQ
+
 如果您在使用该文档完成paddle模型转ONNX的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle2ONNX/issues)提一个ISSUE，我们会高优跟进。

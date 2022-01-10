@@ -55,7 +55,7 @@ python tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdpara
 最终在`mobilenet_v3_small_infer/`文件夹下会生成下面的3个文件。
 
 ```
-alexnet_infer
+mobilenet_v3_small_infer
      |----inference.pdiparams     : 模型参数文件
      |----inference.pdmodel       : 模型结构文件
      |----inference.pdiparams.info: 模型参数信息文件
