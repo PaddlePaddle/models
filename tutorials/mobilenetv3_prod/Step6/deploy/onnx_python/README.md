@@ -173,7 +173,7 @@ max_abs_diff:  1.5646219e-07
 
 ```
 
-从diff可见
+从ONNXRuntime和paddle inference的预测结果diff可见，两者的结果几乎完全一致
 
 
 ## 3. FAQ
