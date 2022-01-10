@@ -42,6 +42,8 @@ python3 -m pip install onnxruntime==1.9.0
 
 - Paddle 模型动转静导出
 
+【基本内容】
+
 `模型动转静`方法可以将训练得到的动态图模型转化为用于推理的静态图模型，下面介绍`模型动转静`流程。
 
 该小节的代码模板位于[export_model.py](./template/code/export_model.py)，您可以基于这段代码进行修改。
@@ -49,8 +51,6 @@ python3 -m pip install onnxruntime==1.9.0
 具体地，关于MobileNetV3的导出代码可以参考：[export_model.py](../../mobilenetv3_prod/Step6/tools/export_model.py)。
 
 使用下面的命令完成`MobileNetV3`模型的动转静导出。
-
-【基本内容】
 
 ```bash
 python3 ./tools/export_model.py --pretrained=${your_pdiparams_file} --save-inference-dir=${output_dir}
@@ -62,7 +62,7 @@ python3 ./tools/export_model.py --pretrained=${your_pdiparams_file} --save-infer
 
 【实战】
 
-参考MobileNetV3的paddle2onnx[使用文档]("../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
 【核验】
 
@@ -77,9 +77,9 @@ ${output_dir}
 
 - ONNX 模型转换
 
-使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
-
 【基本内容】
+
+使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
 
 ```
 paddle2onnx --model_dir=${your_inference_model_dir}
@@ -95,12 +95,12 @@ paddle2onnx --model_dir=${your_inference_model_dir}
   - ${your_pdmodel_file}指的是网络结构的文件.
   - ${your_pdiparams_file}指的是模型参数的文件.
   - ${output_file}指的是需要导出的onnx模型.
-  - ${opset_version}指的是ONNX Opset，目前稳定支持9～11.
+  - ${opset_version}指的是ONNX Opset，目前稳定支持9～11，默认是10.
   - ${enable_onnx_checker}指的是否检查导出为ONNX模型的正确性.
 
 【实战】
 
-参考MobileNetV3的paddle2onnx[使用文档]("../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
 
 【核验】
 
@@ -109,8 +109,11 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 
 ### 2.3 ONNX 预测
 
-ONNX模型测试：
+【基本内容】
 
+使用ONNXRuntime测试ONNX模型模型，确保模型精度符合预期
+
+- Step1：初始化`ONNXRuntime`库并配置相应参数, 并进行预测
 
 ```
 import time
@@ -119,46 +122,50 @@ from onnxruntime import InferenceSession
 from presets import ClassificationPresetEval
 
 # 加载ONNX模型
-sess = InferenceSession('./inference/mobilenetv3_model/model.onnx')
+sess = InferenceSession('${your_onnx_model_name}.onnx')
 
-# define transforms
-input_shape = sess.get_inputs()[0].shape[2:]
-eval_transforms = ClassificationPresetEval(crop_size=input_shape,
-                                           resize_size=256)
 # 准备输入
-with open('./images/demo.jpg', 'rb') as f:
-    img = Image.open(f).convert('RGB')
-
-img = eval_transforms(img)
-img = img.expand([1] + img.shape)
+x = np.random.random((1, 3, 224, 224)).astype('float32')
 
 # 模型预测
-start = time.time()
-ort_outs = sess.run(output_names=None,
-                    input_feed={sess.get_inputs()[0].name: img.numpy()})
-end = time.time()
-
-output = ort_outs[0]
-class_id = output.argmax()
-prob = output[0][class_id]
-print(f"class_id: {class_id}, prob: {prob}")
-print('ONNXRuntime predict time: %.04f s' % (end - start))
-
+ort_outs = sess.run(output_names=None, input_feed={'image': x})
 ```
 
-对于下面的图像进行预测
-
-<div align="center">
-    <img src="../../mobilenetv3_prod/Step6/images/demo.jpg" width=300">
-</div>
-
-在终端中输出结果如下。
+- Step2：`ONNXRuntime`预测结果和`paddle inference`预测结果对比
 
 ```
-class_id: 8, prob: 0.9091273546218872
-ONNXRuntime predict time: 0.0047 s
+import os
+import time
+import paddle
+
+# 从模型代码中导入模型
+from paddle.vision.models import mobilenet_v2
+
+# 实例化模型
+model = mobilenet_v2()
+
+# 将模型设置为推理状态
+model.eval()
+
+# 对比ONNXRuntime和Paddle预测的结果
+paddle_outs = model(paddle.to_tensor(x))
+
+diff = ort_outs[0] - paddle_outs.numpy()
+max_abs_diff = np.fabs(diff).max()
+if max_abs_diff < 1e-05:
+    print("The difference of results between ONNXRuntime and Paddle looks good!")
+else:
+    relative_diff = max_abs_diff / np.fabs(paddle_outs.numpy()).max()
+    if relative_diff < 1e-05:
+        print("The difference of results between ONNXRuntime and Paddle looks good!")
+    else:
+        print("The difference of results between ONNXRuntime and Paddle looks bad!")
+    print('relative_diff: ', relative_diff)
+print('max_abs_diff: ', max_abs_diff)
 ```
 
-表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于训练引擎的结果完全一致
+【实战】
+参考MobileNetV3的paddle2onnx[使用文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.3章节
 
 ## 3. FAQ
+如果您在使用该文档完成paddle模型转ONNX的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle2ONNX/issues)提一个ISSUE，我们会高优跟进。
