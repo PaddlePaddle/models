@@ -21,6 +21,18 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 
 ## 2. Paddle2ONNX推理过程开发
 
+基于Paddle2ONNX的推理过程可以分为6个步骤，如下图所示。
+
+<div align="center">
+    <img src="./images/py2onnx_inference_pipeline.png" width="600">
+</div>
+
+其中设置了2个核验点，分别为
+
+* 准备推理模型
+* 验证推理结果正确性
+
+
 ### 2.1 准备环境
 
 **【数据】**
@@ -171,6 +183,12 @@ ${input_data} 是预处理后的数据，和 ONNXRuntime 的输入一样。
 ort_outs 是 ONNXRuntime 的输出结果
 
 paddlevision 模块位于MobileNetV3_prod/Step6目录下
+
+
+**【核验】**
+
+执行完毕后，如果 max_abs_diff < 1e-05，那么意味着，ONNXRuntime和Paddle inference的输出是一致的。
+
 
 **【实战】**
 
