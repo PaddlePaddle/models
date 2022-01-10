@@ -3,7 +3,7 @@
 # 目录
 
 - [1. 简介](#1---)
-- [2. Paddle2ONNX功能开发](#2---)
+- [2. Paddle2ONNX推理过程开发](#2---)
     - [2.1 环境准备](#2.1---)
     - [2.2 模型转换](#2.2---)
     - [2.3 ONNX 预测](#2.3---)
@@ -12,12 +12,17 @@
 ## 1. 简介
 Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算子目前稳定支持导出 ONNX Opset 9~11，部分Paddle算子支持更低的ONNX Opset转换。
 
-本文档主要介绍 MobileNetV3 模型如何转化为 ONNX 模型，并基于 ONNX 引擎预测。
+本文档主要介绍飞桨模型如何转化为 ONNX 模型，并基于 ONNX 引擎的推理过程开发。
 
 更多细节可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
 
-## 2. Paddle2ONNX功能开发
+## 2. Paddle2ONNX推理过程开发
 ### 2.1 环境准备
+**【数据】**
+
+从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证。
+
+**【环境】**
 
 需要准备 Paddle2ONNX 模型转化环境，和 ONNX 模型预测环境
 
@@ -32,26 +37,39 @@ python3 -m pip install paddle2onnx
 python3 -m pip install onnxruntime==1.9.0
 ```
 
-- 下载代码
-```bash
-git clone https://github.com/PaddlePaddle/models.git
-cd models/tutorials/mobilenetv3_prod/Step6
-```
-
 ### 2.2 模型转换
 
 
 - Paddle 模型动转静导出
 
+`模型动转静`方法可以将训练得到的动态图模型转化为用于推理的静态图模型，下面介绍`模型动转静`流程。
+
+该小节的代码模板位于[export_model.py](./template/code/export_model.py)，您可以基于这段代码进行修改。
+
+具体地，关于MobileNetV3的导出代码可以参考：[export_model.py](../../mobilenetv3_prod/Step6/tools/export_model.py)。
+
 使用下面的命令完成`MobileNetV3`模型的动转静导出。
 
+【基本内容】
+
 ```bash
-python3 ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --save-inference-dir=./mobilenetv3_model
+python3 ./tools/export_model.py --pretrained=${your_pdiparams_file} --save-inference-dir=${output_dir}
 ```
-最终在`mobilenetv3_model/`文件夹下会生成下面的3个文件。
+
+- 参数说明：
+  - ${your_pdiparams_file}指的是模型参数的文件.
+  - ${output_dir}指的是需要导出的paddle静态模型的目录.
+
+【实战】
+
+参考MobileNetV3的paddle2onnx[使用文档]("../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+
+【核验】
+
+最终在`${output_dir}`文件夹下会生成下面的3个文件。
 
 ```
-mobilenetv3_model
+${output_dir}
      |----inference.pdiparams     : 模型参数文件
      |----inference.pdmodel       : 模型结构文件
      |----inference.pdiparams.info: 模型参数信息文件
@@ -61,16 +79,32 @@ mobilenetv3_model
 
 使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
 
+【基本内容】
+
 ```
-paddle2onnx --model_dir=./mobilenetv3_model/ \
---model_filename=inference.pdmodel \
---params_filename=inference.pdiparams \
---save_file=./inference/mobilenetv3_model/model.onnx \
---opset_version=10 \
+paddle2onnx --model_dir=${your_inference_model_dir}
+--model_filename=${your_pdmodel_file}
+--params_filename=${your_pdiparams_file}
+--save_file=${output_file}
+--opset_version=10
 --enable_onnx_checker=True
 ```
 
-执行完毕后，ONNX 模型会被保存在 `./inference/mobilenetv3_model/` 路径下
+- 参数说明：
+  - ${your_inference_model_dir}指的是Paddle模型所在目录.
+  - ${your_pdmodel_file}指的是网络结构的文件.
+  - ${your_pdiparams_file}指的是模型参数的文件.
+  - ${output_file}指的是需要导出的onnx模型.
+  - ${opset_version}指的是ONNX Opset，目前稳定支持9～11.
+  - ${enable_onnx_checker}指的是否检查导出为ONNX模型的正确性.
+
+【实战】
+
+参考MobileNetV3的paddle2onnx[使用文档]("../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+
+【核验】
+
+执行完毕后，将产出${output_file} ONNX 模型文件
 
 
 ### 2.3 ONNX 预测
