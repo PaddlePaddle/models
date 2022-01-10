@@ -34,7 +34,7 @@ def infer():
     # define transforms
     input_shape = sess.get_inputs()[0].shape[2:]
     eval_transforms = ClassificationPresetEval(
-        crop_size=input_shape, resize_size=256)
+        crop_size=input_shape, resize_size=FLAGS.crop_size)
     # 准备输入
     with open(FLAGS.img_path, 'rb') as f:
         img = Image.open(f).convert('RGB')
@@ -96,9 +96,9 @@ if __name__ == '__main__':
         type=str,
         default="model.pdparams",
         help="params filename")
-
     parser.add_argument(
         '--img_path', type=str, default="image.jpg", help="image filename")
+    parser.add_argument('--crop_size', default=256, help='crop_szie')
 
     FLAGS = parser.parse_args()
 
