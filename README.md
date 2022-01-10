@@ -20,7 +20,7 @@
 - 如果你希望了解飞桨模型库最新进展，或者希望与资深开发者一起讨论产业实践关注的重点模型，欢迎扫码加入飞桨模型库交流群：
 
 <div align="center">
-<img src="https://user-images.githubusercontent.com/23690325/145685401-e4c676ef-03aa-475b-9efd-233ff7d8ab29.jpg"  width = "200" height = "200" />
+<img src="https://user-images.githubusercontent.com/23690325/148022003-c99afd89-3f99-40ad-b17f-8d2a34c953ab.PNG"  width = "200" height = "200" />
 </div>
 
 <a name="致谢"></a>

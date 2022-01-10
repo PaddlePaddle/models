@@ -1,0 +1,5 @@
+[2022/01/03 16:49:49] root INFO: acc_top1: 
+[2022/01/03 16:49:49] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:49:49] root INFO: acc_top5: 
+[2022/01/03 16:49:49] root INFO: 	mean diff: check passed: True, value: 0.0
+[2022/01/03 16:49:49] root INFO: diff check passed

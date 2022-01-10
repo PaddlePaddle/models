@@ -49,6 +49,7 @@ def main(args):
         img = Image.open(f).convert('RGB')
 
     img = eval_transforms(img)
+    img = paddle.to_tensor(img)
     img = img.expand([1] + img.shape)
 
     output = model(img).numpy()[0]
