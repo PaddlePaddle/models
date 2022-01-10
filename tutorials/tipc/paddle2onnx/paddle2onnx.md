@@ -48,7 +48,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 python3 -m pip install paddle2onnx
 ```
 
-- 安装 onnxruntime
+- 安装 ONNXRuntime
 ```
 # 建议安装 1.9.0 版本，可根据环境更换版本号
 python3 -m pip install onnxruntime==1.9.0
@@ -64,7 +64,7 @@ python3 -m pip install onnxruntime==1.9.0
 
 **【实战】**
 
-参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.2章节
 
 
 - ONNX 模型转换
@@ -94,7 +94,7 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 
 **【实战】**
 
-参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.2章节
+参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.2章节
 
 **【核验】**
 
@@ -107,16 +107,16 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 
 读取指定图像，对其进行数据变换，转化为符合模型推理所需要的输入格式。
 
-使用ONNX模型进行推理时，使用的数据预处理方法，和使用paddle inference进行推理时的预处理方法一样。
+使用ONNX模型进行推理时，使用的数据预处理方法，和使用Paddle Inference进行推理时的预处理方法一样。
 
 
 ### 2.4 开发ONNX模型推理程序
 
-ONNX作为开源的神经网络交换格式，得到大多数推理引擎的部署支持。在本文档中我们采用微软开源的onnxruntime推理引擎，进行转换后模型的正确性较验。
+ONNX作为开源的神经网络交换格式，得到大多数推理引擎的部署支持。在本文档中我们采用微软开源的ONNXRuntime推理引擎，进行转换后模型的正确性较验。
 
 **【基本内容】**
 
-使用ONNXRuntime测试ONNX模型，确保模型精度符合预期，初始化`ONNXRuntime`库并配置相应参数, 并进行预测
+初始化`ONNXRuntime`库并配置相应参数, 并进行预测
 
 ```
 from onnxruntime import InferenceSession
@@ -135,14 +135,14 @@ ${input_data} 是预处理后的数据，作为网络的输入，数据是ndarra
 
 ### 2.5 开发数据后处理程序
 
-在完成ONNX模型进行推理后，基于不同的任务，需要对网络的输出进行后处理，这部分和使用paddle inference进行模型推理后的后处理方法一样。
+在完成ONNX模型进行推理后，基于不同的任务，需要对网络的输出进行后处理，这部分和使用Paddle Inference进行模型推理后的后处理方法一样。
 
 
 ### 2.6 验证ONNX推理结果正确性
 
 **【基本内容】**
 
-`ONNXRuntime`预测结果和`paddle inference`预测结果对比
+`ONNXRuntime`预测结果和`Paddle Inference`预测结果对比
 
 ```
 import os
@@ -187,13 +187,13 @@ paddlevision 模块位于MobileNetV3_prod/Step6目录下
 
 **【核验】**
 
-执行完毕后，如果 max_abs_diff < 1e-05，那么意味着，ONNXRuntime和Paddle inference的输出是一致的。
+执行完毕后，如果 max_abs_diff < 1e-05，那么意味着，ONNXRuntime和Paddle Inference的输出是一致的。
 
 
 **【实战】**
 
-参考MobileNetV3的paddle2onnx [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md)中的第2.3章节
+参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.3章节
 
 ## 3. FAQ
 
-如果您在使用该文档完成paddle模型转ONNX的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle2ONNX/issues)提一个ISSUE，我们会高优跟进。
+如果您在使用该文档完成Paddle模型转ONNX的过程中遇到问题，可以给在[这里](https://github.com/PaddlePaddle/Paddle2ONNX/issues)提一个ISSUE，我们会高优跟进。

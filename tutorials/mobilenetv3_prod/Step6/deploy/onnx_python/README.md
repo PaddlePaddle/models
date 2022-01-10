@@ -12,7 +12,7 @@
 ## 1. 简介
 Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算子目前稳定支持导出 ONNX Opset 9~11，部分Paddle算子支持更低的ONNX Opset转换。
 
-本文档主要介绍 MobileNetV3 模型如何转化为 ONNX 模型，并基于 ONNX 引擎预测。
+本文档主要介绍 MobileNetV3 模型如何转化为 ONNX 模型，并基于 ONNXRuntime 引擎预测。
 
 更多细节可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
 
@@ -26,7 +26,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 python3 -m pip install paddle2onnx
 ```
 
-- 安装 ONNX
+- 安装 ONNXRuntime
 ```
 # 建议安装 1.9.0 版本，可根据环境更换版本号
 python3 -m pip install onnxruntime==1.9.0
@@ -114,7 +114,7 @@ print(f"class_id: {class_id}, prob: {prob}")
 
 ```
 
-- Step2：`ONNXRuntime`预测结果和`paddle inference`预测结果对比
+- Step2：`ONNXRuntime`预测结果和`Paddle Inference`预测结果对比
 
 ```
 
@@ -164,7 +164,7 @@ class_id: 8, prob: 0.9091270565986633
 
 表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于训练引擎的结果完全一致
 
-`ONNXRuntime`预测结果和`paddle inference`预测结果对比，如下。
+`ONNXRuntime`预测结果和`Paddle Inference`预测结果对比，如下。
 
 ```
 
@@ -173,7 +173,7 @@ max_abs_diff:  1.5646219e-07
 
 ```
 
-从ONNXRuntime和paddle inference的预测结果diff可见，两者的结果几乎完全一致
+从`ONNXRuntime`和`Paddle Inference`的预测结果diff可见，两者的结果几乎完全一致
 
 
 ## 3. FAQ
