@@ -76,6 +76,8 @@ paddle2onnx --model_dir=./mobilenetv3_model/ \
 
 执行完毕后，ONNX 模型会被保存在 `./inference/mobilenetv3_model/` 路径下
 
+更多关于参数的用法，可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
+
 
 ### 2.3 ONNX 推理
 
