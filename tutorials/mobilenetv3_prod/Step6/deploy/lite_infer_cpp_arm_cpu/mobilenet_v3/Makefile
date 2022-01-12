@@ -1,7 +1,7 @@
 ARM_ABI = arm8
 export ARM_ABI
 
-LITE_ROOT=./inference_lite_lib.android.armv8.clang.c++_shared.with_extra.with_cv
+LITE_ROOT=./inference_lite_lib.android.armv8
 
 include ./Makefile.def
 
