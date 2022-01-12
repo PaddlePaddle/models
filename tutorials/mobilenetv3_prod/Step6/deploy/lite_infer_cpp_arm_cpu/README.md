@@ -171,7 +171,7 @@ make
 注意 Makefile 中第4行:
 
 ```
-LITE_ROOT=./inference_lite_lib.android.armv8.clang.c++_shared.with_extra.with_cv
+LITE_ROOT=./inference_lite_lib.android.armv8
 ```
 中的 ```LITE_ROOT```需要改成您的预测库的文件夹名。
 
@@ -200,7 +200,7 @@ adb shell mkdir -p /data/local/tmp/arm_cpu/
 # push executable binary, library to device
 adb push mobilenet_v3 /data/local/tmp/arm_cpu/
 adb shell chmod +x /data/local/tmp/arm_cpu/mobilenet_v3
-adb push inference_lite_lib.android.armv8.clang.c++_shared.with_extra.with_cv/cxx/lib/libpaddle_light_api_shared.so /data/local/tmp/arm_cpu/
+adb push inference_lite_lib.android.armv8/cxx/lib/libpaddle_light_api_shared.so /data/local/tmp/arm_cpu/
 
 # push model with optimized(opt) to device
 adb push ./mobilenet_v3_small.nb /data/local/tmp/arm_cpu/
