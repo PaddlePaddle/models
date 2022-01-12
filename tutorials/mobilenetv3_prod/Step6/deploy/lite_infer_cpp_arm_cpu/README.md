@@ -1,23 +1,14 @@
-# 使用 Paddle Lite 在 arm cpu 上部署
+# Mobilenet_v3 在 ARM CPU 上部署示例
 
 # 目录
 
-- [1. 整体流程]()
-- [2. 部署步骤]()
-  - [2.1 获取 inference model]()
-  - [2.2 准备模型转换工具并生成 Paddle Lite 的部署模型]()
-  - [2.3 以 arm v8 、Android 系统为例进行部署,开发机系统为 Ubuntu]()
-  - [2.4 Paddle Lite 提供的 mobilenet_light demo 的预测步骤分析以及添加前处理方法]()
+- [1 获取 inference model]()
+- [2 准备模型转换工具并生成 Paddle Lite 的部署模型]()
+- [3 以 arm v8 、Android 系统为例进行部署]()
+- [4 推理结果正确性验证]()
 
-## 1. 整体流程
 
-<div align="center">
-    <img src="../../images/Paddle-Lite/paddle-lite部署流程.png" width=600">
-</div>
-
-## 2. 部署步骤
-
-### 2.1 获取 inference model
+### 1 获取 inference model
 
 在 tools 文件夹下提供了输出 inference model 的脚本文件 export_model.py，运行如下命令即可获取 inference model。
 ```
@@ -25,16 +16,16 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
 ```
 在 inference_model 文件夹下有 inference.pdmodel、inference.pdiparams 和 inference.pdiparams.info 文件。
 
-### 2.2 准备模型转换工具并生成 Paddle Lite 的部署模型
+### 2 准备模型转换工具并生成 Paddle Lite 的部署模型
 
 - 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具
 
 - 使用如下命令转换可以转换 inference model 到 Paddle Lite 的 nb 模型：
 
 ```
-./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3
+./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3_small
 ```
-在当前文件夹下可以发现mobilenet_v3.nb文件。
+在当前文件夹下可以发现mobilenet_v3_small.nb文件。
 
 注：在 mac 上运行 opt_mac 可能会有如下错误：
 
@@ -46,7 +37,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrain
     <img src="../../images/Paddle-Lite/pic2.png" width=500">
 </div>
 
-### 2.3 以 arm v8 、Android 系统为例进行部署,开发机系统为 Ubuntu 
+### 3 以 arm v8 、Android 系统为例进行部署
 
 - 准备编译环境
 
@@ -149,7 +140,43 @@ tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.t
        └── java                                          Java 预测库示例
 ```
 
-- 连接一台开启了**USB调试功能**的手机，运行
+- 编译运行示例
+
+将编译好的预测库放在当前目录下mobilenet_v3文件夹下，如下所示：
+
+```
+   mobilenet_v3/                                            示例文件夹
+   ├── inference_lite_lib.android.armv8/                 Paddle Lite C++ 预测库和头文件
+   │
+   ├── Makefile                                          编译相关
+   │
+   ├── Makefile.def                                      编译相关
+   │
+   ├── mobilenet_v3_small.nb                             优化后的模型
+   │
+   ├── mobilenet_v3.cc                                   C++ 示例代码
+   │
+   ├── demo.jpg                                          示例图片
+   │
+   ├── imagenet1k_label_list.txt                         示例label(用于后处理)
+   │
+   └── config.txt                                        示例config(用于前处理)
+```
+在 mobilenet_v3 文件夹下运行
+
+```bash
+make
+```
+会进行编译过程，注意编译过程会下载 opencv 第三方库，需要连接网络。编译完成后会生成 mobilenet_v3可执行文件。
+注意 Makefile 中第4行:
+
+```
+LITE_ROOT=./inference_lite_lib.android.armv8.clang.c++_shared.with_extra.with_cv
+```
+中的 ```LITE_ROOT```需要改成您的预测库的文件夹名。
+
+- 在 Android 手机上部署
+连接一台开启了**USB调试功能**的手机，运行
 ```
 adb devices
 ```
@@ -159,109 +186,59 @@ List of devices attached
 1ddcf602	device
 ```
 
-- 执行以下命令即可在手机上运行demo。
+- 在手机上运行 mobilenet_v3 demo。
 
 ```bash
 #################################
-# 假设当前位于 build.xxx 目录下   #
+# 假设当前位于 mobilenet_v3 目录下   #
 #################################
 
 # prepare enviroment on phone
 adb shell mkdir -p /data/local/tmp/arm_cpu/
 
-# build demo
-cd inference_lite_lib.android.armv8/demo/cxx/mobile_light/
-make
-cd -
 
 # push executable binary, library to device
-adb push inference_lite_lib.android.armv8/demo/cxx/mobile_light/mobilenetv1_light_api /data/local/tmp/arm_cpu/
-adb shell chmod +x /data/local/tmp/arm_cpu/mobilenetv1_light_api
-adb push inference_lite_lib.android.armv8/cxx/lib/libpaddle_light_api_shared.so /data/local/tmp/arm_cpu/
+adb push mobilenet_v3 /data/local/tmp/arm_cpu/
+adb shell chmod +x /data/local/tmp/arm_cpu/mobilenet_v3
+adb push inference_lite_lib.android.armv8.clang.c++_shared.with_extra.with_cv/cxx/lib/libpaddle_light_api_shared.so /data/local/tmp/arm_cpu/
 
 # push model with optimized(opt) to device
-adb push ./mobilenetv3.nb /data/local/tmp/arm_cpu/
+adb push ./mobilenet_v3_small.nb /data/local/tmp/arm_cpu/
+
+# push config and label and pictures to device
+adb push ./config.txt /data/local/tmp/arm_cpu/
+adb push ./imagenet1k_label_list.txt /data/local/tmp/arm_cpu/
+adb push ./demo.jpg /data/local/tmp/arm_cpu/
 
 # run demo on device
 adb shell "export LD_LIBRARY_PATH=/data/local/tmp/arm_cpu/; \
-           /data/local/tmp/arm_cpu/mobilenetv1_light_api \
-           /data/local/tmp/arm_cpu/mobilenetv3.nb \
-           1,3,224,224 \
-           10 10 0 1 1 0" 
-           # repeats=100, warmup=10
-           # power_mode=0 绑定大核, thread_num=1
-           # print_output=0 不打印模型输出 tensors 详细数据
+           /data/local/tmp/arm_cpu/mobilenet_v3 \
+           /data/local/tmp/arm_cpu/config.txt   \
+           /data/local/tmp/arm_cpu/demo.jpg" 
 ```
+
 得到以下输出：
+
 ```
-run_idx:1 / 10: 33.821 ms
-run_idx:2 / 10: 33.8 ms
-run_idx:3 / 10: 33.867 ms
-run_idx:4 / 10: 34.009 ms
-run_idx:5 / 10: 33.699 ms
-run_idx:6 / 10: 33.644 ms
-run_idx:7 / 10: 33.611 ms
-run_idx:8 / 10: 33.783 ms
-run_idx:9 / 10: 33.731 ms
-run_idx:10 / 10: 33.423 ms
+===clas result for image: ./demo.jpg===
+	Top-1, class_id: 494, class_name:  chime, bell, gong, score: 1
+	Top-2, class_id: 0, class_name:  tench, Tinca tinca, score: 0
+	Top-3, class_id: 0, class_name:  tench, Tinca tinca, score: 0
+	Top-4, class_id: 0, class_name:  tench, Tinca tinca, score: 0
+	Top-5, class_id: 0, class_name:  tench, Tinca tinca, score: 0
 
-======= benchmark summary =======
-input_shape(NCHW):1 3 224 224
-model_dir:mobilenet_v3.nb
-warmup:10
-repeats:10
-max_duration:34.009
-min_duration:33.423
-avg_duration:33.7388
-
-====== output summary ======
-output tensor num:1
-
---- output tensor 0 ---
-output shape(NCHW):1 1000
-output tensor 0 elem num:1000
-output tensor 0 standard deviation:0.00219646
-output tensor 0 mean value:0.001
 ```
+
 代表在android手机上推理部署完成。
 
-### 2.4 Paddle Lite 提供的 mobilenet_light demo 的预测步骤分析以及添加前处理方法
+### 4 验证推理结果正确性
 
-```c++
-#include <iostream>
-// 引入 C++ API
-#include "paddle_lite/paddle_api.h"
-#include "paddle_lite/paddle_use_ops.h"
-#include "paddle_lite/paddle_use_kernels.h"
-
-// 1. 设置 MobileConfig
-MobileConfig config;
-config.set_model_from_file(<modelPath>); // 设置 NaiveBuffer 格式模型路径
-config.set_power_mode(LITE_POWER_NO_BIND); // 设置 CPU 运行模式
-config.set_threads(4); // 设置工作线程数
-
-// 2. 创建 PaddlePredictor
-std::shared_ptr<PaddlePredictor> predictor = CreatePaddlePredictor<MobileConfig>(config);
-
-// 3. 设置输入数据,可以在这里进行您的前处理，比如用opencv读取图片等。这里为全一输入。
-std::unique_ptr<Tensor> input_tensor(std::move(predictor->GetInput(0)));
-input_tensor->Resize({1, 3, 224, 224});
-auto* data = input_tensor->mutable_data<float>();
-for (int i = 0; i < ShapeProduction(input_tensor->shape()); ++i) {
-  data[i] = 1;
-}
-
-//其他前处理
-
-// 4. 执行预测
-predictor->run();
-
-// 5. 获取输出数据
-std::unique_ptr<const Tensor> output_tensor(std::move(predictor->GetOutput(0)));
-std::cout << "Output shape " << output_tensor->shape()[1] << std::endl;
-for (int i = 0; i < ShapeProduction(output_tensor->shape()); i += 100) {
-  std::cout << "Output[" << i << "]: " << output_tensor->data<float>()[i]
-            << std::endl;
-}
-//后处理
 ```
+###############################################################
+# 假设当前位于 models/tutorials/mobilenetv3_prod/Step6 目录下#
+###############################################################
+python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams --img-path=images/demo.jpg
+```
+最终输出结果为 ```class_id: 8, prob: 0.9091238975524902``` ，表示预测的类别ID是```8```，置信度为```0.909```。
+
+与Paddle Lite预测结果一致。

@@ -1,0 +1,6 @@
+clas_model_file ./mobilenet_v3_small.nb
+label_path ./imagenet1k_label_list.txt
+resize_short_size 256
+crop_size 224
+visualize 0
+enable_benchmark 0
