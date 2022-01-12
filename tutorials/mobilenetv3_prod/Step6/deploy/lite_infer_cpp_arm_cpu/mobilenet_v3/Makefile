@@ -3,7 +3,7 @@ export ARM_ABI
 
 LITE_ROOT=./inference_lite_lib.android.armv8
 
-include ./Makefile.def
+include ${LITE_ROOT}/demo/cxx/Makefile.def
 
 THIRD_PARTY_DIR=${LITE_ROOT}/third_party
 

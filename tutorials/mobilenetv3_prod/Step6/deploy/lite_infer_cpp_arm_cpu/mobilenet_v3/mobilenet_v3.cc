@@ -141,7 +141,9 @@ cv::Mat CenterCropImg(const cv::Mat &img, const int &crop_size) {
   int resize_h = img.rows;
   int w_start = int((resize_w - crop_size) / 2);
   int h_start = int((resize_h - crop_size) / 2);
-  cv::Rect rect(w_start, h_start, crop_size, crop_size);
+  int w_end = w_start + crop_size;
+  int h_end = h_start + crop_size;
+  cv::Rect rect(w_start, h_start, w_end, h_end);
   cv::Mat crop_img = img(rect);
   return crop_img;
 }

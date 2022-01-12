@@ -12,7 +12,7 @@
 
 提供以下两种方式获取 inference model 
 
-- 直接下载：[inference model](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar)
+- 直接下载(推荐)：[inference model](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar)
 
 - 通过预训练模型获取 
 
@@ -27,30 +27,17 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdpa
 
 - python 脚本方式 
 
-适用于 ``` python == 2.7\3.5\3.6\3.7 ```
+适用于 ``` python == 3.5\3.6\3.7 ```
 首先 pip 安装 Paddle Lite：
 
 ```
-pip install paddlelite==2.10
+pip3 install paddlelite==2.10
 ```
 
-```
-# 引用Paddlelite预测库
-from paddlelite.lite import *
+在```mobilenet_v3```文件夹下允许如下命令：
 
-# 1. 创建opt实例
-opt=Opt()
-# 2. 指定输入模型地址 
-opt.set_model_file("./mobilenet_v3_small_infer/inference.pdmodel")
-opt.set_param_file("./mobilenet_v3_small_infer/inference.pdiparams")
-# 3. 指定转化类型： arm、x86、opencl、npu
-opt.set_valid_places("arm")
-# 4. 指定模型转化类型： naive_buffer、protobuf
-opt.set_model_type("naive_buffer")
-# 4. 输出模型地址
-opt.set_optimize_out("mobilenet_v3_small")
-# 5. 执行模型优化
-opt.run()
+```
+python export_lite_model.py --model-file=./mobilenet_v3_small_infer/inference.pdmodel --param-file=./mobilenet_v3_small_infer/inference.pdiparams --optimize-out=./mobilenet_v3_small
 ```
 在当前文件夹下会生成mobilenet_v3_small.nb文件。
 
@@ -120,10 +107,11 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 (1) 使用预编译包 
 
- 推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库。
+ 推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库（注意本教程需要用 static 的库），例如这个[预编译库](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/inference_lite_lib.android.armv8.clang.c++_static.tar.gz)。
 
 ```
-tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz
+mv inference_lite_lib.android.armv8.clang.c++_static.tar.gz inference_lite_lib.android.armv8.tar.gz
+tar -xvzf inference_lite_lib.android.armv8.tar.gz
 ```
 即可获取编译好的库。注意，即使获取编译好的库依然要进行上述**环境安装**的步骤，因为下面编译 demo 时候会用到。
 
@@ -256,13 +244,12 @@ adb shell "export LD_LIBRARY_PATH=/data/local/tmp/arm_cpu/; \
 得到以下输出：
 
 ```
-===clas result for image: ./demo.jpg===
-	Top-1, class_id: 494, class_name:  chime, bell, gong, score: 1
-	Top-2, class_id: 0, class_name:  tench, Tinca tinca, score: 0
-	Top-3, class_id: 0, class_name:  tench, Tinca tinca, score: 0
-	Top-4, class_id: 0, class_name:  tench, Tinca tinca, score: 0
-	Top-5, class_id: 0, class_name:  tench, Tinca tinca, score: 0
-
+===clas result for image: /data/local/tmp/arm_cpu/demo.jpg===
+	Top-1, class_id: 8, class_name:  hen, score: 0.901639
+	Top-2, class_id: 7, class_name:  cock, score: 0.0970001
+	Top-3, class_id: 86, class_name:  partridge, score: 0.000225853
+	Top-4, class_id: 80, class_name:  black grouse, score: 0.0001647
+	Top-5, class_id: 21, class_name:  kite, score: 0.000128394
 ```
 
 代表在 Android 手机上推理部署完成。
@@ -276,4 +263,4 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdpa
 ```
 最终输出结果为 ```class_id: 8, prob: 0.9091238975524902``` ，表示预测的类别ID是```8```，置信度为```0.909```。
 
-与Paddle Lite预测结果一致。
+与Paddle Lite预测结果一致。输出结果微小差距的原因是 Paddle Lite 所用 ```opencv``` 和 训练所用 ```PIL```库前处理方式有微小差别。

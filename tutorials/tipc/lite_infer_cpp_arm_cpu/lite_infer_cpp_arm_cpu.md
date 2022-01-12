@@ -22,7 +22,7 @@
     <img src="../images/paddleliteworkflow.png" width=600">
 </div>
 
-图中的7是核验点，需要核验结果正确性。
+图中的2、7是核验点，需要核验结果正确性。
 
 ## 2.使用 Paddle Lite 在 ARM CPU 上的部署流程
 
@@ -34,7 +34,7 @@
 
 推理设备：一台 ARM CPU 设备，可以连接到开发机上。开发板的系统可以是 Android 或 Armlinux。
 
-开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的** 准备开发环境 **和** 在 Android 手机上部署 **章节。
+开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**准备开发环境**和**在 Android 手机上部署**章节。
 
 - 推理数据 
 
@@ -51,7 +51,7 @@ Paddle Lite 框架直接支持[ PaddlePaddle ](https://www.paddlepaddle.org.cn/)
 Paddle Lite 框架拥有优秀的加速、优化策略及实现，包含量化、子图融合、Kernel 优选等优化手段。优化后的模型更轻量级，耗费资源更少，并且执行速度也更快。
 这些优化通过 Paddle Lite 提供的 opt 工具实现。opt 工具还可以统计并打印出模型中的算子信息，并判断不同硬件平台下 Paddle Lite 的支持情况。
 
-导出 inference model 和使用 opt 工具优化参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的** 获取 inference model **和** 生成 Paddle Lite 部署模型 **章节。
+导出 inference model 和使用 opt 工具优化参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**获取 inference model**和**生成 Paddle Lite 部署模型**章节，注意本步骤需要核验是否有```xxx.nb```模型生成。
 
 ### 2.3 准备推理所需代码
 
