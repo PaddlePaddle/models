@@ -218,14 +218,13 @@ MobilnetV3网络结构的PyTorch实现: [mobilenetv3_prod/Step1-5/mobilenetv3_re
 将mobilenetv3-torch的[模型参数](https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth)保存在本地之后，就可以通过下面的权重转换示例进行转换：
 
 ```python
-
 import numpy as np
 import torch
 import paddle
 
 def torch2paddle():
-    torch_path = "./mobilenet_v3_small-047dcff4.pth"
-    paddle_path = "./mv3_small_paddle.pdparams"
+    torch_path = "./data/mobilenet_v3_small-047dcff4.pth"
+    paddle_path = "./data/mv3_small_paddle.pdparams"
     torch_state_dict = torch.load(torch_path)
     fc_names = ["classifier"]
     paddle_state_dict = {}
