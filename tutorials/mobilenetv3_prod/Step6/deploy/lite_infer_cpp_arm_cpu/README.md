@@ -166,15 +166,13 @@ tar -xvzf inference_lite_lib.android.armv8.tar.gz
 
 - 编译运行示例
 
-将编译好的预测库放在当前目录下mobilenet_v3文件夹下，如下所示：
+将编译好的预测库放在当前目录下 mobilenet_v3 文件夹下，并准备好用于测试的[图片](../../images/demo.jpg)，和 [label](./mobilenet_v3/imagenet1k_label_list.txt) 、[config](./mobilenet_v3/config.txt) 。最后文件夹如下所示：
 
 ```
    mobilenet_v3/                                            示例文件夹
    ├── inference_lite_lib.android.armv8/                 Paddle Lite C++ 预测库和头文件
    │
    ├── Makefile                                          编译相关
-   │
-   ├── Makefile.def                                      编译相关
    │
    ├── mobilenet_v3_small.nb                             优化后的模型
    │
