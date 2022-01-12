@@ -30,7 +30,8 @@
 
 - 推理环境 
  
-开发机器：一台开发机，可以是 x86 linux 或者 Mac 设备。开发机器上需要安装开发环境。
+开发机器：一台开发机，可以是 x86 linux 或者 Mac 设备。开发机器上需要安装开发环境。 
+
 推理设备：一台 ARM CPU 设备，可以连接到开发机上。开发板的系统可以是 Android 或 Armlinux。
 
 开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**准备开发环境**和**在 Android 手机上部署**章节。
