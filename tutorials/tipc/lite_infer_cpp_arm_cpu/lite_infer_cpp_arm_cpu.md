@@ -34,11 +34,11 @@
 
 推理设备：一台 ARM CPU 设备，可以连接到开发机上。开发板的系统可以是 Android 或 Armlinux。
 
-开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**准备开发环境**和**在 Android 手机上部署**章节。
+开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的** 准备开发环境 **和** 在 Android 手机上部署 **章节。
 
 - 推理数据 
 
-一张可用于推理的[图片](mobilenetv3_prod/Step6/images/demo.jpg)和用于前处理的[配置文件](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/config.txt)(可选，和前处理有关)以及用于推理结果后处理相关的 [label](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/imagenet1k_label_list.txt) 文件（可选，跟后处理有关）。
+一张可用于推理的[图片](../../mobilenetv3_prod/Step6/images/demo.jpg)和用于前处理的[配置文件](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/config.txt)(可选，和前处理有关)以及用于推理结果后处理相关的 [label](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/imagenet1k_label_list.txt) 文件（可选，跟后处理有关）。
 
 ### 2.2 准备推理模型
 
@@ -51,7 +51,7 @@ Paddle Lite 框架直接支持[ PaddlePaddle ](https://www.paddlepaddle.org.cn/)
 Paddle Lite 框架拥有优秀的加速、优化策略及实现，包含量化、子图融合、Kernel 优选等优化手段。优化后的模型更轻量级，耗费资源更少，并且执行速度也更快。
 这些优化通过 Paddle Lite 提供的 opt 工具实现。opt 工具还可以统计并打印出模型中的算子信息，并判断不同硬件平台下 Paddle Lite 的支持情况。
 
-导出 inference model 和使用 opt 工具优化参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**获取 inference model**和**准备模型转换工具并生成 Paddle Lite 的部署模型**章节。
+导出 inference model 和使用 opt 工具优化参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的** 获取 inference model **和** 生成 Paddle Lite 部署模型 **章节。
 
 ### 2.3 准备推理所需代码
 
@@ -63,7 +63,7 @@ Paddle Lite 提供了 `Android/IOS/ArmLinux/Windows/MacOS/Ubuntu` 平台的官�
 
 - Makefile用于编译应用程序
 
-至此已经准备好部署所需的全部文件。以[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的目录结构为例展示：
+至此已经准备好部署所需的全部文件。以[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的 mobilenet_v3 文件夹为例展示：
 
 ```
    mobilenet_v3/                                            示例文件夹
@@ -86,7 +86,7 @@ Paddle Lite 提供了 `Android/IOS/ArmLinux/Windows/MacOS/Ubuntu` 平台的官�
 
 ### 2.4 开发数据预处理程序
 
-Paddle Lite 推理框架的输入不能直接是图片，所以需要对图片进行预处理，预处理过程一般包括 `opencv 读取`、`resize`、 `crop`、`归一化`等操作，之后才能变成最后输入给推理框架的数据。预处理参考 [mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu) 中的mobilenet_v3.cc 文件。
+Paddle Lite 推理框架的输入不能直接是图片，所以需要对图片进行预处理，预处理过程一般包括 `opencv 读取`、`resize`、 `crop`、`归一化`等操作，之后才能变成最后输入给推理框架的数据。预处理参考 [mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3) 中的mobilenet_v3.cc 文件。
 
 
 
@@ -143,7 +143,7 @@ for (int i = 0; i < ShapeProduction(output_tensor->shape()); i += 100) {
 
 ### 2.6 开发推理结果后处理程序
 
-后处理主要处理的是Paddle Lite 推理框架的输出 `tensor`， 包括选取哪个 `tensor` 以及根据 `label` 文件进行获得预测的类别，后处理参考 [mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu) 中的mobilenet_v3.cc 文件。
+后处理主要处理的是Paddle Lite 推理框架的输出 `tensor`， 包括选取哪个 `tensor` 以及根据 `label` 文件进行获得预测的类别，后处理参考 [mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3) 中的mobilenet_v3.cc 文件。
 
 ### 2.7 验证推理结果正确性
 

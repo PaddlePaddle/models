@@ -229,14 +229,13 @@ adb shell "export LD_LIBRARY_PATH=/data/local/tmp/arm_cpu/; \
 
 ```
 
-代表在android手机上推理部署完成。
+代表在 Android 手机上推理部署完成。
 
 ### 4 验证推理结果正确性
 
+在`models/tutorials/mobilenetv3_prod/Step6`目录下运行如下命令：
+
 ```
-###############################################################
-# 假设当前位于 models/tutorials/mobilenetv3_prod/Step6 目录下#
-###############################################################
 python tools/predict.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams --img-path=images/demo.jpg
 ```
 最终输出结果为 ```class_id: 8, prob: 0.9091238975524902``` ，表示预测的类别ID是```8```，置信度为```0.909```。
