@@ -10,8 +10,15 @@
 
 ### 1 获取 inference model
 
-在 tools 文件夹下提供了输出 inference model 的脚本文件 export_model.py，运行如下命令即可获取 inference model。
+提供以下两种方式获取 inference model 
+
+- 直接下载：[inference model](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar)
+
+- 通过预训练模型获取 
+
+首先获取[预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams)，在 ```models/tutorials/mobilenetv3_prod/Step6/tools``` 文件夹下提供了工具 export_model.py ，可以将预训练模型输出 为inference model ，运行如下命令即可获取 inference model。
 ```
+# 假设当前在 models/tutorials/mobilenetv3_prod/Step6 目录下
 python ./tools/export_model.py --pretrained=./mobilenet_v3_small_paddle_pretrained.pdparams  --save-inference-dir=./inference_model
 ```
 在 inference_model 文件夹下有 inference.pdmodel、inference.pdiparams 和 inference.pdiparams.info 文件。
