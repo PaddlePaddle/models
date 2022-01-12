@@ -19,20 +19,49 @@
 首先获取[预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams)，在 ```models/tutorials/mobilenetv3_prod/Step6/tools``` 文件夹下提供了工具 export_model.py ，可以将预训练模型输出 为inference model ，运行如下命令即可获取 inference model。
 ```
 # 假设当前在 models/tutorials/mobilenetv3_prod/Step6 目录下
-python ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams  --save-inference-dir=./inference_model
+python ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams  --save-inference-dir=./mobilenet_v3_small_infer
 ```
-在 inference_model 文件夹下有 inference.pdmodel、inference.pdiparams 和 inference.pdiparams.info 文件。
+在 mobilenet_v3_small_infer 文件夹下有 inference.pdmodel、inference.pdiparams 和 inference.pdiparams.info 文件。
 
 ### 2 准备模型转换工具并生成 Paddle Lite 的部署模型
 
-- 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具
+- python 脚本方式 
 
-- 使用如下命令转换可以转换 inference model 到 Paddle Lite 的 nb 模型：
+适用于 ``` python == 2.7\3.5\3.6\3.7 ```
+首先 pip 安装 Paddle Lite：
 
 ```
-./opt --model_file=./inference_model/inference.pdmodel --param_file=./inference_model/inference.pdiparams --optimize_out=./mobilenet_v3_small
+pip install paddlelite==2.10
 ```
-在当前文件夹下可以发现mobilenet_v3_small.nb文件。
+
+```
+# 引用Paddlelite预测库
+from paddlelite.lite import *
+
+# 1. 创建opt实例
+opt=Opt()
+# 2. 指定输入模型地址 
+opt.set_model_file("./mobilenet_v3_small_infer/inference.pdmodel")
+opt.set_param_file("./mobilenet_v3_small_infer/inference.pdiparams")
+# 3. 指定转化类型： arm、x86、opencl、npu
+opt.set_valid_places("arm")
+# 4. 指定模型转化类型： naive_buffer、protobuf
+opt.set_model_type("naive_buffer")
+# 4. 输出模型地址
+opt.set_optimize_out("mobilenet_v3_small")
+# 5. 执行模型优化
+opt.run()
+```
+在当前文件夹下会生成mobilenet_v3_small.nb文件。
+
+- 终端命令方式 
+
+模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具，使用如下命令转换可以转换 inference model 到 Paddle Lite 的 nb 模型：
+
+```
+./opt --model_file=./mobilenet_v3_small_infer/inference.pdmodel --param_file=./mobilenet_v3_small_infer/inference.pdiparams --optimize_out=./mobilenet_v3_small
+```
+在当前文件夹下会生成mobilenet_v3_small.nb文件。
 
 注：在 mac 上运行 opt_mac 可能会有如下错误：
 
