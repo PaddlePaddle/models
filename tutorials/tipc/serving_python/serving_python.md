@@ -30,7 +30,10 @@ Paddle Serving是飞桨开源的**服务化部署**框架，提供了C++ Serving
 <a name="2"></a>
 ## 2. Paddle Serving服务化部署
 Paddle Serving服务化部署主要包括以下步骤：
-![deploy_process](./images/serving_deploy_process.png)
+
+<div align="center">
+    <img src="../images/serving_guide.png" width="800">
+</div>
 
 其中设置了2个核验点，分别为：
 * 启动服务端
@@ -52,23 +55,23 @@ Paddle Serving服务化部署主要包括以下步骤：
 （1）以下安装docker的Paddle Serving环境，CPU/GPU版本二选一即可。
 
  1）docker环境安装（CPU版本）
-   
+
   ```bash
   # 拉取并进入 Paddle Serving的 CPU Docker
   docker pull paddlepaddle/serving:0.7.0-devel
   docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-devel bash
   docker exec -it test bash
   ````
-  
+
   2)docker环境安装（GPU版本）
-    
+
   ```bash
   # 拉取并进入 Paddle Serving的GPU Docker
   docker pull paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel
   nvidia-docker run -p 9292:9292 --name test -dit paddlepaddle/serving:0.7.0-cuda10.2-cudnn7-devel bash
   nvidia-docker exec -it test bash
   ```
-  
+
 （2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
   ```bash
@@ -77,7 +80,7 @@ Paddle Serving服务化部署主要包括以下步骤：
   pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
   pip3 install paddle-serving-app==0.7.0
   #pip3 install paddlepaddle==2.2.1 # CPU
-  pip3 install paddlepaddle-gpu==2.2.1 
+  pip3 install paddlepaddle-gpu==2.2.1
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
   Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
@@ -174,7 +177,7 @@ class MobileNetV3Op(Op):
         pass
     def postprocess(self, input_dicts, fetch_dict, data_id, log_id):
         pass
-        
+
 class MobileNetV3Service(WebService):
     def get_pipeline_response(self, read_op):
         mobilenetv3_op = MobileNetV3Op(name="imagenet", input_ops=[read_op])
@@ -218,7 +221,7 @@ import base64
 from PIL import Image
 import io
 from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
-```     
+```  
 修改MobileNetV3Op中的init_op和preprocess函数相关代码：
 
 ```py
@@ -227,7 +230,7 @@ class MobileNetV3Op(Op):
         self.seq = Compose([
             ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
         ])
-        
+
     def preprocess(self, input_dicts, data_id, log_id):
         (_, input_dict), = input_dicts.items()
         batch_size = len(input_dict.keys())
@@ -282,7 +285,7 @@ result, None, ""
 - OP名称：第14行修改成imagenet
 - model_config：与2.4转换后服务化部署模型文件夹路径一致，这里使用默认配置 "./serving_server"
 - device_type：使用默认配置1，基于GPU预测；使用参数0，基于CPU预测。
-- devices：使用默认配置"0"，0号卡预测     
+- devices：使用默认配置"0"，0号卡预测  
 
 <a name="2.6"></a>
 ### 2.6 客户端修改
@@ -299,7 +302,7 @@ result, None, ""
 ```
 url = "http://127.0.0.1:18080/imagenet/prediction"
 img_path = "./images/demo.jpg"
-``` 
+```
 
 <a name="2.7"></a>
 ### 2.7 启动服务端模型预测服务
@@ -310,13 +313,13 @@ img_path = "./images/demo.jpg"
 
 ```bash
 python3 web_service.py &
-```                               
+```  
 **【实战】**
 
 针对MobileNet网络, 启动成功的界面如下：
 
 ![图片](./images/py_serving_startup_visualization.jpg)
-   
+
 <a name="2.8"></a>
 #### 2.8 启动客户端
 
@@ -325,12 +328,12 @@ python3 web_service.py &
 当成功启动了模型预测服务，可以启动客户端代码，访问服务。
 
 **【实战】**
-       
+
 客户端访问服务的命令如下：
 
 ```bash
 python3 pipeline_http_client.py
-```                                                  
+```  
 访问成功的界面如下图：
 
 ![图片](./images/serving_client_result.png)

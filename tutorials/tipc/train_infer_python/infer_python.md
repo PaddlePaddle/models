@@ -43,7 +43,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 基于Paddle Inference的推理过程可以分为9个步骤，如下图所示。
 
 <div align="center">
-    <img src="./images/py_inference_pipeline.png" width="600">
+    <img src="../images/inference_guide.png" width="600">
 </div>
 
 其中设置了3个核验点，分别为

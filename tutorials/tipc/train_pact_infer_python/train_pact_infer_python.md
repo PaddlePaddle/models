@@ -24,7 +24,7 @@ Paddle 量化训练（Quant-aware Training, QAT）是指在训练过程中对模
 
 ## 2. 量化训练功能开发
 
-Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
+Paddle 混合精度训练开发可以分为5个步骤，如下图所示。
 
 <div align="center">
     <img src="../images/quant_aware_training_guide.png" width="600">
