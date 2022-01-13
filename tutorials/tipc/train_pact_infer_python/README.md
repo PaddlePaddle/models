@@ -18,9 +18,9 @@
 该系列文档主要介绍 Linux GPU/CPU PACT量化训练开发过程，主要包含2个步骤。
 
 
-- 步骤一：参考[《Linux GPU/CPU PACT量化训练功能开发文档》](./paddle2onnx.md)，完成Linux GPU/CPU PACT量化训练功能开发。
+- 步骤一：参考[《Linux GPU/CPU PACT量化训练功能开发文档》](./train_pact_infer_python.md)，完成Linux GPU/CPU PACT量化训练功能开发。
 
-- 步骤二：参考[《Linux GPU/CPU PACT量化训练测试开发文档》](./test_paddle2onnx.md)，完成Linux GPU/CPU PACT量化训练测试开发。
+- 步骤二：参考[《Linux GPU/CPU PACT量化训练测试开发文档》](./test_train_pact_infer_python.md)，完成Linux GPU/CPU PACT量化训练测试开发。
 
 
 <a name="2"></a>

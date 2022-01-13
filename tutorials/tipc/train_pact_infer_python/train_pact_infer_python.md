@@ -6,8 +6,9 @@
 - [2. 量化训练功能开发](#2)
     - [2.1 准备数据和环境](#2.1)
     - [2.2 准备待量化模型](#2.2)
-    - [2.3 开始量化训练及保存模型](#2.3)
-    - [2.4 验证推理结果正确性](#2.4)
+    - [2.3 准备量化训练代码](#2.3)
+    - [2.4 开始量化训练及保存模型](#2.4)
+    - [2.5 验证推理结果正确性](#2.5)
 - [3. FAQ](#3)
     - [3.1 通用问题](#3.1)
 
@@ -24,7 +25,7 @@ Paddle 量化训练（Quant-aware Training, QAT）是指在训练过程中对模
 
 ## 2. 量化训练功能开发
 
-Paddle 混合精度训练开发可以分为5个步骤，如下图所示。
+Linux GPU/CPU PACT量化训练功能开发可以分为5个步骤，如下图所示。
 
 <div align="center">
     <img src="../images/quant_aware_training_guide.png" width="600">
@@ -77,7 +78,19 @@ fp32_model = mobilenet_v3_small()
 
 <a name="2.3"></a>
 
-### 2.3 开始量化训练及保存模型
+### 2.3 准备量化训练代码
+
+**【基本流程】**
+
+PACT在线量化训练开发之前，要求首先有Linux GPU/CPU基础训练的代码并可以正常训练与收敛。
+
+**【实战】**
+
+参考MobileNetV3_small的训练过程说明文档：[链接](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/mobilenetv3_prod/Step6/README.md#41-%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83)。
+
+<a name="2.4"></a>
+
+### 2.4 开始量化训练及保存模型
 
 **【基本流程】**
 
@@ -128,9 +141,9 @@ quanter.save_quantized_model(net, 'save_dir', input_spec=[paddle.static.InputSpe
 
 量化训练配置、训练及保存量化模型请参考[MobileNetv3量化训练文档](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6/docs/train_pact_infer_python.md)
 
-<a name="2.4"></a>
+<a name="2.5"></a>
 
-### 2.4 验证推理结果正确性
+### 2.5 验证推理结果正确性
 
 **【基本流程】**
 
