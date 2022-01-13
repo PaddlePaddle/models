@@ -24,7 +24,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 基于Paddle2ONNX的推理过程可以分为6个步骤，如下图所示。
 
 <div align="center">
-    <img src="./images/py2onnx_inference_pipeline.png" width="600">
+    <img src="../images/paddle2onnx_guide.png" width="600">
 </div>
 
 其中设置了2个核验点，分别为
@@ -32,6 +32,7 @@ Paddle2ONNX 支持将 PaddlePaddle 模型格式转化到 ONNX 模型格式，算
 * 准备推理模型
 * 验证推理结果正确性
 
+<a name="2.1"></a>
 
 ### 2.1 准备环境
 
@@ -54,6 +55,8 @@ python3 -m pip install paddle2onnx
 python3 -m pip install onnxruntime==1.9.0
 ```
 
+<a name="2.2"></a>
+
 ### 2.2 转换模型
 
 - Paddle 模型动转静导出
@@ -64,7 +67,7 @@ python3 -m pip install onnxruntime==1.9.0
 
 **【实战】**
 
-参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.2章节
+参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.2章节。
 
 
 - ONNX 模型转换
@@ -98,8 +101,9 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 
 **【核验】**
 
-执行完毕后，将产出${output_file} ONNX 模型文件，其中文件后缀为.onnx。
+执行完毕后，将产出${output_file} ONNX 模型文件，其中文件后缀为`.onnx`。
 
+<a name="2.3"></a>
 
 ### 2.3 开发数据预处理程序
 
@@ -109,6 +113,7 @@ paddle2onnx --model_dir=${your_inference_model_dir}
 
 使用ONNX模型进行推理时，使用的数据预处理方法，和使用Paddle Inference进行推理时的预处理方法一样。
 
+<a name="2.4"></a>
 
 ### 2.4 开发ONNX模型推理程序
 
@@ -132,11 +137,14 @@ ort_outs = sess.run(output_names=None, input_feed={sess.get_inputs()[0].name: ${
 
 ${input_data} 是预处理后的数据，作为网络的输入，数据是ndarray类型。
 
+<a name="2.5"></a>
 
 ### 2.5 开发数据后处理程序
 
 在完成ONNX模型进行推理后，基于不同的任务，需要对网络的输出进行后处理，这部分和使用Paddle Inference进行模型推理后的后处理方法一样。
 
+
+<a name="2.6"></a>
 
 ### 2.6 验证ONNX推理结果正确性
 
@@ -193,6 +201,8 @@ paddlevision 模块位于MobileNetV3_prod/Step6目录下
 **【实战】**
 
 参考MobileNetV3的Paddle2ONNX [说明文档](../../mobilenetv3_prod/Step6/deploy/onnx_python/README.md) 中的第2.3章节
+
+<a name="3"></a>
 
 ## 3. FAQ
 

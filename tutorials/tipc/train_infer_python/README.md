@@ -17,9 +17,9 @@
 
 ## 1. 简介
 
-该系列文档主要介绍飞桨模型基于 Linux GPU/CPU 基础训练推理开发过程，主要包含三个步骤。
+该系列文档主要介绍飞桨模型基于 Linux GPU/CPU 基础训练推理开发过程，主要包含3个步骤。
 
-- 步骤一：参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测程序开发。
+- 步骤一：参考 [《模型复现指南》](../../article-implementation/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测程序开发。
 
 - 步骤二：参考[《Linux GPU/CPU 模型推理开发文档》](./infer_python.md)，在基于训练引擎预测的基础上，完成基于Paddle Inference的推理程序开发。
 
@@ -38,10 +38,10 @@
 如果您在模型复现方面经验较少，或者复现过程中遇到问题，希望快速排查问题，强烈建议您按照模型复现指南进行操作。以CV任务为例，复现指南将模型复现分为13个步骤，如下所示。
 
 <div align="center">
-    <img src="../../lwfx/images/framework_reprodcv.png" width="800">
+    <img src="../../article-implementation/images/framework_reprodcv.png" width="800">
 </div>
 
-更多内容请参考：[模型复现指南](../../lwfx/ArticleReproduction_CV.md)。
+更多内容请参考：[模型复现指南](../../article-implementation/ArticleReproduction_CV.md)。
 
 <a name="2.2"></a>
 
@@ -53,7 +53,7 @@
 
 **【参考】**
 
-* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.2`章节。
+* [模型复现指南](../../article-implementation/ArticleReproduction_CV.md)中`3.2`章节。
 
 **【要求】**
 
@@ -64,7 +64,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 **【参考】**
 
-* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中第`3`章节。
+* [模型复现指南](../../article-implementation/ArticleReproduction_CV.md)中第`3`章节。
 
 **【要求】**
 
@@ -76,7 +76,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 **【参考】**
 
-[模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.12`章节。
+[模型复现指南](../../article-implementation/ArticleReproduction_CV.md)中`3.12`章节。
 
 **【要求】**
 
@@ -90,7 +90,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 
 **【参考】**
 
-* [模型复现指南](../../lwfx/ArticleReproduction_CV.md)中`3.13`章节。
+* [模型复现指南](../../article-implementation/ArticleReproduction_CV.md)中`3.13`章节。
 
 **【要求】**
 
@@ -120,7 +120,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
     <img src="./images/py_inference_pipeline.png" width="800">
 </div>
 
-更多的介绍可以参考：[模型推理开发规范](./inference.md)。
+更多的介绍可以参考：[模型推理开发文档](./infer_python.md)。
 
 <a name="3.2"></a>
 
@@ -148,7 +148,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
     <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
-更多的介绍可以参考：[Linux GPU/CPU 基础训练推理测试开发规范](./test_linux_train_infer_python.md)。
+更多的介绍可以参考：[Linux GPU/CPU 基础训练推理测试开发规范](./test_train_infer_python.md)。
 
 
 <a name="4.2"></a>

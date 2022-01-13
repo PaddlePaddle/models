@@ -19,7 +19,7 @@
 在 ARM CPU 上部署需要使用 [Paddle Lite](https://github.com/PaddlePaddle/Paddle-Lite) 进行部署，Paddle Lite 是一个轻量级、灵活性强、易于扩展的高性能的深度学习预测框架，它可以支持诸如 ARM、OpenCL 、NPU 等等多种终端，同时拥有强大的图优化及预测加速能力。如果您希望将 Paddle Lite 框架集成到自己的项目中，那么只需要如下几步简单操作即可。
 
 <div align="center">
-    <img src="../images/paddleliteworkflow.png" width=600">
+    <img src="../images/lite_infer_arm_cpu_guide.png" width=800">
 </div>
 
 图中的2、7是核验点，需要核验结果正确性。
@@ -28,15 +28,15 @@
 
 ### 2.1 准备推理数据与环境
 
-- 推理环境 
- 
-开发机器：一台开发机，可以是 x86 linux 或者 Mac 设备。开发机器上需要安装开发环境。 
+- 推理环境
+
+开发机器：一台开发机，可以是 x86 linux 或者 Mac 设备。开发机器上需要安装开发环境。
 
 推理设备：一台 ARM CPU 设备，可以连接到开发机上。开发板的系统可以是 Android 或 Armlinux。
 
 开发机上安装开发环境以及对推理设备的配置参考[mobilenet_v3开发实战](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu)中的**准备开发环境**和**在 Android 手机上部署**章节。
 
-- 推理数据 
+- 推理数据
 
 一张可用于推理的[图片](../../mobilenetv3_prod/Step6/images/demo.jpg)和用于前处理的[配置文件](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/config.txt)(可选，和前处理有关)以及用于推理结果后处理相关的 [label](../../mobilenetv3_prod/Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3/imagenet1k_label_list.txt) 文件（可选，跟后处理有关）。
 
