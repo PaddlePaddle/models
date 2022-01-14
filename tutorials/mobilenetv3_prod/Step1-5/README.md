@@ -21,7 +21,7 @@
 <a name="1"></a>
 ## 1. 简介
 
-本部分内容包含基于 [MobileNetV3](https://arxiv.org/abs/1905.02244) 的复现对齐过程，可以结合[论文复现指南]()进行学习。
+本部分内容包含基于 [MobileNetV3](https://arxiv.org/abs/1905.02244) 的复现对齐过程，可以结合[论文复现指南](https://github.com/PaddlePaddle/models/blob/release%2F2.2/tutorials/article-implementation/ArticleReproduction_CV.md)进行学习。
 
 <a name="2"></a>
 ## 2. 复现流程
