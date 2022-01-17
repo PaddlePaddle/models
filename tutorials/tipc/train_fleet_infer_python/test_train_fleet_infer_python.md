@@ -18,7 +18,7 @@
 
   飞桨分布式从产业实践出发，提供包括数据并行、模型并行和流水线并行等在内的完备的并行能力，提供简单易用地分布式训练接口和丰富的底层通信原语，赋能用户业务发展。
 
-  本文，我们以最常用的数据并行为例，介绍LInux GPU多机多卡从训练到推理的使用。
+  本文，我们以最常用的数据并行为例，介绍Linux GPU多机多卡从训练到推理的使用。
 
 ## [2. 多机多卡训练功能开发](#2)
 
@@ -35,9 +35,8 @@
 2. 初始化分布式环境
 
 3. 使用DataParallel封装用户组网
-
-  下面将逐一进行讲解。
-
+   
+   下面将逐一进行讲解。
 - 2.1 导入依赖
   
   ```python
@@ -111,10 +110,9 @@
    W0104 17:59:19.018365 43338 device_context.cc:342] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 10.2, Runtime API Version: 9.2
    W0104 17:59:19.022523 43338 device_context.cc:352] device: 0, cuDNN Version: 7.4.
    W0104 17:59:23.193490 43338 fuse_all_reduce_op_pass.cc:78] Find all_reduce operators: 161. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is 5.
-   
-   
    ```
 
+```
 当使用paddle.distributed.launch模块启动分布式任务时，所有日志将保存在./log目录下，日志文件名为workerlog.xx，其中xx为整数；每个卡训练进程对应一个日志文件。
 
 ## 3. [多机多卡推理功能开发](#3)
@@ -123,7 +121,7 @@
 
 ```python
 if fleet.worker_index() == 0:
-    # save inference model
+ # save inference model
 ```
 
 更多关于推理的信息，请参考[Linux GPU/CPU 模型推理开发文档](../train_infer_python/infer_python.md)
