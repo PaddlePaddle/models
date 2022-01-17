@@ -110,7 +110,6 @@
    W0104 17:59:19.018365 43338 device_context.cc:342] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 10.2, Runtime API Version: 9.2
    W0104 17:59:19.022523 43338 device_context.cc:352] device: 0, cuDNN Version: 7.4.
    W0104 17:59:23.193490 43338 fuse_all_reduce_op_pass.cc:78] Find all_reduce operators: 161. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is 5.
-   ```
 
 ```
 当使用paddle.distributed.launch模块启动分布式任务时，所有日志将保存在./log目录下，日志文件名为workerlog.xx，其中xx为整数；每个卡训练进程对应一个日志文件。
