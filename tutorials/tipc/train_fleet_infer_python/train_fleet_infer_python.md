@@ -8,9 +8,7 @@
 
 - [2. 多机多卡训练功能开发](#2)
 
-- [3. 多机多卡推理功能开发](#3)
-
-- [4. FAQ](#4)
+- [3. FAQ](#3)
 
 ## [1. 简介](#1)
 
@@ -138,20 +136,16 @@ python -m paddle.distributed.launch --ips="192.168.0.1,192.168.0.2" --gpus="0,1"
 
 ### 2.6 开发模型推理程序
 
-请参考第3部分。
-
-## 3. [多机多卡推理功能开发](#3)
-
 由于数据并行训练各个卡上包含完整的模型副本，因此只需要保存某张卡上的模型用于推理即可。通常，可以选择保存第一张卡上的模型用于推理。
 
 ```python
-if fleet.worker_index() == 0:
- # save inference model
+if paddle.distributed.get_rank() == 0:
+    # save inference model
 ```
 
 更多关于推理的信息，请参考[Linux GPU/CPU 模型推理开发文档](../train_infer_python/infer_python.md)
 
-## 4. [FAQ](#4)
+## 3. [FAQ](#3)
 
 - 问：当程序报错时，如何排查错误？
 
