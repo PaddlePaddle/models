@@ -117,7 +117,7 @@ repo中包含`lite_data`小数据集压缩包，解压之后可以获取`lite_da
 基于Paddle Inference的预测过程分为下面9个步骤。
 
 <div align="center">
-    <img src="./images/py_inference_pipeline.png" width="800">
+    <img src="../images/inference_guide.png" width="800">
 </div>
 
 更多的介绍可以参考：[模型推理开发文档](./infer_python.md)。
