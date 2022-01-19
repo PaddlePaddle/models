@@ -91,7 +91,8 @@ def multi_head_attention(queries,
                          n_head=1,
                          dropout_rate=0.,
                          cache=None,
-                         static_kv=False):
+                         static_kv=False,
+                         kv_padding_selection=None):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
     computing softmax activiation to mask certain selected positions so that
@@ -180,8 +181,10 @@ def multi_head_attention(queries,
             else:  # For decoder self-attention in inference
                 # use cache and concat time steps.
                 cache_k, cache_v = cache_["k"], cache_["v"]
-                k = layers.concat([cache_k, k], axis=2)
-                v = layers.concat([cache_v, v], axis=2)
+                k = layers.matmul(kv_padding_selection, k)
+                v = layers.matmul(kv_padding_selection, v)
+                k = layers.elementwise_add(cache_k, k)
+                v = layers.elementwise_add(cache_v, v)
                 cache_["k"], cache_["v"] = (k, v)
         return q, k, v
 
@@ -404,7 +407,8 @@ def decoder_layer(dec_input,
                   relu_dropout,
                   preprocess_cmd,
                   postprocess_cmd,
-                  cache=None):
+                  cache=None,
+                  kv_padding_selection=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -419,7 +423,8 @@ def decoder_layer(dec_input,
         d_model,
         n_head,
         attention_dropout,
-        cache=cache)
+        cache=cache,
+        kv_padding_selection=kv_padding_selection)
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -437,7 +442,8 @@ def decoder_layer(dec_input,
         n_head,
         attention_dropout,
         cache=cache,
-        static_kv=True)
+        static_kv=True,
+        kv_padding_selection=kv_padding_selection)
     enc_attn_output = post_process_layer(
         slf_attn_output,
         enc_attn_output,
@@ -472,7 +478,8 @@ def decoder(dec_input,
             relu_dropout,
             preprocess_cmd,
             postprocess_cmd,
-            caches=None):
+            caches=None,
+            kv_padding_selection=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
@@ -492,7 +499,8 @@ def decoder(dec_input,
             relu_dropout,
             preprocess_cmd,
             postprocess_cmd,
-            cache=None if caches is None else (caches[i], i))
+            cache=None if caches is None else (caches[i], i),
+            kv_padding_selection=kv_padding_selection)
         dec_input = dec_output
     dec_output = pre_process_layer(dec_output, preprocess_cmd,
                                    prepostprocess_dropout)
@@ -651,7 +659,8 @@ def wrap_decoder(dec_inputs,
                  weight_sharing,
                  enc_output=None,
                  caches=None,
-                 bos_idx=0):
+                 bos_idx=0,
+                 kv_padding_selection=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
@@ -683,7 +692,8 @@ def wrap_decoder(dec_inputs,
         relu_dropout,
         preprocess_cmd,
         postprocess_cmd,
-        caches=caches)
+        caches=caches,
+        kv_padding_selection=kv_padding_selection)
     # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
     dec_output = layers.reshape(
         dec_output, shape=[-1, dec_output.shape[-1]], inplace=True)
@@ -715,7 +725,7 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
     enc_inputs = (model_input.src_word, model_input.src_pos,
                   model_input.src_slf_attn_bias)
     dec_inputs = (model_input.trg_word, model_input.init_score,
-                  model_input.init_idx, model_input.trg_src_attn_bias)
+                  model_input.init_idx, model_input.trg_src_attn_bias, model_input.kv_padding_selection)
 
     enc_output = wrap_encoder(
         enc_inputs,
@@ -734,7 +744,7 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
         postprocess_cmd,
         weight_sharing,
         bos_idx=bos_idx)
-    start_tokens, init_scores, parent_idx, trg_src_attn_bias = dec_inputs
+    start_tokens, init_scores, parent_idx, trg_src_attn_bias, kv_padding_selection = dec_inputs
 
     def beam_search():
         max_len = layers.fill_constant(
@@ -757,12 +767,12 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
             {
                 "k":  # for self attention
                 layers.fill_constant(
-                    shape=[batch_size, n_head, 0, d_key],
+                    shape=[batch_size, n_head, max_out_len, d_key],
                     dtype=enc_output.dtype,
                     value=0),
                 "v":  # for self attention
                 layers.fill_constant(
-                    shape=[batch_size, n_head, 0, d_value],
+                    shape=[batch_size, n_head, max_out_len, d_value],
                     dtype=enc_output.dtype,
                     value=0),
                 "static_k":  # for encoder-decoder attention
@@ -797,6 +807,7 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                     value=1, shape=[bias_batch_size, 1], dtype=pre_ids.dtype),
                 y=step_idx,
                 axis=0)
+            pre_kv_padding_selection = layers.gather(kv_padding_selection, index=pre_pos)
             logits = wrap_decoder(
                 (pre_ids, pre_pos, None, pre_src_attn_bias),
                 trg_vocab_size,
@@ -815,7 +826,8 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                 weight_sharing,
                 enc_output=enc_output,
                 caches=pre_caches,
-                bos_idx=bos_idx)
+                bos_idx=bos_idx,
+                kv_padding_selection=pre_kv_padding_selection)
             # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
