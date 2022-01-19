@@ -16,10 +16,10 @@ Linux DCU 基础训练推理开发过程主要步骤与[《Linux GPU/CPU 基础�
 
 ## 2. Linux DCU 基础训练推理功能开发与规范
 
-参考[《Linux GPU/CPU 基础训练推理开发》](../train_infer_python/README.md)。
+参考[《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md)。
 
 <a name="3"></a>
 
 ## 3. Linux DCU 基础训练推理测试开发与规范
 
-参考[《Linux GPU/CPU 基础训练推理测试开发规范》](../train_infer_python/test_train_inference_python.md)。
+参考[《Linux GPU/CPU 基础训练推理测试开发规范》](../train_infer_python/test_train_infer_python.md)。

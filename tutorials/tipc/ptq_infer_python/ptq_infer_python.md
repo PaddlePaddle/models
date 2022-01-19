@@ -25,10 +25,10 @@ Paddle中静态离线量化，使用少量校准数据计算量化因子，可�
 
 ## 2. 离线量化功能开发
 
-Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
+Paddle 离线量化开发可以分为个步骤，如下图所示。
 
 <div align="center">
-    <img src="../images/post_training_quant_guide.png" width="600">
+    <img src="../images/post_infer_quant_guide.png" width="600">
 </div>
 
 其中设置了2个核验点，分别为：
