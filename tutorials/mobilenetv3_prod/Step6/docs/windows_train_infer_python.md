@@ -3,63 +3,26 @@
 ## 目录
 
 
-- [1. 简介](#1)
-- [2. 数据集和复现精度](#2)
-- [3. 准备数据与环境](#3)
-    - [3.1 准备环境](#3.1)
-    - [3.2 准备数据](#3.2)
-    - [3.3 准备模型](#3.3)
-- [4. 开始使用](#4)
-    - [4.1 模型训练](#4.1)
-    - [4.2 模型评估](#4.2)
-    - [4.3 模型预测](#4.3)
-- [5. 模型推理部署](#5)
-- [6. TIPC自动化测试脚本](#6)
-- [7. 参考链接与文献](#7)
+- [1. 准备数据与环境](#1)
+    - [1.1 准备环境](#1.1)
+    - [1.2 准备数据](#1.2)
+    - [1.3 准备模型](#1.3)
+- [2. 开始使用](#2)
+    - [2.1 模型训练](#2.1)
+    - [2.2 模型评估](#2.2)
+    - [2.3 模型预测](#2.3)
+- [3. 模型推理部署](#3)
+- [4. TIPC自动化测试脚本](#4)
 
 <a name="1"></a>
 
-## 1. 简介
-
-MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为了进一步提升效果，将 relu 和 sigmoid 激活函数分别替换为 hard_swish 与 hard_sigmoid 激活函数，同时引入了一些专门减小网络计算量的改进策略，最终性能超越了当时其他的轻量级骨干网络。
-
+本文档主要介绍MobileNetV3模型在Windows平台的推理开发流程，有关MobileNetV3模型和数据集的介绍参考 [首页](../REDAME.md)。需要注意，在Windows平台上执行命令和Linux平台略有不同，主要体现在：下载与解压数据、设置环境变量、数据加载等方面。此外Windows平台只支持单卡的训练与预测。
+## 1. 准备环境与数据
 
 
-**论文:** [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
+<a name="1.1"></a>
 
-**参考repo:** [https://github.com/pytorch/vision](https://github.com/pytorch/vision)
-
-
-在此感谢[vision](https://github.com/pytorch/vision)，提高了MobileNetV3论文复现的效率。
-
-注意：在这里为了简化流程，仅关于`ImageNet标准训练过程`做训练对齐，具体地：
-* 训练总共120epoch，总的batch size是256*8=2048，学习率为0.8，下降策略为Piecewise Decay(30epoch下降10倍)
-* 训练预处理：RandomResizedCrop(size=224) + RandomFlip(p=0.5) + Normalize
-* 评估预处理：Resize(256) + CenterCrop(224) + Normalize
-
-这里`mobilenet_v3_small`的参考指标也是重新训练得到的。
-
-<a name="2"></a>
-
-## 2. 数据集和复现精度
-
-数据集为ImageNet，训练集包含1281167张图像，验证集包含50000张图像。
-
-您可以从[ImageNet 官网](https://image-net.org/)申请下载数据。
-
-
-| 模型      | top1/5 acc (参考精度) | top1/5 acc (复现精度) | 下载链接 |
-|:---------:|:------:|:----------:|:----------:|
-| MobileNetV3_small | 0.602/   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar) \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
-
-<a name="3"></a>
-
-## 3. 准备环境与数据
-
-
-<a name="3.1"></a>
-
-### 3.1 准备环境
+### 1.1 准备环境
 
 * 下载代码
 
@@ -88,11 +51,10 @@ paddle.utils.run_check()
 如果出现了`PaddlePaddle is installed successfully!`等输出内容，如下所示，则说明安装成功。
 
 ```
-W1223 02:51:03.061575 33723 device_context.cc:447] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 10.2, Runtime API Version: 10.2
-W1223 02:51:03.070878 33723 device_context.cc:465] device: 0, cuDNN Version: 7.6.
+W0119 16:25:14.953202  7104 device_context.cc:447] Please NOTE: device: 0, GPU Compute Capability: 6.1, Driver API Version: 11.4, Runtime API Version: 10.2
+W0119 16:25:14.953202  7104 device_context.cc:465] device: 0, cuDNN Version: 7.6.
 PaddlePaddle works well on 1 GPU.
-W1223 02:51:33.185979 33723 fuse_all_reduce_op_pass.cc:76] Find all_reduce operators: 2. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is 2.
-PaddlePaddle works well on 8 GPUs.
+PaddlePaddle works well on 1 GPUs.
 PaddlePaddle is installed successfully! Let's start deep learning with PaddlePaddle now.
 ```
 
@@ -104,9 +66,9 @@ PaddlePaddle is installed successfully! Let's start deep learning with PaddlePad
 pip install -r requirements.txt
 ```
 
-<a name="3.2"></a>
+<a name="1.2"></a>
 
-### 3.2 准备数据
+### 1.2 准备数据
 
 如果您已经下载好ImageNet1k数据集，那么该步骤可以跳过，如果您没有，则可以从[ImageNet官网](https://image-net.org/download.php)申请下载。
 
@@ -119,13 +81,11 @@ python -c "import shutil;shutil.unpack_archive('test_images/lite_data.tar', extr
 执行该命令后，会在当前路径下解压出对应的数据集文件夹lite_data
 
 
-<a name="3.3"></a>
+<a name="1.3"></a>
 
-### 3.3 准备模型
+### 1.3 准备模型
 
-如果您希望直接体验评估或者预测推理过程，可以直接根据[第2节：数据集和复现精度]()的内容下载提供的预训练模型，直接体验模型评估、预测、推理部署等内容。
-
-使用下面的命令下载模型
+如果您希望直接体验评估或者预测推理过程，可以使用下面的命令下载 MobileNetV3 预训练模型，直接体验模型评估、预测、推理部署等内容。
 
 ```bat
 rem 下载预训练模型
@@ -136,19 +96,20 @@ rem coming soon!
 ```
 
 
-<a name="4"></a>
+<a name="2"></a>
 
-## 4. 开始使用
+## 2. 开始使用
 
-<a name="4.1"></a>
+<a name="2.1"></a>
 
-### 4.1 模型训练
+### 2.1 模型训练
 
 * 单机单卡训练
 
 ```bat
+rem 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
 set CUDA_VISIBLE_DEVICES=0
-python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
+python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --workers=0
 ```
 
 部分训练日志如下所示。
@@ -160,21 +121,19 @@ python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256
 
 * 单机多卡训练
 
-```bat
-set CUDA_VISIBLE_DEVICES=0,1,2,3
-python -m paddle.distributed.launch --gpus="0,1,2,3" train.py --data-path=./ILSVRC2012 --lr=0.4 --batch-size=256
-```
+目前Windows平台只支持单卡训练与预测。
 
 更多配置参数可以参考[train.py](./train.py)的`get_args_parser`函数。
 
-<a name="4.2"></a>
+<a name="2.2"></a>
 
-### 4.2 模型评估
+### 2.2 模型评估
 
 该项目中，训练与评估脚本相同，指定`--test-only`参数即可完成预测过程。
 
 ```bat
-python train.py --test-only --data-path=./ILSVRC2012 --pretrained=./mobilenet_v3_small_paddle.pdparams
+rem 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
+python train.py --test-only --data-path=./ILSVRC2012 --pretrained=./mobilenet_v3_small_pretrained.pdparams --workers=0
 ```
 
 期望输出如下。
@@ -187,9 +146,9 @@ Test: Total time: 0:02:05
  * Acc@1 0.564 Acc@5 0.790
 ```
 
-<a name="4.3"></a>
+<a name="2.3"></a>
 
-### 4.3 模型预测
+### 2.3 模型预测
 
 * 使用GPU预测
 
@@ -211,22 +170,15 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --
 python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --img-path=images/demo.jpg --device=cpu
 ```
 
-<a name="5"></a>
+<a name="3"></a>
 
-## 5. 模型推理部署
-
-coming soon!
-
-<a name="6"></a>
-
-## 6. TIPC自动化测试脚本
+## 3. 模型推理部署
 
 coming soon!
 
-<a name="7"></a>
+<a name="4"></a>
 
-## 7. 参考链接与文献
+## 4. TIPC自动化测试脚本
 
-1. Howard A, Sandler M, Chu G, et al. Searching for mobilenetv3[C]//Proceedings of the IEEE/CVF International Conference on Computer Vision. 2019: 1314-1324.
-2. vision: https://github.com/pytorch/vision
+coming soon!
 
