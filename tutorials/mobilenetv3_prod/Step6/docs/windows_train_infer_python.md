@@ -157,7 +157,7 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --
 对于下面的图像进行预测
 
 <div align="center">
-    <img src="./images/demo.jpg" width=300">
+    <img src="../images/demo.jpg" width=300">
 </div>
 
 最终输出结果为`class_id: 8, prob: 0.9091238975524902`，表示预测的类别ID是`8`，置信度为`0.909`。
