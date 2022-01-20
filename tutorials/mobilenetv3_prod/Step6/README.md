@@ -71,7 +71,7 @@ cd models/tutorials/mobilenetv3_prod/Step6
 * 安装paddlepaddle：如果您已经安装了2.2或者以上版本的paddlepaddle，那么无需运行下面的命令安装paddlepaddle。
 
 ```bash
-# 需要安装2.2及以上版本的Paddle，如果
+# 需要安装2.2及以上版本的Paddle
 # 安装GPU版本的Paddle
 pip install paddlepaddle-gpu==2.2.0
 # 安装CPU版本的Paddle

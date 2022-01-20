@@ -45,13 +45,13 @@ def train_one_epoch(model,
         if amp_level is not None:
             with paddle.amp.auto_cast(level=amp_level):
                 output = model(image)
-                loss = criterion(output, target)
+                loss = criterion(output, target.astype("int64"))
             scaled = scaler.scale(loss)
             scaled.backward()
             scaler.minimize(optimizer, scaled)
         else:
             output = model(image)
-            loss = criterion(output, target)
+            loss = criterion(output, target.astype("int64"))
             loss.backward()
             optimizer.step()
 
@@ -94,10 +94,10 @@ def evaluate(model, criterion, data_loader, print_freq=100, amp_level=None):
             if amp_level is not None:
                 with paddle.amp.auto_cast(level=amp_level):
                     output = model(image)
-                    loss = criterion(output, target)
+                    loss = criterion(output, target.astype("int64"))
             else:
                 output = model(image)
-                loss = criterion(output, target)
+                loss = criterion(output, target.astype("int64"))
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets

@@ -144,7 +144,7 @@ def accuracy(output, target, topk=(1, )):
 
         _, pred = output.topk(maxk, 1, True, True)
         pred = pred.t()
-        correct = pred.equal(target)
+        correct = pred.equal(target.astype("int64"))
 
         res = []
         for k in topk:
