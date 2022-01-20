@@ -36,4 +36,4 @@
     - Linux XPU2 基础训练推理开发文档 (coming soon)
     - [Linux DCU 基础训练推理开发文档](./linux_dcu_train_infer_python/README.md)
     - Linux NPU 基础训练推理开发文档 (coming soon)
-    - Windows GPU 基础训练推理开发文档 (coming soon)
+    - [Windows GPU/CPU 基础训练推理开发文档](./windows_train_infere_python/README.md)

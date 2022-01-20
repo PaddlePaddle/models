@@ -26,18 +26,18 @@
 
 * 下载代码
 
-```bat
+```bash
 git clone https://github.com/PaddlePaddle/models.git
 cd models/tutorials/mobilenetv3_prod/Step6
 ```
 
 * 安装paddlepaddle：如果您已经安装了2.2或者以上版本的paddlepaddle，那么无需运行下面的命令安装paddlepaddle。
 
-```bat
-rem 需要安装2.2及以上版本的Paddle，如果
-rem 安装GPU版本的Paddle
+```bash
+# 需要安装2.2及以上版本的Paddle
+# 安装GPU版本的Paddle
 pip install paddlepaddle-gpu==2.2.0
-rem 安装CPU版本的Paddle
+# 安装CPU版本的Paddle
 pip install paddlepaddle==2.2.0
 ```
 
@@ -62,7 +62,7 @@ PaddlePaddle is installed successfully! Let's start deep learning with PaddlePad
 
 * 安装requirements
 
-```bat
+```bash
 pip install -r requirements.txt
 ```
 
@@ -74,7 +74,7 @@ pip install -r requirements.txt
 
 如果只是希望快速体验模型训练功能，则可以直接解压`test_images/lite_data.tar`，其中包含16张训练图像以及16张验证图像。
 
-```bat
+```bash
 python -c "import shutil;shutil.unpack_archive('test_images/lite_data.tar', extract_dir='./',format='tar')"
 ```
 
@@ -87,12 +87,12 @@ python -c "import shutil;shutil.unpack_archive('test_images/lite_data.tar', extr
 
 如果您希望直接体验评估或者预测推理过程，可以使用下面的命令下载 MobileNetV3 预训练模型，直接体验模型评估、预测、推理部署等内容。
 
-```bat
-rem 下载预训练模型
+```bash
+# 下载预训练模型
 pip install wget
 python -c "import wget;wget.download('https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams')"
-rem 下载推理模型
-rem coming soon!
+# 下载推理模型
+# coming soon!
 ```
 
 
@@ -106,8 +106,8 @@ rem coming soon!
 
 * 单机单卡训练
 
-```bat
-rem 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
+```bash
+# 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
 set CUDA_VISIBLE_DEVICES=0
 python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --workers=0
 ```
@@ -119,9 +119,7 @@ python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --workers=0
 [Epoch 1, iter: 4790] top1: 0.08750, top5: 0.24531, lr: 0.01000, loss: 5.28853, avg_reader_cost: 0.05164 sec, avg_batch_cost: 0.06852 sec, avg_samples: 64.0, avg_ips: 934.08427 images/sec.
 ```
 
-* 单机多卡训练
-
-目前Windows平台只支持单卡训练与预测。
+**注意**：目前Windows平台只支持单卡训练与预测。
 
 更多配置参数可以参考[train.py](./train.py)的`get_args_parser`函数。
 
@@ -131,8 +129,8 @@ python train.py --data-path=./ILSVRC2012 --lr=0.1 --batch-size=256 --workers=0
 
 该项目中，训练与评估脚本相同，指定`--test-only`参数即可完成预测过程。
 
-```bat
-rem 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
+```bash
+# 在Windows平台，DataLoader只支持单进程模式，因此需要设置 workers 为0
 python train.py --test-only --data-path=./ILSVRC2012 --pretrained=./mobilenet_v3_small_pretrained.pdparams --workers=0
 ```
 
@@ -152,7 +150,7 @@ Test: Total time: 0:02:05
 
 * 使用GPU预测
 
-```bat
+```bash
 python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --img-path=images/demo.jpg
 ```
 
@@ -166,7 +164,7 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --
 
 * 使用CPU预测
 
-```bat
+```bash
 python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --img-path=images/demo.jpg --device=cpu
 ```
 
