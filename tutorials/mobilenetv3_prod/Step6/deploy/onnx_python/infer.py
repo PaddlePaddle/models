@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+import sys
+sys.path.insert(0, ".")
 import argparse
 import numpy as np
 from PIL import Image
@@ -52,37 +54,6 @@ def infer():
     print("ONNXRuntime predict: ")
     print(f"class_id: {class_id}, prob: {prob}")
 
-    # Step2：ONNXRuntime预测结果和Paddle Inference预测结果对比
-    # 实例化 Paddle 模型
-    model = mobilenet_v3_small(pretrained=FLAGS.params_file)
-    model = nn.Sequential(model, nn.Softmax())
-
-    # 将模型设置为推理状态
-    model.eval()
-
-    # 对比ONNXRuntime和Paddle预测的结果
-    paddle_outs = model(paddle.to_tensor(img))
-
-    diff = ort_outs[0] - paddle_outs.numpy()
-    max_abs_diff = np.fabs(diff).max()
-    print("ONNXRuntime and Paddle Inference result diff: ")
-    if max_abs_diff < 1e-05:
-        print(
-            "The difference of results between ONNXRuntime and Paddle looks good!"
-        )
-    else:
-        relative_diff = max_abs_diff / np.fabs(paddle_outs.numpy()).max()
-        if relative_diff < 1e-05:
-            print(
-                "The difference of results between ONNXRuntime and Paddle looks good!"
-            )
-        else:
-            print(
-                "The difference of results between ONNXRuntime and Paddle looks bad!"
-            )
-        print('relative_diff: ', relative_diff)
-    print('max_abs_diff: ', max_abs_diff)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
@@ -91,11 +62,6 @@ if __name__ == '__main__':
         type=str,
         default="model.onnx",
         help="onnx model filename")
-    parser.add_argument(
-        '--params_file',
-        type=str,
-        default="model.pdparams",
-        help="params filename")
     parser.add_argument(
         '--img_path', type=str, default="image.jpg", help="image filename")
     parser.add_argument('--crop_size', default=256, help='crop_szie')
