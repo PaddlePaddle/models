@@ -66,15 +66,15 @@ mobilenet_v3_small_infer
 使用 Paddle2ONNX 将Paddle静态图模型转换为ONNX模型格式：
 
 ```
-paddle2onnx --model_dir=./mobilenetv3_model/ \
---model_filename=inference.pdmodel \
---params_filename=inference.pdiparams \
---save_file=./inference/mobilenetv3_model/model.onnx \
---opset_version=10 \
---enable_onnx_checker=True
+paddle2onnx --model_dir=./mobilenet_v3_small_infer/ \
+    --model_filename=inference.pdmodel \
+    --params_filename=inference.pdiparams \
+    --save_file=./inference/mobilenetv3_model/model.onnx \
+    --opset_version=10 \
+    --enable_onnx_checker=True
 ```
 
-执行完毕后，ONNX 模型会被保存在 `./inference/mobilenetv3_model/` 路径下
+执行完毕后，ONNX 模型会被保存在 `./inference/mobilenetv3_model/` 路径下，文件名为`model.onnx`。
 
 更多关于参数的用法，可参考 [Paddle2ONNX官方教程](https://github.com/PaddlePaddle/Paddle2ONNX/blob/develop/README_zh.md)
 
@@ -94,11 +94,10 @@ ONNX模型测试步骤如下：
 
 执行如下命令：
 
-```
+```bash
 python3 deploy/onnx_python/infer.py \
---onnx_file ./inference/mobilenetv3_model/model.onnx \
---params_file ./mobilenet_v3_small_pretrained.pdparams \
---img_path ./images/demo.jpg
+    --onnx_file ./inference/mobilenetv3_model/model.onnx \
+    --img_path ./images/demo.jpg
 ```
 
 在`ONNXRuntime`输出结果如下。
@@ -109,18 +108,6 @@ ONNXRuntime predict:
 class_id: 8, prob: 0.9091270565986633
 ```
 
-表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于训练引擎的结果完全一致
-
-`ONNXRuntime`预测结果和`Paddle Inference`预测结果对比，如下。
-
-```
-ONNXRuntime and Paddle Inference result diff:
-
-The difference of results between ONNXRuntime and Paddle looks good!
-max_abs_diff:  1.5646219e-07
-```
-
-从`ONNXRuntime`和`Paddle Inference`的预测结果diff可见，两者的结果几乎完全一致
-
+表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于推理引擎的结果完全一致。
 
 ## 3. FAQ

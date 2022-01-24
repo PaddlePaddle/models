@@ -1,4 +1,4 @@
-# Mobilenet_v3 在 ARM CPU 上部署示例
+# Mobilenet_v3 基于 ARM CPU 部署
 
 # 目录
 
@@ -10,11 +10,11 @@
 
 ### 1 获取 inference model
 
-提供以下两种方式获取 inference model 
+提供以下两种方式获取 inference model
 
 - 直接下载(推荐)：[inference model](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar)
 
-- 通过预训练模型获取 
+- 通过预训练模型获取
 
 首先获取[预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams)，在 ```models/tutorials/mobilenetv3_prod/Step6/tools``` 文件夹下提供了工具 export_model.py ，可以将预训练模型输出 为inference model ，运行如下命令即可获取 inference model。
 ```
@@ -25,7 +25,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdpa
 
 ### 2 准备模型转换工具并生成 Paddle Lite 的部署模型
 
-- python 脚本方式 
+- python 脚本方式
 
 适用于 ``` python == 3.5\3.6\3.7 ```
 首先 pip 安装 Paddle Lite：
@@ -41,7 +41,7 @@ python export_lite_model.py --model-file=./mobilenet_v3_small_infer/inference.pd
 ```
 在当前文件夹下会生成mobilenet_v3_small.nb文件。
 
-- 终端命令方式 
+- 终端命令方式
 
 模型转换工具[opt_linux](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_linux)、[opt_mac](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/opt_mac)。或者参考[文档](https://paddle-lite.readthedocs.io/zh/develop/user_guides/model_optimize_tool.html)编译您的模型转换工具，使用如下命令转换可以转换 inference model 到 Paddle Lite 的 nb 模型：
 
@@ -65,9 +65,9 @@ python export_lite_model.py --model-file=./mobilenet_v3_small_infer/inference.pd
 - 准备编译环境
 
 ```
-gcc、g++（推荐版本为 8.2.0)   
-git、make、wget、python、adb   
-Java Environment   
+gcc、g++（推荐版本为 8.2.0)  
+git、make、wget、python、adb  
+Java Environment  
 CMake（请使用 3.10 版本,其他版本的 Cmake 可能有兼容性问题，导致编译不通过）
 Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 开始，NDK 交叉编译工具仅支持 Clang, 不支持 GCC）  
 ```
@@ -105,7 +105,7 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 可以使用下面两种方式获得预测库。
 
-(1) 使用预编译包 
+(1) 使用预编译包
 
  推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库（注意本教程需要用 static 的库），例如这个[预编译库](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/inference_lite_lib.android.armv8.clang.c++_static.tar.gz)。
 
@@ -115,7 +115,7 @@ tar -xvzf inference_lite_lib.android.armv8.tar.gz
 ```
 即可获取编译好的库。注意，即使获取编译好的库依然要进行上述**环境安装**的步骤，因为下面编译 demo 时候会用到。
 
-(2) 编译预测库 
+(2) 编译预测库
 
  运行编译脚本之前，请先检查系统环境变量 ``NDK_ROOT`` 指向正确的 Android NDK 安装路径。
 之后可以下载并构建 Paddle Lite 编译包。
@@ -205,7 +205,7 @@ adb devices
 可以看到有输出
 ```
 List of devices attached
-1ddcf602	device
+1ddcf602    device
 ```
 
 - 在手机上运行 mobilenet_v3 demo。
@@ -236,18 +236,18 @@ adb push ./demo.jpg /data/local/tmp/arm_cpu/
 adb shell "export LD_LIBRARY_PATH=/data/local/tmp/arm_cpu/; \
            /data/local/tmp/arm_cpu/mobilenet_v3 \
            /data/local/tmp/arm_cpu/config.txt   \
-           /data/local/tmp/arm_cpu/demo.jpg" 
+           /data/local/tmp/arm_cpu/demo.jpg"
 ```
 
 得到以下输出：
 
 ```
 ===clas result for image: /data/local/tmp/arm_cpu/demo.jpg===
-	Top-1, class_id: 8, class_name:  hen, score: 0.901639
-	Top-2, class_id: 7, class_name:  cock, score: 0.0970001
-	Top-3, class_id: 86, class_name:  partridge, score: 0.000225853
-	Top-4, class_id: 80, class_name:  black grouse, score: 0.0001647
-	Top-5, class_id: 21, class_name:  kite, score: 0.000128394
+    Top-1, class_id: 8, class_name:  hen, score: 0.901639
+    Top-2, class_id: 7, class_name:  cock, score: 0.0970001
+    Top-3, class_id: 86, class_name:  partridge, score: 0.000225853
+    Top-4, class_id: 80, class_name:  black grouse, score: 0.0001647
+    Top-5, class_id: 21, class_name:  kite, score: 0.000128394
 ```
 
 代表在 Android 手机上推理部署完成。

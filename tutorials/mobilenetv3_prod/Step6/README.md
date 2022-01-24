@@ -23,8 +23,6 @@
 
 MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为了进一步提升效果，将 relu 和 sigmoid 激活函数分别替换为 hard_swish 与 hard_sigmoid 激活函数，同时引入了一些专门减小网络计算量的改进策略，最终性能超越了当时其他的轻量级骨干网络。
 
-
-
 **论文:** [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
 
 **参考repo:** [https://github.com/pytorch/vision](https://github.com/pytorch/vision)
@@ -50,7 +48,8 @@ MobileNetV3 是 2019 年提出的一种基于 NAS 的新的轻量级网络，为
 
 | 模型      | top1/5 acc (参考精度) | top1/5 acc (复现精度) | 下载链接 |
 |:---------:|:------:|:----------:|:----------:|
-| MobileNetV3_small | 0.602/   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar) \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
+| MobileNetV3_small | 0.602/-   | 0.601/0.826   | [预训练模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams) \|  [Inference模型](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar) \| [日志](https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/train_mobilenet_v3_small.log) |
+
 
 <a name="3"></a>
 
@@ -168,7 +167,14 @@ python3 -m paddle.distributed.launch --gpus="0,1,2,3" train.py --data-path="./IL
 
 更多配置参数可以参考[train.py](./train.py)的`get_args_parser`函数。
 
-DCU运行需要设置环境变量 `export HIP_VISIBLE_DEVICES=0,1,2,3`，启动命令与Linux GPU完全相同。
+* 注意：本文档主要介绍Linux上的基础训练推理过程，如果希望获得更多方法的训练方法，可以参考：
+    * [混合精度训练教程](docs/train_amp_infer_python.md)
+    * [多机多卡训练教程](docs/train_fleet_infer_python.md)
+    * [PACT在线量化训练教程](docs/train_pact_infer_python.md)
+    * [Windows平台训练教程](docs/windows_train_infer_python.md)
+    * DCU设备上运行需要设置环境变量 `export HIP_VISIBLE_DEVICES=0,1,2,3`，其余训练评估预测命令与Linux GPU完全相同。
+
+
 
 <a name="4.2"></a>
 
@@ -218,7 +224,14 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --
 
 ## 5. 模型推理部署
 
-coming soon!
+* 基于Paddle Inference的推理过程可以参考：[MobilenetV3 的 Inference 推理教程](./deploy/inference_python/README.md)。
+* 基于Paddle Serving的服务化部署过程可以参考：[MobilenetV3 的 Serving 服务化部署](./deploy/serving_python/README.md)。
+* 基于Paddle Lite的推理过程可以参考[MobilenetV3 基于 ARM CPU 部署急教程](./deploy/lite_infer_cpp_arm_cpu/README.md)。
+* 基于Paddle2ONNX的推理过程可以参考：[MobilenetV3 基于 Paddle2ONNX 的推理教程](./deploy/onnx_python/README.md)。
+* 基于PaddleSlim的离线量化过程可以参考：[MobilenetV3 离线量化教程](./deploy/ptq_python/README.md)
+
+
+
 
 <a name="6"></a>
 
