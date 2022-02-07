@@ -228,23 +228,15 @@ sh tools/run.sh
 </div>
 
 * 最终屏幕上会输出结果，如下图所示。
->cpu_math_library_num_threads : 10
-
->crop_size : 224
->gpu_id : 0
->gpu_mem : 4000
->resize_short_size : 256
->use_fp16 : 0
->use_gpu : 0
->use_mkldnn : 1
->use_tensorrt : 0
->=======End of Paddle Class inference config======
->img_file_list length: 1
 >result:
->	class id: 8
->	score: 0.9014717937
->Current image path: /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg
->Current time cost: 0.0473620000 s, average time cost in all: 0.0473620000 s.
+
+	class id: 8
+
+	score: 0.9014717937
+
+Current image path: /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg
+
+Current time cost: 0.0473620000 s, average time cost in all: 0.0473620000 s.
 
 表示预测的类别ID是`8`，置信度为`0.901`，该结果与基于训练引擎的结果完全一致。
 其中`class id`表示置信度最高的类别对应的id，score表示图片属于该类别的概率。
