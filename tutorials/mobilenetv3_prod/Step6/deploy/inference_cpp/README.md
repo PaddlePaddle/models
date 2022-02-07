@@ -13,6 +13,7 @@
 * 首先需要从opencv官网上下载Linux环境下的源码，以3.4.7版本为例，下载及解压缩命令如下：
 
 ```
+cd deploy/inference_cpp
 wget https://github.com/opencv/opencv/archive/3.4.7.tar.gz
 tar -xvf 3.4.7.tar.gz
 ```
