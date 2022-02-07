@@ -18,7 +18,7 @@
 
 #include <include/utility.h>
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 std::vector<std::string> Utility::ReadDict(const std::string &path) {
   std::ifstream in(path);
@@ -36,4 +36,4 @@ std::vector<std::string> Utility::ReadDict(const std::string &path) {
   return m_vec;
 }
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

@@ -30,7 +30,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/imgproc.hpp"
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 class Utility {
 public:
@@ -43,4 +43,4 @@ public:
   //   }
 };
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

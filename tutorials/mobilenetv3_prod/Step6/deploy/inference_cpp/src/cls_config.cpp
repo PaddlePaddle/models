@@ -14,7 +14,7 @@
 
 #include <include/cls_config.h>
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 std::vector<std::string> ClsConfig::split(const std::string &str,
                                           const std::string &delim) {
@@ -61,4 +61,4 @@ void ClsConfig::PrintConfigInfo() {
   std::cout << "=======End of Paddle Class inference config======" << std::endl;
 }
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

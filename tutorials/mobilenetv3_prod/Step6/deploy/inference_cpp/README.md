@@ -213,7 +213,7 @@ make -j
   * crop_size：预处理时图像裁剪后的大小。
 
 * 然后修改`tools/run.sh`：
-  * `./build/clas_system ./tools/config.txt /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg`
+  * `./build/clas_system ./tools/config.txt ../../images/demo.jpg`
   * 上述命令中分别为：编译得到的可执行文件`clas_system`；运行时的配置文件`config.txt`；待预测的图像。
 
 * 最后执行以下命令，完成对一幅图像的分类。
@@ -233,7 +233,7 @@ class id: 8
 
 score: 0.9014717937
 
-Current image path: /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg
+Current image path: ../../images/demo.jpg
 
 Current time cost: 0.0473620000 s, average time cost in all: 0.0473620000 s.
 

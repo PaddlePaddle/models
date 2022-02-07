@@ -29,7 +29,7 @@
 
 using namespace std;
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 class Normalize {
 public:
@@ -53,4 +53,4 @@ public:
   virtual void Run(const cv::Mat &img, cv::Mat &resize_img, int max_size_len);
 };
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

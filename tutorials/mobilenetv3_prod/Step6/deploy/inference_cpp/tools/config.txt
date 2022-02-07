@@ -8,7 +8,7 @@ use_tensorrt 0
 use_fp16 0
 
 # cls config
-cls_model_path  /work/PaddleClas/deploy/cpp/mobilenet_v3_small_infer/inference.pdmodel
-cls_params_path /work/PaddleClas/deploy/cpp/mobilenet_v3_small_infer/inference.pdiparams
+cls_model_path  ./mobilenet_v3_small_infer/inference.pdmodel
+cls_params_path ./mobilenet_v3_small_infer/inference.pdiparams
 resize_short_size 256
 crop_size 224

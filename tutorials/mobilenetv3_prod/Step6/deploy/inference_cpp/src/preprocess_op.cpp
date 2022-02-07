@@ -30,7 +30,7 @@
 
 #include <include/preprocess_op.h>
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 void Permute::Run(const cv::Mat *im, float *data) {
   int rh = im->rows;
@@ -87,4 +87,4 @@ void ResizeImg::Run(const cv::Mat &img, cv::Mat &resize_img,
   cv::resize(img, resize_img, cv::Size(resize_w, resize_h));
 }
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

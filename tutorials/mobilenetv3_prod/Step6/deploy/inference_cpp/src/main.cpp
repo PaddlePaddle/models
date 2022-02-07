@@ -31,7 +31,7 @@
 
 using namespace std;
 using namespace cv;
-using namespace PaddleClas;
+using namespace MobileNetV3;
 
 int main(int argc, char **argv) {
   if (argc < 3) {

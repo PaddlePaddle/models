@@ -23,7 +23,7 @@
 
 #include "include/utility.h"
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 class ClsConfig {
 public:
@@ -85,4 +85,4 @@ private:
   std::map<std::string, std::string> config_map_;
 };
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

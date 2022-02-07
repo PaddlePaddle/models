@@ -15,7 +15,7 @@
 #include <chrono>
 #include <include/cls.h>
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 void Classifier::LoadModel(const std::string &model_path,
                            const std::string &params_path) {
@@ -100,4 +100,4 @@ double Classifier::Run(cv::Mat &img) {
   return cost_time;
 }
 
-} // namespace PaddleClas
+} // namespace MobileNetV3

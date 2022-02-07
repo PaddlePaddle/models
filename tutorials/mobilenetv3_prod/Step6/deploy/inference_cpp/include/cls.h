@@ -32,7 +32,7 @@
 
 using namespace paddle_infer;
 
-namespace PaddleClas {
+namespace MobileNetV3 {
 
 class Classifier {
 public:
@@ -88,4 +88,4 @@ private:
   CenterCropImg crop_op_;
 };
 
-} // namespace PaddleClas
+} // namespace MobileNetV3
