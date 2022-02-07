@@ -229,6 +229,7 @@ sh tools/run.sh
 
 * 最终屏幕上会输出结果，如下图所示。
 >cpu_math_library_num_threads : 10
+
 >crop_size : 224
 >gpu_id : 0
 >gpu_mem : 4000
