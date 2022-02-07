@@ -1,6 +1,6 @@
 # 服务器端C++预测
 
-本教程将介绍在服务器端部署mobilenet_v3_small模型的详细步骤。
+test本教程将介绍在服务器端部署mobilenet_v3_small模型的详细步骤。
 
 
 ## 1. 准备环境
