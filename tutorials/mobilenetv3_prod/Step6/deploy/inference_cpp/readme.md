@@ -227,11 +227,13 @@ sh tools/run.sh
     <img src="../../images/demo.jpg" width=300">
 </div>
 
-* 最终屏幕上会输出结果，如下图所示。
->result:
-	class id: 8
-	score: 0.9014717937
+* 最终屏幕上会输出结果，如下图所示
+class id: 8
+
+score: 0.9014717937
+
 Current image path: /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg
+
 Current time cost: 0.0473620000 s, average time cost in all: 0.0473620000 s.
 
 表示预测的类别ID是`8`，置信度为`0.901`，该结果与基于训练引擎的结果完全一致。
