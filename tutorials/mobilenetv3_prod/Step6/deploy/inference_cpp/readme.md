@@ -6,7 +6,7 @@
 ## 1. 准备环境
 
 ### 运行准备
-- Linux环境，推荐使用docker。
+- Linux环境，推荐使用docker[安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。
 
 ### 1.1 编译opencv库
 
@@ -228,6 +228,7 @@ sh tools/run.sh
 </div>
 
 * 最终屏幕上会输出结果，如下图所示
+
 class id: 8
 
 score: 0.9014717937
