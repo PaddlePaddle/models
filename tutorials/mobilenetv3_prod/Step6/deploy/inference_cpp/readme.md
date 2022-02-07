@@ -7,9 +7,6 @@
 
 ### 运行准备
 - Linux环境，推荐使用docker。
-- Windows环境，目前支持基于`Visual Studio 2019 Community`进行编译；此外，如果您希望通过生成`sln解决方案`的方式进行编译，可以参考该文档：[https://zhuanlan.zhihu.com/p/145446681](https://zhuanlan.zhihu.com/p/145446681)
-
-* 该文档主要介绍基于Linux环境下的C++预测流程，如果需要在Windows环境下使用预测库进行C++预测，具体编译方法请参考[Windows下编译教程](./docs/windows_vs2019_build.md)。
 
 ### 1.1 编译opencv库
 
@@ -216,7 +213,7 @@ make -j
   * crop_size：预处理时图像裁剪后的大小。
 
 * 然后修改`tools/run.sh`：
-  * `./build/clas_system ./tools/config.txt ./docs/imgs/ILSVRC2012_val_00000666.JPEG`
+  * `./build/clas_system ./tools/config.txt /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg`
   * 上述命令中分别为：编译得到的可执行文件`clas_system`；运行时的配置文件`config.txt`；待预测的图像。
 
 * 最后执行以下命令，完成对一幅图像的分类。
@@ -231,9 +228,22 @@ sh tools/run.sh
 </div>
 
 * 最终屏幕上会输出结果，如下图所示。
+pu_math_library_num_threads : 10
+crop_size : 224
+gpu_id : 0
+gpu_mem : 4000
+resize_short_size : 256
+use_fp16 : 0
+use_gpu : 0
+use_mkldnn : 1
+use_tensorrt : 0
+=======End of Paddle Class inference config======
+img_file_list length: 1
+result:
+	class id: 8
+	score: 0.9014717937
+Current image path: /work/Docs/models/tutorials/mobilenetv3_prod/Step6/images/demo.jpg
+Current time cost: 0.0473620000 s, average time cost in all: 0.0473620000 s.
 
-mage_name: ./images/demo.jpg, class_id: 8, prob: 0.9091264605522156
-```
-
-表示预测的类别ID是`8`，置信度为`0.909`，该结果与基于训练引擎的结果完全一致。
+表示预测的类别ID是`8`，置信度为`0.901`，该结果与基于训练引擎的结果完全一致。
 其中`class id`表示置信度最高的类别对应的id，score表示图片属于该类别的概率。
