@@ -25,6 +25,10 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 <div align="center">
     <img src="../images/infer_cpp.png" width="600">
 </div>
+其中设置了2个核验点，分别为
+
+* 准备输入数据和推理模型
+* 编译得到可执行代码
 
 ### 2.1 准备系统环境
 * 配置合适的编译和执行环境，其中包括编译器，cuda等一些基础库，建议安装docker环境，[参考链接](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。
@@ -40,6 +44,16 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 **推理模型**
 
 对于训练好的模型，我们可以通过这种[方式](../train_infer_python/infer_python.md#22-%E5%87%86%E5%A4%87%E6%8E%A8%E7%90%86%E6%A8%A1%E5%9E%8B)获取用于推理的静态图模型。
+
+**验收**
+
+保存路径下面会生成3个文件，如下所示，其中在Inference推理中用到的为`inference.pdiparams`与`inference.pdmodel`。
+
+```
+inference.pdiparams     : 模型参数文件
+inference.pdmodel       : 模型结构文件
+inference.pdiparams.info: 模型参数信息文件
+```
 
 ### 2.3 准备推理所需代码
 
@@ -94,6 +108,7 @@ void Classifier::LoadModel(const std::string &model_path,
 * crop
 * normalize
 * RGB -> CHW
+
 主要实现在[preprocess_op.cpp](../../mobilenetv3_prod/Step6/deploy/inference_cpp/src/preprocess_op.cpp)中。
 ```c++
 //Resize
