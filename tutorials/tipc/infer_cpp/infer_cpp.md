@@ -103,7 +103,8 @@ void Classifier::LoadModel(const std::string &model_path,
 ```
 **预处理**
 
-读取指定图像，对其进行数据变换，转化为符合模型推理所需要的输入格式。
+读取指定图像，对其进行数据变换，转化为符合模型推理所需要的输入格式, 样例中使用的数据预处理如下:
+
 * resize
 * crop
 * normalize
