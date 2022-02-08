@@ -22,15 +22,13 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 ## 2. 推理过程开发
 
 基于Paddle Inference的推理过程可以分为5个步骤，如下图所示。
-* 准备系统环境
-* 准备输入数据和推理模型
-* 准备推理代码
-* 编译得到可执行代码
-* 运行得到结果
+<div align="center">
+    <img src="../images/infer_cpp.png" width="600">
+</div>
 
 ### 2.1 准备系统环境
 * 配置合适的编译和执行环境，其中包括编译器，cuda等一些基础库，建议安装docker环境，[参考链接](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。
-* 配置相应的paddle infer推理库，有两种方式，具体可以参考[链接](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/README.md#12-%E4%B8%8B%E8%BD%BD%E6%88%96%E8%80%85%E7%BC%96%E8%AF%91paddle%E9%A2%84%E6%B5%8B%E5%BA%93)。
+* 配置相应的paddle infer推理库，有两种方式，具体可以参考[链接](../../mobilenetv3_prod/Step6/deploy/inference_cpp/README.md#12-%E4%B8%8B%E8%BD%BD%E6%88%96%E8%80%85%E7%BC%96%E8%AF%91paddle%E9%A2%84%E6%B5%8B%E5%BA%93)。
 * 配置安装第三库，例如opencv等。
 
 ### 2.2 准备输入数据和推理模型
@@ -41,7 +39,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 **推理模型**
 
-对于训练好的模型，我们可以通过这种[方式](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/train_infer_python/infer_python.md#22-%E5%87%86%E5%A4%87%E6%8E%A8%E7%90%86%E6%A8%A1%E5%9E%8B)获取用于推理的静态模型。
+对于训练好的模型，我们可以通过这种[方式](../train_infer_python/infer_python.md#22-%E5%87%86%E5%A4%87%E6%8E%A8%E7%90%86%E6%A8%A1%E5%9E%8B)获取用于推理的静态图模型。
 
 ### 2.3 准备推理所需代码
 
@@ -50,7 +48,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 **初始化预测引擎**
 
 针对mobilenet_v3_small模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
-主要实现在[cls.cpp](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/src/cls.cpp)
+主要实现在[cls.cpp](../../mobilenetv3_prod/Step6/deploy/inference_cpp/src/cls.cpp)
 ```c++
 void Classifier::LoadModel(const std::string &model_path,
                            const std::string &params_path) {
@@ -91,9 +89,23 @@ void Classifier::LoadModel(const std::string &model_path,
 ```
 **预处理**
 
-读取指定图像，对其进行数据变换，转化为符合模型推理所需要的输入格式。在模型评估过程中，为了保证数据可以组batch，我们一般会使用resize/crop/padding等方法去保持尺度的一致性，在预测推理过程中，需要注意crop是否合适，比如OCR识别任务中，crop的操作会导致识别结果不全。
-主要实现在[preprocess_op.cpp](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/src/preprocess_op.cpp)中。
+读取指定图像，对其进行数据变换，转化为符合模型推理所需要的输入格式。
+* resize
+* crop
+* normalize
+* RGB -> CHW
+主要实现在[preprocess_op.cpp](../../mobilenetv3_prod/Step6/deploy/inference_cpp/src/preprocess_op.cpp)中。
 ```c++
+//Resize
+class ResizeImg {
+public:
+  virtual void Run(const cv::Mat &img, cv::Mat &resize_img, int max_size_len);
+};
+//Crop
+class CenterCropImg {
+public:
+  virtual void Run(cv::Mat &im, const int crop_size = 224);
+};
 //Norm
 class Normalize {
 public:
@@ -105,20 +117,10 @@ class Permute {
 public:
   virtual void Run(const cv::Mat *im, float *data);
 };
-//Crop
-class CenterCropImg {
-public:
-  virtual void Run(cv::Mat &im, const int crop_size = 224);
-};
-//Resize
-class ResizeImg {
-public:
-  virtual void Run(const cv::Mat &img, cv::Mat &resize_img, int max_size_len);
-};
 ```
 **推理**
 
-前向推理主要实现在[cls.cpp](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/src/cls.cpp)。
+前向推理主要实现在[cls.cpp](../../mobilenetv3_prod/Step6/deploy/inference_cpp/src/cls.cpp)。
 ```C++
   auto input_names = this->predictor_->GetInputNames();
   auto input_t = this->predictor_->GetInputHandle(input_names[0]);
@@ -139,8 +141,8 @@ public:
 
 **后处理**
 
-对于模型的推理输出，对其进行后处理，得到最终有实际含义的输出。
-mobilenet_v3_small的后处理代码如下所示。
+模型输出的是一个一维的数组，代表输入图片分类到每个类目的概率，为了得到有实际含义的输出，
+需要获取该数组中最大值的位置和大小，mobilenet_v3_small的后处理代码如下所示。
 
 ```c++
 int maxPosition = max_element(out_data.begin(), out_data.end()) - out_data.begin();
@@ -148,7 +150,7 @@ int score = out_data[maxPosition];
 ```
 
 ### 2.4 编译得到可执行代码
-在准备好相应的代码后需要开始准备编译，这里可以利用cmake来实现，代码示例如：[CMakeLists.txt](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/CMakeLists.txt)
+在准备好相应的代码后需要开始准备编译，这里可以利用cmake来实现，代码示例如：[CMakeLists.txt](../../mobilenetv3_prod/Step6/deploy/inference_cpp/CMakeLists.txt)
 ```bash
 set(DEPS ${DEPS} ${OpenCV_LIBS})
 AUX_SOURCE_DIRECTORY(./src SRCS)
@@ -181,7 +183,7 @@ make -j
 ```
 
 ### 2.5 运行得到结果
-相关脚本位置[run.sh](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/deploy/inference_cpp/tools/run.sh)
+相关脚本位置[run.sh](../../mobilenetv3_prod/Step6/deploy/inference_cpp/tools/run.sh)
 ```bash
 ./build/clas_system ./tools/config.txt ../../images/demo.jpg
 ```
