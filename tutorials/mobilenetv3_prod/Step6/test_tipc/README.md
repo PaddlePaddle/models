@@ -39,18 +39,41 @@ test_tipc
 
 ### 3.2 测试流程概述
 
-使用本工具，可以测试不同功能的支持情况。测试过程包含
+使用本工具，可以测试不同功能的支持情况。测试过程包含：
 
 1. 准备数据与环境
 2. 运行测试脚本，观察不同配置是否运行成功。
 
-具体内容可以参考第4章中的测试文档链接。
+### 3.3 开始测试
 
-<a name="more"></a>
+请参考相应文档，完成指定功能的测试。
 
-## 4. 更多测试功能
+- 基础训练预测测试：
+    - [Linux GPU/CPU 基础训练推理测试](docs/test_train_inference_python.md)
 
-更多测试功能可以参考
+- 更多训练方式测试：
+    - [Linux GPU/CPU 多机多卡训练推理测试]
+    - [Linux GPU/CPU 混合精度训练推理测试]
 
-* [Linux GPU/CPU 基础训练推理测试文档](docs/test_train_inference_python.md)
+- 更多部署方式测试：
+    - [Linux GPU/CPU PYTHON 服务化部署测试]
+    - [Linux GPU/CPU C++ 服务化部署测试]
+    - [Linux GPU/CPU C++ 推理测试]
+    - [Paddle.js 部署测试]
+    - [Paddle2ONNX 测试]
+    - [Lite ARM CPU 部署测试]
+    - [OpenCL ARM GPU 部署测试]
+    - [Metal ARM GPU 部署测试]
+    - [Jetson 部署测试]
+    - [XPU 部署测试]
+    - [OpenCL ARM GPU 部署测试]
 
+- Slim训练部署测试：
+    - [Linux GPU/CPU PACT量化训练测试]
+    - [Linux GPU/CPU 离线量化测试]
+
+- 更多训练环境测试：
+    - [Linux XPU2 基础训练推理测试]
+    - [Linux DCU 基础训练推理测试]
+    - [Linux NPU 基础训练推理测试]
+    - [Windows GPU/CPU 基础训练推理测试]

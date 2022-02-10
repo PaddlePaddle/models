@@ -1,12 +1,6 @@
-# Linux端基础训练推理测试开发规范
+# Linux GPU/CPU 基础训练推理测试
 
-基础训练推理测试开发的流程如下所示。
-
-<div align="center">
-    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
-</div>
-
-Linux端基础训练推理功能测试的主程序为`test_train_inference_python.sh`，可以测试基于Python的模型训练、评估、推理等基本功能。
+Linux GPU/CPU 基础训练推理测试的主程序为`test_train_inference_python.sh`，可以测试基于Python的模型训练、评估、推理等基本功能。
 
 ## 1. 测试结论汇总
 
@@ -84,5 +78,3 @@ bash test_tipc/test_train_inference_python.sh test_tipc/configs/mobilenet_v3_sma
 ```
 Run successfully with command - xxx
 ```
-
-

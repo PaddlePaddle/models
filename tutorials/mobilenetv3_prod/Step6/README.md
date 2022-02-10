@@ -235,9 +235,9 @@ python tools/predict.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --
 
 <a name="6"></a>
 
-## 6. TIPC自动化测试脚本
+## 6. TIPC自动化测试
 
-coming soon!
+飞桨训推一体全流程（Training and Inference Pipeline Criterion(TIPC)）测试工具，可以一键测试飞桨的多种训练、推理、部署打通情况。具体使用方式参考[test_tipc](./test_tipc/)。
 
 <a name="7"></a>
 
