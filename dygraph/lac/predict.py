@@ -80,7 +80,7 @@ def do_infer(args):
         result = infer_process(infer_loader)
         for sent, tags in result:
             result_list = ['(%s, %s)' % (ch, tag) for ch, tag in zip(sent, tags)]
-            print(''.join(result_list))
+            print(''.join(result_list).encode('utf-8'))
 
 if __name__ == '__main__':
     args = parser.parse_args()

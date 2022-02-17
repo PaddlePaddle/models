@@ -27,6 +27,8 @@ import sys
 import paddle.fluid as fluid
 from paddle.fluid import core
 import multiprocessing as mp
+import tempfile
+import shutil
 
 
 def print_arguments(args):
@@ -176,3 +178,62 @@ def check_cuda(use_cuda, err = \
             sys.exit(1)
     except Exception as e:
         pass
+
+
+def _load_state(path):
+    if os.path.exists(path + '.pdopt'):
+        # XXX another hack to ignore the optimizer state
+        tmp = tempfile.mkdtemp()
+        dst = os.path.join(tmp, os.path.basename(os.path.normpath(path)))
+        shutil.copy(path + '.pdparams', dst + '.pdparams')
+        state = fluid.io.load_program_state(dst)
+        shutil.rmtree(tmp)
+    else:
+        state = fluid.io.load_program_state(path)
+    return state
+
+
+def load_params(exe, prog, path, ignore_params=None):
+    """
+    Load model from the given path.
+    Args:
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): load weight to which Program object.
+        path (string): local model path.
+        ignore_params (list): ignore variable to load when finetuning.
+    """
+    if not (os.path.isdir(path) or os.path.exists(path + '.pdparams')):
+        raise ValueError("Model pretrain path {} does not "
+                         "exists.".format(path))
+
+    print('Loading parameters from {}...'.format(path))
+
+    ignore_set = set()
+    state = _load_state(path)
+
+    # ignore the parameter which mismatch the shape
+    # between the model and pretrain weight.
+    all_var_shape = {}
+    for block in prog.blocks:
+        for param in block.all_parameters():
+            all_var_shape[param.name] = param.shape
+    ignore_set.update([
+        name for name, shape in all_var_shape.items()
+        if name in state and shape != state[name].shape
+    ])
+
+    if ignore_params:
+        all_var_names = [var.name for var in prog.list_vars()]
+        ignore_list = filter(
+            lambda var: any([re.match(name, var) for name in ignore_params]),
+            all_var_names)
+        ignore_set.update(list(ignore_list))
+
+    if len(ignore_set) > 0:
+        for k in ignore_set:
+            if k in state:
+                print('warning: variable {} is already excluded automatically'.
+                      format(k))
+                del state[k]
+
+    fluid.io.set_program_state(prog, state)

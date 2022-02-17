@@ -239,7 +239,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img /= img_std
 
     if mode == 'train' or mode == 'val':
-        return (img, sample[1])
+        return (img, [sample[1]])
     elif mode == 'test':
         return (img, )
 
@@ -256,8 +256,9 @@ def process_batch_data(input_data, settings, mode, color_jitter, rotate):
 
 
 class ImageNetReader:
-    def __init__(self, seed=None):
+    def __init__(self, seed=None, place_num=1):
         self.shuffle_seed = seed
+        self.place_num = place_num
 
     def set_shuffle_seed(self, seed):
         assert isinstance(seed, int), "shuffle seed must be int"
@@ -275,8 +276,7 @@ class ImageNetReader:
         if mode == 'test':
             batch_size = 1
         else:
-            batch_size = settings.batch_size / paddle.fluid.core.get_cuda_device_count(
-            )
+            batch_size = settings.batch_size / self.place_num
 
         def reader():
             def read_file_list():
@@ -365,8 +365,7 @@ class ImageNetReader:
             reader = create_mixup_reader(settings, reader)
             reader = fluid.io.batch(
                 reader,
-                batch_size=int(settings.batch_size /
-                               paddle.fluid.core.get_cuda_device_count()),
+                batch_size=int(settings.batch_size / self.place_num),
                 drop_last=True)
         return reader
 

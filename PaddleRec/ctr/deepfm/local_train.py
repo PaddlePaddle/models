@@ -61,12 +61,12 @@ def train():
                                  'epoch_' + str(epoch_id + 1))
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))
-        fluid.io.save_persistables(
-            executor=exe,
-            dirname=model_dir,
-            main_program=fluid.default_main_program())
+        main_program = fluid.default_main_program()
+        fluid.io.save(main_program, model_dir)
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     train()

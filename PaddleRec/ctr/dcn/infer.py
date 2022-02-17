@@ -45,7 +45,7 @@ def infer():
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     cur_model_path = os.path.join(args.model_output_dir,
-                                  'epoch_' + args.test_epoch)
+                                  'epoch_' + args.test_epoch, "checkpoint")
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
@@ -62,10 +62,9 @@ def infer():
             exe = fluid.Executor(place)
             feeder = fluid.DataFeeder(
                 feed_list=dcn_model.data_list, place=place)
-            fluid.io.load_persistables(
-                executor=exe,
-                dirname=cur_model_path,
-                main_program=fluid.default_main_program())
+
+            exe.run(startup_program)
+            fluid.load(fluid.default_main_program(), cur_model_path)
 
             for var in dcn_model.auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)
@@ -108,5 +107,7 @@ def set_zero(var_name,
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     infer()

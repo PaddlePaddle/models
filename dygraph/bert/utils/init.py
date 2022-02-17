@@ -30,7 +30,7 @@ def cast_fp32_to_fp16(exe, main_program):
             param_t = fluid.global_scope().find_var(param.name).get_tensor()
             data = np.array(param_t)
             if param.name.find("layer_norm") == -1:
-                param_t.set(np.float16(data).view(np.uint16), exe.place)
+                param_t.set(np.float16(data), exe.place)
             master_param_var = fluid.global_scope().find_var(param.name +
                                                              ".master")
             if master_param_var is not None:
@@ -83,7 +83,13 @@ def init_pretraining_params(exe,
 
 def init_from_static_model(dir_path, cls_model, bert_config):
     def load_numpy_weight(file_name):
-        res = np.load(os.path.join(dir_path, file_name), allow_pickle=True)
+        if six.PY2:
+            res = np.load(os.path.join(dir_path, file_name), allow_pickle=True)
+        else:
+            res = np.load(
+                os.path.join(dir_path, file_name),
+                allow_pickle=True,
+                encoding='latin1')
         assert res is not None
         return res
 

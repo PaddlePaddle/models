@@ -55,22 +55,21 @@ def infer(args):
     test_data = reader.Data(args.test_path, False)
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step)
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step, batch_size)
     exe.run(fluid.default_startup_program())
     infer_program = fluid.default_main_program().clone(for_test=True)
 
     for epoch_num in range(args.start_index, args.last_index + 1):
         model_path = os.path.join(args.model_path,  "epoch_" + str(epoch_num))
         try:
-            if not os.path.exists(model_path):
+            if not os.path.exists(model_path + ".pdmodel"):
                 raise ValueError()
-            fluid.io.load_persistables(executor=exe, dirname=model_path,
-                    main_program=infer_program)
+            fluid.io.load(infer_program, model_path+".pdmodel", exe)
 
             loss_sum = 0.0
             acc_sum = 0.0
             count = 0
-            py_reader.decorate_paddle_reader(test_data.reader(batch_size, batch_size*20, False))
+            py_reader.set_sample_list_generator(test_data.reader(batch_size, batch_size*20, False))
             py_reader.start()
             try:
                 while True:
@@ -88,5 +87,7 @@ def infer(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     infer(args)

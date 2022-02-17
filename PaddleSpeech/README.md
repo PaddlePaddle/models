@@ -1,4 +1,4 @@
-Fluid 模型库
+PaddleSpeech 语音模型库
 ============
 
 语音识别
@@ -14,4 +14,4 @@ Fluid 模型库
 
 语音合成 (Speech Synthesis) 技术是指用人工方法合成可辨识的语音。文本转语音 (Text-To-Speech) 系统是对语音合成技术的具体应用，其任务是给定某种语言的文本，合成对应的语音。语音合成技术是基于语音的人机交互，实时语音翻译等技术的基础。传统的文本转语音模型分为文本到音位，音位到频谱，频谱到波形等几个阶段分别进行优化，而随着深度学习技术在语音技术的应用的发展，端到端的文本转语音模型正在取得快速发展。
 
-- [DeepVoice3](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech/DeepVoice3), 百度研发的基于卷积神经网络的端到端语音合成模型，对应论文 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654)， 基于 PaddlePaddle 动态图实现。
+- [Parakeet](https://github.com/PaddlePaddle/Parakeet) (Paddle PARAllel text-to-speech toolKIT) 是一个定位于灵活、高效的语音合成工具集，支持多个前沿的语音合成模型，包括 WaveFlow、ClariNet、WaveNet、Deep Voice 3、Transformer TTS、FastSpeech 等。

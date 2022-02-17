@@ -70,8 +70,7 @@ def infer_epoch(args, vocab_size, test_reader, use_cuda, i2w):
             for epoch in range(start_index, last_index + 1):
                 copy_program = main_program.clone()
                 model_path = model_dir + "/pass-" + str(epoch)
-                fluid.io.load_params(
-                    executor=exe, dirname=model_path, main_program=copy_program)
+                fluid.load(copy_program, model_path, exe)
                 accum_num = 0
                 accum_num_sum = 0.0
                 t0 = time.time()
@@ -131,10 +130,7 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
                     copy_program = main_program.clone()
                     model_path = model_dir + "/pass-" + str(epoch) + (
                         '/batch-' + str(batchid * args.print_step))
-                    fluid.io.load_params(
-                        executor=exe,
-                        dirname=model_path,
-                        main_program=copy_program)
+                    fluid.load(copy_program, model_path, exe)
                     accum_num = 0
                     accum_num_sum = 0.0
                     t0 = time.time()
@@ -181,6 +177,8 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     args = parse_args()
     start_index = args.start_index

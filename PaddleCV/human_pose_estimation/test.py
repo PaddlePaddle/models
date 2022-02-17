@@ -127,6 +127,8 @@ def test(args):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     check_cuda(args.use_gpu)
     test(args)

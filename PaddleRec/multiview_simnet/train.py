@@ -112,8 +112,8 @@ def start_train(args):
 
     dataset = reader.SyntheticDataset(args.sparse_feature_dim, args.query_slots,
                                       args.title_slots)
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             dataset.train(), buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
@@ -136,17 +136,19 @@ def start_train(args):
     startup_program = fluid.default_startup_program()
     loop_program = fluid.default_main_program()
 
-    feeder = fluid.DataFeeder(feed_list=all_slots, place=place)
     exe = fluid.Executor(place)
     exe.run(startup_program)
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=all_slots, capacity=10000, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
 
     total_time = 0
     ce_info = []
     for pass_id in range(args.epochs):
         start_time = time.time()
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             loss_val, correct_val = exe.run(loop_program,
-                                            feed=feeder.feed(data),
+                                            feed=data,
                                             fetch_list=[avg_cost, correct])
             logger.info("TRAIN --> pass: {} batch_id: {} avg_cost: {}, acc: {}"
                         .format(pass_id, batch_id, loss_val,
@@ -186,5 +188,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     check_version()
     main()

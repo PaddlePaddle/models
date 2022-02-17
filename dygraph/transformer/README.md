@@ -28,7 +28,8 @@
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle 1.7及以上版本或适当的develop版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 2.0rc 及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装。
+   若使用的是 PaddlePaddle 1.8 版本，请选择 release/1.8 分支。
 
 2. 下载代码
 
@@ -40,7 +41,7 @@
 
 3. 环境依赖
 
-   请参考PaddlePaddle[安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html)部分的内容
+   请参考PaddlePaddle[安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/index_cn.html)部分的内容
 
 
 ### 数据准备
@@ -76,6 +77,7 @@ python -u train.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096
 ```
 
@@ -91,6 +93,7 @@ python -u train.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096 \
   --n_head 16 \
   --d_model 1024 \
@@ -121,10 +124,11 @@ Paddle动态图支持多进程多卡进行模型训练，启动训练的方式�
 ```sh
 python -m paddle.distributed.launch --started_port 8999 --selected_gpus=0,1,2,3,4,5,6,7 --log_dir ./mylog train.py \
   --epoch 30 \
-  --src_vocab_fpath wmt16_ende_data_bpe/vocab_all.bpe.32000 \
-  --trg_vocab_fpath wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --src_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
-  --training_file wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096 \
   --print_step 100 \
   --use_cuda True \

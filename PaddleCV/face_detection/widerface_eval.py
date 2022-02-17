@@ -67,7 +67,7 @@ def infer(args, config):
         image_path = args.image_path
         image = Image.open(image_path)
         if image.mode == 'L':
-            image = img.convert('RGB')
+            image = image.convert('RGB')
         shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
         det0 = detect_face(image, shrink)
@@ -324,6 +324,8 @@ def get_shrink(height, width):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     config = reader.Settings(data_dir=args.data_dir)

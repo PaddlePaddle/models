@@ -131,7 +131,7 @@ def parse_args():
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
-    add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+    add_arg('reader_buf_size',          int,    8,                      "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
@@ -139,13 +139,16 @@ def parse_args():
 
     # SWITCH
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
-    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    add_arg('use_amp',                  bool,   False,                   "Whether to enable mixed precision training with fp16." )
+    add_arg('use_pure_fp16',            bool,   False,                  "Whether to enable all half precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
     add_arg('data_format',              str,    "NCHW",                 "Tensor data format when training.")
     add_arg('fuse_elewise_add_act_ops', bool,   False,                  "Whether to use elementwise_act fusion.")
     add_arg('fuse_bn_act_ops',          bool,   False,                  "Whether to use batch_norm and act fusion.")
-
+    add_arg('fuse_bn_add_act_ops',      bool,   True,                   "Whether to use batch_norm, elementwise_add and act fusion. This is only used for AMP training.")
+    add_arg('enable_addto',             bool,   False,                  "Whether to enable the addto strategy for gradient accumulation or not. This is only used for AMP training.")
+    
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
@@ -420,7 +423,9 @@ def print_info(info_mode,
                batch_id=0,
                print_step=1,
                device_num=1,
-               class_dim=5):
+               class_dim=5,
+               reader_cost=None,
+               ips=None):
     """print function
 
     Args:
@@ -433,31 +438,35 @@ def print_info(info_mode,
     """
     #XXX: Use specific name to choose pattern, not the length of metrics.
     if info_mode == "batch":
+        time_info_str = "batch_cost %.5f sec" % time_info
+        if reader_cost:
+            time_info_str += ", reader_cost %.5f sec" % reader_cost
+        if ips:
+            time_info_str += ", ips %.5f images/sec" % ips
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.4f sec" % time_info))
+                           time_info_str))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
+                           "%.5f" % acc5, "%.5f" % lr, time_info_str,
                            min(class_dim, 5)))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 logger.info(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.4f sec" % time_info,
-                           min(class_dim, 5)))
+                           "%.5f" % acc5, time_info_str, min(class_dim, 5)))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -525,16 +534,30 @@ def best_strategy_compiled(args,
             fluid.require_version(min_version='1.7.0')
             build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
         except Exception as e:
-            logger.info("PaddlePaddle version 1.7.0 or higher is "
-            "required when you want to fuse batch_norm and activation_op.")
+            logger.info(
+                "PaddlePaddle version 1.7.0 or higher is "
+                "required when you want to fuse batch_norm and activation_op.")
         build_strategy.fuse_elewise_add_act_ops = args.fuse_elewise_add_act_ops
+        
+        try:
+            build_strategy.fuse_bn_add_act_ops = args.fuse_bn_add_act_ops
+        except Exception as e:
+            logger.info(
+                "PaddlePaddle 2.0-rc or higher is "
+                "required when you want to enable fuse_bn_add_act_ops strategy.")
+        try:
+            build_strategy.enable_addto = args.enable_addto
+        except Exception as e:
+            logger.info(
+                "PaddlePaddle 2.0-rc or higher is "
+                "required when you want to enable addto strategy.")
 
         exec_strategy = fluid.ExecutionStrategy()
 
         if args.use_gpu:
             exec_strategy.num_threads = fluid.core.get_cuda_device_count()
 
-        exec_strategy.num_iteration_per_drop_scope = 10
+        exec_strategy.num_iteration_per_drop_scope = 10000 if args.use_pure_fp16 else 10
 
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
         if num_trainers > 1 and args.use_gpu:

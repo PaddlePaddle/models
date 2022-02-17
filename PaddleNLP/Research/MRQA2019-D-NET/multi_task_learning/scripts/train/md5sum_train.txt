@@ -1,6 +1,0 @@
-efd6a551d2697c20a694e933210489f8  SQuAD.jsonl.gz
-182f4e977b849cb1dbfb796030b91444  NewsQA.jsonl.gz
-e18f586152612a9358c22f5536bfd32a  TriviaQA.jsonl.gz
-612245315e6e7c4d8446e5fcc3dc1086  SearchQA.jsonl.gz
-d212c7b3fc949bd0dc47d124e8c34907  HotpotQA.jsonl.gz
-e27d27bf7c49eb5ead43cef3f41de6be  NaturalQuestions.jsonl.gz

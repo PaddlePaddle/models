@@ -133,7 +133,6 @@ def parse_args():
     add_arg('dataset',          str,   'icdar2015',  "icdar2015, icdar2017.")
     add_arg('class_num',        int,   2,          "Class number.")
     add_arg('data_dir',         str,   'dataset/icdar2015',        "The data root path.")
-    add_arg('use_pyreader',     bool,   False,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
         "If False, only resize image and not pad, image shape is different between"
@@ -155,7 +154,7 @@ def parse_args():
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
     add_arg('nms_thresh',    float, 0.3,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.01,    "score threshold for NMS.")
-    add_arg('snapshot_stride',  int,    1000,    "save model every snapshot stride.")
+    add_arg('snapshot_iter',  int,    1000,    "save model every snapshot iter.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'ICDAR2015/tmp/',  "The image path used to inference and visualize.")

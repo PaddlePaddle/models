@@ -72,7 +72,7 @@ def train():
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
     loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size,
-                                args.step)
+                                args.step, batch_size)
 
     data_reader = reader.Data(args.train_path, True)
     logger.info("load data complete")
@@ -96,7 +96,7 @@ def train():
 
     all_vocab = fluid.global_scope().var("all_vocab").get_tensor()
     all_vocab.set(
-        np.arange(1, items_num).astype("int64").reshape((-1, 1)), place)
+        np.arange(1, items_num).astype("int64").reshape((-1)), place)
 
     feed_list = [e.name for e in feed_datas]
 
@@ -115,7 +115,8 @@ def train():
     acc_sum = 0.0
     global_step = 0
     PRINT_STEP = 500
-    py_reader.decorate_paddle_reader(data_reader.reader(batch_size, batch_size * 20, True))
+    #py_reader.decorate_paddle_reader(data_reader.reader(batch_size, batch_size * 20, True))
+    py_reader.set_sample_list_generator(data_reader.reader(batch_size, batch_size * 20, True))
     for i in range(args.epoch_num):
         epoch_sum = []
         py_reader.start()
@@ -139,7 +140,7 @@ def train():
         logger.info("epoch loss: %.4lf" % (np.mean(epoch_sum)))
         save_dir = os.path.join(args.model_path, "epoch_" + str(i))
         fetch_vars = [loss, acc]
-        fluid.io.save_inference_model(save_dir, feed_list, fetch_vars, exe)
+        fluid.save(fluid.default_main_program(), model_path=save_dir)
         logger.info("model saved in " + save_dir)
 
     # only for ce
@@ -170,4 +171,6 @@ def get_cards(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     train()

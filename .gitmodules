@@ -3,16 +3,16 @@
 	url = https://github.com/PaddlePaddle/PARL
 [submodule "PaddleCV/PaddleSeg"]
 	path = PaddleCV/PaddleSeg
-	url = https://github.com/PaddlePaddle/PaddleSeg
+	url = https://github.com/PaddlePaddle/PaddleSeg.git
 [submodule "AutoDL"]
 	path = AutoDL
 	url = https://github.com/PaddlePaddle/AutoDL.git
-[submodule "PaddleNLP/PaddleLARK/ERNIE"]
-	path = PaddleNLP/PaddleLARK/ERNIE
-	url = https://github.com/PaddlePaddle/ERNIE.git
 [submodule "PaddleSpeech/DeepSpeech"]
 	path = PaddleSpeech/DeepSpeech
 	url = https://github.com/PaddlePaddle/DeepSpeech.git
-[submodule "PaddleNLP/PALM"]
-	path = PaddleNLP/PALM
-	url = https://github.com/PaddlePaddle/PALM
+[submodule "PaddleSpeech/Parakeet"]
+	path = PaddleSpeech/Parakeet
+	url = https://github.com/PaddlePaddle/Parakeet
+[submodule "PaddleCV/PaddleDetection"]
+	path = PaddleCV/PaddleDetection
+	url = https://github.com/PaddlePaddle/PaddleDetection.git

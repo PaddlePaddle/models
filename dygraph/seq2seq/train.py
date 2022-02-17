@@ -27,7 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid.dygraph_grad_clip import GradClipByGlobalNorm
+from paddle.fluid.clip import GradientClipByGlobalNorm
 
 import reader
 
@@ -57,7 +57,7 @@ def main():
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     with fluid.dygraph.guard(place):
-        args.enable_ce = True
+        #args.enable_ce = True
         if args.enable_ce:
             fluid.default_startup_program().random_seed = 102
             fluid.default_main_program().random_seed = 102
@@ -84,13 +84,18 @@ def main():
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=dropout)
-        gloabl_norm_clip = GradClipByGlobalNorm(max_grad_norm)
+        gloabl_norm_clip = GradientClipByGlobalNorm(max_grad_norm)
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":
-            optimizer = fluid.optimizer.SGD(lr, parameter_list=model.parameters())
+            optimizer = fluid.optimizer.SGD(lr,
+                                            parameter_list=model.parameters(),
+                                            grad_clip=gloabl_norm_clip)
         elif opt_type == "adam":
-            optimizer = fluid.optimizer.Adam(lr, parameter_list=model.parameters())
+            optimizer = fluid.optimizer.Adam(
+                lr,
+                parameter_list=model.parameters(),
+                grad_clip=gloabl_norm_clip)
         else:
             print("only support [sgd|adam]")
             raise Exception("opt type not support")
@@ -103,8 +108,8 @@ def main():
         tar_lang = args.tar_lang
         print("begin to load data")
         raw_data = reader.raw_data(src_lang, tar_lang, vocab_prefix,
-                                train_data_prefix, eval_data_prefix,
-                                test_data_prefix, args.max_len)
+                                   train_data_prefix, eval_data_prefix,
+                                   test_data_prefix, args.max_len)
         print("finished load data")
         train_data, valid_data, test_data, _ = raw_data
 
@@ -128,8 +133,7 @@ def main():
             total_loss = 0.0
             word_count = 0.0
             for batch_id, batch in enumerate(eval_data_iter):
-                input_data_feed, word_num = prepare_input(
-                    batch, epoch_id)
+                input_data_feed, word_num = prepare_input(batch, epoch_id)
                 loss = model(input_data_feed)
 
                 total_loss += loss * batch_size
@@ -138,10 +142,13 @@ def main():
             model.train()
             return ppl
 
+        ce_time = []
+        ce_ppl = []
         max_epoch = args.max_epoch
         for epoch_id in range(max_epoch):
+            epoch_start = time.time()
+
             model.train()
-            start_time = time.time()
             if args.enable_ce:
                 train_data_iter = reader.get_data_iter(
                     train_data, batch_size, enable_ce=True)
@@ -151,37 +158,48 @@ def main():
             total_loss = 0
             word_count = 0.0
             batch_times = []
+            total_reader_cost = 0.0
+            interval_time_start = time.time()
+
+            batch_start = time.time()
             for batch_id, batch in enumerate(train_data_iter):
-                batch_start_time = time.time()
+                batch_reader_end = time.time()
+                total_reader_cost += batch_reader_end - batch_start
+
                 input_data_feed, word_num = prepare_input(
                     batch, epoch_id=epoch_id)
                 word_count += word_num
                 loss = model(input_data_feed)
-                # print(loss.numpy()[0])
                 loss.backward()
-                optimizer.minimize(loss, grad_clip = gloabl_norm_clip)
+                optimizer.minimize(loss)
                 model.clear_gradients()
                 total_loss += loss * batch_size
-                batch_end_time = time.time()
-                batch_time = batch_end_time - batch_start_time
-                batch_times.append(batch_time)
+                total_loss_value = total_loss.numpy()
 
+                batch_times.append(time.time() - batch_start)
                 if batch_id > 0 and batch_id % 100 == 0:
-                    print("-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f" %
-                        (epoch_id, batch_id, batch_time,
-                        np.exp(total_loss.numpy() / word_count)))
+                    print(
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
+                        % (epoch_id, batch_id, np.exp(total_loss_value /
+                                                      word_count),
+                           (time.time() - interval_time_start) / 100,
+                           total_reader_cost / 100,
+                           word_count / (time.time() - interval_time_start)))
+                    ce_ppl.append(np.exp(total_loss_value / word_count))
                     total_loss = 0.0
                     word_count = 0.0
+                    total_reader_cost = 0.0
+                    interval_time_start = time.time()
+                batch_start = time.time()
 
-            end_time = time.time()
-            epoch_time = end_time - start_time
+            train_epoch_cost = time.time() - epoch_start
             print(
-                "\nTrain epoch:[%d]; Epoch Time: %.5f; avg_time: %.5f s/step\n"
-                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
+                "\nTrain epoch:[%d]; epoch_cost: %.5f sec; avg_batch_cost: %.5f s/step\n"
+                % (epoch_id, train_epoch_cost,
+                   sum(batch_times) / len(batch_times)))
+            ce_time.append(train_epoch_cost)
 
-            
-            dir_name = os.path.join(args.model_path,
-                                    "epoch_" + str(epoch_id))
+            dir_name = os.path.join(args.model_path, "epoch_" + str(epoch_id))
             print("begin to save", dir_name)
             paddle.fluid.save_dygraph(model.state_dict(), dir_name)
             print("save finished")
@@ -189,6 +207,18 @@ def main():
             print("dev ppl", dev_ppl)
             test_ppl = eval(test_data)
             print("test ppl", test_ppl)
+
+        if args.enable_ce:
+            card_num = get_cards()
+            _ppl = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _ppl = ce_ppl[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
+            print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
 
 def get_cards():

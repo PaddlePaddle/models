@@ -121,12 +121,14 @@ def train():
         print("epoch:%d num_steps:%d time_cost(s):%f" %
               (epoch_idx, i, total_time / epoch_idx))
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
-        fluid.io.save_params(executor=exe, dirname=save_dir)
+        fluid.save(fluid.default_main_program(), model_path=save_dir)
         print("model saved in %s" % save_dir)
 
     print("finish training")
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     train()

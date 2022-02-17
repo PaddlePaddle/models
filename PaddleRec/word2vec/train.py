@@ -10,7 +10,7 @@ import paddle
 import paddle.fluid as fluid
 import six
 import reader
-from net import skip_gram_word2vec
+from net import skip_gram_word2vec, skip_gram_word2vec_shuffle_batch
 
 import utils
 import sys
@@ -85,6 +85,12 @@ def parse_args():
         default=False,
         help='print speed or not , (default: False)')
     parser.add_argument(
+        '--with_shuffle_batch',
+        action='store_true',
+        required=False,
+        default=False,
+        help='negative samples come from shuffle_batch op or not , (default: False)')
+    parser.add_argument(
         '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()
@@ -121,11 +127,7 @@ def convert_python_to_tensor(weight, batch_size, sample_reader):
     return __reader__
 
 
-def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
-               weight):
-
-    py_reader.decorate_tensor_provider(
-        convert_python_to_tensor(weight, args.batch_size, reader.train()))
+def train_loop(args, train_program, data_loader, loss, trainer_id):
 
     place = fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -149,7 +151,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
         exec_strategy=exec_strategy)
 
     for pass_id in range(args.num_passes):
-        py_reader.start()
+        data_loader.start()
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
@@ -164,7 +166,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
-                               loss_val.mean(), py_reader.queue.size()))
+                               loss_val.mean(), data_loader.queue.size()))
                 if args.with_speed:
                     if batch_id % 500 == 0 and batch_id != 0:
                         elapsed = (time.time() - start)
@@ -178,18 +180,18 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                     model_dir = args.model_output_dir + '/pass-' + str(
                         pass_id) + ('/batch-' + str(batch_id))
                     if trainer_id == 0:
-                        fluid.io.save_params(executor=exe, dirname=model_dir)
+                        fluid.save(fluid.default_main_program(), model_path=model_dir)
                         print("model saved in %s" % model_dir)
                 batch_id += 1
 
         except fluid.core.EOFException:
-            py_reader.reset()
+            data_loader.reset()
             epoch_end = time.time()
             logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
             model_dir = args.model_output_dir + '/pass-' + str(pass_id)
             if trainer_id == 0:
-                fluid.io.save_params(executor=exe, dirname=model_dir)
+                fluid.save(fluid.default_main_program(), model_path=model_dir)
                 print("model saved in %s" % model_dir)
 
 
@@ -212,14 +214,26 @@ def train(args):
                                             filelist, 0, 1)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
-    np_power = np.power(np.array(word2vec_reader.id_frequencys), 0.75)
-    id_frequencys_pow = np_power / np_power.sum()
 
-    loss, py_reader = skip_gram_word2vec(
-        word2vec_reader.dict_size,
-        args.embedding_size,
-        is_sparse=args.is_sparse,
-        neg_num=args.nce_num)
+    if args.with_shuffle_batch:
+        loss, data_loader = skip_gram_word2vec_shuffle_batch(
+            word2vec_reader.dict_size,
+            args.embedding_size,
+            is_sparse=args.is_sparse,
+            neg_num=args.nce_num)
+        data_loader.set_sample_generator(word2vec_reader.train(), batch_size=args.batch_size, drop_last=True)
+    else:
+        np_power = np.power(np.array(word2vec_reader.id_frequencys), 0.75)
+        id_frequencys_pow = np_power / np_power.sum()
+
+        loss, data_loader = skip_gram_word2vec(
+            word2vec_reader.dict_size,
+            args.embedding_size,
+            is_sparse=args.is_sparse,
+            neg_num=args.nce_num)
+
+        data_loader.set_batch_generator(
+            convert_python_to_tensor(id_frequencys_pow, args.batch_size, word2vec_reader.train()))
 
     optimizer = fluid.optimizer.SGD(
         learning_rate=fluid.layers.exponential_decay(
@@ -233,11 +247,12 @@ def train(args):
     # do local training 
     logger.info("run local training")
     main_program = fluid.default_main_program()
-    train_loop(args, main_program, word2vec_reader, py_reader, loss, 0,
-               id_frequencys_pow)
+    train_loop(args, main_program, data_loader, loss, 0)
 
 
 if __name__ == '__main__':
-    utils.check_version()
+    import paddle
+    paddle.enable_static()
     args = parse_args()
+    utils.check_version(args.with_shuffle_batch)
     train(args)

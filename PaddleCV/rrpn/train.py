@@ -56,7 +56,7 @@ def get_device_num():
 
 def train():
     learning_rate = cfg.learning_rate
-    image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
+    #image_shape = [-1, 3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
     devices_num = get_device_num()
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
@@ -71,7 +71,7 @@ def train():
                 add_roi_box_head_func=resnet.ResNetC5(),
                 use_pyreader=cfg.use_pyreader,
                 use_random=use_random)
-            model.build_model(image_shape)
+            model.build_model()
             losses, keys, rpn_rois = model.loss()
             loss = losses[0]
             fetch_list = losses
@@ -132,16 +132,16 @@ def train():
             if num_trainers > 1:
                 train_reader = fluid.contrib.reader.distributed_batch_reader(
                     train_reader)
-        py_reader = model.py_reader
-        py_reader.decorate_paddle_reader(train_reader)
+        data_loader = model.data_loader
+        data_loader.set_sample_list_generator(train_reader, places=place)
     else:
         if num_trainers > 1: shuffle = False
         train_reader = reader.train(
             batch_size=total_batch_size, shuffle=shuffle)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
-    def train_loop_pyreader():
-        py_reader.start()
+    def train_loop():
+        data_loader.start()
         train_stats = TrainingStats(cfg.log_window, keys)
         try:
             start_time = time.time()
@@ -173,51 +173,14 @@ def train():
             total_time = end_time - start_time
             last_loss = np.array(outs[0]).mean()
         except (StopIteration, fluid.core.EOFException):
-            py_reader.reset()
+            data_loader.reset()
 
-    def train_loop():
-        start_time = time.time()
-        prev_start_time = start_time
-        start = start_time
-        train_stats = TrainingStats(cfg.log_window, keys)
-        for iter_id, data in enumerate(train_reader()):
-            prev_start_time = start_time
-            start_time = time.time()
-            if data[0][1].shape[0] == 0:
-                continue
-
-            outs = exe.run(compiled_train_prog,
-                           fetch_list=[v.name for v in fetch_list],
-                           feed=feeder.feed(data))
-            stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
-            train_stats.update(stats)
-            logs = train_stats.log()
-            if iter_id % 10 == 0:
-                strs = '{}, iter: {}, lr: {:.5f}, {}, time: {:.3f}'.format(
-                    now_time(), iter_id,
-                    np.mean(outs[-1]), logs, start_time - prev_start_time)
-                print(strs)
-            sys.stdout.flush()
-            if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0 and iter_id != 0:
-                save_name = "{}".format(iter_id + 1)
-                checkpoint.save(exe, train_prog,
-                                os.path.join(cfg.model_save_dir, save_name))
-            if (iter_id + 1) == cfg.max_iter:
-                checkpoint.save(exe, train_prog,
-                                os.path.join(cfg.model_save_dir, "model_final"))
-                break
-
-        end_time = time.time()
-        total_time = end_time - start_time
-        last_loss = np.array(outs[0]).mean()
-
-    if cfg.use_pyreader:
-        train_loop_pyreader()
-    else:
-        train_loop()
+    train_loop()
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)

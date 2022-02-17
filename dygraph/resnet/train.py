@@ -25,6 +25,8 @@ from paddle.fluid import framework
 
 import math
 import sys
+import time
+import reader
 
 IMAGENET1000 = 1281167
 base_lr = 0.1
@@ -45,12 +47,119 @@ def parse_args():
     parser.add_argument(
         "-b", "--batch_size", default=32, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
+
+    # NOTE:used in benchmark
+    parser.add_argument(
+        "--max_iter",
+        default=0,
+        type=int,
+        help="the max iters to train, used in benchmark")
+    parser.add_argument(
+        "--class_dim",
+        default=102,
+        type=int,
+        help="the class number of flowers dataset")
+    parser.add_argument(
+        "--use_imagenet_data",
+        action="store_true",
+        help="Use imagenet dataset instead of the flowers dataset(small dataset)"
+    )
+    parser.add_argument(
+        '--data_dir',
+        default="./data/ILSVRC2012",
+        type=str,
+        help="The ImageNet dataset root directory.")
+    parser.add_argument(
+        '--lower_scale',
+        default=0.08,
+        type=float,
+        help="The value of lower_scale in ramdom_crop")
+    parser.add_argument(
+        '--lower_ratio',
+        default=3. / 4.,
+        type=float,
+        help="The value of lower_ratio in ramdom_crop")
+    parser.add_argument(
+        '--upper_ratio',
+        default=4. / 3.,
+        type=float,
+        help="The value of upper_ratio in ramdom_crop")
+    parser.add_argument(
+        '--resize_short_size',
+        default=256,
+        type=int,
+        help="The value of resize_short_size")
+    parser.add_argument(
+        '--crop_size', default=224, type=int, help="The value of crop size")
+    parser.add_argument(
+        '--use_mixup', default=False, type=bool, help="Whether to use mixup")
+    parser.add_argument(
+        '--mixup_alpha',
+        default=0.2,
+        type=float,
+        help="The value of mixup_alpha")
+    parser.add_argument(
+        '--reader_thread',
+        default=8,
+        type=int,
+        help="The number of multi thread reader")
+    parser.add_argument(
+        '--reader_buf_size',
+        default=16,
+        type=int,
+        help="The buf size of multi thread reader")
+    parser.add_argument(
+        '--interpolation',
+        default=None,
+        type=int,
+        help="The interpolation mode")
+    parser.add_argument(
+        '--use_aa',
+        default=False,
+        type=bool,
+        help="Whether to use auto augment")
+    parser.add_argument(
+        '--image_mean',
+        nargs='+',
+        type=float,
+        default=[0.485, 0.456, 0.406],
+        help="The mean of input image data")
+    parser.add_argument(
+        '--image_std',
+        nargs='+',
+        type=float,
+        default=[0.229, 0.224, 0.225],
+        help="The std of input image data")
+    parser.add_argument(
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
+
     args = parser.parse_args()
     return args
 
 
 args = parse_args()
 batch_size = args.batch_size
+
+
+class TimeCostAverage(object):
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.cnt = 0
+        self.total_time = 0
+
+    def record(self, usetime):
+        self.cnt += 1
+        self.total_time += usetime
+
+    def get_average(self):
+        if self.cnt == 0:
+            return 0
+        return self.total_time / self.cnt
 
 
 def optimizer_setting(parameter_list=None):
@@ -77,7 +186,6 @@ def optimizer_setting(parameter_list=None):
                 boundaries=bd, values=lr),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
-        
 
     return optimizer
 
@@ -112,11 +220,7 @@ class ConvBNLayer(fluid.dygraph.Layer):
 
 
 class BottleneckBlock(fluid.dygraph.Layer):
-    def __init__(self,
-                 num_channels,
-                 num_filters,
-                 stride,
-                 shortcut=True):
+    def __init__(self, num_channels, num_filters, stride, shortcut=True):
         super(BottleneckBlock, self).__init__()
 
         self.conv0 = ConvBNLayer(
@@ -182,16 +286,9 @@ class ResNet(fluid.dygraph.Layer):
         num_filters = [64, 128, 256, 512]
 
         self.conv = ConvBNLayer(
-            num_channels=3,
-            num_filters=64,
-            filter_size=7,
-            stride=2,
-            act='relu')
+            num_channels=3, num_filters=64, filter_size=7, stride=2, act='relu')
         self.pool2d_max = Pool2D(
-            pool_size=3,
-            pool_stride=2,
-            pool_padding=1,
-            pool_type='max')
+            pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
         self.bottleneck_block_list = []
         for block in range(len(depth)):
@@ -216,11 +313,12 @@ class ResNet(fluid.dygraph.Layer):
         import math
         stdv = 1.0 / math.sqrt(2048 * 1.0)
 
-        self.out = Linear(self.pool2d_avg_output,
-                      class_dim,
-                      act='softmax',
-                      param_attr=fluid.param_attr.ParamAttr(
-                          initializer=fluid.initializer.Uniform(-stdv, stdv)))
+        self.out = Linear(
+            self.pool2d_avg_output,
+            class_dim,
+            act='softmax',
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
     def forward(self, inputs):
         y = self.conv(inputs)
@@ -233,6 +331,16 @@ class ResNet(fluid.dygraph.Layer):
         return y
 
 
+def reader_decorator(reader):
+    def __reader__():
+        for item in reader():
+            img = np.array(item[0]).astype('float32').reshape(3, 224, 224)
+            label = np.array(item[1]).astype('int64').reshape(1)
+            yield img, label
+
+    return __reader__
+
+
 def eval(model, data):
 
     model.eval()
@@ -241,20 +349,11 @@ def eval(model, data):
     total_acc5 = 0.0
     total_sample = 0
     for batch_id, data in enumerate(data()):
-        dy_x_data = np.array(
-            [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
-        if len(np.array([x[1] for x in data]).astype('int64')) != batch_size:
-            continue
-        y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-            batch_size, 1)
-
-        img = to_variable(dy_x_data)
-        label = to_variable(y_data)
+        img = data[0]
+        label = data[1]
         label.stop_gradient = True
 
         out = model(img)
-        #loss = fluid.layers.cross_entropy(input=out, label=label)
-        #avg_loss = fluid.layers.mean(x=loss)
 
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
@@ -266,7 +365,6 @@ def eval(model, data):
         total_acc5 += acc_top5.numpy()
         total_sample += 1
 
-        # print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
         if batch_id % 10 == 0:
             print("test | batch step %d, acc1 %0.3f acc5 %0.3f" % \
                   ( batch_id, total_acc1 / total_sample, total_acc5 / total_sample))
@@ -279,8 +377,14 @@ def eval(model, data):
 
 def train_resnet():
     epoch = args.epoch
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
@@ -292,25 +396,50 @@ def train_resnet():
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
-        resnet = ResNet()
+        resnet = ResNet(class_dim=args.class_dim)
         optimizer = optimizer_setting(parameter_list=resnet.parameters())
 
         if args.use_data_parallel:
             resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
 
-        train_reader = paddle.batch(
-            paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
-        if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
+        if args.use_imagenet_data:
+            imagenet_reader = reader.ImageNetReader(0)
+            train_reader = imagenet_reader.train(settings=args)
+        else:
+            train_reader = paddle.batch(
+                reader_decorator(paddle.dataset.flowers.train(use_xmap=True)),
+                batch_size=batch_size,
+                drop_last=True)
 
-        test_reader = paddle.batch(
-            paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)
+        if args.use_imagenet_data:
+            test_reader = imagenet_reader.val(settings=args)
+        else:
+            test_reader = paddle.batch(
+                reader_decorator(paddle.dataset.flowers.test(use_xmap=True)),
+                batch_size=batch_size,
+                drop_last=True)
 
-        #file_name = './model/epoch_0.npz'
-        #model_data = np.load( file_name )
+        train_loader = fluid.io.DataLoader.from_generator(
+            capacity=32,
+            use_double_buffer=True,
+            iterable=True,
+            return_list=True,
+            use_multiprocess=True)
+        train_loader.set_sample_list_generator(train_reader, places=place)
+
+        test_loader = fluid.io.DataLoader.from_generator(
+            capacity=64,
+            use_double_buffer=True,
+            iterable=True,
+            return_list=True,
+            use_multiprocess=True)
+        test_loader.set_sample_list_generator(test_reader, places=place)
+
+        #NOTE: used in benchmark 
+        total_batch_num = 0
 
         for eop in range(epoch):
+            epoch_start = time.time()
 
             resnet.train()
             total_loss = 0.0
@@ -318,23 +447,17 @@ def train_resnet():
             total_acc5 = 0.0
             total_sample = 0
 
-            #dict_state = resnet.state_dict()
+            train_batch_cost_avg = TimeCostAverage()
+            train_reader_cost_avg = TimeCostAverage()
+            batch_start = time.time()
+            for batch_id, data in enumerate(train_loader()):
+                #NOTE: used in benchmark
+                if args.max_iter and total_batch_num == args.max_iter:
+                    return
 
-            #resnet.load_dict( model_data )
+                train_reader_cost = time.time() - batch_start
 
-            print("load finished")
-
-            for batch_id, data in enumerate(train_reader()):
-                dy_x_data = np.array(
-                    [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
-                if len(np.array([x[1]
-                                 for x in data]).astype('int64')) != batch_size:
-                    continue
-                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-                    -1, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
+                img, label = data
                 label.stop_gradient = True
 
                 out = resnet(img)
@@ -360,30 +483,45 @@ def train_resnet():
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
-                #print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
+
+                train_batch_cost = time.time() - batch_start
+                train_batch_cost_avg.record(train_batch_cost)
+                train_reader_cost_avg.record(train_reader_cost)
+
+                total_batch_num = total_batch_num + 1  #this is for benchmark
                 if batch_id % 10 == 0:
-                    print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
-                           ( eop, batch_id, total_loss / total_sample, \
-                             total_acc1 / total_sample, total_acc5 / total_sample))
+                    ips = float(
+                        args.batch_size) / train_batch_cost_avg.get_average()
+                    print(
+                        "[Epoch %d, batch %d] loss: %.5f, acc1: %.5f, acc5: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f images/sec"
+                        % (eop, batch_id, total_loss / total_sample,
+                           total_acc1 / total_sample, total_acc5 / total_sample,
+                           train_batch_cost_avg.get_average(),
+                           train_reader_cost_avg.get_average(), ips))
+                    train_batch_cost_avg.reset()
+                    train_reader_cost_avg.reset()
+                batch_start = time.time()
 
             if args.ce:
                 print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
                 print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
                 print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
-            print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
-                  (eop, batch_id, total_loss / total_sample, \
-                   total_acc1 / total_sample, total_acc5 / total_sample))
+
+            train_epoch_cost = time.time() - epoch_start
+            print(
+                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f s"
+                % (eop, total_loss / total_sample, total_acc1 / total_sample,
+                   total_acc5 / total_sample, train_epoch_cost))
+
             resnet.eval()
-            eval(resnet, test_reader)
+            eval(resnet, test_loader)
 
             save_parameters = (not args.use_data_parallel) or (
                 args.use_data_parallel and
                 fluid.dygraph.parallel.Env().local_rank == 0)
             if save_parameters:
-                fluid.save_dygraph(resnet.state_dict(),
-                                                'resnet_params')
+                fluid.save_dygraph(resnet.state_dict(), 'resnet_params')
 
 
 if __name__ == '__main__':
-
     train_resnet()

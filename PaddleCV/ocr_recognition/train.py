@@ -106,11 +106,11 @@ def train(args):
     # load init model
     if args.init_model is not None:
         model_dir = args.init_model
-        model_file_name = None
-        if not os.path.isdir(args.init_model):
-            model_dir = os.path.dirname(args.init_model)
-            model_file_name = os.path.basename(args.init_model)
-        fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
+        fluid.load(
+            fluid.default_main_program(),
+            model_dir,
+            var_list=fluid.io.get_program_parameter(fluid.default_main_program(
+            )))
         print("Init model from: %s." % args.init_model)
 
     train_exe = exe
@@ -139,7 +139,8 @@ def train(args):
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
         print("\n[%s] - Iter[%d]; Test seq error: %s.\n" %
-              (time.asctime( time.localtime(time.time())), iter_num, str(test_seq_error[0])))
+              (time.asctime(time.localtime(time.time())), iter_num,
+               str(test_seq_error[0])))
 
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
@@ -148,8 +149,8 @@ def train(args):
 
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
-        fluid.io.save_params(
-            exe, dirname=args.save_model_dir, filename=filename)
+        fluid.save(fluid.default_main_program(),
+                   os.path.join(args.save_model_dir, filename))
         print("Saved model to: %s/%s." % (args.save_model_dir, filename))
 
     iter_num = 0
@@ -179,15 +180,16 @@ def train(args):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print("\n[%s] - Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f"
-                      % (time.asctime( time.localtime(time.time())), iter_num,
-                         total_loss / (args.log_period * args.batch_size),
-                         total_seq_error / (args.log_period * args.batch_size)))
+                print("\n[%s] - Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" %
+                      (time.asctime(time.localtime(time.time())), iter_num,
+                       total_loss / (args.log_period * args.batch_size),
+                       total_seq_error / (args.log_period * args.batch_size)))
                 if 'ce_mode' in os.environ:
-                    print("kpis	train_cost	%f" % (total_loss / (args.log_period *
-                                                            args.batch_size)))
-                    print("kpis	train_acc	%f" % (
-                        1 - total_seq_error / (args.log_period * args.batch_size)))
+                    print("kpis	train_cost	%f" %
+                          (total_loss / (args.log_period * args.batch_size)))
+                    print("kpis	train_acc	%f" %
+                          (1 - total_seq_error /
+                           (args.log_period * args.batch_size)))
                 total_loss = 0.0
                 total_seq_error = 0.0
 
@@ -242,4 +244,6 @@ def main():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     main()

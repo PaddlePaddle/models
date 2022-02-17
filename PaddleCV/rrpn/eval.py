@@ -36,7 +36,6 @@ def eval():
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num
     model = model_builder.RRPN(
         add_conv_body_func=resnet.ResNet(),
@@ -48,19 +47,14 @@ def eval():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            model.build_model(image_shape)
+            model.build_model()
             pred_boxes = model.eval_bbox_out()
     infer_prog = infer_prog.clone(True)
     exe.run(startup_prog)
-
-    # yapf: disable
-    def if_exist(var):
-        return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
-    if cfg.pretrained_model:
-        checkpoint.load_params(exe, infer_prog, cfg.pretrained_model)
-    # yapf: enable
+    fluid.load(infer_prog, cfg.pretrained_model, exe)
     test_reader = reader.test(1)
-    feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
+    data_loader = model.data_loader
+    data_loader.set_sample_list_generator(test_reader, places=place)
 
     fetch_list = [pred_boxes]
     res_list = []
@@ -68,11 +62,10 @@ def eval():
         'bbox', 'gt_box', 'gt_class', 'is_crowed', 'im_info', 'im_id',
         'is_difficult'
     ]
-    for i, data in enumerate(test_reader()):
-        im_info = [data[0][1]]
+    for i, data in enumerate(data_loader()):
         result = exe.run(infer_prog,
                          fetch_list=[v.name for v in fetch_list],
-                         feed=feeder.feed(data),
+                         feed=data,
                          return_numpy=False)
         pred_boxes_v = result[0]
         nmsed_out = pred_boxes_v
@@ -85,6 +78,8 @@ def eval():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)

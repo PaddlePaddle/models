@@ -113,7 +113,7 @@ def eval(args):
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
-    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name, pred.name]
+    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
@@ -151,7 +151,7 @@ def eval(args):
         parallel_data.append(image_data)
         if place_num == len(parallel_data):
             t1 = time.time()
-            loss_set, acc1_set, acc5_set, pred_set = exe.run(
+            loss_set, acc1_set, acc5_set = exe.run(
                 compiled_program,
                 fetch_list=fetch_list,
                 feed=list(feeder.feed_parallel(parallel_data, place_num)))
@@ -201,4 +201,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     main()
