@@ -17,7 +17,7 @@
 
 | 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
 | :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
-| -     | - |  -  | 支持 | - | - | - |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | - | - |
 
 
 ## 3. 测试工具简介
@@ -51,11 +51,11 @@ test_tipc
 - 基础训练预测测试：
     - [Linux GPU/CPU 基础训练推理测试](docs/test_train_inference_python.md)
 
-- 更多训练方式测试：
+- 更多训练方式测试（coming soon）：
     - [Linux GPU/CPU 多机多卡训练推理测试]
     - [Linux GPU/CPU 混合精度训练推理测试]
 
-- 更多部署方式测试：
+- 更多部署方式测试（coming soon）：
     - [Linux GPU/CPU PYTHON 服务化部署测试]
     - [Linux GPU/CPU C++ 服务化部署测试]
     - [Linux GPU/CPU C++ 推理测试]
@@ -68,11 +68,11 @@ test_tipc
     - [XPU 部署测试]
     - [OpenCL ARM GPU 部署测试]
 
-- Slim训练部署测试：
+- Slim训练部署测试（coming soon）：
     - [Linux GPU/CPU PACT量化训练测试]
     - [Linux GPU/CPU 离线量化测试]
 
-- 更多训练环境测试：
+- 更多训练环境测试（coming soon）：
     - [Linux XPU2 基础训练推理测试]
     - [Linux DCU 基础训练推理测试]
     - [Linux NPU 基础训练推理测试]

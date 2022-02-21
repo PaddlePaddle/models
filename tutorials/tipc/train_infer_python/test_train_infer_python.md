@@ -1,63 +1,287 @@
-# Linux GPU/CPU 基础训练推理测试开发文档
+# Linux GPU/CPU 基础训练推理功能测试开发文档
 
 # 目录
 
 - [1. 简介](#1)
-- [2. 基本训练推理功能测试开发](#2)
-    - [2.1 准备待测试的命令](#2.1)
-    - [2.2 准备数据与环境](#2.2)
-    - [2.3 准备开发所需脚本](#2.3)
-    - [2.4 填写配置文件](#2.4)
-    - [2.5 验证配置正确性](#2.5)
-    - [2.6 撰写说明文档](#2.6)
-- [3. FAQ](#3)
+- [2. 命令与配置文件解析](#2)
+    - [2.1 命令解析](#2.1)
+    - [2.2 配置文件和运行命令映射解析](#2.2)
+- [3. 基本训练推理功能测试开发](#3)
+    - [2.1 准备待测试的命令](#3.1)
+    - [2.2 准备数据与环境](#3.2)
+    - [2.3 准备开发所需脚本](#3.3)
+    - [2.4 填写配置文件](#3.4)
+    - [2.5 验证配置正确性](#3.5)
+    - [2.6 撰写说明文档](#3.6)
+- [4. FAQ](#4)
 
 <a name="1"></a>
 
 ## 1. 简介
 
-飞桨除了基本的模型训练和预测，还提供了支持多端多平台的高性能推理部署工具。本文档提供了飞桨训推一体全流程（Training and Inference Pipeline Criterion(TIPC)）在Linux GPU/CPU 基础训练推理测试下的开发流程。
+本文档主要关注Linux GPU/CPU 下模型的基础训练推理全流程功能测试，具体测试点如下：
+
+- 模型训练：单机单卡/多卡训练跑通
+- 模型动转静：保存静态图模型
+- 模型推理：推理过程跑通
+
+为了一键跑通上述所有功能，本文档提供了`训推一体全流程`功能自动化测试工具，它包含3个脚本文件和1个配置文件，分别是：
+
+* `test_train_inference_python.sh`: 测试Linux上训练、模型动转静、推理功能的脚本，会对`train_infer_python.txt`进行解析，得到具体的执行命令。**该脚本无需修改**。
+* `prepare.sh`: 准备测试需要的数据或需要的预训练模型。
+* `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等，**该脚本无需修改**。
+* `train_infer_python.txt`: 配置文件，其中的内容会被`test_train_inference_python.sh`解析成具体的执行命令字段。
 
 <a name="2"></a>
 
-## 2. 基础训练推理功能测试开发
+## 2. 命令与配置文件解析
 
-Linux GPU/CPU 下的基础训练推理测试开发的过程可以分为6个步骤，如下图所示。
+<a name="2.1"></a>
+
+### 2.1 命令解析
+
+模型训练、动转静、推理过程的运行命令差别很大，但是都可以拆解为3个部分：
+
+```
+python  run_script   set_configs
+```
+
+例如：
+
+* 对于通过配置文件传参的场景来说，`python3.7 train.py -c config.yaml -o epoch_num=120`
+    * `python`部分为`python3.7`
+    * `run_script`部分为`train.py`
+    * `set_configs`部分为`-c config.yaml -o epoch_num=120`
+* 对于通过argparse传参的场景来说，`python3.7 train.py --data-path="./lite_data" --lr=0.1`
+    * `python`部分为`python3.7`
+    * `run_script`部分为`train.py`
+    * `set_configs`部分为`--data-path="./lite_data" --lr=0.1`
+
+其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以拼凑出一条完整的命令。
+
+基础训练推理功能测试开发过程主要分为以下6个步骤。
 
 <div align="center">
     <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
-其中设置了2个核验点，分别为
+其中设置了2个核验点。下面在2.2章节对配置文件进行详细说明，在第3章详细介绍开发过程。
 
-* 验证配置正确性
-* 撰写说明文档
+<a name="2.2"></a>
 
-<a name="2.1"></a>
+### 2.2 配置文件和运行命令映射解析
 
-### 2.1 准备待测试的命令
+完整的`train_infer_python.txt`配置文件共有32行，包含5个方面的内容。
 
-Linux端基础训练推理功能测试的主程序为`tutorials/mobilenetv3_prod/Step6/test_tipc/test_train_inference_python.sh`，可以测试基于Python的模型训练、评估、推理等基本功能。
+* 训练参数：第1~11行
+* 训练脚本配置：第13~14行
+* 评估脚本和配置：第16~17行（本部分无需关注，这里不再展开介绍）
+* 模型导出脚本和配置：第19~25行
+* 模型Inference推理：第26~32行
 
-首先需要进入到目录`tutorials/mobilenetv3_prod/Step6/`下，测试命令如下，如果希望测试不同的模型文件，只需更换为自己的参数配置文件，即可完成对应模型的测试。
+具体内容见[train_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt)。
 
-**【准备数据】**
+配置文件中主要有以下3种类型的字段。
+
+* 一行内容以冒号为分隔符：该行可以被解析为`key:value`的格式，需要根据实际的含义修改该行内容，下面进行详细说明。
+* 一行内容为`======xxxxx=====`：该行内容为注释信息，无需修改。
+* 一行内容为`##`：该行内容表示段落分隔符，没有实际意义，无需修改。
+
+#### 2.2.1 训练配置参数
+
+在配置文件中，可以通过下面的方式配置一些常用的超参数，如：是否使用GPU、迭代轮数、batch-size、预训练模型路径等，下面给出了常用的训练配置以及需要修改的内容。
+
+<details>
+<summary><b>训练配置参数（点击以展开详细内容或者折叠）
+</b></summary>
+
+
+| 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
+|----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
+| 2  | model_name:mobilenet_v3_small       | 模型名字          | 否         | 是           | value修改为自己的模型名字                  |
+| 3  | python:python3.7                    | python环境      | 否         | 是           | value修改为自己的python环境              |
+| 4  | gpu_list:0                          | gpu id        | 否         | 是           | value修改为自己的GPU ID                |
+| 5  | use-gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为设置GPU的内容，value修改为设置GPU的值         |
+| 6  | --epochs:lite_train_lite_infer=5    | 迭代的epoch数目    | 是         | 否           | key修改为代码中设置epoch数量的内容          |
+| 7  | --output-dir:./output/              | 输出目录          | 是         | 否           | key修改为代码中设置输出路径的内容             |
+| 8  | --batch-size:lite_train_lite_infer=4 | 训练的batch size | 是         | 否           | key修改为代码中设置batch size的内容       |
+| 9 | --pretrained:null                   | 预训练模型         | 是         | 是           | 如果训练时指定了预训练模型，则key和value需要对应修改 |
+| 10 | train_model_name:latest.pdparams    | 训练结果的模型名字  | 否         | 是           | value需要修改为训练完成之后保存的模型名称，用于后续的动转静 |
+| 11 | --data-path:./lite_data             | 数据集路径         | 是         | 是           | key和value需要对应修改为指定的数据集路径              |
+
+</details>
+
+以训练命令`python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001`为例，总共包含4个超参数。
+
+* 运行设备：`--device=gpu`，则需要修改为配置文件的第5行，`key`为`--device`， `value`为`gpu`，修改后内容为`--device:gpu`
+* 迭代轮数：`--epochs=2`，则需要修改配置文件的第6行，修改后内容为`--epochs:lite_train_lite_infer=2`（`lite_train_lite_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
+* 数据路径：`--data-path=./lite_data`，则需要修改为配置文件的第11行，修改后内容为`--data-path:./lite_data`
+* 学习率：`--lr=0.001`，由于配置文件中不包含该项配置，因此可以将其和`train.py`字段（配置文件第14行）放在一起，具体会在2.2.2节详细说明。
+
+#### 2.2.2 训练命令配置参数
+
+下面给出了配置文件中的训练命令配置参数（点击以展开详细内容或者折叠）
+
+<details>
+<summary><b>训练命令配置参数（点击以展开详细内容或者折叠）
+</b></summary>
+
+| 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
+|----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
+| 13 | trainer:norm_train                          | 训练方法            | 否         | 否           | -                 |
+| 14 | norm_train:train.py                         | norm_train的训练脚本 | 否         | 是           | value可以修改为自己的训练命令 |
+
+</details>
+
+以训练命令`python3.7 train.py --device=gpu --epochs=1 --data-path=./lite_data --lr=0.001`为例，该命令是正常训练（非裁剪、量化、蒸馏等方式），因此
+
+* 配置文件的第13行直接写`norm_train`即可。
+* 第14行配置`norm_train`的具体运行脚本/入口，即上述命令中的`train.py`因此配置文件的14行内容初步可以修改为`norm_train:train.py`，考虑到`--lr=0.001`超参数无法在配置文件中配置，因此可以在这里添加，修改后内容为`norm_train:train.py --lr=0.001`
+
+#### 2.2.3 模型动转静配置参数
+
+下面给出了配置文件中的模型动转静配置参数。
+
+**【注意】：** 在模型动转静过程中，为方便管理输入输出，程序会自动指定输入和输出目录，因此我们只需要提供可以配置输入输出目录的参数即可。
+
+<details>
+<summary><b>模型动转静配置参数（点击以展开详细内容或者折叠）</b></summary>
+
+| 行号 | 参考内容                 | 含义        | key是否需要修改 | value是否需要修改 | 修改内容                    |
+|----|------------------|-----------|-----------|-------------|-------------------------|
+| 20 | --save-inference-dir:./output/mobilenet_v3_small_infer/ | 动转静输出目录      | 是         | 否           | key修改为代码中设置输出目录的内容    |
+| 21 | --pretrained:                                   | 预训练模型路径    | 是         | 否           | key修改为代码中可以设置预训练模型路径的内容 |
+| 22 | norm_export:tools/export_model.py               | 模型动转静导出命令  | 否         | 是           | value修改为实际的动转静导出命令      |
+
+</details>
+
+以模型动转静命令`python tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --save-inference-dir="./mobilenet_v3_small_infer" --model=mobilenet_v3_small`为例。
+
+* 预训练模型路径的配置为`--pretrained=./mobilenet_v3_small_pretrained.pdparams`，因此需要将21行修改为`--pretrained:`
+* 动转静保存目录的配置为`--save-inference-dir="./mobilenet_v3_small_infer"`，因此需要将20行修改为`--save-inference-dir:`
+* 模型导出命令为`tools/export_model.py`，考虑到也需要配置`--model=mobilenet_v3_small`，因此可以将22行修改为`norm_export:tools/export_model.py --model=mobilenet_v3_small`
+
+#### 2.2.4 模型推理配置参数
+
+下面给出了配置文件中的模型推理配置参数。
+
+<details>
+<summary><b>模型推理配置参数（点击以展开详细内容或者折叠）</b></summary>
+
+| 行号 | 参考内容             | 含义     | key是否需要修改 | value是否需要修改 | 修改内容        |
+|----|------------------|-----------------|-----------|-------------|-------------|
+| 24 | train_model:./pretrain_models/mobilenet_v3_small_pretrained.pdparams   | 训练模型保存路径   | 否         | 否           |                                   |
+| 25 | infer_export:tools/export_model.py --model=mobilenet_v3_small | 推理前是否需要导出       | 否         | 是           | value修改为和22行内容一致即可                |
+| 27 | inference:deploy/inference_python/infer.py         | 推理脚本            | 否         | 是           | value修改为自己的推理脚本                   |
+| 28 | --use-gpu:True|False                                 | 是否使用GPU         | 是         | 是           | key和value修改为GPU设置的参数和值            |
+| 29 | --batch_size:1                                       | 推理batch size    | 是         | 否           | key修改为代码中设置batch size的内容       |
+| 30 | --model-dir:./output/mobilenet_v3_small_infer/   | 推理模型保存路径     | 是         | 否           | key修改为代码中可以设置inference model路径的内容 |
+| 31 | --img-path:./images/demo.jpg                 | 图片路径或者图片文件夹路径   | 是         | 否           | key修改为代码中设置图片路径的内容       |
+| 32 | --benchmark:False                                    | 是否使用benchmark            | 是         | 是           | key和value修改为规范化推理日志输出设置的参数和值      |
+
+</details>
+
+以推理命令`python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ --img-path=./images/demo.jpg`为例。
+
+* 推理的入口脚本为`deploy/inference_python/infer.py`，因此27行需要修改为`inference:deploy/inference_python/infer.py`。
+* Inference模型路径配置为`--model-dir=./mobilenet_v3_small_infer/`，而运行该命令时，会直接基于已经生成的Inference模型，因此30行需要修改为`--model-dir:./mobilenet_v3_small_infer/`
+* 测试图像路径配置为`--img-path=./images/demo.jpg`，因此31行修改为`--img-path:./images/demo.jpg`
+
+<a name="3"></a>
+
+## 3. 基础训练推理功能测试开发
+
+<a name="3.1"></a>
+
+### 3.1 准备待测试的命令
+
+**【基本内容】**
+
+准备训练、模型动转静、模型推理的命令，后续会将这些命令按照[第2节](#2)所述内容，映射到配置文件中。
+
+**【实战】**
+
+MobileNetV3的训练、动转静、推理示例运行命令如下所示。
+
+```bash
+# 模型训练
+python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001
+# 模型动转静
+python tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdparams --save-inference-dir="./mobilenet_v3_small_infer" --model=mobilenet_v3_small
+# 推理
+python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ --img-path=./images/demo.jpg
+```
+
+<a name="3.2"></a>
+
+### 3.2 准备数据与环境
+
+**【基本内容】**
+
+1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
+
+    相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
+
+2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
+
+**【注意事项】**
+
+* 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
+    * 压缩命令： `tar -zcf lite_data.tar lite_data`
+    * 解压命令： `tar -xf lite_data.tar`
+
+
+<a name="3.3"></a>
+
+### 3.3 准备开发所需脚本
+
+**【基本内容】**
+
+在repo中新建`test_tipc`目录，将文件 [common_func.sh](../../mobilenetv3_prod/Step6/test_tipc/common_func.sh) ， [prepare.sh](../../mobilenetv3_prod/Step6/test_tipc/prepare.sh) 和 [test_train_inference_python.sh](../../mobilenetv3_prod/Step6/test_tipc/test_train_inference_python.sh) 分别拷贝到`test_tipc`目录中。
+
+
+**【注意事项】**
+
+* 上述3个脚本文件无需改动，在实际使用时，直接修改配置文件即可。
+
+<a name="3.4"></a>
+
+### 3.4 填写配置文件
+
+**【基本内容】**
+
+在repo的`test_tipc/`目录中新建`configs/model_name`，将文件 [train_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt) 拷贝到该目录中，其中`model_name`需要修改为您自己的模型名称。
+
+**【实战】**
+
+配置文件的含义解析可以参考 [2.2节配置文件解析](#2.2) 部分。
+
+mobilenet_v3_small的测试开发配置文件可以参考：[train_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt)。
+
+<a name="3.5"></a>
+
+### 3.5 验证配置正确性
+
+**【基本内容】**
+
+基于修改完的配置，运行
 
 ```bash
 bash test_tipc/prepare.sh ${your_params_file} lite_train_lite_infer
-```
-
-**【测试】**
-
-```bash
 bash test_tipc/test_train_inference_python.sh ${your_params_file} lite_train_lite_infer
 ```
 
-以`mobilenet_v3_small`的`Linux GPU/CPU 基础训练推理测试`为例，命令如下所示。
+**【注意事项】**
 
-```bash
-bash test_tipc/prepare.sh test_tipc/configs/mobilenet_v3_small/train_infer_python.txt lite_train_lite_infer
+如果运行失败，会输出具体的报错命令，可以根据输出的报错命令排查下配置文件的问题并修改，示例报错如下所示。
+
 ```
+Run failed with command - python3.7 tools/export_model.py --model=mobilenet_v3_small --pretrained=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0/latest --save-inference-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0!
+```
+
+**【实战】**
+
+以mobilenet_v3_small的`Linux GPU/CPU 基础训练推理功能测试` 为例，命令如下所示。
 
 ```bash
 bash test_tipc/test_train_inference_python.sh test_tipc/configs/mobilenet_v3_small/train_infer_python.txt lite_train_lite_infer
@@ -65,68 +289,42 @@ bash test_tipc/test_train_inference_python.sh test_tipc/configs/mobilenet_v3_sma
 
 输出结果如下，表示命令运行成功。
 
+```bash
+Run successfully with command - python3.7 train.py --output-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0 --epochs=5   --batch-size=4!
+......
+Run successfully with command - python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0,1 --batch-size=1   --benchmark=False > ./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_cpu_batchsize_1.log 2>&1 !
 ```
-Run successfully with command - xxx
-```
 
-<a name="2.2"></a>
+**【核验】**
 
-### 2.2 准备数据与环境
+基于修改后的配置文件，测试通过，全部命令成功
 
-**【数据】**
+<a name="3.6"></a>
 
-用于分类模型基础训练推理测试的数据位于`tutorials/mobilenetv3_prod/Step6/test_images/lite_data.tar`，直接解压即可。
+### 3.6 撰写说明文档
 
-**【环境】**
+**【基本内容】**
 
-- 安装PaddlePaddle：如果您已经安装了2.2或者以上版本的paddlepaddle，那么无需运行下面的命令安装paddlepaddle。
-    ```
-    # 需要安装2.2及以上版本的Paddle
-    # 安装GPU版本的Paddle
-    pip install paddlepaddle-gpu==2.2.0
-    # 安装CPU版本的Paddle
-    pip install paddlepaddle==2.2.0
-    ```
+撰写TIPC功能总览和测试流程说明文档，分别为
 
-- 安装依赖
-    ```
-    cd tutorials/mobilenetv3_prod/Step6/
-    pip3 install  -r requirements.txt
-    ```
+1. TIPC功能总览文档：test_tipc/README.md
+2. Linux GPU/CPU 基础训练推理功能测试说明文档：test_tipc/docs/test_train_infer_python.md
 
-- 安装AutoLog（规范化日志输出工具）
-    ```
-    git clone https://github.com/LDOUBLEV/AutoLog
-    cd AutoLog
-    pip install -r requirements.txt
-    python setup.py bdist_wheel
-    pip3 install ./dist/auto_log-1.0.0-py3-none-any.whl
-    cd ../
-    ```
+2个文档模板分别位于下述位置，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
-<a name="2.3"></a>
+1. [README.md](../../mobilenetv3_prod/Step6/test_tipc/README.md)
+2. [test_train_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_inference_python.md)
 
-### 2.3 准备开发所需脚本
+**【实战】**
 
-开发脚本所在目录是：`tutorials/mobilenetv3_prod/Step6/test_tipc/`
-主要涉及以下几个文件：
-`common_func.sh`: TIPC基础训练推理测试常用函数，无需改动
-`prepare.sh `   : TIPC基础训练推理测试数据准备脚本，如果需要测试其他数据或需要额外的预训练模型，可以按照模板进行准备数据和所需的预训练模型
-`test_train_inference_python.sh`: TIPC基础训练推理测试解析脚本，无需改动
+mobilenet_v3_small中`test_tipc`文档如下所示。
 
-<a name="2.4"></a>
+1. TIPC功能总览文档：[README.md](../../mobilenetv3_prod/Step6/test_tipc/README.md)
+2. Linux GPU/CPU 基础训练推理测试说明文档：[test_train_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_inference_python.md)
 
-### 2.4 填写配置文件
+**【核验】**
 
-如果需要新增测试模型，需要在 `tutorials/mobilenetv3_prod/Step6/test_tipc/configs` 目录下新建一个以模型名字命名的目录`model_name`，然后在该模型目录下新建一个`train_infer_python.txt`，该文件是基础训练推理测试的配置文件。
-模板文件参考`tutorials/mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt`，可以基于该文件来修改对应的参数使其适配自己的模型。
-
-
-<a name="2.5"></a>
-
-### 2.5 验证配置正确性
-
-根据以上步骤进行配置，可以得到以下目录结构，该结构位于`tutorials/mobilenetv3_prod/Step6/`目录下
+repo中最终目录结构如下所示。
 
 ```
 test_tipc
@@ -141,17 +339,8 @@ test_tipc
     |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
 ```
 
-根据测试文档，基于配置文件，跑通训练推理全流程测试。
+基于`test_train_inference_python.md`文档，跑通`Linux GPU/CPU 基础训练推理功能测试`流程。
 
-<a name="2.6"></a>
+<a name="4"></a>
 
-### 2.6 撰写说明文档
-
-验证配置正确后，需要补充一下说明文档。主要涉及以下两个文档：
-
-- `test_tipc/README.md` 文档中对该模型支持的的功能进行总体介绍。
-- `test_tipc/docs/test_train_inference_python.md` 文档中对Linux GPU/CPU 基础训练推理的功能支持情况进行介绍。
-
-<a name="3"></a>
-
-## 3. FAQ
+## 4. FAQ

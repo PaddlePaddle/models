@@ -19,10 +19,10 @@ eval:train.py --test-only
 ===========================infer_params===========================
 --save-inference-dir:./output/mobilenet_v3_small_infer/
 --pretrained:
-norm_export:tools/export_model.py
+norm_export:tools/export_model.py --model=mobilenet_v3_small
 ##
 train_model:./pretrain_models/mobilenet_v3_small_pretrained.pdparams
-infer_export:tools/export_model.py 
+infer_export:tools/export_model.py --model=mobilenet_v3_small
 ##
 inference:deploy/inference_python/infer.py
 --use-gpu:True|False
