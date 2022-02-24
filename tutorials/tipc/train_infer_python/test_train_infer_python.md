@@ -59,14 +59,6 @@ python  run_script   set_configs
 
 其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以拼凑出一条完整的命令。
 
-基础训练推理功能测试开发过程主要分为以下6个步骤。
-
-<div align="center">
-    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
-</div>
-
-其中设置了2个核验点。下面在2.2章节对配置文件进行详细说明，在第3章详细介绍开发过程。
-
 <a name="2.2"></a>
 
 ### 2.2 配置文件和运行命令映射解析
@@ -190,6 +182,14 @@ python  run_script   set_configs
 <a name="3"></a>
 
 ## 3. 基础训练推理功能测试开发
+
+基础训练推理功能测试开发过程主要分为以下6个步骤。
+
+<div align="center">
+    <img src="./images/test_linux_train_infer_python_pipeline.png" width="400">
+</div>
+
+其中设置了2个核验点，下面详细介绍开发过程。
 
 <a name="3.1"></a>
 
