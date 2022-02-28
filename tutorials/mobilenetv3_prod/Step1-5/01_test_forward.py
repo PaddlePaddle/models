@@ -9,6 +9,10 @@ from mobilenetv3_ref.torchvision.models import mobilenet_v3_small as mv3_small_t
 
 
 def test_forward():
+    device = "gpu"  # you can also set it as "cpu"
+    torch_device = torch.device("cuda:0" if device == "gpu" else "cpu")
+    paddle.set_device(device)
+
     # load paddle model
     paddle_model = mv3_small_paddle()
     paddle_model.eval()
@@ -21,6 +25,8 @@ def test_forward():
     torch_state_dict = torch.load("./data/mobilenet_v3_small-047dcff4.pth")
     torch_model.load_state_dict(torch_state_dict)
 
+    torch_model.to(torch_device)
+
     # load data
     inputs = np.load("./data/fake_data.npy")
 
@@ -31,7 +37,9 @@ def test_forward():
     reprod_logger.save("./result/forward_paddle.npy")
 
     # save the torch output
-    torch_out = torch_model(torch.tensor(inputs, dtype=torch.float32))
+    torch_out = torch_model(
+        torch.tensor(
+            inputs, dtype=torch.float32).to(torch_device))
     reprod_logger.add("logits", torch_out.cpu().detach().numpy())
     reprod_logger.save("./result/forward_ref.npy")
 
@@ -46,4 +54,5 @@ if __name__ == "__main__":
 
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
-    diff_helper.report(path="./result/log/forward_diff.log")
+    diff_helper.report(
+        path="./result/log/forward_diff.log", diff_threshold=1e-5)

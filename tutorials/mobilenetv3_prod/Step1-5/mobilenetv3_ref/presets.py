@@ -1,4 +1,4 @@
-from torchvision.transforms import autoaugment, transforms
+from torchvision.transforms import transforms
 
 
 class ClassificationPresetTrain:
