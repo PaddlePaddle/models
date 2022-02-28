@@ -9,7 +9,7 @@ from mobilenetv3_ref.torchvision.models import mobilenet_v3_small as mv3_small_t
 
 
 def test_forward():
-    device = "gpu"  # you can also set is as "cpu"
+    device = "gpu"  # you can also set it as "cpu"
     torch_device = torch.device("cuda:0" if device == "gpu" else "cpu")
     paddle.set_device(device)
 
