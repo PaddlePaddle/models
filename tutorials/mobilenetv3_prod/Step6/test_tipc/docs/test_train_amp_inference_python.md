@@ -6,7 +6,7 @@ Linux GPU/CPU 混合精度训练推理测试的主程序为`test_train_inference
 
 - 训练相关：
 
-| 算法名称 | 模型名称 | 单机单卡（AMP) | 单机多卡(AMP) |
+| 算法名称 | 模型名称 | 单机单卡(AMP) | 单机多卡(AMP) |
 |  :----: |   :----:  |    :----:  |  :----:   |
 |  MobileNetV3  | mobilenet_v3_small | 正常训练 | 正常训练 |
 
