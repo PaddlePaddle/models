@@ -17,7 +17,7 @@
 
 | 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
 | :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
-| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | - | - |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度<br> | - | - |
 
 
 ## 3. 测试工具简介
@@ -53,7 +53,7 @@ test_tipc
 
 - 更多训练方式测试（coming soon）：
     - [Linux GPU/CPU 多机多卡训练推理测试]
-    - [Linux GPU/CPU 混合精度训练推理测试]
+    - [Linux GPU/CPU 混合精度训练推理测试](docs/test_train_amp_inference_python.md)
 
 - 更多部署方式测试（coming soon）：
     - [Linux GPU/CPU PYTHON 服务化部署测试]
