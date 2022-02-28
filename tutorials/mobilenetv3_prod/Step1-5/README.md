@@ -157,14 +157,12 @@ python 01_test_forward.py
 根据示例代码可以看到，我们将结果保存在`result/log/forward_diff.log`中，打开对应文件或者直接观察命令行输出，就会有下列结果：
 
 ```bash
-[2021/12/21 15:00:38] root INFO: logits:
-[2021/12/21 15:00:38] root INFO:     mean diff: check passed: False, value: 2.308018565599923e-06
-[2021/12/21 15:00:38] root INFO: diff check failed
+[2022/02/28 05:31:40] root INFO: logits:
+[2022/02/28 05:31:40] root INFO: 	mean diff: check passed: True, value: 1.7629824924370041e-06
+[2022/02/28 05:31:40] root INFO: diff check passed
 ```
 
-这里我们发现在`reprod_log`默认的平均差异小于1e-6的标准下，当前前向对齐是不符合条件的，但是这是由于前向 op 计算导致的微小的差异。
-
-一般说来前向误差在 1e-5 左右都是可以接受的，到这里我们就验证了网络的前向是对齐的，完成了第一个打卡点。
+由于前向 op 计算导致的微小的差异。一般说来前向误差在 1e-5 左右的 diff 是可以接受的，到这里我们就验证了网络的前向是对齐的，完成了第一个打卡点。
 
 <a name="4.2"></a>
 ### 4.2 数据加载对齐
