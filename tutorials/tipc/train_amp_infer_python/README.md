@@ -66,7 +66,7 @@ Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
 混合精度训练推理测试开发的流程如下所示。
 
 <div align="center">
-    <img src="./images/test_linux_train_amp_infer_python_pipeline.png" width="400">
+    <img src="./images/test_linux_train_amp_infer_python_pipeline.png" width="800">
 </div>
 
 更多的介绍可以参考：[Linux GPU/CPU 混合精度训练推理测试开发规范](./test_train_amp_infer_python.md)。
@@ -77,7 +77,7 @@ Paddle 混合精度训练开发可以分为4个步骤，如下图所示。
 
 #### 3.2.1 目录结构
 
-如果您已经完成了基础训练功能和训练代码的开发，那么只需要在原`test_tipc`目录的基础上，增加混合精度训练推理测试的配置文件和使用说明文档。
+如果您已经完成了[基础训练推理功能开发](../train_infer_python/README.md)，那么只需要在原`test_tipc`目录的基础上，增加混合精度训练推理测试的配置文件和使用说明文档。
 否则，需要在repo根目录下面新建`test_tipc`文件夹，目录结构如下所示。
 
 ```
