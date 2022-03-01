@@ -1,4 +1,4 @@
-# Linux GPU/CPU 混合精度训练推理功能测试开发文档
+# Linux GPU/CPU 混合精度训练推理测试开发文档
 
 # 目录
 
@@ -186,7 +186,7 @@ python  run_script   set_configs
 混合精度训练推理功能测试开发过程主要分为以下6个步骤。
 
 <div align="center">
-    <img src="./images/test_linux_train_infer_python_pipeline.png" width="800">
+    <img src="./images/test_linux_train_amp_infer_python_pipeline.png" width="800">
 </div>
 
 其中设置了2个核验点，下面详细介绍开发过程。
@@ -332,11 +332,11 @@ test_tipc
     |    |--model_name                          # 您的模型名称
     |           |--train_amp_infer_python.txt   # 混合精度训练推理测试配置文件
     |--docs                                     # 文档目录
-    |   |--test_train_amp_inference_python.md       # 混合精度训练推理测试说明文档
+    |   |--test_train_amp_inference_python.md   # 混合精度训练推理测试说明文档
     |----README.md                              # TIPC说明文档
-    |----prepare.sh                             # TIPC正常训练、混合精度训练推理测试数据准备脚本
-    |----test_train_inference_python.sh         # TIPC正常训练、混合精度训练推理测试解析脚本，无需改动
-    |----common_func.sh                         # TIPC正常训练、混合精度训练推理测试常用函数，无需改动
+    |----prepare.sh                             # TIPC混合精度训练推理测试数据准备脚本
+    |----test_train_inference_python.sh         # TIPC混合精度训练推理测试解析脚本，无需改动
+    |----common_func.sh                         # TIPC混合精度训练推理测试常用函数，无需改动
 ```
 
 基于`test_train_amp_inference_python.md`文档，跑通`Linux GPU/CPU 混合精度训练推理功能测试`流程。
