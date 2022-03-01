@@ -313,7 +313,7 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 2个文档模板分别位于下述位置，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
 1. [README.md](../../mobilenetv3_prod/Step6/test_tipc/README.md)
-2. [test_train_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_amp_inference_python.md)
+2. [test_train_amp_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_amp_inference_python.md)
 
 **【实战】**
 
