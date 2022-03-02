@@ -1,0 +1,32 @@
+===========================train_params===========================
+model_name:mobilenet_v3_small
+python:python3.7
+gpu_list:0|0,1
+use-gpu:True|True
+--epochs:lite_train_lite_infer=5|whole_train_whole_infer=90
+--output-dir:./output/
+--batch-size:lite_train_lite_infer=4|whole_train_whole_infer=128
+--pretrained:null
+train_model_name:latest.pdparams
+--data-path:./lite_data
+##
+trainer:amp_train
+amp_train:train.py --amp_level=O1
+#
+===========================eval_params===========================
+eval:train.py --test-only
+##
+===========================infer_params===========================
+--save-inference-dir:./output/mobilenet_v3_small_infer/
+--pretrained:
+norm_export:tools/export_model.py --model=mobilenet_v3_small
+##
+train_model:./pretrain_models/mobilenet_v3_small_pretrained.pdparams
+infer_export:tools/export_model.py --model=mobilenet_v3_small
+##
+inference:deploy/inference_python/infer.py
+--use-gpu:True|False
+--batch-size:1
+--model-dir:./output/mobilenet_v3_small_infer/
+--img-path:./images/demo.jpg
+--benchmark:False
