@@ -82,4 +82,6 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
     <img src="../../../../tipc/train_infer_python/images/autolog_demo.png">
 </div>
 
+该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_gpu_batchsize_1.log`。
+
 如果运行失败，也会在终端中输出运行失败的日志信息以及对应的运行命令。可以基于该命令，分析运行失败的原因。
