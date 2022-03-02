@@ -46,12 +46,7 @@ tar -xf test_images/lite_data.tar
     ```
 - 安装AutoLog（规范化日志输出工具）
     ```
-    git clone https://github.com/LDOUBLEV/AutoLog
-    cd AutoLog
-    pip install -r requirements.txt
-    python setup.py bdist_wheel
-    pip3 install ./dist/auto_log-1.0.0-py3-none-any.whl
-    cd ../
+    pip install  https://paddleocr.bj.bcebos.com/libs/auto_log-1.2.0-py3-none-any.whl
     ```
 
 ### 2.3 功能测试
