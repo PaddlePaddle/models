@@ -13,7 +13,7 @@
 - [Linux GPU/CPU 基础训练推理开发文档](./train_infer_python/README.md)
 
 - 更多训练方式开发文档
-    - [Linux GPU 多机多卡训练推理开发文档](./train_fleet_infer_python/README.md)
+    - [Linux GPU 多机多卡训练推理开发文档(coming soon)](./train_fleet_infer_python/README.md)
     - [Linux GPU 混合精度训练推理开发文档](./train_amp_infer_python/README.md)
 
 - 更多部署方式开发文档
