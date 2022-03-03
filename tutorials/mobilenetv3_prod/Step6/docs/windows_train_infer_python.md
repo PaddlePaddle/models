@@ -176,7 +176,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 
 更多关于Paddle Inference推理引擎的介绍，可以参考[Paddle Inference官网教程](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)。
 
-本小节教程主要基于Paddle Inference的mobilenet_v3_small模型推理。假定已安装好PaddlePaddle，当前路径为 `xx\models\tutorials\mobilenetv3_prod\Step6`。
+本小节教程主要基于Paddle Inference的mobilenet_v3_small模型推理。假定已安装好PaddlePaddle，当前路径为 `xx/models/tutorials/mobilenetv3_prod/Step6`。
 
 
 ### 3.1 模型动转静导出
