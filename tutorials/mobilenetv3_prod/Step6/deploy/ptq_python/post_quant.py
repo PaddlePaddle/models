@@ -18,11 +18,12 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+sys.path.insert(0, ".")
 import numpy as np
 from PIL import Image
 
-sys.path[0] = os.path.join(
-    os.path.dirname("__file__"), os.path.pardir, os.path.pardir)
+#sys.path[0] = os.path.join(
+#    os.path.dirname("__file__"), os.path.pardir, os.path.pardir)
 
 import paddle
 import paddlevision
