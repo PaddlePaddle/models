@@ -186,7 +186,7 @@ python  run_script   set_configs
 PACT量化训练推理功能测试开发过程主要分为以下6个步骤。
 
 <div align="center">
-    <img src="./images/quant_aware_training_guide.png" width="800">
+    <img src="../images/quant_aware_training_guide.png" width="800">
 </div>
 
 其中设置了2个核验点，下面详细介绍开发过程。
