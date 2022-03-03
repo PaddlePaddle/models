@@ -19,7 +19,7 @@
 | :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
 | MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度<br> | - | - |
 | MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | PACT量化训练<br> | - |
-
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | 离线量化训练<br> | - |
 
 ## 3. 测试工具简介
 
@@ -71,7 +71,7 @@ test_tipc
 
 - Slim训练部署测试：
     - [Linux GPU/CPU PACT量化训练测试](./docs/test_train_pact_inference_python.md)
-    - [Linux GPU/CPU 离线量化测试]
+    - [Linux GPU/CPU 离线量化测试](./docs/test_train_ptq_inference_python.md)
 
 - 更多训练环境测试（coming soon）：
     - [Linux XPU2 基础训练推理测试]
