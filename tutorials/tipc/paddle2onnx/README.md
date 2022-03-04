@@ -61,7 +61,7 @@ Paddle2ONNX 开发过程可以分为下面6个步骤。
 基础训练推理测试开发的流程如下所示。
 
 <div align="center">
-    <img src="../images/test_linux_train_infer_python_pipeline.png" width="400">
+    <img src="../train_infer_python/images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
 更多的介绍可以参考：[Paddle2ONNX功能开发规范](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/paddle2onnx/paddle2onnx.md)。
