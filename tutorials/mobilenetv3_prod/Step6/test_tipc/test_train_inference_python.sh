@@ -155,6 +155,7 @@ else
         fi
 
         for trainer in ${trainer_list[*]}; do
+        
             run_train=${trainer_py}
             run_export=${norm_export}
 
