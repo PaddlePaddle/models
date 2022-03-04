@@ -45,4 +45,21 @@ elif [ ${MODE} = "whole_infer" ];then
     if [[ ${model_name} == "mobilenet_v3_small" ]];then
         wget -nc -P  ./pretrain_models/ https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_pretrained.pdparams  --no-check-certificate
     fi
+
+elif [ ${MODE} = "serving_infer" ];then
+    # get data
+    tar -xf ./test_images/lite_data.tar
+    # wget model
+    if [[ ${model_name} == "mobilenet_v3_small" ]];then
+        wget -nc -P  ./inference https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
+        cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
+    fi
+elif [ ${MODE} = "paddle2onnx_infer" ];then
+    # get data
+    tar -xf ./test_images/lite_data.tar
+    # get model
+    if [[ ${model_name} == "mobilenet_v3_small" ]];then
+        wget -nc -P  ./inference https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
+        cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
+    fi
 fi
