@@ -15,9 +15,9 @@
 - 模型压缩：包括裁剪、离线/在线量化、蒸馏。
 - 其他预测部署：包括Paddle Inference C++预测、Paddle Serving部署、Paddle-Lite部署等。
 
-| 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
-| :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
-| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度<br> | - | - |
+| 算法论文 | 模型名称 | 模型类型 | Linux 基础<br>训练预测 | | Windows 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
+| :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |   :----  |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 支持 | 混合精度<br> | - | - |
 
 
 ## 3. 测试工具简介
@@ -76,4 +76,4 @@ test_tipc
     - [Linux XPU2 基础训练推理测试]
     - [Linux DCU 基础训练推理测试]
     - [Linux NPU 基础训练推理测试]
-    - [Windows GPU/CPU 基础训练推理测试]
+    - [Windows GPU/CPU 基础训练推理测试](docs/test_windows_train_inference_python.md)
