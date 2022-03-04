@@ -70,12 +70,13 @@ function func_inference(){
     _model_dir=$3
     _log_path=$4
     _img_dir=$5
+    _train_type=$6
     # inference 
     for use_gpu in ${use_gpu_list[*]}; do
         # cpu
         if [ ${use_gpu} = "False" ] || [ ${use_gpu} = "cpu" ]; then
             for batch_size in ${batch_size_list[*]}; do
-                _save_log_path="${_log_path}/python_infer_cpu_batchsize_${batch_size}.log"
+                _save_log_path="${_log_path}/${_train_type}_python_infer_cpu_batchsize_${batch_size}.log"
                 set_infer_data=$(func_set_params "${image_dir_key}" "${_img_dir}")
                 set_benchmark=$(func_set_params "${benchmark_key}" "${benchmark_value}")
                 set_batchsize=$(func_set_params "${batch_size_key}" "${batch_size}")
@@ -89,7 +90,7 @@ function func_inference(){
         # gpu        
         elif [ ${use_gpu} = "True" ] || [ ${use_gpu} = "gpu" ]; then
             for batch_size in ${batch_size_list[*]}; do
-                _save_log_path="${_log_path}/python_infer_gpu_batchsize_${batch_size}.log"
+                _save_log_path="${_log_path}/${_train_type}_python_infer_gpu_batchsize_${batch_size}.log"
                 set_infer_data=$(func_set_params "${image_dir_key}" "${_img_dir}")
                 set_benchmark=$(func_set_params "${benchmark_key}" "${benchmark_value}")
                 set_batchsize=$(func_set_params "${batch_size_key}" "${batch_size}")
@@ -133,7 +134,8 @@ if [ ${MODE} = "whole_infer" ]; then
         save_infer_dir=${save_infer_dir}
     fi
     #run inference
-    func_inference "${python}" "${inference_py}" "${save_infer_dir}" "${LOG_PATH}" "${infer_img_dir}"
+    default_train_type="norm_train"
+    func_inference "${python}" "${inference_py}" "${save_infer_dir}" "${LOG_PATH}" "${infer_img_dir}" "${default_train_type}"
     
 else
     IFS="|"
@@ -155,7 +157,6 @@ else
         fi
 
         for trainer in ${trainer_list[*]}; do
-            
             run_train=${trainer_py}
             run_export=${norm_export}
 
@@ -204,7 +205,7 @@ else
                 
                 infer_model_dir=${save_infer_path}
                 
-                func_inference "${python}" "${inference_py}" "${infer_model_dir}" "${LOG_PATH}" "${train_infer_img_dir}"
+                func_inference "${python}" "${inference_py}" "${infer_model_dir}" "${LOG_PATH}" "${train_infer_img_dir}" "${trainer}"
                 
                 eval "unset CUDA_VISIBLE_DEVICES"
             fi
