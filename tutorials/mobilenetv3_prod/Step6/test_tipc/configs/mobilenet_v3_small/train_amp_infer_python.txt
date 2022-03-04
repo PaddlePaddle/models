@@ -29,4 +29,4 @@ inference:deploy/inference_python/infer.py
 --batch-size:1
 --model-dir:./output/mobilenet_v3_small_infer/
 --img-path:./images/demo.jpg
---benchmark:False
+--benchmark:True

@@ -76,11 +76,37 @@ Run successfully with command - python3.7 train.py --amp_level=O1 --output-dir=.
 Run successfully with command - python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0,1 --batch-size=1   --benchmark=True > ./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_cpu_batchsize_1.log 2>&1 !
 ```
 
-在开启benchmark选项时，可以得到测试的详细数据，包含运行环境信息（系统版本、CUDA版本、CUDNN版本、驱动版本），Paddle版本信息，参数设置信息（运行设备、线程数、是否开启内存优化等），模型信息（模型名称、精度），数据信息（batchsize、是否为动态shape等），性能信息（CPU/GPU的占用、运行耗时、预处理耗时、推理耗时、后处理耗时），如下图所示
+在开启benchmark选项时，可以得到测试的详细数据，包含运行环境信息（系统版本、CUDA版本、CUDNN版本、驱动版本），Paddle版本信息，参数设置信息（运行设备、线程数、是否开启内存优化等），模型信息（模型名称、精度），数据信息（batchsize、是否为动态shape等），性能信息（CPU/GPU的占用、运行耗时、预处理耗时、推理耗时、后处理耗时），内容如下所示：
 
-<div align="center">
-    <img src="../../../../tipc/train_infer_python/images/autolog_demo.png">
-</div>
+```
+[2022/03/03 04:21:20] root INFO: ---------------------- Env info ----------------------
+[2022/03/03 04:21:20] root INFO:  OS_version: Ubuntu 16.04
+[2022/03/03 04:21:20] root INFO:  CUDA_version: 10.2.89
+[2022/03/03 04:21:20] root INFO:  CUDNN_version: 7.6.5
+[2022/03/03 04:21:20] root INFO:  drivier_version: 440.64.00
+[2022/03/03 04:21:20] root INFO: ---------------------- Paddle info ----------------------
+[2022/03/03 04:21:20] root INFO:  paddle_version: 2.2.2
+[2022/03/03 04:21:20] root INFO:  paddle_commit: b031c389938bfa15e15bb20494c76f86289d77b0
+[2022/03/03 04:21:20] root INFO:  log_api_version: 1.0
+[2022/03/03 04:21:20] root INFO: ----------------------- Conf info -----------------------
+[2022/03/03 04:21:20] root INFO:  runtime_device: cpu
+[2022/03/03 04:21:20] root INFO:  ir_optim: True
+[2022/03/03 04:21:20] root INFO:  enable_memory_optim: True
+[2022/03/03 04:21:20] root INFO:  enable_tensorrt: False
+[2022/03/03 04:21:20] root INFO:  enable_mkldnn: False
+[2022/03/03 04:21:20] root INFO:  cpu_math_library_num_threads: 1
+[2022/03/03 04:21:20] root INFO: ----------------------- Model info ----------------------
+[2022/03/03 04:21:20] root INFO:  model_name: classification
+[2022/03/03 04:21:20] root INFO:  precision: fp32
+[2022/03/03 04:21:20] root INFO: ----------------------- Data info -----------------------
+[2022/03/03 04:21:20] root INFO:  batch_size: 1
+[2022/03/03 04:21:20] root INFO:  input_shape: dynamic
+[2022/03/03 04:21:20] root INFO:  data_num: 1
+[2022/03/03 04:21:20] root INFO: ----------------------- Perf info -----------------------
+[2022/03/03 04:21:20] root INFO:  cpu_rss(MB): 228.7539, gpu_rss(MB): None, gpu_util: None%
+[2022/03/03 04:21:20] root INFO:  total time spent(s): 0.2199
+[2022/03/03 04:21:20] root INFO:  preprocess_time(ms): 18.5826, inference_time(ms): 201.2458, postprocess_time(ms): 0.0784
+```
 
 该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_gpu_batchsize_1.log`。
 
