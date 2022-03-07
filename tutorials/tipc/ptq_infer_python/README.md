@@ -60,7 +60,7 @@ Linux GPU/CPU 离线量化开发过程可以分为下面5个步骤。
 
 量化训练推理测试开发的流程如下所示：
 <div align="center">
-    <img src="./images/post_infer_quant_guide.png" width="800">
+    <img src="../images/test_ptq_pact_train_infer.png" width="800">
 </div>
 
 更多的介绍可以参考：[Linux GPU/CPU PACT离线量化训练推理测试开发规范](./test_ptq_infer_python.md)。

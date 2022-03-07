@@ -82,7 +82,7 @@ bash test_tipc/test_train_inference_python.sh test_tipc/configs/mobilenet_v3_sma
 
 
 <div align="center">
-    <img src="../../pact_train_infer_benchmark.png">
+    <img src="../../images/pact_train_infer_benchmark.png">
 </div>
 
 如果运行失败，也会在终端中输出运行失败的日志信息以及对应的运行命令。可以基于该命令，分析运行失败的原因。
