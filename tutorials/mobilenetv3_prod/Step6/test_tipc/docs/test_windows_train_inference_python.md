@@ -1,6 +1,7 @@
 # Windows GPU/CPU 基础训练推理测试
 
 Windows GPU/CPU 基础训练推理测试的主程序为`test_train_inference_python.sh`，可以测试基于Python的模型训练、评估、推理等基本功能。
+在Windows平台上执行命令和Linux平台略有不同，主要体现在：下载与解压数据、设置环境变量、数据加载等方面。此外Windows平台只支持单卡的训练与预测，DataLoader只支持单进程模式，因此需要设置 workers 为0。
 
 ## 1. 测试结论汇总
 
@@ -52,7 +53,7 @@ python -c "import wget;wget.download('https://paddle-model-ecology.bj.bcebos.com
 
 - 安装依赖
     ```
-    pip3 install  -r requirements.txt
+    pip install  -r requirements.txt
     ```
 
 - 安装AutoLog（规范化日志输出工具）

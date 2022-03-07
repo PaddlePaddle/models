@@ -17,6 +17,8 @@
 
 <a name="1"></a>
 
+在Windows平台上执行命令和Linux平台略有不同，主要体现在：下载与解压数据、设置环境变量、数据加载等方面。此外Windows平台只支持单卡的训练与预测，DataLoader只支持单进程模式，因此需要设置 workers 为0。如果已经完成了 [Linux GPU/CPU 下模型的基础训练推理全流程功能开发](../train_infer_python/test_train_infer_python.md)，那么可以直接跳转到第三节[3. 基本训练推理功能测试开发](#3)。
+
 ## 1. 简介
 
 本文档主要关注 Windows GPU/CPU 下模型的基础训练推理全流程功能测试，具体测试点如下：
