@@ -1,6 +1,6 @@
 ===========================train_params===========================
 model_name:mobilenet_v3_small
-python:python3.7
+python:python
 gpu_list:0
 use-gpu:True
 --epochs:lite_train_lite_infer=5|whole_train_whole_infer=90

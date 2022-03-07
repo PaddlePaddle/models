@@ -7,12 +7,12 @@
     - [2.1 命令解析](#2.1)
     - [2.2 配置文件和运行命令映射解析](#2.2)
 - [3. 基本训练推理功能测试开发](#3)
-    - [2.1 准备待测试的命令](#3.1)
-    - [2.2 准备数据与环境](#3.2)
-    - [2.3 准备开发所需脚本](#3.3)
-    - [2.4 填写配置文件](#3.4)
-    - [2.5 验证配置正确性](#3.5)
-    - [2.6 撰写说明文档](#3.6)
+    - [3.1 准备待测试的命令](#3.1)
+    - [3.2 准备数据与环境](#3.2)
+    - [3.3 准备开发所需脚本](#3.3)
+    - [3.4 填写配置文件](#3.4)
+    - [3.5 验证配置正确性](#3.5)
+    - [3.6 撰写说明文档](#3.6)
 - [4. FAQ](#4)
 
 <a name="1"></a>
@@ -91,7 +91,7 @@ python  run_script   set_configs
 | 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
 |----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
 | 2  | model_name:mobilenet_v3_small       | 模型名字          | 否         | 是           | value修改为自己的模型名字                  |
-| 3  | python:python3.7                    | python环境      | 否         | 是           | value修改为自己的python环境              |
+| 3  | python:python                    | python环境      | 否         | 是           | value修改为自己的python环境              |
 | 4  | gpu_list:0                          | gpu id        | 否         | 是           | value修改为自己的GPU ID                |
 | 5  | use-gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为设置GPU的内容，value修改为设置GPU的值         |
 | 6  | --epochs:lite_train_lite_infer=5    | 迭代的epoch数目    | 是         | 否           | key修改为代码中设置epoch数量的内容          |
@@ -103,7 +103,7 @@ python  run_script   set_configs
 
 </details>
 
-以训练命令`python3.7 train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001 --workers=0`为例，总共包含5个超参数。
+以训练命令`python train.py --device=gpu --epochs=2 --data-path=./lite_data --lr=0.001 --workers=0`为例，总共包含5个超参数。
 
 * 运行设备：`--device=gpu`，则需要修改为配置文件的第5行，`key`为`--device`， `value`为`gpu`，修改后内容为`--device:gpu`
 * 迭代轮数：`--epochs=2`，则需要修改配置文件的第6行，修改后内容为`--epochs:lite_train_lite_infer=2`（`lite_train_lite_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
@@ -126,7 +126,7 @@ python  run_script   set_configs
 
 </details>
 
-以训练命令`python3.7 train.py --device=gpu --epochs=1 --data-path=./lite_data --lr=0.001 --workers=0`为例，该命令是正常训练（非裁剪、量化、蒸馏等方式），因此
+以训练命令`python train.py --device=gpu --epochs=1 --data-path=./lite_data --lr=0.001 --workers=0`为例，该命令是正常训练（非裁剪、量化、蒸馏等方式），因此
 
 * 配置文件的第13行直接写`norm_train`即可。
 * 第14行配置`norm_train`的具体运行脚本/入口，即上述命令中的`train.py`因此配置文件的14行内容初步可以修改为`norm_train:train.py`，考虑到`--lr=0.001`超参数无法在配置文件中配置，因此可以在这里添加，同样，由于在Windows平台，DataLoader只支持单进程模式，因此需要设置 `--workers=0`，修改后内容为`norm_train:train.py --lr=0.001 --workers=0`
@@ -170,7 +170,7 @@ python  run_script   set_configs
 | 29 | --batch_size:1                                       | 推理batch size    | 是         | 否           | key修改为代码中设置batch size的内容       |
 | 30 | --model-dir:./output/mobilenet_v3_small_infer/   | 推理模型保存路径     | 是         | 否           | key修改为代码中可以设置inference model路径的内容 |
 | 31 | --img-path:./images/demo.jpg                 | 图片路径或者图片文件夹路径   | 是         | 否           | key修改为代码中设置图片路径的内容       |
-| 32 | --benchmark:False                                    | 是否使用benchmark            | 是         | 是           | key和value修改为规范化推理日志输出设置的参数和值      |
+| 32 | --benchmark:True                                    | 是否使用benchmark            | 是         | 是           | key和value修改为规范化推理日志输出设置的参数和值      |
 
 </details>
 
@@ -224,7 +224,7 @@ python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ 
 
     相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
-2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
+2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发。此外，在windows下想要执行shell脚本，需要使用到"Git Bash"，所以需要安装Git，具体可百度搜索安装方法。
 
 **【注意事项】**
 
@@ -275,7 +275,7 @@ bash test_tipc/test_train_inference_python.sh ${your_params_file} lite_train_lit
 如果运行失败，会输出具体的报错命令，可以根据输出的报错命令排查下配置文件的问题并修改，示例报错如下所示。
 
 ```
-Run failed with command - python3.7 tools/export_model.py --model=mobilenet_v3_small --pretrained=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0/latest --save-inference-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0!
+Run failed with command - python tools/export_model.py --model=mobilenet_v3_small --pretrained=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0/latest --save-inference-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0!
 ```
 
 **【实战】**
@@ -289,18 +289,18 @@ bash test_tipc/test_train_inference_python.sh test_tipc/configs/mobilenet_v3_sma
 输出结果如下，表示命令运行成功。
 
 ```bash
-Run successfully with command - python3.7 train.py --output-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0 --epochs=5   --batch-size=4!
+Run successfully with command - python train.py --workers=0 --output-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0 --epochs=5   --batch-size=4!
 ......
-Run successfully with command - python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0 --batch-size=1   --benchmark=True > ./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_cpu_batchsize_1.log 2>&1 !
+Run successfully with command - python deploy/inference_python/infer.py --use-gpu=False --model-dir=./log/mobilenet_v3_small/lite_train_lite_infer/norm_train_gpus_0 --batch-size=1   --benchmark=True > ./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_cpu_batchsize_1.log 2>&1 !
 ```
 
 在开启benchmark参数时，可以得到测试的详细数据，包含运行环境信息（系统版本、CUDA版本、CUDNN版本、驱动版本），Paddle版本信息，参数设置信息（运行设备、线程数、是否开启内存优化等），模型信息（模型名称、精度），数据信息（batchsize、是否为动态shape等），性能信息（CPU,GPU的占用、运行耗时、预处理耗时、推理耗时、后处理耗时），如下图所示
 
 <div align="center">
-    <img src="./images/autolog_demo.png">
+    <img src="./images/autolog_win_demo.png">
 </div>
 
-该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_gpu_batchsize_1.log`。
+该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_cpu_batchsize_1.log`。
 
 **【核验】**
 
