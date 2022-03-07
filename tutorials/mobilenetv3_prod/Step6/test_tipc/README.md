@@ -18,7 +18,8 @@
 | 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
 | :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
 | MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度<br> | - | - |
-
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | PACT量化训练<br> | - |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | - | 离线量化训练<br> | - |
 
 ## 3. 测试工具简介
 
@@ -68,9 +69,9 @@ test_tipc
     - [XPU 部署测试]
     - [OpenCL ARM GPU 部署测试]
 
-- Slim训练部署测试（coming soon）：
-    - [Linux GPU/CPU PACT量化训练测试]
-    - [Linux GPU/CPU 离线量化测试]
+- Slim训练部署测试：
+    - [Linux GPU/CPU PACT量化训练测试](./docs/test_train_pact_inference_python.md)
+    - [Linux GPU/CPU 离线量化测试](./docs/test_train_ptq_inference_python.md)
 
 - 更多训练环境测试（coming soon）：
     - [Linux XPU2 基础训练推理测试]
