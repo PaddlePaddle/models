@@ -61,8 +61,8 @@ function func_inference(){
                 set_batchsize=$(func_set_params "${batch_size_key}" "${batch_size}")
                 set_model_dir=$(func_set_params "${infer_model_key}" "${_model_dir}")
                 command="${_python} ${_script} ${use_gpu_key}=${use_gpu} ${set_model_dir} ${set_batchsize} ${set_infer_data} ${set_benchmark} > ${_save_log_path} 2>&1 "
-                # eval $command
                 echo $command
+                eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
                 status_check $last_status "${command}" "${status_log}"
@@ -75,9 +75,9 @@ function func_inference(){
                 set_benchmark=$(func_set_params "${benchmark_key}" "${benchmark_value}")
                 set_batchsize=$(func_set_params "${batch_size_key}" "${batch_size}")
                 set_model_dir=$(func_set_params "${infer_model_key}" "${_model_dir}")
-                command="${_python} ${_script} ${use_gpu_key}=${use_gpu} ${set_model_dir} ${set_batchsize} ${set_infer_data} ${set_benchmark} > ${_save_log_path} 2>&1 "
-                # eval $command
+                command="${_python} ${_script} ${use_gpu_key}=${use_gpu} ${set_model_dir} ${set_batchsize} ${set_infer_data} ${set_benchmark} > ${_save_log_path} 2>&1 "               
                 echo $command
+                eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
                 status_check $last_status "${command}" "${status_log}"   
