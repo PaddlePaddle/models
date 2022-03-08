@@ -18,7 +18,7 @@
 
 | 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 更多<br>部署方式 | Slim<br>训练部署 |  更多<br>训练环境  |
 | :--- | :--- |  :----:  | :--------: |  :----:  |   :----:  |   :----:  |   :----:  |
-| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度 |  | PACT量化<br>离线量化 | Windows GPU/CPU |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度 | PYTHON 服务化部署<br>Paddle2ONNX 部署| PACT量化<br>离线量化 | Windows GPU/CPU |
 
 
 ## 3. 测试工具简介
@@ -58,11 +58,11 @@ test_tipc
     - [Linux GPU/CPU 混合精度训练推理测试](docs/test_train_amp_inference_python.md)
 
 - 更多部署方式测试（coming soon）：
-    - [Linux GPU/CPU PYTHON 服务化部署测试]
+    - [Linux GPU/CPU PYTHON 服务化部署测试](docs/test_serving_infer_python.md)
     - [Linux GPU/CPU C++ 服务化部署测试]
     - [Linux GPU/CPU C++ 推理测试]
     - [Paddle.js 部署测试]
-    - [Paddle2ONNX 测试]
+    - [Paddle2ONNX 测试](docs/test_paddle2onnx.md)
     - [Lite ARM CPU 部署测试]
     - [OpenCL ARM GPU 部署测试]
     - [Metal ARM GPU 部署测试]
