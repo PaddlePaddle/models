@@ -10,9 +10,9 @@ use-gpu:True|True
 train_model_name:latest.pdparams
 --data-path:./lite_data
 ##
-trainer:amp_train
-amp_train:train.py --amp_level=O1
-#
+trainer:pact_train
+pact_train:train.py --pact_quant
+##
 ===========================eval_params===========================
 eval:train.py --test-only
 ##
