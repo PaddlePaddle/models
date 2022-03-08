@@ -1,0 +1,13 @@
+===========================paddle2onnx_params===========================
+model_name:mobilenet_v3_small
+python:python3.7
+2onnx: paddle2onnx
+--model_dir:./inference/mobilenet_v3_small_infer/
+--model_filename:inference.pdmodel
+--params_filename:inference.pdiparams
+--save_file:./inference/mobilenet_v3_small_onnx/model.onnx
+--opset_version:10
+--enable_onnx_checker:True
+inference:deploy/onnx_python/infer.py
+--onnx_file:./inference/mobilenetv3_model_onnx/model.onnx
+--img_path:./lite_data/test/demo.jpg
