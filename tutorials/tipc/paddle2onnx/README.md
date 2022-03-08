@@ -38,7 +38,7 @@ Paddle2ONNX 开发过程可以分为下面6个步骤。
 </div>
 
 
-更多的介绍可以参考：[Paddle2ONNX 开发文档](./paddle2onnx.md)。
+更多的介绍可以参考：[Paddle2ONNX 功能开发文档](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/paddle2onnx/paddle2onnx.md)。
 
 <a name="2.2"></a>
 
@@ -64,7 +64,7 @@ Paddle2ONNX 开发过程可以分为下面6个步骤。
     <img src="../train_infer_python/images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
-更多的介绍可以参考：[Paddle2ONNX功能开发规范](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/paddle2onnx/paddle2onnx.md)。
+更多的介绍可以参考：[Paddle2ONNX功能开发规范](./test_paddle2onnx.md)。
 
 ## 3.2 核验点
 
