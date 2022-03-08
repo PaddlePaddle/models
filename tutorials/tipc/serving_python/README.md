@@ -61,12 +61,13 @@ Linux GPU/CPU PYTHON 服务化部署功能开发过程以分为下面8个步骤�
 
 基础训练推理测试开发的流程如下所示。
 
+
 <div align="center">
-    <img src="../images/test_linux_train_infer_python_pipeline.png" width="400">
+    <img src="../train_infer_python/images/test_linux_train_infer_python_pipeline.png" width="400">
 </div>
 
 
-更多的介绍可以参考：[PaddleServing测试开发文档](./test_serving_python.md)。
+更多的介绍可以参考：[Linux GPU/CPU PYTHON 服务化部署功能开发文档](./test_serving_python.md)。
 
 ## 3.2 核验点
 
