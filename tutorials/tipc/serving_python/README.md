@@ -67,7 +67,7 @@ Linux GPU/CPU PYTHON 服务化部署功能开发过程以分为下面8个步骤�
 </div>
 
 
-更多的介绍可以参考：[Linux GPU/CPU PYTHON 服务化部署功能开发文档](./test_serving_python.md)。
+更多的介绍可以参考：[Linux GPU/CPU PYTHON 服务化部署测试开发文档](./test_serving_python.md)。
 
 ## 3.2 核验点
 
