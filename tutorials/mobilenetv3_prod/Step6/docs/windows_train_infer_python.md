@@ -191,7 +191,7 @@ python tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdpara
 在`mobilenet_v3_small_infer/`文件夹下会生成下面的3个文件。
 
 ```
-alexnet_infer
+mobilenet_v3_small_infer
      |----inference.pdiparams     : 模型参数文件
      |----inference.pdmodel       : 模型结构文件
      |----inference.pdiparams.info: 模型参数信息文件
@@ -207,7 +207,7 @@ python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ 
 对于下面的图像进行预测
 
 <div align="center">
-    <img src="../../images/demo.jpg" width=300">
+    <img src="../images/demo.jpg" width=300">
 </div>
 
 在终端中输出结果如下。
