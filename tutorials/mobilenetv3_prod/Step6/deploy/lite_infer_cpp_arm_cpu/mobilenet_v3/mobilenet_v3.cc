@@ -21,6 +21,7 @@
 #include <opencv2/opencv.hpp>
 #include <sys/time.h>
 #include <vector>
+#include "AutoLog/auto_log/lite_autolog.h"
 
 using namespace paddle::lite_api; // NOLINT
 using namespace std;
@@ -151,8 +152,10 @@ cv::Mat CenterCropImg(const cv::Mat &img, const int &crop_size) {
 std::vector<RESULT>
 RunClasModel(std::shared_ptr<PaddlePredictor> predictor, const cv::Mat &img,
              const std::map<std::string, std::string> &config,
-             const std::vector<std::string> &word_labels, double &cost_time) {
+             const std::vector<std::string> &word_labels, double &cost_time,
+             std::vector<double> *time_info) {
   // Read img
+  auto preprocess_start = std::chrono::steady_clock::now();
   int resize_short_size = stoi(config.at("resize_short_size"));
   int crop_size = stoi(config.at("crop_size"));
   int visualize = stoi(config.at("visualize"));
@@ -174,8 +177,8 @@ RunClasModel(std::shared_ptr<PaddlePredictor> predictor, const cv::Mat &img,
   std::vector<float> scale = {1 / 0.229f, 1 / 0.224f, 1 / 0.225f};
   const float *dimg = reinterpret_cast<const float *>(img_fp.data);
   NeonMeanScale(dimg, data0, img_fp.rows * img_fp.cols, mean, scale);
-
-  auto start = std::chrono::system_clock::now();
+  auto preprocess_end = std::chrono::steady_clock::now();
+  auto inference_start = std::chrono::system_clock::now();
   // Run predictor
   predictor->Run();
 
@@ -183,9 +186,10 @@ RunClasModel(std::shared_ptr<PaddlePredictor> predictor, const cv::Mat &img,
   std::unique_ptr<const Tensor> output_tensor(
       std::move(predictor->GetOutput(0)));
   auto *output_data = output_tensor->data<float>();
-  auto end = std::chrono::system_clock::now();
-  auto duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  auto inference_end = std::chrono::system_clock::now();
+  auto postprocess_start = std::chrono::system_clock::now();
+
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(inference_end - inference_start);
   cost_time = double(duration.count()) *
               std::chrono::microseconds::period::num /
               std::chrono::microseconds::period::den;
@@ -198,6 +202,14 @@ RunClasModel(std::shared_ptr<PaddlePredictor> predictor, const cv::Mat &img,
   cv::Mat output_image;
   auto results =
       PostProcess(output_data, output_size, word_labels, output_image);
+  auto postprocess_end = std::chrono::system_clock::now();
+
+  std::chrono::duration<float> preprocess_diff = preprocess_end - preprocess_start;
+  time_info->push_back(double(preprocess_diff.count() * 1000));
+  std::chrono::duration<float> inference_diff = inference_end - inference_start;
+  time_info->push_back(double(inference_diff.count() * 1000));
+  std::chrono::duration<float> postprocess_diff = postprocess_end - postprocess_start;
+  time_info->push_back(double(postprocess_diff.count() * 1000));
 
   if (visualize) {
     std::string output_image_path = "./clas_result.png";
@@ -308,9 +320,14 @@ int main(int argc, char **argv) {
 
   bool enable_benchmark = bool(stoi(config.at("enable_benchmark")));
   int total_cnt = enable_benchmark ? 1000 : 1;
-
   std::string clas_model_file = config.at("clas_model_file");
   std::string label_path = config.at("label_path");
+  std::string crop_size = config.at("crop_size");
+  int num_threads = stoi(config.at("num_threads"));
+  int batch_size = stoi(config.at("batch_size"));
+  std::string precision = config.at("precision");
+  std::string runtime_device = config.at("runtime_device");
+  bool tipc_benchmark = bool(stoi(config.at("tipc_benchmark")));
 
   // Load Labels
   std::vector<std::string> word_labels = LoadLabels(label_path);
@@ -321,8 +338,9 @@ int main(int argc, char **argv) {
     cv::cvtColor(srcimg, srcimg, cv::COLOR_BGR2RGB);
 
     double run_time = 0;
+    std::vector<double> time_info;
     std::vector<RESULT> results =
-        RunClasModel(clas_predictor, srcimg, config, word_labels, run_time);
+        RunClasModel(clas_predictor, srcimg, config, word_labels, run_time, &time_info);
 
     std::cout << "===clas result for image: " << img_path << "===" << std::endl;
     for (int i = 0; i < results.size(); i++) {
@@ -340,7 +358,19 @@ int main(int argc, char **argv) {
     } else {
       std::cout << "Current time cost: " << run_time << " s." << std::endl;
     }
-  }
+    if (tipc_benchmark) {
+      AutoLogger autolog(clas_model_file,
+                         runtime_device,
+                         num_threads,
+                         batch_size,
+                         crop_size,
+                         precision,
+                         time_info,
+                         1);
+    std::cout << "=======================TIPC Lite Information=======================" << std::endl;
+    autolog.report();
+    }
 
+  }
   return 0;
 }

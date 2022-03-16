@@ -1,6 +1,11 @@
-clas_model_file /data/local/tmp/arm_cpu/mobilenet_v3_small.nb
+clas_model_file /data/local/tmp/arm_cpu/ mobilenet_v3_small.nb
 label_path /data/local/tmp/arm_cpu/imagenet1k_label_list.txt
 resize_short_size 256
 crop_size 224
 visualize 0
+num_threads 1
+batch_size 1
+precision FP32
+runtime_device arm_cpu
 enable_benchmark 0
+tipc_benchmark 1
