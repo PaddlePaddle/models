@@ -34,12 +34,14 @@ bash test_tipc/prepare_lite_arm_cpu_cpp.sh test_tipc/configs/mobilenet_v3_small/
 
 `test_lite_arm_cpu_cpp.sh` 中包含了测试的内容，执行以下命令即可完成测试。
 
-`bash test_tipc/test_lite_arm_cpu_cpp.sh ${your_config_file}`
+```bash
+bash test_tipc/test_lite_arm_cpu_cpp.sh ${your_config_file}
+```
 
 以`mobilenet_v3_small`的`Lite cpp arm cpu 推理功能测试`为例，命令如下所示。
 
 ```bash
-`bash test_tipc/test_lite_arm_cpu_cpp.sh test_tipc/configs/mobilenet_v3_small/lite_arm_cpu_cpp.txt`
+bash test_tipc/test_lite_arm_cpu_cpp.sh test_tipc/configs/mobilenet_v3_small/lite_arm_cpu_cpp.txt
 ```
 
 输出结果如下，表示命令运行成功。
