@@ -1,4 +1,4 @@
-clas_model_file /data/local/tmp/arm_cpu/ mobilenet_v3_small.nb
+clas_model_file /data/local/tmp/arm_cpu/mobilenet_v3_small.nb
 label_path /data/local/tmp/arm_cpu/imagenet1k_label_list.txt
 resize_short_size 256
 crop_size 224
