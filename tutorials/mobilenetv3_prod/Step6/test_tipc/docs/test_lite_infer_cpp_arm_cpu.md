@@ -13,7 +13,7 @@ Lite cpp arm cpu 推理测试的主程序为`test_lite_arm_cpu_cpp.sh`，可以�
 
 ### 2.1 准备环境
 
-Lite cpp arm cpu 推理的环境准备可以参考[]()。
+Lite cpp arm cpu 推理的环境准备可以参考[Mobilenet_v3 基于 ARM CPU 部署文档](../../deploy/lite_infer_cpp_arm_cpu/README.md)。
 
 
 ### 2.2 准备模型、数据、预测库
@@ -52,7 +52,7 @@ bash test_tipc/prepare_lite_arm_cpu_cpp.sh test_tipc/configs/mobilenet_v3_small/
 可以打印参数设置信息（运行设备、线程数等），模型信息（模型名称、精度等），数据信息（batchsize等），性能信息（预处理耗时、推理耗时、后处理耗时），如下图所示
 
 <div align="center">
-    <img src="../../../../tipc/train_infer_python/images/lite_cpp_arm_cpu_autolog_demo.png">
+    <img src="../../../../tipc/lite_infer_cpp_arm_cpu/images/lite_cpp_arm_cpu_autolog_demo.png">
 </div>
 
 该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./output/lite_mobilenet_v3_small.nb_runtime_device_arm_cpu_precision_FP32_batchsize_1_threads_1.log`。

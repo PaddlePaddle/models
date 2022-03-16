@@ -53,7 +53,7 @@ Lite ARM CPU 推理开发过程可以分为下面7个步骤。
 
 ## 3. Lite ARM CPU 推理测试开发与规范
 
-<a name="4.1"></a>
+<a name="3.1"></a>
 
 ### 3.1 开发流程
 
@@ -67,11 +67,11 @@ Lite ARM CPU 推理开发过程可以分为下面7个步骤。
 更多的介绍可以参考：[Lite cpp arm cpu 推理功能测试开发文档](./test_lite_infer_cpp_arm_cpu.md)。
 
 
-<a name="4.2"></a>
+<a name="3.2"></a>
 
-### 4.2 核验点
+### 3.2 核验点
 
-#### 4.2.1 目录结构
+#### 3.2.1 目录结构
 
 在repo根目录下面新建`test_tipc`文件夹，目录结构如下所示。
 
@@ -88,7 +88,7 @@ test_tipc
 ```
 
 
-#### 4.2.2 配置文件和测试文档
+#### 3.2.2 配置文件和测试文档
 
 1. TIPC功能总览文档：`test_tipc/README.md`
 2. Lite cpp arm cpu 推理功能测试说明文档：`test_tipc/docs/test_lite_infer_cpp_arm_cpu.md`
