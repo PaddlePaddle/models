@@ -24,14 +24,14 @@
 * `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等。
 * `train_amp_infer_python.txt`: 配置文件，其中的内容会被`test_train_inference_python.sh`解析成具体的执行命令字段。
 
-**注意**，通常情况下，我们是先完成基础训练推理的开发和测试开发，再集成混合精度训练功能及相应的测试开发。若您已完成基础训练推理功能的开发和测试开发，则只需要添加混合精度训练推理相关的配置文件即可。`test_train_inference_python.sh`，`prepare.sh`，`common_func.sh`这3个脚本文件无需修改。
+`注意`: 通常情况下，我们是先完成基础训练推理的开发和测试，再集成混合精度训练功能及相应的测试开发。若您已完成基础训练推理功能的开发和测试，则只需要添加混合精度训练推理相关的配置文件即可。`test_train_inference_python.sh`，`prepare.sh`，`common_func.sh`这3个脚本文件无需修改。
 
 <a name="2"></a>
 
 ## 2. 命令与配置文件解析
 
-此章节可以参考[基础训练推理测试开发文档](../train_infer_python/test_train_infer_python.md#2)。 **主要的差异点**为脚本的第13行和第14行，如下所示：
-
+此章节可以参考[基础训练推理测试开发文档](../train_infer_python/test_train_infer_python.md#2)。 `主要的差异点`为脚本的第13行和第14行，如下所示：
+| 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
 |----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
 | 13 | trainer:amp_train                          | 训练方法            | 否         | 否           | -                 |
 | 14 | amp_train:train.py --amp_level=O1          | norm_train的训练脚本 | 否         | 是           | value可以修改为自己的训练命令 |
@@ -51,7 +51,7 @@
     <img src="./images/test_linux_train_amp_infer_python_pipeline.png" width="800">
 </div>
 
-其中设置了2个核验点，详细的开发过程与[基础训练推理测试开发](../train_infer_python/test_train_infer_python.md#3)类似，**主要的差异点**有如下三处:
+其中设置了2个核验点，详细的开发过程与[基础训练推理测试开发](../train_infer_python/test_train_infer_python.md#3)类似。`主要的差异点`有如下三处:
 
 * 1） 增加配置文件
 
@@ -82,7 +82,7 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 
 若基于修改后的配置文件，全部命令都运行成功，则验证通过。
 
-**注意**，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
+`注意`，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
 
 * 3）撰写说明文档
 
@@ -106,7 +106,7 @@ test_tipc
     |----test_train_inference_python.sh         # TIPC基础、混合精度训练推理测试解析脚本
     |----common_func.sh                         # TIPC基础、混合精度训练推理测试常用函数
 ```
-基于`test_train_amp_inference_python.md`文档，跑通`Linux GPU/CPU 混合精度训练推理功能测试`流程。
+最后，自行基于`test_train_amp_inference_python.md`文档，跑通`Linux GPU/CPU 混合精度训练推理功能测试`流程即可。
 
 <a name="4"></a>
 
