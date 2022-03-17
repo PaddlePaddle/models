@@ -61,16 +61,10 @@ ${line4}" > tmp_file.txt
 }
 
 
-export_script="tools/export_model.py"
-
-file=${export_script%%.py*}
-
 
 echo "-------- Test inference result --------- "
-echo ${file}.py
 add_check_function
-model_type=$(realpath ${file}.py)
-root_path="."
+model_type=$PWD
 
 echo $model_type
 ## add_check_infer_result
