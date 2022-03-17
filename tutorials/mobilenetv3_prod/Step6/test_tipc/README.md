@@ -63,7 +63,7 @@ test_tipc
     - [Linux GPU/CPU C++ 推理测试]
     - [Paddle.js 部署测试]
     - [Paddle2ONNX 测试](docs/test_paddle2onnx.md)
-    - [Lite ARM CPU 部署测试]
+    - [Lite ARM CPU 部署测试](docs/test_lite_infer_cpp_arm_cpu.md)
     - [OpenCL ARM GPU 部署测试]
     - [Metal ARM GPU 部署测试]
     - [Jetson 部署测试]
