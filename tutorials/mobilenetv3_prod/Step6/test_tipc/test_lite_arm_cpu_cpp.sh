@@ -1,14 +1,6 @@
 #!/bin/bash
 source test_tipc/common_func.sh
 
-function func_parser_value(){
-    strs=$1
-    IFS=$2
-    array=(${strs})
-    tmp=${array[1]}
-    echo ${tmp}
-}
-
 IFS=$'\n'
 
 BASIC_CONFIG="config.txt"
@@ -21,22 +13,22 @@ tipc_lines=(${tipc_dataline})
 
 
 # parser basic config
-label_path=$(func_parser_value "${basic_lines[1]}" " ")
-resize_short_size=$(func_parser_value "${basic_lines[2]}" " ")
-crop_size=$(func_parser_value "${basic_lines[3]}" " ")
-visualize=$(func_parser_value "${basic_lines[4]}" " ")
-enable_benchmark=$(func_parser_value "${basic_lines[9]}" " ")
-tipc_benchmark=$(func_parser_value "${basic_lines[10]}" " ")
+label_path=$(func_parser_value_lite "${basic_lines[1]}" " ")
+resize_short_size=$(func_parser_value_lite "${basic_lines[2]}" " ")
+crop_size=$(func_parser_value_lite "${basic_lines[3]}" " ")
+visualize=$(func_parser_value_lite "${basic_lines[4]}" " ")
+enable_benchmark=$(func_parser_value_lite "${basic_lines[9]}" " ")
+tipc_benchmark=$(func_parser_value_lite "${basic_lines[10]}" " ")
 
 # parser tipc config
-runtime_device=$(func_parser_value "${tipc_lines[0]}" ":")
-lite_arm_work_path=$(func_parser_value "${tipc_lines[1]}" ":")
-lite_arm_so_path=$(func_parser_value "${tipc_lines[2]}" ":")
-clas_model_name=$(func_parser_value "${tipc_lines[3]}" ":")
-inference_cmd=$(func_parser_value "${tipc_lines[4]}" ":")
-num_threads_list=$(func_parser_value "${tipc_lines[5]}" ":")
-batch_size_list=$(func_parser_value "${tipc_lines[6]}" ":")
-precision_list=$(func_parser_value "${tipc_lines[7]}" ":")
+runtime_device=$(func_parser_value_lite "${tipc_lines[0]}" ":")
+lite_arm_work_path=$(func_parser_value_lite "${tipc_lines[1]}" ":")
+lite_arm_so_path=$(func_parser_value_lite "${tipc_lines[2]}" ":")
+clas_model_name=$(func_parser_value_lite "${tipc_lines[3]}" ":")
+inference_cmd=$(func_parser_value_lite "${tipc_lines[4]}" ":")
+num_threads_list=$(func_parser_value_lite "${tipc_lines[5]}" ":")
+batch_size_list=$(func_parser_value_lite "${tipc_lines[6]}" ":")
+precision_list=$(func_parser_value_lite "${tipc_lines[7]}" ":")
 
 LOG_PATH="./output"
 mkdir -p ${LOG_PATH}

@@ -1,12 +1,5 @@
 #!/bin/bash
-
-function func_parser_value(){
-    strs=$1
-    IFS=$2
-    array=(${strs})
-    tmp=${array[1]}
-    echo ${tmp}
-}
+source test_tipc/common_func.sh
 
 CONFIG=$1
 
@@ -46,14 +39,14 @@ TIPC_CONFIG=$1
 tipc_dataline=$(cat $TIPC_CONFIG)
 tipc_lines=(${tipc_dataline})
 
-runtime_device=$(func_parser_value "${tipc_lines[0]}" ":")
-lite_arm_work_path=$(func_parser_value "${tipc_lines[1]}" ":")
-lite_arm_so_path=$(func_parser_value "${tipc_lines[2]}" ":")
-clas_model_name=$(func_parser_value "${tipc_lines[3]}" ":")
-inference_cmd=$(func_parser_value "${tipc_lines[4]}" ":")
-num_threads_list=$(func_parser_value "${tipc_lines[5]}" ":")
-batch_size_list=$(func_parser_value "${tipc_lines[6]}" ":")
-precision_list=$(func_parser_value "${tipc_lines[7]}" ":")
+runtime_device=$(func_parser_value_lite "${tipc_lines[0]}" ":")
+lite_arm_work_path=$(func_parser_value_lite "${tipc_lines[1]}" ":")
+lite_arm_so_path=$(func_parser_value_lite "${tipc_lines[2]}" ":")
+clas_model_name=$(func_parser_value_lite "${tipc_lines[3]}" ":")
+inference_cmd=$(func_parser_value_lite "${tipc_lines[4]}" ":")
+num_threads_list=$(func_parser_value_lite "${tipc_lines[5]}" ":")
+batch_size_list=$(func_parser_value_lite "${tipc_lines[6]}" ":")
+precision_list=$(func_parser_value_lite "${tipc_lines[7]}" ":")
 
 # push executable binary, library, lite model, data, etc. to arm device
 adb shell mkdir -p ${lite_arm_work_path}
