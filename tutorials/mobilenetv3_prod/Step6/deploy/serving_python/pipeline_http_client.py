@@ -19,6 +19,11 @@ import cv2
 import base64
 import os
 
+import argparse
+parser = argparse.ArgumentParser(description="args for paddleserving")
+parser.add_argument("--image_dir", type=str, default="../../images/demo.jpg")
+args = parser.parse_args()
+
 
 def cv2_to_base64(image):
     """cv2_to_base64
@@ -36,12 +41,16 @@ def cv2_to_base64(image):
 if __name__ == "__main__":
     url = "http://127.0.0.1:18093/imagenet/prediction"
     logid = 10000
-    img_path = "../../images/demo.jpg"
-    with open(img_path, 'rb') as file:
-        image_data = file.read()
-    # data should be transformed to the base64 format
-    image = cv2_to_base64(image_data)
-    data = {"key": ["image"], "value": [image], "logid": logid}
-    # send requests
-    r = requests.post(url=url, data=json.dumps(data))
-    print(r.json())
+    test_img_dir = args.image_dir
+
+    for idx, img_file in enumerate(os.listdir(test_img_dir)):
+        with open(os.path.join(test_img_dir, img_file), 'rb') as file:
+            image_data1 = file.read()
+
+        image = cv2_to_base64(image_data1)
+
+        for i in range(1):
+            data = {"key": ["image"], "value": [image], "logid": logid}
+            # send requests
+            r = requests.post(url=url, data=json.dumps(data))
+            print(r.json())

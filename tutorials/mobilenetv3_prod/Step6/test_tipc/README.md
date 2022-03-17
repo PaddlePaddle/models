@@ -10,14 +10,15 @@
 打通情况汇总如下，已填写的部分表示可以使用本工具进行一键测试，未填写的表示正在支持中。
 
 **字段说明：**
-- 基础训练预测：包括模型训练、Paddle Inference Python预测。
-- 更多训练方式：包括多机多卡、混合精度。
-- 模型压缩：包括裁剪、离线/在线量化、蒸馏。
-- 其他预测部署：包括Paddle Inference C++预测、Paddle Serving部署、Paddle-Lite部署等。
+- 基础训练预测：指Linux GPU/CPU环境下的模型训练、Paddle Inference Python预测。
+- 更多训练方式：包括多机多卡、混合精度训练。
+- 更多部署方式：包括C++预测、Serving服务化部署、ARM端侧部署等多种部署方式，具体列表见[3.3节](#3.3)
+- Slim训练部署：包括PACT在线量化、离线量化。
+- 更多训练环境：包括Windows GPU/CPU、Linux NPU、Linux DCU等多种环境。
 
-| 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
-| :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
-| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度<br> | - | - |
+| 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 更多<br>部署方式 | Slim<br>训练部署 |  更多<br>训练环境  |
+| :--- | :--- |  :----:  | :--------: |  :----:  |   :----:  |   :----:  |   :----:  |
+| MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度 | PYTHON 服务化部署<br>Paddle2ONNX 部署| PACT量化<br>离线量化 | Windows GPU/CPU |
 
 
 ## 3. 测试工具简介
@@ -44,6 +45,7 @@ test_tipc
 1. 准备数据与环境
 2. 运行测试脚本，观察不同配置是否运行成功。
 
+<a name="3.3"></a>
 ### 3.3 开始测试
 
 请参考相应文档，完成指定功能的测试。
@@ -56,24 +58,24 @@ test_tipc
     - [Linux GPU/CPU 混合精度训练推理测试](docs/test_train_amp_inference_python.md)
 
 - 更多部署方式测试（coming soon）：
-    - [Linux GPU/CPU PYTHON 服务化部署测试]
+    - [Linux GPU/CPU PYTHON 服务化部署测试](docs/test_serving_infer_python.md)
     - [Linux GPU/CPU C++ 服务化部署测试]
     - [Linux GPU/CPU C++ 推理测试]
     - [Paddle.js 部署测试]
-    - [Paddle2ONNX 测试]
-    - [Lite ARM CPU 部署测试]
+    - [Paddle2ONNX 测试](docs/test_paddle2onnx.md)
+    - [Lite ARM CPU 部署测试](docs/test_lite_infer_cpp_arm_cpu.md)
     - [OpenCL ARM GPU 部署测试]
     - [Metal ARM GPU 部署测试]
     - [Jetson 部署测试]
     - [XPU 部署测试]
     - [OpenCL ARM GPU 部署测试]
 
-- Slim训练部署测试（coming soon）：
-    - [Linux GPU/CPU PACT量化训练测试]
-    - [Linux GPU/CPU 离线量化测试]
+- Slim训练部署测试：
+    - [Linux GPU/CPU PACT量化训练测试](./docs/test_train_pact_inference_python.md)
+    - [Linux GPU/CPU 离线量化测试](./docs/test_train_ptq_inference_python.md)
 
 - 更多训练环境测试（coming soon）：
     - [Linux XPU2 基础训练推理测试]
     - [Linux DCU 基础训练推理测试]
     - [Linux NPU 基础训练推理测试]
-    - [Windows GPU/CPU 基础训练推理测试]
+    - [Windows GPU/CPU 基础训练推理测试](docs/test_windows_train_inference_python.md)
