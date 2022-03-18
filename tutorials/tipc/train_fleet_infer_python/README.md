@@ -33,7 +33,7 @@
 与单机单卡的普通模型训练相比，使用飞桨分布式训练的代码都只需要补充三个部分代码：
 
 <div align="center">
-    <img src="./images/images/data_parallel.png" width="800">
+    <img src="./images/data_parallel.png" width="800">
 </div>
 
 
