@@ -55,7 +55,8 @@
 
 * 1） 增加配置文件
 
-此处需要将文件 [train_amp_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_amp_infer_python.txt) 拷贝到该`test_tipc/configs/model_name`中，其中`model_name`需要修改为您自己的模型名称。
+此处需要将文件 [train_amp_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_amp_infer_python.txt) 拷贝到`test_tipc/configs/model_name`路径下，`model_name`为您自己的模型名字。同时，需要相应
+修改`train_amp_infer_python.txt`模板文件中的`model_name`字段。
 
 * 2）验证配置正确性
 
@@ -86,10 +87,8 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 
 * 3）撰写说明文档
 
-此处需要增加 Linux GPU/CPU 混合精度训练推理功能测试说明文档：test_tipc/docs/test_amp_train_infer_python.md
+此处需要增加 Linux GPU/CPU 混合精度训练推理功能测试说明文档，该文档的模板位于[test_train_amp_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_amp_inference_python.md)，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
-该文档的模板位于下述位置，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
-[test_train_amp_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_amp_inference_python.md)
 
 若已完成混合精度训练测试开发以及基础训练测试的开发，则repo最终目录结构如下所示。
 ```
