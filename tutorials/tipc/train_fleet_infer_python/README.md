@@ -33,7 +33,7 @@
 与单机单卡的普通模型训练相比，使用飞桨分布式训练主要包括以下步骤：
 
 <div align="center">
-    <img src="./images/data_parallel.png" width="800">
+    <img src="./images/data_parallel.png" width="600">
 </div>
 
 
