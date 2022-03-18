@@ -53,12 +53,12 @@
 
 其中设置了2个核验点，详细的开发过程与[基础训练推理测试开发](../train_infer_python/test_train_infer_python.md#3)类似。**主要的差异点**有如下三处:
 
-* 1） 增加配置文件
+* ### 1） 增加配置文件
 
 此处需要将文件 [train_amp_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_amp_infer_python.txt) 拷贝到`test_tipc/configs/model_name`路径下，`model_name`为您自己的模型名字。同时，需要相应
 修改`train_amp_infer_python.txt`模板文件中的`model_name`字段。
 
-* 2）验证配置正确性
+* ### 2）验证配置正确性
 
 基于修改完的配置，运行
 
@@ -85,7 +85,7 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 
 **注意**，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
 
-* 3）撰写说明文档
+* ### 3）撰写说明文档
 
 此处需要增加`Linux GPU/CPU 混合精度训练推理功能测试`说明文档，该文档的模板位于[test_train_amp_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_amp_inference_python.md)，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
