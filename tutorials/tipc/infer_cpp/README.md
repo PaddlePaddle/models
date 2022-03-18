@@ -26,7 +26,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 <div align="center">
     <img src="../images/infer_cpp.png" width="600">
 </div>
-更多的介绍可以参考：[C++推理文档开发文档](./infer_cpp.md)。
+更多的介绍可以参考:[C++推理文档开发文档](./infer_cpp.md)。
 
 ### 2.2 核验点
 这里设置了2个核验点
