@@ -41,6 +41,8 @@
 * 配置文件的第13行写`amp_train`, 区别于基础训练的`normal_train`。
 * 配置文件的第14行内容为`amp_train:train.py --amp_level=O1`，区别于基础训练的`normal_train:train.py`。
 
+**注意**，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
+
 <a name="3"></a>
 
 ## 3. 混合精度训练推理功能测试开发
@@ -83,7 +85,6 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 
 若基于修改后的配置文件，全部命令都运行成功，则验证通过。
 
-**注意**，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
 
 * ### 3）撰写说明文档
 
