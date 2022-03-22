@@ -31,14 +31,16 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
 ### 2.1 准备环境
 - 准备两台可以相互`ping`通的机器
   这里推荐使用docker容器的方式来运行，可以避免环境不一致的问题。以Paddle2.2.2 GPU版，cuda10.2 cudnn7为例：
-```
-拉取预安装 PaddlePaddle 的镜像：
-nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7
+  ```
+  拉取预安装 PaddlePaddle 的镜像：
+  nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7
 
-用镜像构建并进入Docker容器：
-nvidia-docker run --name paddle -it -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
-```
-不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)
+  用镜像构建并进入Docker容器：
+  nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
+  ```
+  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。 
+
+  如果想使用物理机互联方式进行测试，可跳过上述docker安装过程。
 
 - 安装依赖
     ```
