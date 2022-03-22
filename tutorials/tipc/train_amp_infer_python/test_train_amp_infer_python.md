@@ -34,14 +34,14 @@
 | 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
 |----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
 | 13 | trainer:amp_train                          | 训练方法            | 否         | 否           | -                 |
-| 14 | amp_train:train.py --amp_level=O1          | 混合精度训练脚本 | 否         | 是           | value可以修改为自己的训练命令 |
+| 14 | amp_train:train.py --amp_level=O2          | 混合精度训练脚本 | 否         | 是           | value可以修改为自己的训练命令 |
 
-以训练命令`python3.7 train.py --amp_level=O1 --device=gpu --epochs=1 --data-path=./lite_data`为例，该命令为混合精度训练（非裁剪、量化、蒸馏等方式），因此
+以训练命令`python3.7 train.py --amp_level=O2 --device=gpu --epochs=1 --data-path=./lite_data`为例，该命令为混合精度训练（非裁剪、量化、蒸馏等方式），因此
 
 * 配置文件的第13行写`amp_train`, 区别于基础训练的`normal_train`。
-* 配置文件的第14行内容为`amp_train:train.py --amp_level=O1`，区别于基础训练的`normal_train:train.py`。
+* 配置文件的第14行内容为`amp_train:train.py --amp_level=O2`，区别于基础训练的`normal_train:train.py`。
 
-**注意**，模板配置文件中默认测试混合精度训练的`O1`模式，若您需要测试`O2`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O1`改为`amp_train:train.py --amp_level=O2`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
+**注意**，模板配置文件中默认测试混合精度训练的`O2`模式，若您需要测试`O1`模式，只需要将配置文件第14行的`amp_train:train.py --amp_level=O2`改为`amp_train:train.py --amp_level=O1`即可。 `O1`模式和`O2`模式的区别详见官网文档[自动混合精度训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/01_paddle2.0_introduction/basic_concept/amp_cn.html#sanshiyongfeijiangkuangjiashixianzidonghunhejingdu)
 
 <a name="3"></a>
 
