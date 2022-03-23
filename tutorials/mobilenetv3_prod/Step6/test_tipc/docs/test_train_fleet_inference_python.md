@@ -8,7 +8,7 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
 
 | 算法名称 | 模型名称 | 多机多卡 |
 |  :----: |   :----:  |    :----:  |
-|  MobileNetV3  | mobilenet_v3_small | 正常训练 |
+|  MobileNetV3  | mobilenet_v3_small | 分布式训练 |
 
 
 - 推理相关：
