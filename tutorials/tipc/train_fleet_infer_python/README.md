@@ -54,3 +54,4 @@
 <a name="3"></a>
 
 # 3. 多机多卡训练推理测试开发与规范
+参考[Linux GPU 多机多卡训练推理测试开发文档](./test_train_fleet_infer_python.md)增加配置文件并撰写测试说明文档。
