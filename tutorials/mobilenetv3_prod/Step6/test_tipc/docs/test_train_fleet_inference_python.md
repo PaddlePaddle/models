@@ -31,7 +31,7 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
   用镜像构建并进入Docker容器：
   nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
   ```
-  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。
+  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html#old-version-anchor-2-%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4)。
 
 - 拉取代码
   ```
@@ -58,7 +58,7 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
 ```bash
 bash test_tipc/test_train_inference_python.sh ${your_params_file} lite_train_lite_infer
 ```
-`注意：` 多机多卡的训练推理测试有别于单机，需要在各个节点上分别启动命令。
+**注意:** 多机多卡的训练推理测试有别于单机，需要在各个节点上分别启动命令。
 
 以`mobilenet_v3_small`的`Linux GPU/CPU 多机多卡训练推理测试`为例，命令如下所示。
 
