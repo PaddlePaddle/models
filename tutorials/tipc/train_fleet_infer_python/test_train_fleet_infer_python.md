@@ -30,7 +30,7 @@
 以训练命令`python3.7 -m paddle.distributed.launch --ips 192.168.0.1,192.168.0.2 --gpus 0,1 train.py --device=gpu --epochs=1 --data-path=./lite_data`为例，该命令为多机多卡训练（非裁剪、量化、蒸馏等方式），运行在`ip`地址为`192.168.0.1`和`192.168.0.2`的`0,1`号卡上，
 因此:
 * 配置文件的第4行写`gpu_list:192.168.0.1,192.168.0.2;0,1`。
-* 配置文件的第13行写`fleet_train`, 区别于基础训练的`normal_train`、混合精度训练的`amp_train`。
+* 配置文件的第13行`trainer`内容为`fleet_train`, 区别于基础训练的`normal_train`、混合精度训练的`amp_train`。
 * 配置文件的第14行内容为`fleet_train:train.py`。
 
 <a name="3"></a>
@@ -47,15 +47,15 @@
 
 * ### 1）准备验证环境
 
-  该步骤需要准备至少两台可以相互`ping`通的机器。这里推荐使用Docker容器的方式来运行。以Paddle2.2.2 GPU版，cuda10.2, cudnn7为例：
-  ```
-  拉取预安装 PaddlePaddle 的镜像：
-  nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7
+该步骤需要准备至少两台可以相互`ping`通的机器。这里推荐使用Docker容器的方式来运行。以Paddle2.2.2 GPU版，cuda10.2, cudnn7为例：
+```
+拉取预安装 PaddlePaddle 的镜像：
+nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7
 
-  用镜像构建并进入Docker容器：
-  nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
-  ```
-  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html#old-version-anchor-2-%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4)。
+用镜像构建并进入Docker容器：
+nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
+```
+不同的物理机环境配置，Docker容器创建请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html#old-version-anchor-2-%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4)。
 
 * ### 2）增加配置文件
 
