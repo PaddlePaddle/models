@@ -20,17 +20,10 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
 
 ## 2. 测试流程
 
-多机多卡的运行环境包括如下几种：
-* 公有云平台
-* 内网PaddleCloud
-* 物理机/docker容器
-
-公有云上有两类产品可以方便得运行PaddlePaddle分布式训练，一是基于`kubernetes`的云原生容器引擎，例如百度云CCE产品、阿里云ACK产品、华为云CCE产品等；二是各个云厂商的AI开发平台，例如百度云BML平台、华为云ModelArts平台、阿里云PAI平台。详情请见[公有云配置](https://fleet-x.readthedocs.io/en/latest/paddle_fleet_rst/public_cloud.html)。
-`PaddleCloud` 为百度内网云平台，一般只有内部测试人员有专门的队列；即使是内部研发人员，想使用多节点训练也需要排队申请。因此，本文只基于物理机/docker互联方式，介绍如何进行多机多卡的训练推理测试。
-
 ### 2.1 准备环境
-- 准备两台可以相互`ping`通的机器
-  这里推荐使用docker容器的方式来运行，可以避免环境不一致的问题。以Paddle2.2.2 GPU版，cuda10.2 cudnn7为例：
+- 准备至少两台可以相互`ping`通的机器
+
+  这里推荐使用Docker容器的方式来运行。以Paddle2.2.2 GPU版，cuda10.2 cudnn7为例：
   ```
   拉取预安装 PaddlePaddle 的镜像：
   nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7
@@ -38,13 +31,11 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
   用镜像构建并进入Docker容器：
   nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.2.2-gpu-cuda10.2-cudnn7 /bin/bash
   ```
-  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。 
-
-  如果想使用物理机互联方式进行测试，可跳过上述docker安装过程。
+  不同的物理机环境配置，安装请参照[官网安装说明](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/docker/linux-docker.html)。
 
 - 安装依赖
     ```
-    pip3 install  -r requirements.txt
+    pip install  -r requirements.txt
     ```
 
 - 安装AutoLog（规范化日志输出工具）
@@ -54,12 +45,14 @@ Linux GPU/CPU 多机多卡训练推理测试的主程序为`test_train_inference
 
 ### 2.2 功能测试
 
+首先修改配置文件中的`ip`设置: 假设两台机器的`ip`地址分别为`192.168.0.1`和`192.168.0.2`，则对应的配置文件`gpu_list`字段需要修改为`gpu_list:192.168.0.1,192.168.0.2;0,1`。`ip`地址查看命令为`ifconfig`。
+
 测试方法如下所示，希望测试不同的模型文件，只需更换为自己的参数配置文件，即可完成对应模型的测试。
 
 ```bash
 bash test_tipc/test_train_inference_python.sh ${your_params_file} lite_train_lite_infer
 ```
-**注意：** 多机多卡的训练有别于单机训练，需要指定各个节点的ip地址，并在各个节点上分别启动命令。假设两台机器的IP地址分别为192.168.0.1和192.168.0.2，该IP地址可以为两台物理机的IP地址，也可以为两台机器内部Docker容器的IP地址，则对应的配置文件`gpu_list`字段需要修改为`gpu_list:192.168.0.1,192.168.0.2;0,1`。
+**注意：** 多机多卡的训练推理测试有别于单机，需要在各个节点上分别启动命令。
 
 以`mobilenet_v3_small`的`Linux GPU/CPU 多机多卡训练推理测试`为例，命令如下所示。
 
