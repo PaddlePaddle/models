@@ -64,6 +64,8 @@ nvidia-docker run --name paddle -it --net=host -v $PWD:/paddle registry.baidubce
 
 * ### 3）验证配置正确性
 
+首先，修改配置文件中的`ip`设置:  假设两台机器的`ip`地址分别为`192.168.0.1`和`192.168.0.2`，则对应的配置文件`gpu_list`字段需要修改为`gpu_list:192.168.0.1,192.168.0.2;0,1`，`ip`地址查看命令为`ifconfig`。
+
 基于修改完的配置，运行
 
 ```bash
