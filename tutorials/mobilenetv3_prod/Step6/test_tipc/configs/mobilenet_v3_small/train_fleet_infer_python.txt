@@ -10,8 +10,8 @@ use-gpu:True
 train_model_name:latest.pdparams
 --data-path:./lite_data
 ##
-trainer:norm_train
-norm_train:train.py
+trainer:fleet_train
+fleet_train:train.py
 ##
 ===========================eval_params===========================
 eval:train.py --test-only
