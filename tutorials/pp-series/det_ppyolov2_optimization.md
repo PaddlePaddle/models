@@ -12,14 +12,14 @@
 ## 1. 目标检测算法优化思路
 
 
-算法优化总体可以分为如下三部分，首先需要对场景进行详细分析，并充分掌握模型需求，例如模型体积、精度速度要求等。有效的前期分析有助于制定清晰合理的算法优化目标，并指导接下来高效的算法调研和迭代实验，避免出现尝试大量优化方法但是无法满足模型最终要求的情况。具体来说，调研和实验可以应用到数据模块、模型结构、训练策略三大模块。这个方法普遍的适用于深度学习模型优化，下面重点以目标检测领域为例，详细展开以上三部分的优化思路。
+算法优化总体可以分为如下三部分，首先需要对目标场景进行详细分析，并充分掌握模型需求，例如模型体积、精度速度要求等。有效的前期分析有助于制定清晰合理的算法优化目标，并指导接下来高效的算法调研和迭代实验，避免出现尝试大量优化方法但是无法满足模型最终要求的情况。具体来说，调研和实验可以应用到数据模块、模型结构、训练策略三大模块。这个方法普遍的适用于深度学习模型优化，下面重点以目标检测领域为例，详细展开以上三部分的优化思路。
 <div align="center">
   <img src="https://ai-studio-static-online.cdn.bcebos.com/25bfeaa9206e406aa0c406f0dcfabb85c20409b51f08401488f4007612d71fc6" width='800'/>
 </div>
 
 ### 1.1 数据模块
 
-数据模块可以说是深度学习领域最重要的一环，在产业应用中，数据往往都是自定义采集的，数据量相比开源数据集规模较小，因此高质量的标注数据和不断迭代是模型优化的一大利器。数据采集方面，往往少数精标数据的效果会优于大量粗标或者无标注数据，同时需要制定清晰明确的标注标准并覆盖尽可能全面的场景，而在成本允许的情况下，数据是多多益善的。在学术研究中，通常是对固定的公开数据集进行迭代，此时数据模块的优化主要在数据增广方面，例如颜色、翻转、随机扩充、随机裁剪，以及近些年使用较多的[MixUp](https://paddlepedia.readthedocs.io/en/latest/tutorials/computer_vision/image_augmentation/ImageAugment.html#mixup), [AutoAugment](https://paddlepedia.readthedocs.io/en/latest/tutorials/computer_vision/image_augmentation/ImageAugment.html#autoaugment), Mosaic等方法。可以将不同的数据增广方法组合以提升模型泛化能力，需要注意的是，过多的数据增广可能会使模型学习能力降低，也使得数据加载模块耗时过长导致训练迭代效率降低；另外在目标检测任务中，部分数据增广方法可能会影响真实标注框的坐标位置，需要做出相应的调整。
+数据模块可以说是深度学习领域最重要的一环，在产业应用中，数据往往都是自定义采集的，数据量相比开源数据集规模较小，因此高质量的标注数据和不断迭代是模型优化的一大利器。数据采集方面，少数精标数据的效果会优于大量粗标或者无标注数据，制定清晰明确的标注标准并覆盖尽可能全面的场景也是十分必要的。而在成本允许的情况下，数据是多多益善的。在学术研究中，通常是对固定的公开数据集进行迭代，此时数据模块的优化主要在数据增广方面，例如颜色、翻转、随机扩充、随机裁剪，以及近些年使用较多的[MixUp](https://paddlepedia.readthedocs.io/en/latest/tutorials/computer_vision/image_augmentation/ImageAugment.html#mixup), [AutoAugment](https://paddlepedia.readthedocs.io/en/latest/tutorials/computer_vision/image_augmentation/ImageAugment.html#autoaugment), Mosaic等方法。可以将不同的数据增广方法组合以提升模型泛化能力，需要注意的是，过多的数据增广可能会使模型学习能力降低，也使得数据加载模块耗时过长导致训练迭代效率降低；另外在目标检测任务中，部分数据增广方法可能会影响真实标注框的坐标位置，需要做出相应的调整。
 
 <div align="center">
   <img src="https://ai-studio-static-online.cdn.bcebos.com/d153ee4cc94b4a4f8f2ebf86b76d18ab3b60ec6855ae4c4da2db66da1c4a79c5" width='800'/>
@@ -31,7 +31,13 @@
 
 模型结构方面存在一系列通用的优化方案，例如损失函数优化和特征提取优化，focal loss，IoU loss等损失函数优化能够在不影响推理速度的同时提升模型精度；[SPP](https://arxiv.org/abs/1406.4729)能够在几乎不增加预测耗时的情况下加强模型多尺度特征。
 
-此外还需要在清晰的优化目标的基础上，作出针对性的优化。对于云端高算力场景，通常要在保证高精度的同时，需求模型预测速度尽可能快，实现精度速度高性价比的模型，这也是工业界云端目标检测部署上线的核心需求之一。模型结构倾向于使用ResNet系列骨干网络，并引入少量的可变形卷积实现引入少量计算量的同时提升模型特征提取能力。对于边缘端部署的场景，设备相比于云端的GPU来说算力比较低，同时边缘端设计的内存空间比较小，对应的硬件功耗比较低，但是依然需要保持模型较高的实时性，因此就需要对目标检测模型结构作出轻量化的设计。倾向于使用[MobileNet](https://arxiv.org/abs/1704.04861)系列轻量级骨干网络，同时将模型中较为耗时的卷积替换为[深度可分离卷积](https://paddlepedia.readthedocs.io/en/latest/tutorials/CNN/convolution_operator/Separable_Convolution.html?highlight=%E6%B7%B1%E5%BA%A6%E5%8F%AF%E5%88%86%E7%A6%BB%E5%8D%B7%E7%A7%AF#id4)，将[反卷积](https://paddlepedia.readthedocs.io/en/latest/tutorials/CNN/convolution_operator/Transpose_Convolution.html?highlight=%E5%8F%8D%E5%8D%B7%E7%A7%AF)替换为插值的方式。
+此外还需要在清晰的优化目标的基础上，作出针对性的优化。对于云端和边缘部署的场景，模型结构的设计选择不同，如下表所示。
+
+| 场景      | 特点     | 模型结构建议 |
+|:---------:|:------------------:|:------------:|
+| 云端场景    | 算力充足，保证效果        | 倾向于使用ResNet系列骨干网络，并引入少量的可变形卷积实现引入少量计算量的同时提升模型特征提取能力。|
+| 边缘端部署场景 | 算力和功耗相对云端较低，内存较小 | 倾向于使用[MobileNet](https://arxiv.org/abs/1704.04861)系列轻量级骨干网络，同时将模型中较为耗时的卷积替换为[深度可分离卷积](https://paddlepedia.readthedocs.io/en/latest/tutorials/CNN/convolution_operator/Separable_Convolution.html?highlight=%E6%B7%B1%E5%BA%A6%E5%8F%AF%E5%88%86%E7%A6%BB%E5%8D%B7%E7%A7%AF#id4)，将[反卷积](https://paddlepedia.readthedocs.io/en/latest/tutorials/CNN/convolution_operator/Transpose_Convolution.html?highlight=%E5%8F%8D%E5%8D%B7%E7%A7%AF)替换为插值的方式。 |
+
 
 <div align="center">
   <img src="https://ai-studio-static-online.cdn.bcebos.com/86c783f67ecf439e9eab67f145bc7321b2828f68ef9f44efaff0e6be25a9985f" width='800'/>
@@ -41,7 +47,7 @@
 
 ### 1.3 训练策略
 
-在模型迭代优化的过程中，会引入不同的优化模块，可能导致模型训练不稳定，为此需要改进训练策略，加强模型训练稳定性，同时提升模型收敛效果。所有训练策略的调整并不会对预测性能造成损失。例如调整优化器、学习率等训练参数，Synchronized batch normalization(卡间同步批归一化)能够扩充batch信息，使得网络获取更多输入信息，EMA（Exponential Moving Average）通过滑动平均的方式更新参数，避免异常值对参数的影响。在实际应用场景中，由于数据量有限，可以使用预先在COCO数据集上训练好的模型进行迁移学习，能够大幅提升模型精度。该模块中的优化策略也能够通用的提升不同计算机视觉任务模型效果。
+在模型迭代优化的过程中，会引入不同的优化模块，可能导致模型训练不稳定，为此需要改进训练策略，加强模型训练稳定性，同时提升模型收敛效果。所有训练策略的调整并不会对预测速度造成损失。例如调整优化器、学习率等训练参数，Synchronized batch normalization(卡间同步批归一化)能够扩充batch信息，使得网络获取更多输入信息，EMA（Exponential Moving Average）通过滑动平均的方式更新参数，避免异常值对参数的影响。在实际应用场景中，由于数据量有限，可以使用预先在COCO数据集上训练好的模型进行迁移学习，能够大幅提升模型精度。该模块中的优化策略也能够通用的提升不同计算机视觉任务模型效果。
 
 以上优化技巧集成了多种算法结构及优化模块，需要大量的代码开发，而且不同优化技巧之间需要相互组合，对代码的模块化设计有较大挑战，接下来介绍飞桨推出的一套端到端目标检测开发套件PaddleDetection。
 
@@ -105,7 +111,7 @@ $$
 
 ### 2.2 骨干网络
 
-PP-YOLOv2不同于YOLOv3的DarkNet53骨干网络，PP-YOLOv2使用更加优异的ResNet50vd-DCN作为模型的骨干网络。它可以被分为ResNet50vd和DCN两部分来看。ResNet50vd是指拥有50个卷积层的ResNet-D网络。ResNet结构如下图所示：
+不同于YOLOv3的DarkNet53骨干网络，PP-YOLOv2使用更加优异的ResNet50vd-DCN作为模型的骨干网络。它可以被分为ResNet50vd和DCN两部分来看。ResNet50vd是指拥有50个卷积层的ResNet-D网络。ResNet结构如下图所示：
 
 <div align=center>
     <img src="https://raw.githubusercontent.com/mls1999725/pictures/master/ResNet-A.png" alt="ResNet-A" style="zoom: 50%;"/>
@@ -134,28 +140,73 @@ ResNet:
 
 经多次实验发现，使用ResNet50vd结构作为骨干网络，相比于原始的ResNet，可以提高1%-2%的目标检测精度，且推理速度基本保持不变。而DCN（Deformable Convolution）可变形卷积的特点在于：其卷积核在每一个元素上额外增加了一个可学习的偏移参数。这样的卷积核在学习过程中可以调整卷积的感受野，从而能够更好的提取图像特征，以达到提升目标检测精度的目的。但它会在一定程度上引入额外的计算开销。经过多翻尝试，发现只在ResNet的最后一个stage增加可变形卷积，是实现引入极少计算量并提升模型精度的最佳策略。
 
-可变形卷积的[代码实现](https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.1/ppdet/modeling/layers.py#L410)如下：
+可变形卷积的[代码实现](https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.1/ppdet/modeling/layers.py#L41)如下：
 
 ```python
-self.conv_offset = nn.Conv2D(
-    in_channels,
-    3*kernel_size**2,
-    kernel_size,
-    stride=stride,
-    padding=(kernel_size - 1) // 2,
-    weight_attr=ParamAttr(initializer=Constant(0.0)),
-        bias_attr=offset_bias_attr)
+from paddle.vision.ops import DeformConv2D
 
-self.conv_dcn = DeformConv2D(
-    in_channels,
-    out_channels,
-    kernel_size,
-    stride=stride,
-    padding=(kernel_size - 1) // 2 * dilation,
-    dilation=dilation,
-    groups=groups,
-    weight_attr=weight_attr,
-    bias_attr=False)
+class DeformableConvV2(nn.Layer):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size,
+                 stride=1,
+                 padding=0,
+                 dilation=1,
+                 groups=1,
+                 weight_attr=None,
+                 bias_attr=None,
+                 regularizer=None,
+                 skip_quant=False,
+                 dcn_bias_regularizer=L2Decay(0.),
+                 dcn_bias_lr_scale=2.):
+        super().__init__()
+        self.offset_channel = 2 * kernel_size**2
+        self.mask_channel = kernel_size**2
+
+        offset_bias_attr = ParamAttr(
+            initializer=Constant(0.),
+            learning_rate=lr_scale,
+            regularizer=regularizer)
+
+        self.conv_offset = nn.Conv2D(
+            in_channels,
+            3 * kernel_size**2,
+            kernel_size,
+            stride=stride,
+            padding=(kernel_size - 1) // 2,
+            weight_attr=ParamAttr(initializer=Constant(0.0)),
+            bias_attr=offset_bias_attr)
+
+        if bias_attr:
+            # in FCOS-DCN head, specifically need learning_rate and regularizer
+            dcn_bias_attr = ParamAttr(
+                initializer=Constant(value=0),
+                regularizer=dcn_bias_regularizer,
+                learning_rate=dcn_bias_lr_scale)
+        else:
+            # in ResNet backbone, do not need bias
+            dcn_bias_attr = False
+        self.conv_dcn = DeformConv2D(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            padding=(kernel_size - 1) // 2 * dilation,
+            dilation=dilation,
+            groups=groups,
+            weight_attr=weight_attr,
+            bias_attr=dcn_bias_attr)
+
+    def forward(self, x):
+        offset_mask = self.conv_offset(x)
+        offset, mask = paddle.split(
+            offset_mask,
+            num_or_sections=[self.offset_channel, self.mask_channel],
+            axis=1)
+        mask = F.sigmoid(mask)
+        y = self.conv_dcn(x, offset, mask=mask)
+        return y
 ```
 
 

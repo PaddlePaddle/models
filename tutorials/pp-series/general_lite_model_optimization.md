@@ -112,7 +112,7 @@ COCO数据集上结果对比如下所示。
 
 模型蒸馏有2种主要损失函数：
 
-* 对于分类输出，对于最终的回归输出，使用JSDIV loss
+* 对于分类输出，对于最终的回归输出，使用，JSDIV loss，具体实现可以参考：[链接](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.3/ppcls/loss/dmlloss.py#L20#L20)
 * 对于回归输出，使用距离loss（l2、l1、smooth l1等）
 
 #### 2.2.2 具体内容
@@ -133,7 +133,7 @@ COCO数据集上结果对比如下所示。
 
 （3）加载预训练模型：
 
-* 如果教师模型是大模型，则需要加载大模型的训练结果，并且将教师模型的参数状态设置为`trainable=False`，停止参数更新
+* 如果教师模型是大模型，则需要加载大模型的训练结果，并且将教师模型的参数状态设置为`trainable=False`，停止参数更新，使用示例可以参考：[链接](https://github.com/PaddlePaddle/PaddleClas/blob/1358e3f647e12b9ee6c5d6450291983b2d5ac382/ppcls/arch/__init__.py#L117)
 * 如果是教师模型是小模型，则与学生模型的加载逻辑相同
 
 （4）蒸馏训练：和该任务的默认训练过程保持一致。
@@ -194,6 +194,7 @@ Paddle 量化训练（Quant-aware Training, QAT）是指在训练过程中对模
 ```yaml
 pretrain_weights: https://bj.bcebos.com/v1/paddledet/models/keypoint/lite_hrnet_30_256x192_coco.pdparams
 slim: QAT
+# 这里的PACT量化配置适用于大多数任务，包括分类、检测、OCR等，一般无需改动
 QAT:
   quant_config: {
     'activation_preprocess_type': 'PACT',
@@ -239,6 +240,7 @@ def build_slim_model(cfg, mode='train'):
 
 * 关于模型大小的定义如下：将训练得到的动态图模型使用`paddle.jit.save`接口，保存为静态图模型，得到模型参数文件`*.pdiparams`和结构文件`*.pdmodel`，二者的存储大小之和。
 * 2.1章节中提供的骨干网络为推荐使用，具体不做限制，最终模型大小/速度/精度满足验收条件即可。
+* 在部分模型不方便直接替换骨干网络的情况下（比如该模型是针对该任务设计的，通用的骨干网络无法满足要求等），可以通过对大模型的通道或者层数进行裁剪，来实现模型轻量化，最终保证模型大小满足要求即可。
 
 ### 3.2 知识蒸馏
 
