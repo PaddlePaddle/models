@@ -4,7 +4,8 @@ set -ux
 SAVE_DIR=outputs/DailyDialog.infer
 VOCAB_PATH=model/Bert/vocab.txt
 DATA_DIR=data/DailyDialog
-INIT_CHECKPOINT=outputs/DailyDialog/best.model
+INIT_CHECKPOINT=model/PLATO
+# outputs/DailyDialog/best.model
 DATA_TYPE=multi
 
 # CUDA environment settings.
