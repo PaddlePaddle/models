@@ -54,6 +54,7 @@ plt.legend({"paddle.nn.Conv2D weight", "torch.nn.Conv2d weight"})
 ```python
 import paddle
 import torch
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import paddle.nn.initializer as init
@@ -105,6 +106,7 @@ if isinstance(m, nn.Conv2d):
 | `paddle.nn.Conv2D` bias参数 | `torch.nn.Conv2d` bias参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/conv2d_bias_default_diff.jpeg) | 见附录`4.1.1`  | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/conv2d_bias_fixed_diff.jpeg) |
 | `paddle.nn.Linear` weight参数 | `torch.nn.Linear` weight参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/linear_weight_default_diff.jpeg) | 见附录`4.1.2`  | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/linear_weight_fixed_diff.jpeg) |
 | `paddle.nn.Linear` bias参数 | `torch.nn.Linear` bias参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/linear_bias_default_diff.jpeg) | 见附录`4.1.2`  | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/linear_bias_fixed_diff.jpeg) |
+| `paddle.nn.Embedding` weight参数 | `torch.nn.Embedding` weight参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/embedding_weight_default_diff.jpeg) | 见附录`4.1.3`  | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/embedding_weight_fixed_diff.jpeg) |
 
 
 
@@ -150,13 +152,12 @@ plt.ylabel("count")
 plt.legend({"paddle.nn.Conv2D bias", "torch.nn.Conv2d bias"})
 ```
 
-
-
 * 修正后初始化以及可视化代码
 
 ```python
 import paddle
 import torch
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import paddle.nn.initializer as init
@@ -221,8 +222,10 @@ plt.legend({"paddle.nn.Linear bias", "torch.nn.Linear bias"})
 ```python
 import paddle
 import torch
+import math
 import numpy as np
 import matplotlib.pyplot as plt
+import paddle.nn.initializer as init
 %matplotlib inline
 # linear的初始化方法同样适用于2.1节中的公式，此处的kernal_size等价于1。
 linear_pd = paddle.nn.Linear(4096, 512,
@@ -245,4 +248,50 @@ temp = plt.hist([linear_pd_bias, linear_pt_bias], bins=50, rwidth=0.8, histtype=
 plt.xlabel("value")
 plt.ylabel("count")
 plt.legend({"paddle.nn.Linear bias", "torch.nn.Linear bias"})
+```
+
+
+### 4.1.3 paddle.nn.Embedding
+
+* 默认初始化以及可视化代码
+
+```python
+import paddle
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+eb_pd = paddle.nn.Embedding(1024, 512)
+eb_pt = torch.nn.Embedding(1024, 512)
+
+eb_pd_weight = eb_pd.weight.numpy().reshape((-1, ))
+eb_pt_weight = eb_pt.weight.detach().numpy().reshape((-1, ))
+plt.figure(figsize=(10, 6))
+temp = plt.hist([eb_pd_weight, eb_pt_weight], bins=100, rwidth=0.8, histtype="step")
+plt.xlabel("value")
+plt.ylabel("count")
+plt.legend({"paddle.nn.Embedding weight", "torch.nn.Embedding weight"})
+```
+
+* 修正后初始化以及可视化代码
+
+```python
+import paddle
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import paddle.nn.initializer as init
+%matplotlib inline
+# linear的初始化方法同样适用于2.1节中的公式，此处的kernal_size等价于1。
+eb_pd = paddle.nn.Embedding(1024, 512, weight_attr=init.Normal(0.0, 1.0))
+eb_pt = torch.nn.Embedding(1024, 512)
+
+eb_pd_weight = eb_pd.weight.numpy().reshape((-1, ))
+eb_pt_weight = eb_pt.weight.detach().numpy().reshape((-1, ))
+plt.figure(figsize=(10, 6))
+temp = plt.hist([eb_pd_weight, eb_pt_weight], bins=100, rwidth=0.8, histtype="step")
+plt.xlabel("value")
+plt.ylabel("count")
+plt.legend({"paddle.nn.Embedding weight", "torch.nn.Embedding weight"})
 ```
