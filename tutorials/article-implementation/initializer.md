@@ -10,7 +10,7 @@ Paddle提供了大量的初始化方法，包括`Constant`, `KaimingUniform`, `K
 **更多参考链接：**
 
 * Paddle初始化相关API链接：[初始化API官网文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/Overview_cn.html#chushihuaxiangguan)
-* Paddle提供的初始化方式为直接修改API的`ParamAttr`，与`torch.nn.init`等系列API的使用方式不同，PaddleDetection中实现了与`torch.nn.init`系列API完全对齐的初始化API，包括`uniform_`, `normal_`, `constant_`, `ones_`, `zeros_`, `xavier_uniform_`, `xavier_normal_`, `kaiming_uniform_`, `kaiming_normal_`, `linear_init_`, `conv_init_`, `reset_initialized_parameter`，可以参考[initializer.py](https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/initializer.py)，查看更多的实现细节。
+* Paddle提供的初始化方式为直接修改API的`ParamAttr`，与`torch.nn.init`等系列API的使用方式不同，PaddleDetection中实现了与`torch.nn.init`系列API完全对齐的初始化API，包括`uniform_`, `normal_`, `constant_`, `ones_`, `zeros_`, `xavier_uniform_`, `xavier_normal_`, `kaiming_uniform_`, `kaiming_normal_`, `linear_init_`, `conv_init_`，可以参考[initializer.py](https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/initializer.py)，查看更多的实现细节。
 
 
 # 2. 不同框架的初始化差异
@@ -46,7 +46,7 @@ plt.legend({"paddle.nn.Conv2D weight", "torch.nn.Conv2d weight"})
 <img src="https://paddle-model-ecology.bj.bcebos.com/images/initializer/conv2d_weight_default_diff.jpeg"  width = "600" />
 </div>
 
-结合[paddle文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/ParamAttr_cn.html#paramattr)和[torch文档](https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html?highlight=conv2d#torch.nn.Conv2d)可知，paddle的初始化是`XavierNormal`，torch的初始化是`uniform`，初始化方法边界值是`(-sqrt(groups/(in_channels*prod(*kernal_size), sqrt(groups/(in_channels*prod(*kernal_size))`。
+结合[paddle文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/ParamAttr_cn.html#paramattr)和[torch文档](https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html?highlight=conv2d#torch.nn.Conv2d)可知，paddle的初始化是`XavierNormal`，torch的初始化是`uniform`，初始化方法边界值是`(-sqrt(groups/(in_channels*prod(*kernal_size))), sqrt(groups/(in_channels*prod(*kernal_size))))`。
 
 
 * **Step2：** 由上述分析，基于`paddle.nn.initializer.Uniform` API，自定义Paddle中Conv2D的初始化，代码如下所示：
@@ -112,8 +112,8 @@ if isinstance(m, nn.Conv2d):
 
 | Paddle API | torch API  | 默认初始化方法的参数分布对比图 |
 |:---------:|:------------------:|:------------:|
-| `paddle.nn.BatchNorm2D` scale参数 | `torch.nn.BatchNorm2d` scale参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/bn_scale_default_diff.jpeg) |
-| `paddle.nn.BatchNorm2D` offset参数 | `torch.nn.BatchNorm2d` offset参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/bn_offset_default_diff.jpeg) |
+| `paddle.nn.BatchNorm2D` weight参数 | `torch.nn.BatchNorm2d` weight参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/bn_weight_default_diff.jpeg) |
+| `paddle.nn.BatchNorm2D` bias参数 | `torch.nn.BatchNorm2d` bias参数 | ![](https://paddle-model-ecology.bj.bcebos.com/images/initializer/bn_bias_default_diff.jpeg) |
 
 # 4. 附录
 
