@@ -4,3 +4,8 @@
 
 - [Step1-5](./Step1-5)：MobileNetV3_small的模型复现实战。
 - [Step6](./Step6)：MobileNetV3_small的训练/评估/预测以及多种部署方案实战。
+
+
+# Reference
+
+* torchvision：https://github.com/pytorch/vision （该项目中MobileNetV3_small的参考实现来源）
