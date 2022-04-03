@@ -2,7 +2,7 @@
 set -ux
 
 SAVE_DIR=outputs/DSTC7_Ubuntu.baseline.infer
-VOCAB_PATH=model/Bert/vocab.txt
+VOCAB_PATH=model-baseline/Bert/vocab.txt
 DATA_DIR=data/DSTC7_Ubuntu
 INIT_CHECKPOINT=outputs/DSTC7_Ubuntu.baseline/best.model
 DATA_TYPE=multi
