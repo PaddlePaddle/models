@@ -53,7 +53,7 @@ test_tipc
 - 基础训练预测测试：
     - [Linux GPU/CPU 基础训练推理测试](docs/test_train_inference_python.md)
 
-- 更多训练方式测试（coming soon）：
+- 更多训练方式测试：
     - [Linux GPU/CPU 多机多卡训练推理测试](docs/test_train_fleet_inference_python.md)
     - [Linux GPU/CPU 混合精度训练推理测试](docs/test_train_amp_inference_python.md)
 
