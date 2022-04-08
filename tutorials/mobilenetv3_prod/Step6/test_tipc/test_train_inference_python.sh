@@ -31,6 +31,9 @@ data_path_value=$(func_parser_value "${lines[10]}")
 trainer_list=$(func_parser_value "${lines[12]}")
 norm_trainer=$(func_parser_key "${lines[13]}")
 trainer_py=$(func_parser_value "${lines[13]}")
+# nodes
+nodes_key=$(func_parser_key "${lines[14]}")
+nodes_value=$(func_parser_value "${lines[14]}")
 
 # eval params
 eval_py=$(func_parser_value "${lines[16]}")
@@ -152,6 +155,15 @@ else
             array=(${gpu})
             env="export CUDA_VISIBLE_DEVICES=${array[0]}"
             IFS="|"
+        else
+            IFS=";"
+            array=(${gpu})
+            ips=${array[0]}
+            gpu=${array[1]}
+            IFS=","
+            array=(${gpu})
+            env="export CUDA_VISIBLE_DEVICES=${array[0]}"
+            IFS="|"
         fi
 
         for trainer in ${trainer_list[*]}; do
@@ -165,15 +177,22 @@ else
             set_epoch=$(func_set_params "${epoch_key}" "${epoch_num}")
             set_pretrain=$(func_set_params "${pretrain_model_key}" "${pretrain_model_value}")
             set_batchsize=$(func_set_params "${train_batch_key}" "${train_batch_value}")
-            if [ ${#ips} -le 26 ];then
+            if [ ${#ips} -le 15 ];then
                 save_log="${LOG_PATH}/${trainer}_gpus_${gpu}"
-                nodes=1
+            else                  
+                IFS=","
+                ips_array=(${ips})
+                IFS="|"
+                nodes=${#ips_array[@]}
+                save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_nodes_${nodes}"
             fi
             set_save_model=$(func_set_params "${save_model_key}" "${save_log}")
             if [ ${#gpu} -le 2 ];then  # train with single gpu
                 cmd="${python} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
-            elif [ ${#ips} -le 26 ];then  # train with multi-gpu
+            elif [ ${#ips} -le 15 ];then  # train with multi-gpu
                 cmd="${python} -m paddle.distributed.launch --gpus=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
+            else     # train with multi-machine
+                cmd="${python} -m paddle.distributed.launch --ips=${ips} --gpus=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
             fi
             # run train
             eval $cmd
