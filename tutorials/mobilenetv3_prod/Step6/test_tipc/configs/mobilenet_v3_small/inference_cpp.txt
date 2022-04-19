@@ -1,0 +1,14 @@
+# model load config
+use_gpu  0
+gpu_id  0
+gpu_mem  4000
+cpu_math_library_num_threads  10
+use_mkldnn 1
+use_tensorrt 0
+use_fp16 0
+
+# cls config
+cls_model_path  ./deploy/inference_cpp/mobilenet_v3_small_infer/inference.pdmodel
+cls_params_path ./deploy/inference_cpp/mobilenet_v3_small_infer/inference.pdiparams
+resize_short_size 256
+crop_size 224

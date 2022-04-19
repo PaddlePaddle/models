@@ -60,7 +60,7 @@ test_tipc
 - 更多部署方式测试（coming soon）：
     - [Linux GPU/CPU PYTHON 服务化部署测试](docs/test_serving_infer_python.md)
     - [Linux GPU/CPU C++ 服务化部署测试]
-    - [Linux GPU/CPU C++ 推理测试]
+    - [Linux GPU/CPU C++ 推理测试](docs/test_inference_cpp.md)
     - [Paddle.js 部署测试]
     - [Paddle2ONNX 测试](docs/test_paddle2onnx.md)
     - [Lite ARM CPU 部署测试](docs/test_lite_infer_cpp_arm_cpu.md)
