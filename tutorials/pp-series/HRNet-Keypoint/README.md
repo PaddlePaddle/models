@@ -39,7 +39,7 @@ python -c "import paddle; print(paddle.__version__)"
 
 **Note**
 
-1.  If you want to use PaddleDetection on multi-GPU, please install NCCL at first.
+1.  If you want to train the model on multi-GPU, please install NCCL at first.
 
 #### 2. Clone this repo, and we'll call the directory that you cloned as ${POSE_ROOT}.
 #### 3. Install dependencies:
@@ -113,10 +113,10 @@ python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c con
 
 # GPU evaluation
 export CUDA_VISIBLE_DEVICES=0
-python tools/eval.py -c configs/hrnet_w32_256x192.yml -o weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192.pdparams
+python tools/eval.py -c configs/hrnet_w32_256x192.yml -o weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams
 
 # test
-python tools/infer.py -c configs/hrnet_w32_256x192.yml --infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192.pdparams
+python tools/infer.py -c configs/hrnet_w32_256x192.yml --infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams
 
 # training with distillation
 python tools/train.py -c configs/lite_hrnet_30_256x192_coco.yml  --distill_config=./configs/hrnet_w32_256x192_teacher.yml
@@ -131,11 +131,11 @@ python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c con
 
 # GPU evaluation with PACT quantization
 export CUDA_VISIBLE_DEVICES=0
-python tools/eval.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
+python tools/eval.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams
 
 # test with PACT quantization
 python tools/infer.py -c configs/lite_hrnet_30_256x192_coco_pact.yml
---infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
+--infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams
 
 ```
 
@@ -143,19 +143,19 @@ python tools/infer.py -c configs/lite_hrnet_30_256x192_coco_pact.yml
 
 ```bash
 # export model
-python tools/export_model.py -c configs/hrnet_w32_256x192.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192_coco.pdparams
+python tools/export_model.py -c configs/hrnet_w32_256x192.yml -o  weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams
 
 # inference
 python deploy/infer.py  --model_dir=output_inference/hrnet_w32_256x192/ --image_file=dataset/test_image/hrnet_demo.jpg
 
 # export model with lite model
-python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco.pdparams
+python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco.yml -o  weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams
 
 # inference with lite model
 python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco/ --image_file=dataset/test_image/hrnet_demo.jpg
 
 # export model with PACT quantization
-python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
+python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o  weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams
 
 # inference with PACT quantization
 python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_pact/ --image_file=dataset/test_image/hrnet_demo.jpg
@@ -164,12 +164,16 @@ python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_
 
 ## 3 Result
 COCO Dataset
-| Model              | Input Size | AP(coco val) |                           Model Download                           | Config File                                                    |
-| :---------------- | -------- | :----------: | :----------------------------------------------------------: | ----------------------------------------------------------- |
-| HRNet-w32             | 256x192  |     76.9     | [hrnet_w32_256x192.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams) | [config](./configs/hrnet_w32_256x192.yml)                     |
-| LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml)                     |
-| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)                     |
-| LiteHRNet-30-PACT         | 256x192  |     69.9     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)                     |
+
+| Model  | Input Size | AP(%, coco val) |   Model Download | Config File | Inference model size |
+| :----------: | -------- | :----------: | :------------: | :---: | :---: |
+| HRNet-w32             | 256x192  |     76.9     | [hrnet_w32_256x192.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams) | [config](./configs/hrnet_w32_256x192.yml)           | 118M |
+| LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml) | 26M |
+| LiteHRNet-30-distillation    | 256x192  |     69.9     |[lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)       | 26M |
+| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8.0M |
+
+
+* note: Inference model size is obtained by summing `pdiparams` and `pdmodel` file size.
 
 
 ![](/dataset/test_image/hrnet_demo.jpg)

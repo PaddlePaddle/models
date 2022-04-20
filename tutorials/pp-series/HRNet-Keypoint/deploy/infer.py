@@ -335,10 +335,10 @@ def predict_image(detector, image_list, batch_size=1):
         if FLAGS.run_benchmark:
             # warmup
             detector.predict(
-                image_list, FLAGS.threshold, repeats=10, add_timer=False)
+                image_list, FLAGS.threshold, repeats=3, add_timer=False)
             # run benchmark
             detector.predict(
-                image_list, FLAGS.threshold, repeats=10, add_timer=True)
+                image_list, FLAGS.threshold, repeats=3, add_timer=True)
 
             cm, gm, gu = get_current_memory_mb()
             detector.cpu_mem += cm
@@ -447,8 +447,7 @@ if __name__ == '__main__':
     FLAGS = parser.parse_args()
     print_arguments(FLAGS)
     FLAGS.device = FLAGS.device.upper()
-    assert FLAGS.device in ['CPU', 'GPU', 'XPU'
-                            ], "device should be CPU, GPU or XPU"
+    assert FLAGS.device in ['CPU', 'GPU'], "device should be CPU or GPU"
     assert not FLAGS.use_gpu, "use_gpu has been deprecated, please use --device"
 
     main()
