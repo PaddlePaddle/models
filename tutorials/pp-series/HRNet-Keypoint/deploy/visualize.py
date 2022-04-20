@@ -129,6 +129,7 @@ def draw_pose(imgfile,
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
     if returnimg:
         return canvas
+    os.makedirs(save_dir, exist_ok=True)
     save_name = os.path.join(
         save_dir, os.path.splitext(os.path.basename(imgfile))[0] + '_vis.jpg')
     plt.imsave(save_name, canvas[:, :, ::-1])
