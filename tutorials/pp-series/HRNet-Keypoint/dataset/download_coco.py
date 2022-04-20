@@ -16,11 +16,11 @@ import sys
 import os.path as osp
 import logging
 # add python path of PadleDetection to sys.path
-parent_path = osp.abspath(osp.join(__file__, *(['..'] * 3)))
+parent_path = osp.abspath(osp.join(__file__, *(['..'] * 2)))
 if parent_path not in sys.path:
     sys.path.append(parent_path)
 
-from ppdet.utils.download import download_dataset
+from lib.utils.download import download_dataset
 
 logging.basicConfig(level=logging.INFO)
 
