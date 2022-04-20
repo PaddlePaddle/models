@@ -98,9 +98,9 @@ python -c "import paddle; print(paddle.__version__)"
 - If the coco dataset has been downloaded  
     The files can be organized according to the above data file organization structure.
 
-### 2.3 Training & Evaluation & Inference
+### 2.3 Training & Evaluation & Test
 
-We provides scripts for training, evalution and inference with various features according to different configure.
+We provides scripts for training, evalution and test with various features according to different configure.
 
 ```bash
 # training on single-GPU
@@ -115,7 +115,7 @@ python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c con
 export CUDA_VISIBLE_DEVICES=0
 python tools/eval.py -c configs/hrnet_w32_256x192.yml -o weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192.pdparams
 
-# Inference
+# test
 python tools/infer.py -c configs/hrnet_w32_256x192.yml --infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192.pdparams
 
 # training with distillation
@@ -133,10 +133,32 @@ python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c con
 export CUDA_VISIBLE_DEVICES=0
 python tools/eval.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
 
-# Inference with PACT quantization
+# test with PACT quantization
 python tools/infer.py -c configs/lite_hrnet_30_256x192_coco_pact.yml
 --infer_img=dataset/test_image/hrnet_demo.jpg -o weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
 
+```
+
+### 2.4 Export model & Inference
+
+```bash
+# export model
+python tools/export_model.py -c configs/hrnet_w32_256x192.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192_coco.pdparams
+
+# inference
+python deploy/infer.py  --model_dir=output_inference/hrnet_w32_256x192/ --image_file=dataset/test_image/hrnet_demo.jpg
+
+# export model with lite model
+python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco.pdparams
+
+# inference with lite model
+python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco/ --image_file=dataset/test_image/hrnet_demo.jpg
+
+# export model with PACT quantization
+python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o  weights=https://paddledet.bj.bcebos.com/models/keypoint/lite_hrnet_30_256x192_coco_pact.pdparams
+
+# inference with PACT quantization
+python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_pact/ --image_file=dataset/test_image/hrnet_demo.jpg
 
 ```
 
