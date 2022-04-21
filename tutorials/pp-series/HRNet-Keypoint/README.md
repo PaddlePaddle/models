@@ -176,7 +176,7 @@ python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_
 | LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml) | 26 | 160.6
 | LiteHRNet-30-distillation    | 256x192  |     69.9     |[lite_hrnet_30_256x192_coco_dist.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml)       | 26 | 160.6
 | LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8 | 156.7
-| LiteHRNet-30-PACT-distillation         | 256x192  |     70.2     | [lite_hrnet_30_256x192_coco_dist_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8 | 156.7
+| LiteHRNet-30-distillation-PACT         | 256x192  |     70.2     | [lite_hrnet_30_256x192_coco_dist_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_dist_pact.yml)         | 8 | 156.7
 
 
 **NOTE:**
