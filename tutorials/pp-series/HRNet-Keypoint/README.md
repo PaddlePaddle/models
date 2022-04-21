@@ -184,15 +184,16 @@ python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_
 * Inference model size is obtained by summing `pdiparams` and `pdmodel` file size.
 * The inference time is tested on CPU(`Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz`) without MKLDNN using paddlepaddle-develop.
 
-* Visualization
+
+**Visualization**
 
 Input:
 
-![](/dataset/test_image/hrnet_demo.jpg)
+![](./dataset/test_image/hrnet_demo.jpg)
 
 Output:
 
-![](/deploy/output/hrnet_demo_vis.jpg)
+![](./deploy/output/hrnet_demo_vis.jpg)
 
 
 ## Citation
