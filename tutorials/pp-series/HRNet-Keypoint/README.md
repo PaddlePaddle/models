@@ -129,6 +129,10 @@ python tools/train.py -c configs/lite_hrnet_30_256x192_coco_pact.yml
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c configs/lite_hrnet_30_256x192_coco_pact.yml
 
+# training with PACT quantization on multi-GPU using distilled trained model
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+python -m paddle.distributed.launch --gpus 0,1,2,3,4,5,6,7 tools/train.py -c configs/lite_hrnet_30_256x192_coco_dist_pact.yml
+
 # GPU evaluation with PACT quantization
 export CUDA_VISIBLE_DEVICES=0
 python tools/eval.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o weights=https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams
@@ -163,23 +167,36 @@ python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_
 ```
 
 ## 3 Result
-COCO Dataset
 
-| Model  | Input Size | AP(%, coco val) |   Model Download | Config File | Inference model size |
-| :----------: | -------- | :----------: | :------------: | :---: | :---: |
-| HRNet-w32             | 256x192  |     76.9     | [hrnet_w32_256x192.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams) | [config](./configs/hrnet_w32_256x192.yml)           | 118M |
-| LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml) | 26M |
-| LiteHRNet-30-distillation    | 256x192  |     69.9     |[lite_hrnet_30_256x192_coco_dist.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml)       | 26M |
-| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8.0M |
+* COCO Dataset benchmark
+
+| Model  | Input Size | AP(%, coco val) |   Model Download | Config File | Inference model size(M) | Inference time (ms/image) |
+| :----------: | -------- | :----------: | :------------: | :---: | :---: | :---: |
+| HRNet-w32             | 256x192  |     76.9     | [hrnet_w32_256x192.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams) | [config](./configs/hrnet_w32_256x192.yml)           | 118 | 357.1 |
+| LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml) | 26 | 160.6
+| LiteHRNet-30-distillation    | 256x192  |     69.9     |[lite_hrnet_30_256x192_coco_dist.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml)       | 26 | 160.6
+| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8 | 156.7
+| LiteHRNet-30-PACT-distillation         | 256x192  |     70.2     | [lite_hrnet_30_256x192_coco_dist_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8 | 156.7
 
 
-* note: Inference model size is obtained by summing `pdiparams` and `pdmodel` file size.
+**NOTE:**
 
+* Inference model size is obtained by summing `pdiparams` and `pdmodel` file size.
+* The inference time is tested on CPU(`Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz`) without MKLDNN using paddlepaddle-develop.
+
+* Visualization
+
+Input:
 
 ![](/dataset/test_image/hrnet_demo.jpg)
+
+Output:
+
 ![](/deploy/output/hrnet_demo_vis.jpg)
 
+
 ## Citation
+
 ````
 @inproceedings{cheng2020bottom,
   title={Deep High-Resolution Representation Learning for Human Pose Estimation},
