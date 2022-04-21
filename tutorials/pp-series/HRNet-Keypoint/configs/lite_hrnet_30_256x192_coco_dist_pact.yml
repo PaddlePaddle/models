@@ -2,7 +2,7 @@ use_gpu: true
 log_iter: 5
 save_dir: output
 snapshot_epoch: 10
-weights: output/lite_hrnet_30_256x192_coco_pact/model_final
+weights: output/lite_hrnet_30_256x192_coco_dist_pact/model_final
 epoch: 50
 num_joints: &num_joints 17
 pixel_std: &pixel_std 200
@@ -15,7 +15,7 @@ hmsize: &hmsize [48, 64]
 flip_perm: &flip_perm [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
 
 
-pretrain_weights: https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams
+pretrain_weights: https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams
 slim: QAT
 QAT:
   quant_config: {

@@ -335,10 +335,10 @@ def predict_image(detector, image_list, batch_size=1):
         if FLAGS.run_benchmark:
             # warmup
             detector.predict(
-                image_list, FLAGS.threshold, repeats=3, add_timer=False)
+                [img_file], FLAGS.threshold, repeats=3, add_timer=False)
             # run benchmark
             detector.predict(
-                image_list, FLAGS.threshold, repeats=3, add_timer=True)
+                [img_file], FLAGS.threshold, repeats=3, add_timer=True)
 
             cm, gm, gu = get_current_memory_mb()
             detector.cpu_mem += cm
@@ -346,7 +346,7 @@ def predict_image(detector, image_list, batch_size=1):
             detector.gpu_util += gu
             print('Test iter {}'.format(i))
         else:
-            results = detector.predict(image_list, FLAGS.threshold)
+            results = detector.predict([img_file], FLAGS.threshold)
             draw_pose(
                 img_file,
                 results,
