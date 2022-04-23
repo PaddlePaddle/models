@@ -187,6 +187,28 @@ Paddle 量化训练（Quant-aware Training, QAT）是指在训练过程中对模
 
 具体内容请参考[Linux GPU/CPU PACT量化训练功能开发文档](../tipc/train_pact_infer_python/train_pact_infer_python.md)。
 
+
+在训练得到量化模型之后，对量化后模型使用动转静得到inference模型，此时模型仍然以fp32的形式存储，直接查看inference模型大小，量化体积没有优势，此时可以通过paddlelite工具对模型进行转换，得到用int8方式保存的
+
+首先安装`paddlelite`。
+
+```shell
+pip install paddlelite
+```
+
+然后使用下面的命令对量化后的inference模型进行转换。
+
+```shell
+paddle_lite_opt \
+    --model_file="${your_path}/inference.pdmodel"  \
+    --param_file="${your_path}/inference.pdiparams" \
+    --optimize_out=./output \
+    --quant_model=true \
+    --quant_type=QUANT_INT8
+```
+
+最终会在当前目录下生成`output.nb`文件，该文件大小即为**量化后模型大小**。
+
 #### 2.3.4 实战
 
 在关键点检测任务中，首先在配置中添加PACT量化的配置文件：[lite_hrnet_30_256x192_coco_pact.yml#L19](HRNet-Keypoint/configs/lite_hrnet_30_256x192_coco_pact.yml#L19)。
@@ -236,17 +258,25 @@ def build_slim_model(cfg, mode='train'):
 
 ## 3. FAQ
 
-### 3.1 轻量化骨干网络
+### 3.1 通用问题
 
-* 关于模型大小的定义如下：将训练得到的动态图模型使用`paddle.jit.save`接口，保存为静态图模型，得到模型参数文件`*.pdiparams`和结构文件`*.pdmodel`，二者的存储大小之和。
+* 关于模型大小的定义如下：
+    * 对于非量化模型，可以将训练得到的动态图模型使用`paddle.jit.save`接口，保存为静态图模型，得到模型参数文件`*.pdiparams`和结构文件`*.pdmodel`，二者的存储大小之和。
+    * 对于量化后模型，可以将动转静之后的inference模型，使用paddlelite工具转化ARM端部署模型，得到的`nb`文件模型大小即为该量化模型的大小，具体转换方式请参考本文的`2.3.3`章节。
+* 关于模型速度的定义如下：
+    * 对于非量化模型，模型的CPU和GPU速度建议均在AiStudio上面，选择`Tesla V100 32GB`的机器进行测试，测试时需要首先使用几张图片进行warmup，避免前面图片的预测耗时太长，导致最终预测速度不准确。
+    * 对于量化模型，GPU环境中，在`TensorRT`+`int8`的测试条件下会有速度优势；CPU环境中，在ARM中测试时有速度优势。
+
+### 3.2 轻量化骨干网络
+
 * 2.1章节中提供的骨干网络为推荐使用，具体不做限制，最终模型大小/速度/精度满足验收条件即可。
 * 在部分模型不方便直接替换骨干网络的情况下（比如该模型是针对该任务设计的，通用的骨干网络无法满足要求等），可以通过对大模型的通道或者层数进行裁剪，来实现模型轻量化，最终保证模型大小满足要求即可。
 
-### 3.2 知识蒸馏
+### 3.3 知识蒸馏
 
 * 不同任务中有针对该任务的定制知识蒸馏训练策略，2.2章节中内容仅供建议参考，蒸馏策略不做限制，模型精度满足要求验收条件即可。
 
-### 3.3 模型量化
+### 3.4 模型量化
 
 * 量化时，加载训练得到的fp32模型之后，可以将初始学习率修改为fp32训练时的`0.2~0.5`倍，迭代轮数也可以缩短为之前的`0.25~0.5`倍。
 * 对于大多数CV任务，模型量化的精度损失在0.3%~1.0%左右，如果量化后精度大幅降低（超过3%），则需要仔细排查量化细节，建议仅对`conv`以及`linear`参数进行量化。

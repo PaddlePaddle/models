@@ -164,24 +164,28 @@ python tools/export_model.py -c configs/lite_hrnet_30_256x192_coco_pact.yml -o  
 # inference with PACT quantization
 python deploy/infer.py  --model_dir=output_inference/lite_hrnet_30_256x192_coco_pact/ --image_file=dataset/test_image/hrnet_demo.jpg
 
+# convert the inference model to arm lite model
+# to convert the model, you should firstly install paddlelite using `pip install paddlelite`
+paddle_lite_opt  --model_file=./output_inference/lite_hrnet_30_256x192_coco_pact/model.pdmodel --param_file=./output_inference/lite_hrnet_30_256x192_coco_pact/model.pdiparams --optimize_out=./output_quant --quant_type=QUANT_INT8
 ```
 
 ## 3 Result
 
 * COCO Dataset benchmark
 
-| Model  | Input Size | AP(%, coco val) |   Model Download | Config File | Inference model size(M) | Inference time (ms/image) |
+| Model  | Input Size | AP(%, coco val) |   Model Download | Config File | Model size(M) | Inference time (ms/image) |
 | :----------: | -------- | :----------: | :------------: | :---: | :---: | :---: |
 | HRNet-w32             | 256x192  |     76.9     | [hrnet_w32_256x192.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/hrnet_w32_256x192.pdparams) | [config](./configs/hrnet_w32_256x192.yml)           | 118 | 357.1 |
 | LiteHRNet-30          | 256x192  |     69.4     | [lite_hrnet_30_256x192_coco.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml) | 26 | 160.6
 | LiteHRNet-30-distillation    | 256x192  |     69.9     |[lite_hrnet_30_256x192_coco_dist.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco.yml)       | 26 | 160.6
-| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 8 | 156.7
-| LiteHRNet-30-distillation-PACT         | 256x192  |     70.2     | [lite_hrnet_30_256x192_coco_dist_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_dist_pact.yml)         | 8 | 156.7
+| LiteHRNet-30-PACT         | 256x192  |     68.9     | [lite_hrnet_30_256x192_coco_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_pact.yml)         | 3.9 | 156.7
+| LiteHRNet-30-distillation-PACT         | 256x192  |     70.2     | [lite_hrnet_30_256x192_coco_dist_pact.pdparams](https://paddle-model-ecology.bj.bcebos.com/model/hrnet_pose/lite_hrnet_30_256x192_coco_dist_pact.pdparams) | [config](./configs/lite_hrnet_30_256x192_coco_dist_pact.yml)         | 3.9 | 156.7
 
 
 **NOTE:**
 
-* Inference model size is obtained by summing `pdiparams` and `pdmodel` file size.
+* For model without quantization, the model size is obtained by summing `pdiparams` and `pdmodel` file size.
+* For model after quantization, the model size is obtained by converting the inference model to lite model (int8) using `paddlelite_opt`.
 * The inference time is tested on CPU(`Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz`) without MKLDNN using paddlepaddle-develop.
 
 
