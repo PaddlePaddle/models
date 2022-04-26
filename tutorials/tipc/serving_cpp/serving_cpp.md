@@ -259,7 +259,7 @@ python3 -m paddle_serving_server.serve --model serving_server --port 9993
 
 针对MobileNet网络, 启动成功的界面如下：
 
-![图片](./images/cpp_serving_startup_visualization.jpg)
+![图片](./images/cpp_serving_startup_visualization.png)
 
 <a name="2.8"></a>
 #### 2.8 启动客户端
