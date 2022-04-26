@@ -205,7 +205,7 @@ from paddle_serving_client import Client
 
 ```py
 def preprocess():
-    image_file = "demo.jpg"
+    image_file = img_path
     image = Image.open(image_file)
     seq = Compose([
             ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
