@@ -184,8 +184,6 @@ serving_client.py文件中的preprocess函数用于开发数据预处理程序�
 上述模型输入字典的key可以通过服务化模型配置文件serving_server/serving_server_conf.prototxt中的feed_var字典的name字段获取。
 上述模型输出列表的key可以通过服务化模型配置文件serving_server/serving_server_conf.prototxt中的fetch_var字典的name字段获取。
 
-serving_client.py文件中的feed和fetch为需要处理的输入参数。
-
 **【实战】**
 
 针对MobileNetV3网络的数据预处理开发，修改serving_client.py文件中代码如下：
