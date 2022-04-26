@@ -273,7 +273,7 @@ python3 -m paddle_serving_server.serve --model serving_server --port 9993
 客户端访问服务的命令如下：
 
 ```bash
-python3 修改serving_client.py
+python3 serving_client.py
 ```  
 访问成功的界面如下图：
 
