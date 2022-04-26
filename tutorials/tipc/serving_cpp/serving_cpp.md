@@ -224,7 +224,7 @@ serving_client.py文件中的postprocess函数用于开发预测结果后处理�
 
 **（2）处理流程：** 数据预处理流程和基于Paddle Inference的预测结果后处理一致。
 
-**（3）输出：** 需要返回预测结果字典。
+**（3）输出：** 需要返回预测结果字典fetch_dict。
 
 
 【实战】
@@ -234,14 +234,14 @@ serving_client.py文件中的postprocess函数用于开发预测结果后处理�
 ```py
 def postprocess(fetch_map):
     score_list = fetch_map["softmax_1.tmp_0"]
-    result = {"class_id": [], "prob": []}
+    fetch_dict = {"class_id": [], "prob": []}
     for score in score_list:
         score = score.tolist()
         max_score = max(score)
-        result["class_id"].append(score.index(max_score))
-        result["prob"].append(max_score)
-    result["class_id"] = str(result["class_id"])
-    result["prob"] = str(result["prob"])
+        fetch_dict["class_id"].append(score.index(max_score))
+        fetch_dict["prob"].append(max_score)
+    fetch_dict["class_id"] = str(fetch_dict["class_id"])
+    fetch_dict["prob"] = str(fetch_dict["prob"])
     return fetch_dict
 ```
 

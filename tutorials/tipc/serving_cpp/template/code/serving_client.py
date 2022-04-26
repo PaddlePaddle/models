@@ -14,7 +14,7 @@
 
 from paddle_serving_client import Client
 
-url = "http://127.0.0.1:9993"
+url = "127.0.0.1:9993"
 logid = 10000
 img_path = "./images/demo.jpg"
 
@@ -51,4 +51,5 @@ feed, fetch = preprocess()
 
 fetch_map = client.predict(feed=feed, fetch=fetch)
 
-postprocess(fetch_map)
+result = postprocess(fetch_map)
+print(result)
