@@ -229,7 +229,7 @@ serving_client.py文件中的postprocess函数用于开发预测结果后处理�
 
 【实战】
 
-针对MobileNet网络的预测结果后处理开发，修改web_service.py文件中MobileNetOp中的postprocess函数相关代码如下：
+针对MobileNet网络的预测结果后处理开发，serving_client.py文件中的postprocess函数相关代码如下：
 
 ```py
 def postprocess(fetch_map):
