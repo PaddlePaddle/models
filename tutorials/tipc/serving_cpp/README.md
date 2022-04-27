@@ -69,21 +69,21 @@ Linux GPU/CPU C++ 服务化部署功能开发过程以分为下面8个步骤。
 
 #### 3.2.1 目录结构
 
-在 repo 根目录下面新建 test_tipc 文件夹，目录结构如下所示。
+在 repo 根目录下面新建 `test_tipc` 文件夹，目录结构如下所示。
 ```
 test_tipc
     |--configs                              # 配置目录
     |    |--model_name                      # 您的模型名称
-    |           |--serving_infer_python.txt   # python服务化部署测试配置文件
+    |           |--serving_infer_cpp.txt    # C++ 服务化部署测试配置文件
     |--docs                                 # 文档目录
-    |   |--test_serving_infer_python.md   # python服务化部署测试说明文档
+    |   |--test_serving_infer_cpp.md        # C++ 服务化部署测试说明文档
     |----README.md                          # TIPC说明文档
-    |----test_serving_infer_python.sh     # TIPC python服务化部署解析脚本，无需改动
+    |----test_serving_infer_cpp.sh          # C++ 服务化部署解析脚本，无需改动
     |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
 ```
 
 #### 3.2.2 配置文件和测试文档
 
 - `test_tipc/README.md` 文档中对该模型支持的的功能进行总体介绍。
-- `test_tipc/docs/test_serving_infer_python.md` 文档中对PaddleServing的功能支持情况进行介绍。
+- `test_tipc/docs/test_serving_infer_cpp.md` 文档中对 `Paddle Serving` 的功能支持情况进行介绍。
 - 根据测试文档，基于配置文件，跑通训练推理全流程测试。
