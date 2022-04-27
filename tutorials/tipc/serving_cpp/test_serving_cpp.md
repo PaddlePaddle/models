@@ -95,7 +95,7 @@ python3.7 -m paddle_serving_client.convert --dirname=./inference/resnet50_infer/
 
 C++ 服务的客户端采用 PYTHON 语言编写。
 ```python
-python3 serving_client.py
+python3.7 serving_client.py
 ```
 
 <a name="3"></a>
