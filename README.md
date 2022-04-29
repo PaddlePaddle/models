@@ -18,9 +18,10 @@
 
 ## 欢迎加入飞桨模型库技术交流群
 - 如果你希望了解飞桨模型库最新进展，或者希望与资深开发者一起讨论产业实践关注的重点模型，欢迎扫码加入飞桨模型库交流群：
+- （微信扫码填写简单问卷即可添加小助手，加上好友之后回复"model" 即可入群）
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/littletomatodonkey/github_images/main/models_20220210.png"  width = "200" height = "200" />
+<img src="https://user-images.githubusercontent.com/23690325/165911212-cda07629-1bab-4cc3-8228-e5b69320fe4d.jpg"  width = "200" height = "200" />
 </div>
 
 <a name="致谢"></a>
