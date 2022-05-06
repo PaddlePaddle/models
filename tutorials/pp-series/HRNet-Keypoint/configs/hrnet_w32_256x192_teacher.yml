@@ -1,0 +1,38 @@
+pretrain_weights:
+weights: "https://paddledet.bj.bcebos.com/models/keypoint/hrnet_w32_256x192.pdparams"
+num_joints: &num_joints 17
+pixel_std: &pixel_std 200
+metric: KeyPointTopDownCOCOEval
+train_height: &train_height 256
+train_width: &train_width 192
+trainsize: &trainsize [*train_width, *train_height]
+hmsize: &hmsize [48, 64]
+flip_perm: &flip_perm [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
+
+# distillation config and loss
+freeze_parameters: True
+distill_loss:
+  name: DistMSELoss
+  weight: 1.0
+  key: output
+
+# model
+architecture: TopDownHRNet
+
+TopDownHRNet:
+  backbone: HRNet
+  post_process: HRNetPostProcess
+  flip_perm: *flip_perm
+  num_joints: *num_joints
+  width: &width 32
+  loss: KeyPointMSELoss
+  use_dark: False
+
+HRNet:
+  width: *width
+  freeze_at: -1
+  freeze_norm: false
+  return_idx: [0]
+
+KeyPointMSELoss:
+  use_target_weight: true
