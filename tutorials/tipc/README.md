@@ -18,7 +18,7 @@
 
 - 更多部署方式开发文档
     - [Linux GPU/CPU PYTHON 服务化部署开发文档](./serving_python/README.md)
-    - Linux GPU/CPU C++ 服务化部署开发文档 (coming soon)
+    - [Linux GPU/CPU C++ 服务化部署开发文档](./serving_cpp/README.md)
     - [Linux GPU/CPU C++ 推理开发文档](./infer_cpp/README.md)
     - Paddle.js 部署开发文档 (coming soon)
     - [Paddle2ONNX 开发文档](./paddle2onnx/README.md)
