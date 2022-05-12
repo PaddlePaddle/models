@@ -57,4 +57,39 @@ Linux GPU/CPU PYTHON 服务化部署功能开发过程以分为下面8个步骤�
 
 ## 3. 服务化部署测试开发规范
 
-coming soon!
+## 3.1 开发流程
+
+基础训练推理测试开发的流程如下所示。
+
+
+<div align="center">
+    <img src="../train_infer_python/images/test_linux_train_infer_python_pipeline.png" width="400">
+</div>
+
+
+更多的介绍可以参考：[Linux GPU/CPU PYTHON 服务化部署测试开发文档](./test_serving_python.md)。
+
+## 3.2 核验点
+
+### 3.2.1 目录结构
+
+在repo根目录下面新建`test_tipc`文件夹，目录结构如下所示。
+
+
+```
+test_tipc
+    |--configs                              # 配置目录
+    |    |--model_name                      # 您的模型名称
+    |           |--serving_infer_python.txt   # python服务化部署测试配置文件
+    |--docs                                 # 文档目录
+    |   |--test_serving_infer_python.md   # python服务化部署测试说明文档
+    |----README.md                          # TIPC说明文档
+    |----test_serving_infer_python.sh     # TIPC python服务化部署解析脚本，无需改动
+    |----common_func.sh                     # TIPC基础训练推理测试常用函数，无需改动
+```
+
+#### 3.2.2 配置文件和测试文档
+
+* `test_tipc/README.md` 文档中对该模型支持的的功能进行总体介绍。
+* `test_tipc/docs/test_serving_infer_python.md ` 文档中对**PaddleServing**的功能支持情况进行介绍。
+* 根据测试文档，基于配置文件，跑通训练推理全流程测试。

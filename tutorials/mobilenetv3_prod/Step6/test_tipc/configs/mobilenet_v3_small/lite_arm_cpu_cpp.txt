@@ -1,0 +1,8 @@
+runtime_device:arm_cpu
+lite_arm_work_path:/data/local/tmp/arm_cpu/
+lite_arm_so_path:inference_lite_lib.android.armv8/cxx/lib/libpaddle_light_api_shared.so
+clas_model_file:mobilenet_v3_small.nb
+inference_cmd:mobilenet_v3 config.txt demo.jpg
+--num_threads_list:1
+--batch_size_list:1
+--precision_list:FP32

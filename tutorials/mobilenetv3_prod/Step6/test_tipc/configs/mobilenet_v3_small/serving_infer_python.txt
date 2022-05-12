@@ -1,0 +1,13 @@
+===========================serving_params===========================
+model_name:mobilenet_v3_small
+python:python3.7
+trans_model:-m paddle_serving_client.convert
+--dirname:./inference/mobilenet_v3_small_infer/
+--model_filename:inference.pdmodel
+--params_filename:inference.pdiparams
+--serving_server:./deploy/serving_python/serving_server/
+--serving_client:./deploy/serving_python/serving_client/
+serving_dir:./deploy/serving_python
+web_service:web_service.py
+pipline:pipeline_http_client.py
+--image_dir:../../lite_data/test/

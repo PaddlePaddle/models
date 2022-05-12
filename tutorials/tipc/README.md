@@ -13,13 +13,13 @@
 - [Linux GPU/CPU 基础训练推理开发文档](./train_infer_python/README.md)
 
 - 更多训练方式开发文档
-    - [Linux GPU 多机多卡训练推理开发文档(coming soon)](./train_fleet_infer_python/README.md)
+    - [Linux GPU 多机多卡训练推理开发文档](./train_fleet_infer_python/README.md)
     - [Linux GPU 混合精度训练推理开发文档](./train_amp_infer_python/README.md)
 
 - 更多部署方式开发文档
     - [Linux GPU/CPU PYTHON 服务化部署开发文档](./serving_python/README.md)
-    - Linux GPU/CPU C++ 服务化部署开发文档 (coming soon)
-    - Linux GPU/CPU C++ 推理开发文档 (coming soon)
+    - [Linux GPU/CPU C++ 服务化部署开发文档](./serving_cpp/README.md)
+    - [Linux GPU/CPU C++ 推理开发文档](./infer_cpp/README.md)
     - Paddle.js 部署开发文档 (coming soon)
     - [Paddle2ONNX 开发文档](./paddle2onnx/README.md)
     - [Lite ARM CPU 部署开发文档](./lite_infer_cpp_arm_cpu/README.md)

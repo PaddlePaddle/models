@@ -34,7 +34,7 @@ python ./tools/export_model.py --pretrained=./mobilenet_v3_small_pretrained.pdpa
 pip3 install paddlelite==2.10
 ```
 
-在```mobilenet_v3```文件夹下允许如下命令：
+在```Step6/deploy/lite_infer_cpp_arm_cpu/mobilenet_v3```文件夹下允许如下命令：
 
 ```
 python export_lite_model.py --model-file=./mobilenet_v3_small_infer/inference.pdmodel --param-file=./mobilenet_v3_small_infer/inference.pdiparams --optimize-out=./mobilenet_v3_small
@@ -107,11 +107,11 @@ Android NDK（支持 ndk-r17c 及之后的所有 NDK 版本, 注意从 ndk-r18 �
 
 (1) 使用预编译包
 
- 推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库（注意本教程需要用 static 的库），例如这个[预编译库](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/inference_lite_lib.android.armv8.clang.c++_static.tar.gz)。
+ 推荐使用 Paddle Lite 仓库提供的 [release库](https://github.com/PaddlePaddle/Paddle-Lite/releases/tag/v2.10),在网页最下边选取要使用的库（注意本教程需要用 static 的库），例如这个[预编译库](https://github.com/PaddlePaddle/Paddle-Lite/releases/download/v2.10/inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz)。
 
 ```
-mv inference_lite_lib.android.armv8.clang.c++_static.tar.gz inference_lite_lib.android.armv8.tar.gz
-tar -xvzf inference_lite_lib.android.armv8.tar.gz
+tar -xvzf inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv.tar.gz
+mv inference_lite_lib.android.armv8.clang.c++_static.with_extra.with_cv inference_lite_lib.android.armv8
 ```
 即可获取编译好的库。注意，即使获取编译好的库依然要进行上述**环境安装**的步骤，因为下面编译 demo 时候会用到。
 
@@ -178,7 +178,7 @@ tar -xvzf inference_lite_lib.android.armv8.tar.gz
    │
    ├── mobilenet_v3.cc                                   C++ 示例代码
    │
-   ├── demo.jpg                                          示例图片
+   ├── demo.jpg                                          示例图片, 从 Step6/images 文件夹中复制过来
    │
    ├── imagenet1k_label_list.txt                         示例label(用于后处理)
    │

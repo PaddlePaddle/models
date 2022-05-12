@@ -7,12 +7,12 @@
     - [2.1 命令解析](#2.1)
     - [2.2 配置文件和运行命令映射解析](#2.2)
 - [3. 基本训练推理功能测试开发](#3)
-    - [2.1 准备待测试的命令](#3.1)
-    - [2.2 准备数据与环境](#3.2)
-    - [2.3 准备开发所需脚本](#3.3)
-    - [2.4 填写配置文件](#3.4)
-    - [2.5 验证配置正确性](#3.5)
-    - [2.6 撰写说明文档](#3.6)
+    - [3.1 准备待测试的命令](#3.1)
+    - [3.2 准备数据与环境](#3.2)
+    - [3.3 准备开发所需脚本](#3.3)
+    - [3.4 填写配置文件](#3.4)
+    - [3.5 验证配置正确性](#3.5)
+    - [3.6 撰写说明文档](#3.6)
 - [4. FAQ](#4)
 
 <a name="1"></a>
@@ -300,6 +300,8 @@ Run successfully with command - python3.7 deploy/inference_python/infer.py --use
 <div align="center">
     <img src="./images/autolog_demo.png">
 </div>
+
+该信息可以在运行log中查看，以`mobilenet_v3_small`为例，log位置在`./log/mobilenet_v3_small/lite_train_lite_infer/python_infer_gpu_batchsize_1.log`。
 
 **【核验】**
 
