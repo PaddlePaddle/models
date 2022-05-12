@@ -54,6 +54,12 @@ elif [ ${MODE} = "serving_infer" ];then
         wget -nc -P  ./inference https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
+elif [ ${MODE} = "cpp_infer" ];then
+    # wget model
+    if [[ ${model_name} == "mobilenet_v3_small" ]];then
+        wget -nc -P  ./deploy/inference_cpp/ https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
+        cd ./deploy/inference_cpp/ && tar xf mobilenet_v3_small_infer.tar && cd ../../
+    fi
 elif [ ${MODE} = "paddle2onnx_infer" ];then
     # get data
     tar -xf ./test_images/lite_data.tar

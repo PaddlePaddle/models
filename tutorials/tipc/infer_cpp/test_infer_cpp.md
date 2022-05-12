@@ -39,7 +39,7 @@ run_scripts configs_path img_path
 ```
 
 * `run_scripts`：最终编译好的可执行命令。
-* `configs_path`：设置模型路径、是否使用GPU、是否开启mkldnn、是否开启TensorRT等。
+* `configs_path`：设置模型路径、是否使用GPU等。
 * `img_path`：待预测的图像路径。
 
 <a name="2.2"></a>
@@ -131,10 +131,13 @@ mobilenet_v3_small的测试开发配置文件可以参考：[inference_cpp.txt](
 
 **【基本内容】**
 
-基于修改完的配置，运行
+基于修改完的配置，运行方法如下
 
 ```bash
-bash test_tipc/test_inference_cpp.sh ${your_params_file}
+# 格式：bash + 运行脚本 + 参数1: 配置文件选择 + 参数2: 模式选择
+bash test_tipc/prepare.sh  test_tipc/configs/[model_name]/inference_cpp.txt  cpp_infer
+# 格式：bash + 运行脚本 + 参数1: 配置文件选择
+bash test_tipc/test_inference_cpp.sh  test_tipc/configs/[model_name]/inference_cpp.txt
 ```
 
 **【注意事项】**
@@ -142,7 +145,7 @@ bash test_tipc/test_inference_cpp.sh ${your_params_file}
 如果运行失败，会输出具体的报错命令，可以根据输出的报错命令排查下配置文件的问题并修改，示例报错如下所示。
 
 ```
-Run failed with command - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu_use_mkldnn.log 2>&1 !
+Run failed with command - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu.log 2>&1 !
 ```
 
 **【实战】**
@@ -150,16 +153,17 @@ Run failed with command - ./deploy/inference_cpp/build/clas_system test_tipc/con
 以mobilenet_v3_small的`Linux GPU/CPU C++推理功能测试` 为例，命令如下所示。
 
 ```bash
+bash test_tipc/prepare.sh test_tipc/configs/mobilenet_v3_small/inference_cpp.txt cpp_infer
 bash test_tipc/test_inference_cpp.sh test_tipc/configs/mobilenet_v3_small/inference_cpp.txt
 ```
 
 输出结果如下，表示命令运行成功。
 
 ```bash
-Run successfully with command - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu_use_mkldnn.log 2>&1 !
+Run successfully with command - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu.log 2>&1 !
 ```
 
-也可以在`./log/infer_cpp/infer_cpp_use_cpu_use_mkldnn.log`中查看详细的输出结果。
+也可以在`./log/infer_cpp/infer_cpp_use_cpu.log`中查看详细的输出结果。
 
 **【核验】**
 
