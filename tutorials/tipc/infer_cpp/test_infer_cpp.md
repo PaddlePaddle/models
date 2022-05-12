@@ -45,9 +45,9 @@ run_scripts configs_path img_path
 <a name="2.2"></a>
 
 ### 2.2 配置文件解析
-完整的`inference_cpp.txt`配置文件共有14行，包含两个方面的内容。
-* 运行环境参数配置：第1~8行
-* 模型参数配置：第10~14行
+完整的`inference_cpp.txt`配置文件共有11行，包含两个方面的内容。
+* 运行环境参数配置：第1~5行
+* 模型参数配置：第7~11行
 
 具体内容见[inference_cpp.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/inference_cpp.txt)
 
@@ -66,13 +66,10 @@ run_scripts configs_path img_path
 | 3  | gpu_id       | 使用的GPU卡号  | 否         | 是           | value修改为自己的GPU ID              |
 | 4  | gpu_mem      | 显存          | 否         | 是           | value修改为自己的GPU 显存             |
 | 5  | cpu_math_library_num_thread | 底层科学计算库所用线程的数量  | 否      | 是           | value修改为合适的线程数         |
-| 6  | use_mkldnn   | 是否使用MKLDNN加速    | 否        | 是          | value根据是否使用MKLDNN进行修改          |
-| 7  | use_tensorrt | 是否使用tensorRT进行加速          | 否         | 是           | value根据是否使用tensorRT进行修改             |
-| 8  | use_fp16 | 是否使用半精度浮点数进行计算，该选项仅在use_tensorrt为true时有效 | 否         | 是          | value根据在开启tensorRT时是否使用半精度进行修改|
-| 11 | cls_model_path  | 预测模型结构文件路径         | 否         | 是           | value修改为预测模型结构文件路径 |
-| 12 | cls_params_path | 预测模型参数文件路径  | 否         | 是           | vvalue修改为预测模型参数文件路径 |
-| 13 | resize_short_size  | 预处理时图像缩放大小         | 否         | 是           | value修改为预处理时图像缩放大小  
-| 14 | crop_size          | 预处理时图像裁剪后的大小      | 否         | 是           | value修改为预处理时图像裁剪后的大小  
+| 8 | cls_model_path  | 预测模型结构文件路径         | 否         | 是           | value修改为预测模型结构文件路径 |
+| 9 | cls_params_path | 预测模型参数文件路径  | 否         | 是           | vvalue修改为预测模型参数文件路径 |
+| 10 | resize_short_size  | 预处理时图像缩放大小         | 否         | 是           | value修改为预处理时图像缩放大小  
+| 11 | crop_size          | 预处理时图像裁剪后的大小      | 否         | 是           | value修改为预处理时图像裁剪后的大小  
 
 
 </details>
