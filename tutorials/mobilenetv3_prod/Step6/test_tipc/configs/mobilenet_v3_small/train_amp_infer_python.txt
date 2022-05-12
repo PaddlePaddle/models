@@ -11,7 +11,7 @@ train_model_name:latest.pdparams
 --data-path:./lite_data
 ##
 trainer:amp_train
-amp_train:train.py --amp_level=O1
+amp_train:train.py --amp_level=O2
 #
 ===========================eval_params===========================
 eval:train.py --test-only

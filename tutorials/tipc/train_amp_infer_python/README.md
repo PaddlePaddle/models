@@ -15,11 +15,9 @@
 
 该系列文档主要介绍 Linux GPU 混合精度训练功能开发过程，主要包含2个步骤。
 
-
 - 步骤一：参考[《Linux GPU 混合精度训练功能开发文档》](./train_amp_infer_python.md)，完成Linux GPU 混合精度训练功能开发。
 
-- 步骤二：参考[《Linux GPU 混合精度训练功能测试开发文档》](./test_train_amp_infer_python.md)，完成Linux GPU 混合精度训练功能测试开发。
-
+- 步骤二：参考[《Linux GPU 混合精度训练推理测试开发文档》](./test_train_amp_infer_python.md)，完成Linux GPU 混合精度训练推理功能测试开发。
 
 <a name="2"></a>
 
