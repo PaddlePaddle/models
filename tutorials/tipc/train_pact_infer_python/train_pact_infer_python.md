@@ -52,8 +52,8 @@ Linux GPU/CPU PACT量化训练功能开发可以分为5个步骤，如下图所�
 
 **【准备开发环境】**
 
-- 确定已安装paddle，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
-- 确定已安装paddleslim，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
+- 确定已安装paddle 2.2.1，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
+- 确定已安装paddleslim 2.2.1，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
 
 ```
 pip install paddlepaddle-gpu==2.2.1.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
@@ -101,7 +101,7 @@ PACT在线量化训练开发之前，要求首先有Linux GPU/CPU基础训练的
 ```python
 quant_config = {
     'weight_preprocess_type': None,
-    'activation_preprocess_type': None,
+    'activation_preprocess_type': PACT, #None,
     'weight_quantize_type': 'channel_wise_abs_max',
     'activation_quantize_type': 'moving_average_abs_max',
     'weight_bits': 8,
@@ -113,11 +113,7 @@ quant_config = {
 }
 ```
 
-- `activation_preprocess_type`'：代表对量化模型激活值预处理的方法，目前支持PACT方法，如需使用可以改为'PACT'；默认为None，代表不对激活值进行任何预处理。
-- `weight_preprocess_type`：代表对量化模型权重参数预处理的方法；默认为None，代表不对权重进行任何预处理。
-- `weight_quantize_type`：代表模型权重的量化方式，可选的有['abs_max', 'moving_average_abs_max', 'channel_wise_abs_max']，默认为channel_wise_abs_max
-- `activation_quantize_type`：代表模型激活值的量化方式，可选的有['abs_max', 'moving_average_abs_max']，默认为moving_average_abs_max
-- `quantizable_layer_type`：代表量化OP的类型，目前支持Conv2D和Linear
+**注意**：保持以上量化配置，无需改动
 
 
 - Step2：插入量化算子，得到量化训练模型
