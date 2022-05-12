@@ -159,7 +159,7 @@ bash test_tipc/test_inference_cpp.sh test_tipc/configs/mobilenet_v3_small/infere
 输出结果如下，表示命令运行成功。
 
 ```bash
-Run successfully with command - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu.log 2>&1 !
+Run successfully with command - mobilenet_v3_small - ./deploy/inference_cpp/build/clas_system test_tipc/configs/mobilenet_v3_small/inference_cpp.txt ./images/demo.jpg > ./log/infer_cpp/infer_cpp_use_cpu.log 2>&1 !
 ```
 
 也可以在`./log/infer_cpp/infer_cpp_use_cpu.log`中查看详细的输出结果。
