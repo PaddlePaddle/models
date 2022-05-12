@@ -167,7 +167,7 @@ python3.7 pipeline_http_client.py --image_dir=../../lite_data/test/
 
     相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
-2. 环境：安装好PaddlePaddle即可进行离线量化训练推理测试开发
+2. 环境：安装好PaddlePaddle即可进行python服务化部署测试开发
 
 **【注意事项】**
 
@@ -226,7 +226,7 @@ Run failed with command - python3.7 pipeline_http_client.py > ../../log/mobilene
 
 **【实战】**
 
-以mobilenet_v3_small的`Linux GPU/CPU 离线量化训练推理功能测试` 为例，命令如下所示。
+以mobilenet_v3_small的`Linux GPU/CPU python服务化部署功能测试` 为例，命令如下所示。
 
 ```bash
 bash test_tipc/test_serving_infer_python.sh test_tipc/configs/mobilenet_v3_small/serving_infer_python.txt serving_infer
@@ -251,7 +251,7 @@ Run successfully with command - python3.7 pipeline_http_client.py > ../../log/mo
 撰写TIPC功能总览和测试流程说明文档，分别为
 
 1. TIPC功能总览文档：test_tipc/README.md
-2. Linux GPU/CPU 离线量化训练推理功能测试说明文档：test_tipc/docs/test_serving_infer_python.md
+2. Linux GPU/CPU python服务化部署功能测试说明文档：test_tipc/docs/test_serving_infer_python.md
 
 2个文档模板分别位于下述位置，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
