@@ -134,10 +134,8 @@ mobilenet_v3_small的测试开发配置文件可以参考：[inference_cpp.txt](
 基于修改完的配置，运行方法如下
 
 ```bash
-# 格式：bash + 运行脚本 + 参数1: 配置文件选择 + 参数2: 模式选择
-bash test_tipc/prepare.sh  test_tipc/configs/[model_name]/inference_cpp.txt  cpp_infer
-# 格式：bash + 运行脚本 + 参数1: 配置文件选择
-bash test_tipc/test_inference_cpp.sh  test_tipc/configs/[model_name]/inference_cpp.txt
+bash test_tipc/prepare.sh  ${your_params_file}   cpp_infer
+bash test_tipc/test_inference_cpp.sh  ${your_params_file} 
 ```
 
 **【注意事项】**
