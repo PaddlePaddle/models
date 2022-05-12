@@ -261,7 +261,8 @@ def main(args):
     if args.amp_level is not None:
         scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
         if args.amp_level == 'O2':
-            model = paddle.amp.decorate(models=model, level='O2')
+            model = paddle.amp.decorate(
+                models=model, level='O2', save_dtype="float32")
 
     # multi cards
     if paddle.distributed.get_world_size() > 1:
