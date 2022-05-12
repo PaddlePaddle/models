@@ -214,15 +214,37 @@ python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ 
 
 <a name="3.2"></a>
 
-### 3.2 准备数据与环境
+### 3.2 准备数据与环境与规范训练日志
 
 **【基本内容】**
 
-1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
+1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内，确保基础训练推理总时间不超过十分钟），放在`lite_data`文件夹下。
 
     相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
-2. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
+2. 规范训练日志格式：训练日志中，除了打印loss、精度等信息，还需要有以下信息：
+
+- reader_cost：1个Step数据加载用时，单位：秒(sec)。
+	1). N个Step打印1条日志时，reader_cost为N个Step数据加载用时的平均值
+	2). 建议(但不强制)使用DataLoader，而非DataFeeder
+- batch_cost：1个Step训练用时，单位：秒(sec)。batch_cost = reader_cost + model.forward()（训练）时间。
+- ips：单卡每秒处理的样本数，单位如：images/sec、sequences/sec、tokens/sec、words/sec、frames/sec等。
+- samples： samples代表上次打印到本次打印，新完成训练的样本数量。对于每个Step样本数可能不同的模型（大多为NLP模型），需要计算samples。
+
+    最终打印期望格式如下：
+    ```
+    ..., ... , loss: 0.12345, avg_reader_cost: 0.12345 sec, avg_batch_cost: 0.12345 sec, avg_samples: 100, avg_ips: 0.12345 images/sec
+    ```
+    - avg_reader_cost、avg_batch_cost、avg_samples、avg_ips算法如下：
+    假如，模型每N个Step打印1次日志，每Step reader用时为：`R1, R2,...Rn`，每Step训练用时：`T1, T2,...Tn`，每Step **单卡BatchSize** 为`S1, S2,...Sn`。
+    `avg_reader_cost = sum(R1, R2,...Rn) / N`
+    `avg_batch_cost = avg_reader_cost + sum(T1, T2,...Tn) / N`
+    `avg_samples = sum(S1, S2,...Sn) / N`
+    `avg_ips = samples / batch_cost `
+    ips 单位如：images/sec、sequences/sec、tokens/sec、words/sec、frames/sec等。
+
+
+3. 环境：安装好PaddlePaddle即可进行基础训练推理测试开发
 
 **【注意事项】**
 
@@ -257,6 +279,9 @@ python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ 
 配置文件的含义解析可以参考 [2.2节配置文件解析](#2.2) 部分。
 
 mobilenet_v3_small的测试开发配置文件可以参考：[train_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt)。
+
+为了确保基础训练、推理总时间不超过10分钟，需要在`train_infer_python.txt`中设置较小的`epoch`数或者迭代次数。以[train_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_infer_python.txt)为例，设置`--epochs:lite_train_lite_infer=5`，数值5表示训练5个epoch，不同模型根据训练耗时调整该数值，确保运行耗时不超过10分钟。
+
 
 <a name="3.5"></a>
 
