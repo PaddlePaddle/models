@@ -46,10 +46,12 @@ Paddle 离线量化开发可以分为个步骤，如下图所示。
 
 以ImageNet1k数据集为例，可参考[数据准备文档](https://github.com/PaddlePaddle/models/tree/release/2.2/tutorials/mobilenetv3_prod/Step6#32-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE)。
 
+用于校准的数据最好选择训练集，数据量在500个样本左右即可。
+
 **【准备开发环境】**
 
-- 确定已安装paddle，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
-- 确定已安装paddleslim，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
+- 确定已安装paddle 2.2.1，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
+- 确定已安装paddleslim 2.2.1，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
 
 ```
 pip install paddlepaddle-gpu==2.2.1.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
@@ -93,7 +95,7 @@ paddle.jit.save(fp32_model, fp32_output_model_path, [input_spec])
 
 <a name="2.3"></a>
 
-### 2.3 准备离线量化代码
+### 2.3 开始离线量化
 
 **【基本流程】**
 
@@ -101,14 +103,14 @@ paddle.jit.save(fp32_model, fp32_output_model_path, [input_spec])
 
 - Step1：定义`sample_generator`，传入paddle.io.Dataloader实例化对象，用来遍历校准数据集
 
-- Step2：定义Executor，由于离线量化模型是Inference模型，量化校准过程也需要在静态图下执行，所以需要定义静态图Executor，用来执行离线量化校准执行
+- Step2：开始离线量化
 
 
 **【实战】**
 
-1）定义数据集，可以参考[Datasets定义](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/paddlevision/datasets/vision.py)
+1）定义DataLoader，数据集定义可以参考[Datasets定义](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/mobilenetv3_prod/Step6/paddlevision/datasets/vision.py)
 
-2）定义`sample_generator`：
+包装DataLoader，定义`sample_generator`：
 
 ```python
 def sample_generator(loader):
@@ -120,46 +122,28 @@ def sample_generator(loader):
     return __reader__
 ```
 
-2）定义Executor：
+2）开始离线量化
 
 ```python
+from paddleslim.quant import quant_post_static
+fp32_model_dir = 'mv3_fp32_infer'
+quant_output_dir = 'quant_model'
 use_gpu = True
 place = paddle.CUDAPlace(0) if use_gpu else paddle.CPUPlace()
 exe = paddle.static.Executor(place)
-```
-
-
-<a name="2.4"></a>
-
-### 2.4 开始离线量化
-
-**【基本流程】**
-
-使用飞桨PaddleSlim中的`quant_post_static`接口开始进行离线量化：
-
-- Step1：导入`quant_post_static`接口
-```python
-from paddleslim.quant import quant_post_static
-```
-
-- Step2：配置传入`quant_post_static`接口参数，开始离线量化
-
-```python
-fp32_model_dir = 'mv3_fp32_infer'
-quant_output_dir = 'quant_model'
 quant_post_static(
         executor=exe,
-	model_dir=fp32_model_dir,
-	quantize_model_path=quant_output_dir,
-	sample_generator=sample_generator(data_loader),
-	model_filename='model.pdmodel',
-	params_filename='model.pdiparams',
-	batch_size=32,
-	batch_nums=10,
-	algo='KL')
+        model_dir=fp32_model_dir,
+        quantize_model_path=quant_output_dir,
+        sample_generator=sample_generator(data_loader),
+        model_filename='model.pdmodel',
+        params_filename='model.pdiparams',
+        batch_size=32,
+        batch_nums=10,
+        algo='KL')
 ```
 
-- Step3：检查输出结果，确保离线量化后生成`__model__`和`__params__`文件。
+- 检查输出结果，确保离线量化后生成`__model__`和`__params__`文件。
 
 
 **【实战】**
