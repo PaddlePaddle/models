@@ -87,7 +87,7 @@ function func_inference(){
                 eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
-                status_check $last_status "${command}" "${status_log}"
+                status_check $last_status "${command}" "${status_log}" "${model_name}"
             done
         # gpu        
         elif [ ${use_gpu} = "True" ] || [ ${use_gpu} = "gpu" ]; then
@@ -101,7 +101,7 @@ function func_inference(){
                 eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
-                status_check $last_status "${command}" "${status_log}"   
+                status_check $last_status "${command}" "${status_log}"  "${model_name}"
             done      
         else
             echo "Does not support hardware other than CPU and GPU Currently!"
@@ -131,7 +131,7 @@ if [ ${MODE} = "whole_infer" ]; then
         echo $export_cmd
         eval $export_cmd
         status_export=$?
-        status_check $status_export "${export_cmd}" "${status_log}"
+        status_check $status_export "${export_cmd}" "${status_log}" "${model_name}"
     else
         save_infer_dir=${save_infer_dir}
     fi
@@ -196,7 +196,7 @@ else
             fi
             # run train
             eval $cmd
-            status_check $? "${cmd}" "${status_log}"
+            status_check $? "${cmd}" "${status_log}" "${model_name}"
             # TODO ensure model name
             set_eval_pretrain=$(func_set_params "${pretrain_model_key}" "${save_log}/${train_model_name}")
 
@@ -205,7 +205,7 @@ else
                 eval ${env}
                 eval_cmd="${python} ${eval_py} ${set_eval_pretrain}" 
                 eval $eval_cmd
-                status_check $? "${eval_cmd}" "${status_log}"
+                status_check $? "${eval_cmd}" "${status_log}" "${model_name}"
             fi
             # run export model
             if [ ${run_export} != "null" ]; then 
@@ -215,7 +215,7 @@ else
                 set_save_infer_key=$(func_set_params "${save_infer_key}" "${save_infer_path}")
                 export_cmd="${python} ${run_export} ${set_export_weight} ${set_save_infer_key}"
                 eval $export_cmd
-                status_check $? "${export_cmd}" "${status_log}"
+                status_check $? "${export_cmd}" "${status_log}" "${model_name}"
 
                 #run inference
                 eval $env

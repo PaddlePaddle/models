@@ -21,7 +21,7 @@
 
 ## 1. 简介
 
-Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端，提供高性能的推理能力。相比于直接基于预训练模型进行预测，Paddle Inference可使用MKLDNN、CUDNN、TensorRT进行预测加速，从而实现更优的推理性能。
+Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端，提供高性能的推理能力。
 更多关于Paddle Inference推理引擎的介绍，可以参考[Paddle Inference官网教程](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)。
 本文档主要介绍飞桨模型在 Linux GPU/CPU 下基于C++预测引擎的推理过程开发。
 
@@ -45,7 +45,7 @@ run_scripts configs_path img_path
 <a name="2.2"></a>
 
 ### 2.2 配置文件解析
-完整的`inference_cpp.txt`配置文件共有11行，包含两个方面的内容。
+完整的`inference_cpp.txt`配置文件共有12行，包含两个方面的内容。
 * 运行环境参数配置：第1~5行
 * 模型参数配置：第7~11行
 
@@ -62,14 +62,15 @@ run_scripts configs_path img_path
 
 | 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
 |----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
-| 2  | use_gpu      | 是否使用GPU    | 否         | 是           | value根据是否使用GPU进行修改               |
-| 3  | gpu_id       | 使用的GPU卡号  | 否         | 是           | value修改为自己的GPU ID              |
-| 4  | gpu_mem      | 显存          | 否         | 是           | value修改为自己的GPU 显存             |
-| 5  | cpu_math_library_num_thread | 底层科学计算库所用线程的数量  | 否      | 是           | value修改为合适的线程数         |
-| 8 | cls_model_path  | 预测模型结构文件路径         | 否         | 是           | value修改为预测模型结构文件路径 |
-| 9 | cls_params_path | 预测模型参数文件路径  | 否         | 是           | vvalue修改为预测模型参数文件路径 |
-| 10 | resize_short_size  | 预处理时图像缩放大小         | 否         | 是           | value修改为预处理时图像缩放大小  
-| 11 | crop_size          | 预处理时图像裁剪后的大小      | 否         | 是           | value修改为预处理时图像裁剪后的大小  
+| 2  | model_name      | 模型名称    | 否         | 是           | value根据模型名称修改               |
+| 3  | use_gpu      | 是否使用GPU    | 否         | 是           | value根据是否使用GPU进行修改               |
+| 4  | gpu_id       | 使用的GPU卡号  | 否         | 是           | value修改为自己的GPU ID              |
+| 5  | gpu_mem      | 显存          | 否         | 是           | value修改为自己的GPU 显存             |
+| 6  | cpu_math_library_num_thread | 底层科学计算库所用线程的数量  | 否      | 是           | value修改为合适的线程数         |
+| 9 | cls_model_path  | 预测模型结构文件路径         | 否         | 是           | value修改为预测模型结构文件路径 |
+| 10 | cls_params_path | 预测模型参数文件路径  | 否         | 是           | vvalue修改为预测模型参数文件路径 |
+| 11 | resize_short_size  | 预处理时图像缩放大小         | 否         | 是           | value修改为预处理时图像缩放大小  
+| 12 | crop_size          | 预处理时图像裁剪后的大小      | 否         | 是           | value修改为预处理时图像裁剪后的大小  
 
 
 </details>

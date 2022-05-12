@@ -28,8 +28,9 @@ IFS=$'\n'
 lines=(${dataline})
 
 # parser load config
-use_gpu_key=$(func_parser_key_cpp "${lines[1]}")
-use_gpu_value=$(func_parser_value_cpp "${lines[1]}")
+model_name=$(func_parser_value_cpp "${lines[1]}")
+use_gpu_key=$(func_parser_key_cpp "${lines[2]}")
+use_gpu_value=$(func_parser_value_cpp "${lines[2]}")
 
 LOG_PATH="./log/infer_cpp"
 mkdir -p ${LOG_PATH}
@@ -48,7 +49,7 @@ function func_infer_cpp(){
     infer_cpp_full_cmd="${inference_cpp_cmd} ${FILENAME} ${inference_cpp_img} > ${_save_log_path} 2>&1 "   
     eval $infer_cpp_full_cmd
     last_status=${PIPESTATUS[0]}
-    status_check $last_status "${infer_cpp_full_cmd}" "${status_log}"
+    status_check $last_status "${infer_cpp_full_cmd}" "${status_log}"  "${model_name}"
 }
 
 echo "################### run test cpp inference ###################"
