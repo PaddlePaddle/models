@@ -140,7 +140,7 @@ if amp_level is not None:
 - ``paddle.amp.auto_cast``使用介绍见[API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/amp/auto_cast_cn.html)
 
 
-4）利用`GradScaler`完成loss的缩放：
+4）在训练循环中，利用`GradScaler`完成loss的缩放：
 
 ```python
 scaled = scaler.scale(loss)
