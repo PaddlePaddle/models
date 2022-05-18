@@ -24,11 +24,11 @@ serving_server_value=$(func_parser_value "${lines[7]}")
 serving_client_key=$(func_parser_key "${lines[8]}")
 serving_client_value=$(func_parser_value "${lines[8]}")
 serving_dir_value=$(func_parser_value "${lines[9]}")
-run_model_path_key=$(func_parser_value "${lines[10]}")
-run_model_path_value=$(func_parser_value "${lines[11]}")
-port_key=$(func_parser_value "${lines[12]}")
-port_value=$(func_parser_key "${lines[13]}")
-cpp_client_value=$(func_parser_value "${lines[14]}")
+run_model_path_key=$(func_parser_key "${lines[10]}")
+run_model_path_value=$(func_parser_value "${lines[10]}")
+port_key=$(func_parser_key "${lines[11]}")
+port_value=$(func_parser_value "${lines[11]}")
+cpp_client_value=$(func_parser_value "${lines[12]}")
 
 
 LOG_PATH="./log/${model_name}/${MODE}"
@@ -50,24 +50,24 @@ function func_serving(){
     python_list=(${python_list})
     python=${python_list[0]}
     trans_model_cmd="${python} ${trans_model_py} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_serving_server} ${set_serving_client}"
-    eval $trans_model_cmd}
+    eval $trans_model_cmd
     cd ${serving_dir_value}
     echo $PWD
     unset https_proxy
     unset http_proxy
 
-    web_service_cmd="${python} ${web_service_py} &"
-    eval $web_service_cmd
-    sleep 2s
     _save_log_path="../../log/${model_name}/${MODE}/server_infer_gpu_batchsize_1.log"
-
     # phrase 2: run server
-    cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${port_key} ${port_value} > ${_save_log_path} 2>&1 "
+    cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${port_key} ${port_value} > serving_log.log & "
     eval $cpp_server_cmd
+    sleep 2s
+    clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
+    eval $clinet_cmd
     last_status=${PIPESTATUS[0]}
-    eval "cat ${_save_log_path}"
+    # eval "cat ${_save_log_path}"
     cd ../../
     status_check $last_status "${cpp_server_cmd}" "${status_log}"
+    status_check $last_status "${clinet_cmd}" "${status_log}"
     ps ux | grep -i 'paddle_serving_server' | awk '{print $2}' | xargs kill -s 9
 }
 
