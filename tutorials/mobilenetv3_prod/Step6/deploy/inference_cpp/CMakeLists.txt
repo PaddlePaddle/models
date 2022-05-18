@@ -47,6 +47,8 @@ else ()
   find_package(OpenCV REQUIRED PATHS ${OPENCV_DIR}/share/OpenCV NO_DEFAULT_PATH)
   include_directories("${PADDLE_LIB}/paddle/include")
   link_directories("${PADDLE_LIB}/paddle/lib")
+  link_directories("${PADDLE_LIB}/third_party/install/paddle2onnx/lib")
+  link_directories("${PADDLE_LIB}/third_party/install/onnxruntime/lib")
 endif ()
 include_directories(${OpenCV_INCLUDE_DIRS})
 

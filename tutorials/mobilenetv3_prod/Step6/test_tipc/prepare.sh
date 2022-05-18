@@ -60,6 +60,9 @@ elif [ ${MODE} = "cpp_infer" ];then
     cd ./deploy/inference_cpp/ && tar xf mobilenet_v3_small_infer.tar
     wget -nc https://paddle-inference-lib.bj.bcebos.com/2.2.2/cxx_c/Linux/GPU/x86-64_gcc8.2_avx_mkl_cuda11.1_cudnn8.1.1_trt7.2.3.4/paddle_inference.tgz
     tar zxf paddle_inference.tgz
+    if [ ! -d "paddle_inference" ]; then
+        ln -s paddle_inference_install_dir paddle_inference
+    fi
     wget -nc https://paddleocr.bj.bcebos.com/libs/opencv/opencv-3.4.7.tar.gz
     tar zxf opencv-3.4.7.tar.gz
     # build opencv
