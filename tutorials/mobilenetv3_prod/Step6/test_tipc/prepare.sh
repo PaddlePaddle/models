@@ -18,7 +18,7 @@ model_name=$(func_parser_value "${lines[1]}")
 
 trainer_list=$(func_parser_value "${lines[12]}")
 
-
+pip install -r requirements.txt
 if [ ${MODE} = "lite_train_lite_infer" ];then
     # prepare lite data
     tar -xf ./test_images/lite_data.tar
@@ -55,15 +55,20 @@ elif [ ${MODE} = "serving_infer" ];then
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
 elif [ ${MODE} = "cpp_infer" ];then
+    PADDLEInfer=$3
     # wget model
     wget -nc -P  ./deploy/inference_cpp/ https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
     cd ./deploy/inference_cpp/ && tar xf mobilenet_v3_small_infer.tar
-    wget -nc https://paddle-inference-lib.bj.bcebos.com/2.2.2/cxx_c/Linux/GPU/x86-64_gcc8.2_avx_mkl_cuda11.1_cudnn8.1.1_trt7.2.3.4/paddle_inference.tgz
+    if [ "" = "$PADDLEInfer" ];then
+        wget -nc https://paddle-inference-lib.bj.bcebos.com/2.2.2/cxx_c/Linux/GPU/x86-64_gcc8.2_avx_mkl_cuda11.1_cudnn8.1.1_trt7.2.3.4/paddle_inference.tgz --no-check-certificate
+    else
+        wget -nc $PADDLEInfer --no-check-certificate
+    fi
     tar zxf paddle_inference.tgz
     if [ ! -d "paddle_inference" ]; then
         ln -s paddle_inference_install_dir paddle_inference
     fi
-    wget -nc https://paddleocr.bj.bcebos.com/libs/opencv/opencv-3.4.7.tar.gz
+    wget -nc https://paddleocr.bj.bcebos.com/libs/opencv/opencv-3.4.7.tar.gz --no-check-certificate
     tar zxf opencv-3.4.7.tar.gz
     # build opencv
     cd opencv-3.4.7/

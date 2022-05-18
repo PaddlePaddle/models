@@ -18,7 +18,6 @@ from paddle import inference
 import numpy as np
 from PIL import Image
 
-from reprod_log import ReprodLogger
 from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 
 
@@ -239,8 +238,3 @@ def infer_main(args):
 if __name__ == "__main__":
     args = get_args()
     class_id, prob = infer_main(args)
-
-    reprod_logger = ReprodLogger()
-    reprod_logger.add("class_id", np.array([class_id]))
-    reprod_logger.add("prob", np.array([prob]))
-    reprod_logger.save("output_inference_engine.npy")
