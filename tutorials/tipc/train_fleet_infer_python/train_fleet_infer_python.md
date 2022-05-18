@@ -1,13 +1,9 @@
 # Linux GPU 多机多卡训练开发文档
 
-# 
-
 # 目录
 
 - [1. 简介](#1)
-
 - [2. 多机多卡训练功能开发](#2)
-
 - [3. FAQ](#3)
 
 <a name="1"></a>
@@ -28,7 +24,9 @@
 
   在深度学习模型训练中，数据并行可作为通过增加并行训练设备来提高训练吞吐量(global batch size per second) 的方法。以常见的ResNet50 模型使用32GB V100卡训练为例。假设训练时单卡最大能支持的local batch size为256，训练一个step的耗时为1秒。则单卡训练时的吞吐为256 imgs/s。如果我们使用32 张V100 做数据并行训练，假设没有损耗，那么理论上的训练吞吐可达到 32 x 256 = 8192 imgs/。实际上由于数据并行时多机多卡的通信消耗等，实际加速效率会有折扣，但在加速效率为0.8时，训练吞吐也可达到32 x 256 x 0.8 = 6554 imgs/s。如果使用更多的GPU，并行训练的速度将会更高，大大减少训练需要的时间。
 
-<img src="images/data_parallel.png" title="" alt="" data-align="center">
+<div align="center">
+    <img src="./images/data_parallel.png" width="800">
+</div>
 
 如上图所示，与单机单卡的普通模型训练相比，使用飞桨分布式训练的代码都只需要按照下面6个步骤操作
 
@@ -128,7 +126,7 @@ INFO 2021-01-04 17:59:08,727 launch_utils.py:472] Local start 4 processes. First
 ...
 W0104 17:59:19.018365 43338 device_context.cc:342] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 10.2, Runtime API Version: 9.2
 W0104 17:59:19.022523 43338 device_context.cc:352] device: 0, cuDNN Version: 7.4.
-W0104 17:59:23.193490 43338 fuse_all_reduce_op_pass.cc:78] Find all_reduce operators: 161. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is 
+W0104 17:59:23.193490 43338 fuse_all_reduce_op_pass.cc:78] Find all_reduce operators: 161. To make the speed faster, some all_reduce ops are fused during training, after fusion, the number of all_reduce ops is
 ```
 
 当使用paddle.distributed.launch模块启动分布式任务时，所有日志将保存在./log目录下，日志文件名为workerlog.xx，其中xx为整数；每个卡训练进程对应一个日志文件。

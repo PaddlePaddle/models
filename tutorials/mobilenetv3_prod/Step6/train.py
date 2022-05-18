@@ -17,7 +17,6 @@ import random
 apex = None
 
 import numpy as np
-from reprod_log import ReprodLogger
 
 
 def train_one_epoch(model,
@@ -262,7 +261,8 @@ def main(args):
     if args.amp_level is not None:
         scaler = paddle.amp.GradScaler(init_loss_scaling=1024)
         if args.amp_level == 'O2':
-            model = paddle.amp.decorate(models=model, level='O2')
+            model = paddle.amp.decorate(
+                models=model, level='O2', save_dtype="float32")
 
     # multi cards
     if paddle.distributed.get_world_size() > 1:
@@ -303,10 +303,7 @@ def main(args):
                                 os.path.join(args.output_dir, 'best.pdopt'))
 
     if args.pact_quant:
-        input_spec = [
-            InputSpec(
-                shape=[None, 3, 224, 224], dtype='float32')
-        ]
+        input_spec = [InputSpec(shape=[None, 3, 224, 224], dtype='float32')]
         quanter.save_quantized_model(
             model,
             os.path.join(args.output_dir, "qat_inference"),
@@ -422,7 +419,3 @@ def get_args_parser(add_help=True):
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
     top1 = main(args)
-    if paddle.distributed.get_rank() == 0:
-        reprod_logger = ReprodLogger()
-        reprod_logger.add("top1", np.array([top1]))
-        reprod_logger.save("train_align_paddle.npy")

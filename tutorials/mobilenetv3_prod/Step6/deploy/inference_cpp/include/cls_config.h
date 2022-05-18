@@ -39,11 +39,6 @@ public:
     this->cpu_math_library_num_threads =
         stoi(config_map_["cpu_math_library_num_threads"]);
 
-    this->use_mkldnn = bool(stoi(config_map_["use_mkldnn"]));
-
-    this->use_tensorrt = bool(stoi(config_map_["use_tensorrt"]));
-    this->use_fp16 = bool(stoi(config_map_["use_fp16"]));
-
     this->cls_model_path.assign(config_map_["cls_model_path"]);
 
     this->cls_params_path.assign(config_map_["cls_params_path"]);
@@ -60,11 +55,6 @@ public:
   int gpu_mem = 4000;
 
   int cpu_math_library_num_threads = 1;
-
-  bool use_mkldnn = false;
-
-  bool use_tensorrt = false;
-  bool use_fp16 = false;
 
   std::string cls_model_path;
 
