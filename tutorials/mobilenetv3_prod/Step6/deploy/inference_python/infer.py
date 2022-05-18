@@ -80,6 +80,8 @@ class InferenceEngine(object):
             config.enable_use_gpu(1000, 0)
         else:
             config.disable_gpu()
+            # The thread num should not be greater than the number of cores in the CPU.
+            config.set_cpu_math_library_num_threads(4)
 
         # enable memory optim
         config.enable_memory_optim()

@@ -201,21 +201,10 @@ class InferenceEngine(object):
         config.enable_memory_optim()
         if args.use_gpu:
             config.enable_use_gpu(100, 0)
-            config.enable_tensorrt_engine(workspace_size=1 << 30,
-                                      max_batch_size=10,
-                                      min_subgraph_size=5,
-                                      precision_mode=PrecisionType.Float32,
-                                      use_static=False,
-                                      use_calib_mode=False)
-            config.set_trt_dynamic_shape_info(
-                                      min_input_shape={"input": [1, 3, 1, 1]},
-                                      max_input_shape={"input": [10, 3, 1200, 1200]},
-                                      optim_input_shape={"input": [1, 3, 224, 224]})
         else:
-            # If not specific mkldnn, you can set the blas thread.
+            config.disable_gpu()
             # The thread num should not be greater than the number of cores in the CPU.
             config.set_cpu_math_library_num_threads(4)
-            config.enable_mkldnn()
         # creat predictor
         predictor = create_predictor(config)
         # get input and output tensor property

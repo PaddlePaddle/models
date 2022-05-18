@@ -61,8 +61,7 @@ int main(int argc, char **argv) {
 
   Classifier classifier(config.cls_model_path, config.cls_params_path,
                         config.use_gpu, config.gpu_id, config.gpu_mem,
-                        config.cpu_math_library_num_threads, config.use_mkldnn,
-                        config.use_tensorrt, config.use_fp16,
+                        config.cpu_math_library_num_threads,
                         config.resize_short_size, config.crop_size);
 
   double elapsed_time = 0.0;
