@@ -40,16 +40,12 @@ public:
                       const std::string &params_path, const bool &use_gpu,
                       const int &gpu_id, const int &gpu_mem,
                       const int &cpu_math_library_num_threads,
-                      const bool &use_mkldnn, const bool &use_tensorrt,
-                      const bool &use_fp16, const int &resize_short_size,
+                      const int &resize_short_size,
                       const int &crop_size) {
     this->use_gpu_ = use_gpu;
     this->gpu_id_ = gpu_id;
     this->gpu_mem_ = gpu_mem;
     this->cpu_math_library_num_threads_ = cpu_math_library_num_threads;
-    this->use_mkldnn_ = use_mkldnn;
-    this->use_tensorrt_ = use_tensorrt;
-    this->use_fp16_ = use_fp16;
 
     this->resize_short_size_ = resize_short_size;
     this->crop_size_ = crop_size;
@@ -70,9 +66,6 @@ private:
   int gpu_id_ = 0;
   int gpu_mem_ = 4000;
   int cpu_math_library_num_threads_ = 4;
-  bool use_mkldnn_ = false;
-  bool use_tensorrt_ = false;
-  bool use_fp16_ = false;
 
   std::vector<float> mean_ = {0.485f, 0.456f, 0.406f};
   std::vector<float> scale_ = {1 / 0.229f, 1 / 0.224f, 1 / 0.225f};

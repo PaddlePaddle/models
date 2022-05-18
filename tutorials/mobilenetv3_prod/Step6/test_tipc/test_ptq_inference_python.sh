@@ -65,7 +65,7 @@ function func_inference(){
                 eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
-                status_check $last_status "${command}" "${status_log}"
+                status_check $last_status "${command}" "${status_log}" "${model_name}"
             done
         # gpu        
         elif [ ${use_gpu} = "True" ] || [ ${use_gpu} = "gpu" ]; then
@@ -80,7 +80,7 @@ function func_inference(){
                 eval $command
                 last_status=${PIPESTATUS[0]}
                 eval "cat ${_save_log_path}"
-                status_check $last_status "${command}" "${status_log}"   
+                status_check $last_status "${command}" "${status_log}"  "${model_name}" 
             done      
         else
             echo "Does not support hardware other than CPU and GPU Currently!"
@@ -107,7 +107,7 @@ if [ ${MODE} = "whole_infer" ]; then
     echo $export_cmd
     # eval $export_cmd
     status_export=$?
-    status_check $status_export "${export_cmd}" "${status_log}"
+    status_check $status_export "${export_cmd}" "${status_log}" "${model_name}"
     
     save_infer_dir=${output_dir_value}
     #run inference

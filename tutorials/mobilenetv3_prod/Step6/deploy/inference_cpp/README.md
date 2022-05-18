@@ -91,7 +91,7 @@ cd build
 cmake  .. \
     -DWITH_CONTRIB=OFF \
     -DWITH_MKL=ON \
-    -DWITH_MKLDNN=ON  \
+    -DWITH_MKLDNN=OFF  \
     -DWITH_TESTING=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DWITH_INFERENCE_API_TEST=OFF \
@@ -205,9 +205,6 @@ make -j
   * gpu_id：使用的GPU卡号；
   * gpu_mem：显存；
   * cpu_math_library_num_threads：底层科学计算库所用线程的数量；
-  * use_mkldnn：是否使用MKLDNN加速；
-  * use_tensorrt: 是否使用tensorRT进行加速；
-  * use_fp16：是否使用半精度浮点数进行计算，该选项仅在use_tensorrt为true时有效；
   * cls_model_path：预测模型结构文件路径；
   * cls_params_path：预测模型参数文件路径；
   * resize_short_size：预处理时图像缩放大小；

@@ -16,6 +16,7 @@
 - Slim训练部署：包括PACT在线量化、离线量化。
 - 更多训练环境：包括Windows GPU/CPU、Linux NPU、Linux DCU等多种环境。
 
+
 | 算法论文 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 更多<br>部署方式 | Slim<br>训练部署 |  更多<br>训练环境  |
 | :--- | :--- |  :----:  | :--------: |  :----:  |   :----:  |   :----:  |   :----:  |
 | MobileNetV3     | mobilenet_v3_small |  分类  | 支持 | 混合精度 | PYTHON 服务化部署<br>Paddle2ONNX 部署| PACT量化<br>离线量化 | Windows GPU/CPU |
