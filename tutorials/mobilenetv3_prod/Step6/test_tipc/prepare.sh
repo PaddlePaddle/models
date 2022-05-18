@@ -55,10 +55,15 @@ elif [ ${MODE} = "serving_infer" ];then
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
 elif [ ${MODE} = "cpp_infer" ];then
+    PADDLEInfer=$3
     # wget model
     wget -nc -P  ./deploy/inference_cpp/ https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
     cd ./deploy/inference_cpp/ && tar xf mobilenet_v3_small_infer.tar
-    wget -nc https://paddle-inference-lib.bj.bcebos.com/2.2.2/cxx_c/Linux/GPU/x86-64_gcc8.2_avx_mkl_cuda11.1_cudnn8.1.1_trt7.2.3.4/paddle_inference.tgz
+    if [ "" = "$PADDLEInfer" ];then
+        wget -nc https://paddle-inference-lib.bj.bcebos.com/2.2.2/cxx_c/Linux/GPU/x86-64_gcc8.2_avx_mkl_cuda11.1_cudnn8.1.1_trt7.2.3.4/paddle_inference.tgz
+    else
+        wget -nc $PADDLEInfer
+    fi
     tar zxf paddle_inference.tgz
     wget -nc https://paddleocr.bj.bcebos.com/libs/opencv/opencv-3.4.7.tar.gz
     tar zxf opencv-3.4.7.tar.gz
