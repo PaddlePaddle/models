@@ -18,7 +18,7 @@ model_name=$(func_parser_value "${lines[1]}")
 
 trainer_list=$(func_parser_value "${lines[12]}")
 
-
+pip3 install -r requirements.txt
 if [ ${MODE} = "lite_train_lite_infer" ];then
     # prepare lite data
     tar -xf ./test_images/lite_data.tar
