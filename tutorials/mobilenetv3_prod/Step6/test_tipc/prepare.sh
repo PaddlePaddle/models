@@ -65,6 +65,9 @@ elif [ ${MODE} = "cpp_infer" ];then
         wget -nc $PADDLEInfer --no-check-certificate
     fi
     tar zxf paddle_inference.tgz
+    if [ ! -d "paddle_inference" ]; then
+        ln -s paddle_inference_install_dir paddle_inference
+    fi
     wget -nc https://paddleocr.bj.bcebos.com/libs/opencv/opencv-3.4.7.tar.gz --no-check-certificate
     tar zxf opencv-3.4.7.tar.gz
     # build opencv
