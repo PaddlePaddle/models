@@ -229,8 +229,8 @@ Run failed with command - paddle2onnx --model_dir=./inference/mobilenet_v3_small
 以mobilenet_v3_small的`Linux GPU/CPU 离线量化训练推理功能测试` 为例，命令如下所示。
 
 ```bash
-bash test_tipc/prepare.sh ${your_params_file} paddle2onnx_infer
-bash test_tipc/test_paddle2onnx.sh ${your_params_file} paddle2onnx_infer
+bash test_tipc/prepare.sh ./test_tipc/configs/mobilenet_v3_small/paddle2onnx_infer_python.txt  paddle2onnx_infer
+bash test_tipc/test_paddle2onnx.sh ./test_tipc/configs/mobilenet_v3_small/paddle2onnx_infer_python.txt paddle2onnx_infer
 ```
 
 输出结果如下，表示命令运行成功。
