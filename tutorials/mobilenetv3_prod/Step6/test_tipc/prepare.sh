@@ -55,7 +55,7 @@ elif [ ${MODE} = "serving_infer" ];then
     ${python_name} -m pip install paddle-serving-server-gpu==0.8.3.post101
     ${python_name} -m pip install paddle_serving_client==0.8.3
     ${python_name} -m pip install paddle-serving-app==0.8.3
-    ${python_name} download_bin.py
+    ${python_name} ./deploy/serving_cpp/download_bin.py
     # get data
     tar -xf ./test_images/lite_data.tar
     # wget model
