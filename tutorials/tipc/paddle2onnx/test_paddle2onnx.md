@@ -229,8 +229,8 @@ Run failed with command - paddle2onnx --model_dir=./inference/mobilenet_v3_small
 以mobilenet_v3_small的`Linux GPU/CPU 离线量化训练推理功能测试` 为例，命令如下所示。
 
 ```bash
-bash test_tipc/prepare.sh ${your_params_file} paddle2onnx
-bash test_tipc/test_paddle2onnx.sh ${your_params_file} paddle2onnx
+bash test_tipc/prepare.sh ${your_params_file} paddle2onnx_infer
+bash test_tipc/test_paddle2onnx.sh ${your_params_file} paddle2onnx_infer
 ```
 
 输出结果如下，表示命令运行成功。
@@ -238,7 +238,7 @@ bash test_tipc/test_paddle2onnx.sh ${your_params_file} paddle2onnx
 ```bash
 Run successfully with command -  paddle2onnx --model_dir=./inference/mobilenet_v3_small_infer/ --model_filename=inference.pdmodel --params_filename=inference.pdiparams --save_file=./inference/mobilenet_v3_small_onnx/model.onnx --opset_version=10 --enable_onnx_checker=True!
 
-Run successfully with command - python3.7 deploy/onnx_python/infer.py --img_path=./lite_data/test/demo.jpg --onnx_file=./inference/mobilenet_v3_small_onnx/model.onnx > ./log/mobilenet_v3_small//paddle2onnx_infer_cpu.log 2>&1 !  
+Run successfully with command - python3.7 deploy/onnx_python/infer.py --img_path=./lite_data/test/demo.jpg --onnx_file=./inference/mobilenet_v3_small_onnx/model.onnx > ./log/mobilenet_v3_small/paddle2onnx_infer_cpu.log 2>&1 !  
 ```
 
 **【核验】**
