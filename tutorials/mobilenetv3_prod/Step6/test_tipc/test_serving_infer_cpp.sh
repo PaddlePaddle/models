@@ -33,7 +33,8 @@ cpp_client_value=$(func_parser_value "${lines[12]}")
 
 LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
-status_log="${LOG_PATH}/results_serving.log"
+
+status_log="../../log/${model_name}/${MODE}/results_serving_infer_cpp.log"
 
 function func_serving(){
     IFS='|'
@@ -51,24 +52,27 @@ function func_serving(){
     python=${python_list[0]}
     trans_model_cmd="${python} ${trans_model_py} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_serving_server} ${set_serving_client}"
     eval $trans_model_cmd
+    last_status=${PIPESTATUS[0]}
     cd ${serving_dir_value}
+    status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"
     echo $PWD
     unset https_proxy
     unset http_proxy
 
-    _save_log_path="../../log/${model_name}/${MODE}/server_infer_gpu_batchsize_1.log"
+    _save_log_path="../../log/${model_name}/${MODE}/servering_infer_cpp_gpu_batchsize_1.log"
     # phrase 2: run server
     cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${port_key} ${port_value} > serving_log.log & "
     eval $cpp_server_cmd
+    last_status=${PIPESTATUS[0]}
+    status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
     sleep 2s
     clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
     eval $clinet_cmd
     last_status=${PIPESTATUS[0]}
+    status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
     # eval "cat ${_save_log_path}"
     cd ../../
-    status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
-    status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
-    ps ux | grep -i 'paddle_serving_server' | awk '{print $2}' | xargs kill -s 9
+    ps ux | grep -i ${port_value} | awk '{print $2}' | xargs kill -s 9
 }
 
 

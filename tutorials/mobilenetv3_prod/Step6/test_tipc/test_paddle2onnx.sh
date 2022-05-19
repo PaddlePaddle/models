@@ -65,6 +65,7 @@ function func_paddle2onnx(){
     set_img_dir=$(func_set_params "${image_dir_key}" "${image_dir_value}")
     infer_model_cmd="${python} ${inference_py} ${set_img_dir} ${set_model_dir} > ${_save_log_path} 2>&1 "
     eval $infer_model_cmd
+    last_status=${PIPESTATUS[0]}
     status_check $last_status "${infer_model_cmd}" "${status_log}" "${model_name}"
 }
 
