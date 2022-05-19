@@ -64,7 +64,7 @@ function func_serving(){
     last_status=${PIPESTATUS[0]}
     eval "cat ${_save_log_path}"
     cd ../../
-    status_check $last_status "${pipeline_cmd}" "${status_log}"
+    status_check $last_status "${pipeline_cmd}" "${status_log}" "${model_name}"
     ps ux | grep -E 'web_service|pipeline' | awk '{print $2}' | xargs kill -s 9
 }
 

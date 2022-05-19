@@ -66,8 +66,8 @@ function func_serving(){
     last_status=${PIPESTATUS[0]}
     # eval "cat ${_save_log_path}"
     cd ../../
-    status_check $last_status "${cpp_server_cmd}" "${status_log}"
-    status_check $last_status "${clinet_cmd}" "${status_log}"
+    status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
+    status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
     ps ux | grep -i 'paddle_serving_server' | awk '{print $2}' | xargs kill -s 9
 }
 
