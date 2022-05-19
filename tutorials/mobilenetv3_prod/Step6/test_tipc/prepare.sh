@@ -47,6 +47,14 @@ elif [ ${MODE} = "whole_infer" ];then
     fi
 
 elif [ ${MODE} = "serving_infer" ];then
+    # install serving
+    python_name_list=$(func_parser_value "${lines[2]}")
+    IFS='|'
+    array=(${python_name_list})
+    python_name=${array[0]}
+    ${python_name} -m pip install paddle-serving-server-gpu==0.8.3.post101
+    ${python_name} -m pip install paddle_serving_client==0.8.3
+    ${python_name} -m pip install paddle-serving-app==0.8.3
     # get data
     tar -xf ./test_images/lite_data.tar
     # wget model
@@ -55,6 +63,13 @@ elif [ ${MODE} = "serving_infer" ];then
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
 elif [ ${MODE} = "paddle2onnx_infer" ];then
+    # install paddle2onnx
+    python_name_list=$(func_parser_value "${lines[2]}")
+    IFS='|'
+    array=(${python_name_list})
+    python_name=${array[0]}
+    ${python_name} -m pip install paddle2onnx
+    ${python_name} -m pip install onnxruntime==1.9.0
     # get data
     tar -xf ./test_images/lite_data.tar
     # get model

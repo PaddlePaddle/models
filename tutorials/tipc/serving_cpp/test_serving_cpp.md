@@ -265,8 +265,9 @@ test_tipc
 <a name="4"></a>
 
 ## 4. FAQ
+如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
 
-```
+```bash
 unset http_proxy
 unset https_proxy
 ```
