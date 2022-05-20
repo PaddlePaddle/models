@@ -69,7 +69,7 @@ function func_serving(){
     eval $cpp_server_cmd
     last_status=${PIPESTATUS[0]}
     status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
-    sleep 2s
+    sleep 5s
     clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
     eval $clinet_cmd
     last_status=${PIPESTATUS[0]}

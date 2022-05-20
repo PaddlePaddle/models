@@ -61,7 +61,7 @@ function func_serving(){
     eval $web_service_cmd
     last_status=${PIPESTATUS[0]}
     status_check $last_status "${web_service_cmd}" "${status_log}" "${model_name}"
-    sleep 2s
+    sleep 5s
     _save_log_path="../../log/${model_name}/${MODE}/server_infer_gpu_batchsize_1.log"
     set_image_dir=$(func_set_params "${image_dir_key}" "${image_dir_value}")
     pipeline_cmd="${python} ${pipeline_py} ${set_image_dir} > ${_save_log_path} 2>&1 "
