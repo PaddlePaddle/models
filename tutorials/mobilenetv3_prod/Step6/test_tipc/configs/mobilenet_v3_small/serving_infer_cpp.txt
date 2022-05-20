@@ -9,5 +9,6 @@ trans_model:-m paddle_serving_client.convert
 --serving_client:./deploy/serving_cpp/serving_client/
 serving_dir:./deploy/serving_cpp
 --model:serving_server
+--op:GeneralClasOp
 --port:9997
 cpp_client:serving_client.py

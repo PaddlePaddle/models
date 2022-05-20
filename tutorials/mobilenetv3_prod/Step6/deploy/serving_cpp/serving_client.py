@@ -17,21 +17,34 @@ import numpy as np
 import base64
 from PIL import Image
 import io
+import os
 from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 from paddle_serving_client import Client
 
+import argparse
+parser = argparse.ArgumentParser(description="args for paddleserving")
+parser.add_argument("--image_dir", type=str, default="../../lite_data/test")
+args = parser.parse_args()
+
+
 url = "127.0.0.1:9997"
 logid = 10000
-img_path = "../../images/demo.jpg"
+img_path = args.image_dir
 
-def preprocess():
-    image_file = img_path
-    image = Image.open(image_file)
-    seq = Compose([
-            ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
-        ])
-    input_data=seq(image)
-    feed = {"input": input_data}
+client = Client()
+client.load_client_config(
+    "serving_client/serving_client_conf.prototxt")
+client.connect([url])
+
+def cv2_to_base64(image):
+    return base64.b64encode(image).decode(
+        'utf8') 
+        
+def preprocess(img_file):
+    with open(img_file, 'rb') as file:
+        image_data = file.read()
+    image = cv2_to_base64(image_data)
+    feed = {"input": image}
     fetch = ["softmax_1.tmp_0"]
     return feed, fetch
 
@@ -47,14 +60,10 @@ def postprocess(fetch_map):
     fetch_dict["prob"] = str(fetch_dict["prob"])
     return fetch_dict
 
-client = Client()
-client.load_client_config(
-    "serving_client/serving_client_conf.prototxt")
-client.connect([url])
 
-feed, fetch = preprocess()
-
-fetch_map = client.predict(feed=feed, fetch=fetch)
-
-result = postprocess(fetch_map)
-print(result)
+for img_file in os.listdir(img_path):
+    res_list = []
+    feed, fetch = preprocess(os.path.join(img_path, img_file))
+    fetch_map = client.predict(feed=feed, fetch=fetch)
+    result = postprocess(fetch_map)
+    print(result)
