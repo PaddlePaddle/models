@@ -47,12 +47,6 @@ elif [ ${MODE} = "whole_infer" ];then
     fi
 
 elif [ ${MODE} = "serving_infer" ];then
-    # install serving
-    python_name_list=$(func_parser_value "${lines[2]}")
-    IFS='|'
-    array=(${python_name_list})
-    python_name=${array[0]}
-    ${python_name} ./deploy/serving_cpp/download_bin.py
     # get data
     tar -xf ./test_images/lite_data.tar
     # wget model
