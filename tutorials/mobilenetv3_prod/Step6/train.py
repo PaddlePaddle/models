@@ -268,7 +268,7 @@ def main(args):
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
-    if args.test_only and paddle.distributed.get_rank() == 0:
+    if args.test_only:
         top1 = evaluate(
             model, criterion, data_loader_test, amp_level=args.amp_level)
         return top1
