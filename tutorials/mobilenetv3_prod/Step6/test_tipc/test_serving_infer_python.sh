@@ -32,7 +32,7 @@ image_dir_value=$(func_parser_value "${lines[12]}")
 
 LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
-status_log="${LOG_PATH}/results_serving.log"
+status_log="../../log/${model_name}/${MODE}/serving_infer_python_gpu_batchsize_1.log"
 
 function func_serving(){
     IFS='|'
@@ -48,23 +48,28 @@ function func_serving(){
     python_list=(${python_list})
     python=${python_list[0]}
     trans_model_cmd="${python} ${trans_model_py} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_serving_server} ${set_serving_client}"
-    eval $trans_model_cmd}
+    eval ${trans_model_cmd}
+    last_status=${PIPESTATUS[0]}
     cd ${serving_dir_value}
+    status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"
     echo $PWD
     unset https_proxy
     unset http_proxy
 
+    _save_log_path="../../log/${model_name}/${MODE}/serving_infer_python_gpu_batchsize_1.log"
     web_service_cmd="${python} ${web_service_py} &"
     eval $web_service_cmd
-    sleep 2s
+    last_status=${PIPESTATUS[0]}
+    status_check $last_status "${web_service_cmd}" "${status_log}" "${model_name}"
+    sleep 5s
     _save_log_path="../../log/${model_name}/${MODE}/server_infer_gpu_batchsize_1.log"
     set_image_dir=$(func_set_params "${image_dir_key}" "${image_dir_value}")
     pipeline_cmd="${python} ${pipeline_py} ${set_image_dir} > ${_save_log_path} 2>&1 "
     eval $pipeline_cmd
     last_status=${PIPESTATUS[0]}
+    status_check $last_status "${pipeline_cmd}" "${status_log}" "${model_name}"
     eval "cat ${_save_log_path}"
     cd ../../
-    status_check $last_status "${pipeline_cmd}" "${status_log}"
     ps ux | grep -E 'web_service|pipeline' | awk '{print $2}' | xargs kill -s 9
 }
 

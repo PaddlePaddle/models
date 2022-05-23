@@ -58,14 +58,15 @@ function func_paddle2onnx(){
     trans_model_cmd="${padlle2onnx_cmd} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_save_model} ${set_opset_version} ${set_enable_onnx_checker}"
     eval $trans_model_cmd
     last_status=${PIPESTATUS[0]}
-    status_check $last_status "${trans_model_cmd}" "${status_log}"
+    status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"
     # python inference
     set_gpu=$(func_set_params "${use_gpu_key}" "${use_gpu_value}")
     set_model_dir=$(func_set_params "${model_key}" "${save_file_value}")
     set_img_dir=$(func_set_params "${image_dir_key}" "${image_dir_value}")
     infer_model_cmd="${python} ${inference_py} ${set_img_dir} ${set_model_dir} > ${_save_log_path} 2>&1 "
     eval $infer_model_cmd
-    status_check $last_status "${infer_model_cmd}" "${status_log}"
+    last_status=${PIPESTATUS[0]}
+    status_check $last_status "${infer_model_cmd}" "${status_log}" "${model_name}"
 }
 
 

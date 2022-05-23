@@ -45,7 +45,7 @@ Paddle Serving 的 C++ 服务的客户端启动命令一般由 PYTHON 程序编�
 python run_script
 ```
 例如：
-- 对于通过argparse传参的场景来说，`python3 resnet50_client.py`
+- 对于通过argparse传参的场景来说，`python3.7 resnet50_client.py`
 - `python`：替换为 `python3.7`
 - `run_script`：替换为 `resnet50_client.py`
 
@@ -147,7 +147,16 @@ python3.7 serving_client.py
 
     相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
 
-2. 环境：安装好PaddlePaddle即可进行离线量化训练推理测试开发
+2. 环境：安装好 PaddlePaddle 和 PaddleServing 即可进行服务化部署测试开发
+
+为了将模型预处理放在C++端，需自行开发自定义op并重新编译 PaddleServing，参考如下步骤将自定义op放在Serving repo目录下：
+
+```
+cp deploy/serving_cpp/preprocess/general_clas_op.* {Serving_repo_path}/core/general-server/op
+cp deploy/serving_cpp/preprocess/preprocess_op.* {Serving_repo_path}/core/predictor/tools/pp_shitu_tools
+```
+
+参考[编译文档](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/Compile_CN.md)重新编译Serving，并设置SERVING_BIN环境变量。
 
 **【注意事项】**
 
@@ -205,7 +214,11 @@ Run failed with command - python3.7 serving_client.py > ../../log/mobilenet_v3_s
 
 **【实战】**
 
-以mobilenet_v3_small的`Linux GPU/CPU 离线量化训练推理功能测试` 为例，命令如下所示。
+以mobilenet_v3_small的`Linux GPU/CPU 服务化部署测试` 为例，命令如下所示。
+
+```bash
+bash test_tipc/prepare.sh test_tipc/configs/mobilenet_v3_small/serving_infer_cpp.txt serving_infer
+```
 
 ```bash
 bash test_tipc/test_serving_infer_cpp.sh test_tipc/configs/mobilenet_v3_small/serving_infer_cpp.txt serving_infer
@@ -265,8 +278,9 @@ test_tipc
 <a name="4"></a>
 
 ## 4. FAQ
+如果访问不成功，可能设置了代理影响的，可以用下面命令取消代理设置。
 
-```
+```bash
 unset http_proxy
 unset https_proxy
 ```
