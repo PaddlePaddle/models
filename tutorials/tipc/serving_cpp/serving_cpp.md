@@ -74,12 +74,12 @@ Paddle Serving服务化部署主要包括以下步骤：
 （2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
   ```bash
-  pip3 install paddle-serving-client==0.8.3
-  #pip3 install paddle-serving-server==0.8.3 # CPU
-  pip3 install paddle-serving-server-gpu==0.8.3.post102 # GPU with CUDA10.2 + TensorRT6
-  pip3 install paddle-serving-app==0.8.3
-  #pip3 install paddlepaddle==2.2.2 # CPU
-  pip3 install paddlepaddle-gpu==2.2.2
+  pip3 install paddle-serving-client
+  #pip3 install paddle-serving-server # CPU
+  pip3 install paddle-serving-server-gpu # GPU with CUDA10.2 + TensorRT6
+  pip3 install paddle-serving-app
+  #pip3 install paddlepaddle # CPU
+  pip3 install paddlepaddle-gpu
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
   Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/Latest_Packages_CN.md)
@@ -133,7 +133,6 @@ python3 -m paddle_serving_client.convert \
 
 - serving_client.py：用于**客户端**访问服务的程序，开发者需要设置url（服务地址）、logid（日志ID）和测试图像。
 
-- preprocess_ops.py：用户图片前项处理的一些工具类
 
 **【实战】**
 
@@ -145,7 +144,40 @@ cp -r ./template/code/*  ./
 <a name="2.5"></a>
 ### 2.5 服务端修改
 
-服务端无需进行代码修改。
+需要将前后处理部分以自定义OP的形式与 Serving 服务端编译在一起，推荐复用 cpp_infer 中的代码。
+
+**【基本流程】**
+
+具体开发流程可参考[新增op](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/C%2B%2B_Serving/2%2B_model.md)
+
+**【实战】**
+
+针对MobileNet网络, 新增三类文件:
+
+* [General_Clas_op.*](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/general_clas_op.cpp) 包含自定义op部分，读取 client 端传输数据并进行推理预测；
+
+* [preprocess_op.*](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/preprocess_op.cpp) 是可能会用到的工具类函数，复用 cpp_infer 中的代码；
+
+* [serving_client_conf.prototxt](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/serving_client_conf.prototxt) 由于clint端输入的是原始图像，可能与推理时需要的输入数据类型不同，建议将输入数据类型统一修改成string，tipc测试时每次copy该文件，覆盖自动生成的`serving_client_conf.prototxt`。 具体将 feed_var 中的 feed_type 修改为20，shape修改为1。
+
+```
+feed_var {
+  name: "input"
+  alias_name: "input"
+  is_lod_tensor: false
+  feed_type: 20
+  shape: 1
+}
+```
+
+完成代码开发后，将相关代码cp到Serving源码中并进行编译[编译](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/Compile_CN.md)：
+
+```
+cp deploy/serving_cpp/preprocess/general_clas_op.* ${Serving_repo_path}/core/general-server/op
+cp deploy/serving_cpp/preprocess/preprocess_op.* ${Serving_repo_path}/core/predictor/tools/pp_shitu_tools
+```
+
+
 
 <a name="2.6"></a>
 ### 2.6 客户端修改
@@ -170,13 +202,11 @@ img_path = "./images/demo.jpg"
 
 **【基本流程】**
 
-serving_client.py文件中的preprocess函数用于开发数据预处理程序，包含输入、处理流程和输出三部分。
+serving_client.py文件中的preprocess函数用于开发数据处理程序，包含输入和输出两部分。
 
 **（1）输入：** 一般开发者使用时，需要自行定义读取数据的方式。
 
-**（2）处理流程：** 数据预处理流程和基于Paddle Inference的模型预处理流程相同。
-
-**（3）输出：** 需要返回两个参数，第一个参数为模型预测的输入字典，第二个参数为需要获取的模型输出列表
+**（2）输出：** 需要返回两个参数，第一个参数为模型预测的输入字典，第二个参数为需要获取的模型输出列表
 
 ```
 {"input": input_data}, ["output"]
@@ -196,20 +226,20 @@ import numpy as np
 import base64
 from PIL import Image
 import io
-from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 from paddle_serving_client import Client
 ```  
-添加数据读取相关代码：
+添加数据读取相关代码，将输入图片转换成string类型：
 
 ```py
-def preprocess():
-    image_file = img_path
-    image = Image.open(image_file)
-    seq = Compose([
-            ResizeImage(256), CenterCropImage(224), NormalizeImage(), ToCHW()
-        ])
-    input_data=seq(image)
-    feed = {"input": input_data}
+def cv2_to_base64(image):
+    return base64.b64encode(image).decode(
+        'utf8')
+
+def preprocess(img_file):
+    with open(img_file, 'rb') as file:
+        image_data = file.read()
+    image = cv2_to_base64(image_data)
+    feed = {"input": image}
     fetch = ["softmax_1.tmp_0"]
     return feed, fetch
 ```
@@ -253,7 +283,7 @@ def postprocess(fetch_map):
 可以按如下命令启动模型预测服务：
 
 ```bash
-python3 -m paddle_serving_server.serve --model serving_server --port 9993
+python3 -m paddle_serving_server.serve --model serving_server --op GeneralClasOp --port 9993
 ```  
 **【实战】**
 

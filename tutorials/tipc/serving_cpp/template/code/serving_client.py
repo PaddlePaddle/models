@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from paddle_serving_client import Client
+import os
 
 url = "127.0.0.1:9993"
 logid = 10000
 img_path = "./images/demo.jpg"
+
 
 def preprocess():
     """preprocess
@@ -30,6 +32,7 @@ def preprocess():
     """
     pass
 
+
 def postprocess(fetch_map):
     """postprocess
 
@@ -42,14 +45,12 @@ def postprocess(fetch_map):
     """
     pass
 
+
 client = Client()
-client.load_client_config(
-    "serving_client/serving_client_conf.prototxt")
+client.load_client_config("serving_client/serving_client_conf.prototxt")
 client.connect([url])
 
-feed, fetch = preprocess()
-
+feed, fetch = preprocess(img_path)
 fetch_map = client.predict(feed=feed, fetch=fetch)
-
 result = postprocess(fetch_map)
 print(result)
