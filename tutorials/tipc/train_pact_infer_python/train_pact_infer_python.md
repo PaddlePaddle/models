@@ -52,12 +52,12 @@ Linux GPU/CPU PACT量化训练功能开发可以分为5个步骤，如下图所�
 
 **【准备开发环境】**
 
-- 确定已安装paddle，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
-- 确定已安装paddleslim，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
+- 确定已安装PaddlePaddle最新版本，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看飞桨[官网](https://www.paddlepaddle.org.cn/)
+- 确定已安装paddleslim最新版本，通过pip安装linux版本paddle命令如下，更多的版本安装方法可查看[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)
 
 ```
-pip install paddlepaddle-gpu==2.2.1.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
-pip install paddleslim==2.2.1
+pip install paddlepaddle-gpu
+pip install paddleslim
 ```
 
 <a name="2.2"></a>
@@ -101,7 +101,7 @@ PACT在线量化训练开发之前，要求首先有Linux GPU/CPU基础训练的
 ```python
 quant_config = {
     'weight_preprocess_type': None,
-    'activation_preprocess_type': None,
+    'activation_preprocess_type': PACT, #None,
     'weight_quantize_type': 'channel_wise_abs_max',
     'activation_quantize_type': 'moving_average_abs_max',
     'weight_bits': 8,
@@ -113,11 +113,7 @@ quant_config = {
 }
 ```
 
-- `activation_preprocess_type`'：代表对量化模型激活值预处理的方法，目前支持PACT方法，如需使用可以改为'PACT'；默认为None，代表不对激活值进行任何预处理。
-- `weight_preprocess_type`：代表对量化模型权重参数预处理的方法；默认为None，代表不对权重进行任何预处理。
-- `weight_quantize_type`：代表模型权重的量化方式，可选的有['abs_max', 'moving_average_abs_max', 'channel_wise_abs_max']，默认为channel_wise_abs_max
-- `activation_quantize_type`：代表模型激活值的量化方式，可选的有['abs_max', 'moving_average_abs_max']，默认为moving_average_abs_max
-- `quantizable_layer_type`：代表量化OP的类型，目前支持Conv2D和Linear
+**注意**：保持以上量化配置，无需改动
 
 
 - Step2：插入量化算子，得到量化训练模型
@@ -143,43 +139,11 @@ quanter.save_quantized_model(net, 'save_dir', input_spec=[paddle.static.InputSpe
 
 <a name="2.5"></a>
 
-### 2.5 验证推理结果正确性
+### 2.5 通过Paddle Inference验证量化前模型和量化后模型的精度差异
 
 **【基本流程】**
 
-使用Paddle Inference库测试离线量化模型，确保模型精度符合预期。
-
-- Step1：初始化`paddle.inference`库并配置相应参数
-
-```python
-import paddle.inference as paddle_infer
-model_file = os.path.join('quant_model', 'qat_inference.pdmodel')
-params_file = os.path.join('quant_model', 'qat_inference.pdiparams')
-config = paddle_infer.Config(model_file, params_file)
-if FLAGS.use_gpu:
-    config.enable_use_gpu(1000, 0)
-if not FLAGS.ir_optim:
-    config.switch_ir_optim(False)
-
-predictor = paddle_infer.create_predictor(config)
-```
-
-- Step2：配置预测库输入输出
-
-```python
-input_names = predictor.get_input_names()
-input_handle = predictor.get_input_handle(input_names[0])
-output_names = predictor.get_output_names()
-output_handle = predictor.get_output_handle(output_names[0])
-```
-
-- Step3：开始预测并检验结果正确性
-
-```python
-input_handle.copy_from_cpu(img_np)
-predictor.run()
- output_data = output_handle.copy_to_cpu()
-```
+可参考[开发推理程序流程](https://github.com/PaddlePaddle/models/blob/release/2.3/tutorials/tipc/train_infer_python/infer_python.md#26-%E5%BC%80%E5%8F%91%E6%8E%A8%E7%90%86%E7%A8%8B%E5%BA%8F)
 
 **【实战】**
 
