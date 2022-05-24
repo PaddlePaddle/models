@@ -54,6 +54,8 @@ elif [ ${MODE} = "serving_infer" ];then
         wget -nc -P  ./inference https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
+    unset https_proxy
+    unset http_proxy
 elif [ ${MODE} = "cpp_infer" ];then
     PADDLEInfer=$3
     # wget model

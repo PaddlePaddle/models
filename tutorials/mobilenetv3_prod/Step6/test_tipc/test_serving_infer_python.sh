@@ -55,8 +55,6 @@ function func_serving(){
     cd ${serving_dir_value}
     status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"
     echo $PWD
-    unset https_proxy
-    unset http_proxy
 
     for use_gpu in ${web_use_gpu_list[*]}; do
         if [ ${use_gpu} = "null" ]; then
