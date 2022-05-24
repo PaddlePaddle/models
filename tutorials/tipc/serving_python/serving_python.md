@@ -81,7 +81,7 @@ Paddle Serving服务化部署主要包括以下步骤：
   ```bash
   pip install paddle-serving-client
   #pip install paddle-serving-server # CPU
-  pip install paddle-serving-server-gpu # GPU 默认 CUDA10.2 + TensorRT6，其他环节需手动指定版本号
+  pip install paddle-serving-server-gpu # GPU 默认 CUDA10.2 + TensorRT6，其他环境需手动指定版本号
   pip install paddle-serving-app
   #pip install paddlepaddle # CPU
   pip install paddlepaddle-gpu
