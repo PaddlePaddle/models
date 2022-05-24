@@ -21,6 +21,62 @@ from PIL import Image
 import io
 from preprocess_ops import ResizeImage, CenterCropImage, NormalizeImage, ToCHW, Compose
 
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import yaml
+
+
+class ArgsParser(ArgumentParser):
+    def __init__(self):
+        super(ArgsParser, self).__init__(
+            formatter_class=RawDescriptionHelpFormatter)
+        self.add_argument("-c", "--config", help="configuration file to use")
+        self.add_argument(
+            "-o", "--opt", nargs='+', help="set configuration options")
+
+    def parse_args(self, argv=None):
+        args = super(ArgsParser, self).parse_args(argv)
+        assert args.config is not None, \
+            "Please specify --config=configure_file_path."
+        args.conf_dict = self._parse_opt(args.opt, args.config)
+        print("args config:", args.conf_dict)
+        return args
+
+    def _parse_helper(self, v):
+        if v.isnumeric():
+            if "." in v:
+                v = float(v)
+            else:
+                v = int(v)
+        elif v == "True" or v == "False":
+            v = (v == "True")
+        return v
+
+    def _parse_opt(self, opts, conf_path):
+        f = open(conf_path)
+        config = yaml.load(f, Loader=yaml.Loader)
+        if not opts:
+            return config
+        for s in opts:
+            s = s.strip()
+            k, v = s.split('=')
+            v = self._parse_helper(v)
+            if "devices" in k:
+                v = str(v)
+            print(k, v, type(v))
+            cur = config
+            parent = cur
+            for kk in k.split("."):
+                if kk not in cur:
+                    cur[kk] = {}
+                    parent = cur
+                    cur = cur[kk]
+                else:
+                    parent = cur
+                    cur = cur[kk]
+            parent[k.split(".")[-1]] = v
+        return config
+
+
 class MobileNetV3Op(Op):
     def init_op(self):
         self.seq = Compose([
@@ -53,16 +109,17 @@ class MobileNetV3Op(Op):
         result["prob"] = str(result["prob"])
         return result, None, ""
 
+
 class MobileNetV3Service(WebService):
     def get_pipeline_response(self, read_op):
-        mobilenetv3_op = MobileNetV3Op(
-            name="imagenet", input_ops=[read_op])
+        mobilenetv3_op = MobileNetV3Op(name="imagenet", input_ops=[read_op])
         return mobilenetv3_op
 
 
 # define the service class
 uci_service = MobileNetV3Service(name="imagenet")
 # load config and prepare the service
-uci_service.prepare_pipeline_config("config.yml")
+FLAGS = ArgsParser().parse_args()
+uci_service.prepare_pipeline_config(yml_dict=FLAGS.conf_dict)
 # start the service
 uci_service.run_service()

@@ -22,7 +22,7 @@ op:
             model_config: "./serving_server"
 
             #计算硬件类型: 空缺时由devices决定(CPU/GPU)，0=cpu, 1=gpu, 2=tensorRT, 3=arm cpu, 4=kunlun xpu
-            device_type: 1
+            device_type: 
 
             #计算硬件ID，当devices为""或不写时为CPU预测；当devices为"0", "0,1,2"时为GPU预测，表示使用的GPU卡
             devices: "0" # "0,1"
