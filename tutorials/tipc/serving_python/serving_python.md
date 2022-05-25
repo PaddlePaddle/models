@@ -41,7 +41,11 @@ Paddle Serving服务化部署主要包括以下步骤：
 
 <a name="2.1"></a>
 ### 2.1 准备测试数据
-准备测试数据及对应的数据标签，用于后续[推理预测阶段](#2.7)。
+
+为方便快速验证推理预测过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内，确保基础训练推理总时间不超过十分钟），放在`lite_data`文件夹下。
+
+    相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
+
 
 本教程以`./images/demo.jpg`作为测试用例。
 
@@ -72,15 +76,15 @@ Paddle Serving服务化部署主要包括以下步骤：
   nvidia-docker exec -it test bash
   ```
 
-（2）安装Paddle Serving四个安装包，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
+（2）安装Paddle Serving四个安装包的最新版本，分别是：paddle-serving-server(CPU/GPU版本二选一), paddle-serving-client, paddle-serving-app和paddlepaddle(CPU/GPU版本二选一)。
 
   ```bash
-  pip3 install paddle-serving-client==0.7.0
-  #pip3 install paddle-serving-server==0.7.0 # CPU
-  pip3 install paddle-serving-server-gpu==0.7.0.post102 # GPU with CUDA10.2 + TensorRT6
-  pip3 install paddle-serving-app==0.7.0
-  #pip3 install paddlepaddle==2.2.1 # CPU
-  pip3 install paddlepaddle-gpu==2.2.1
+  pip install paddle-serving-client
+  #pip install paddle-serving-server # CPU
+  pip install paddle-serving-server-gpu # GPU 默认 CUDA10.2 + TensorRT6，其他环境需手动指定版本号
+  pip install paddle-serving-app
+  #pip install paddlepaddle # CPU
+  pip install paddlepaddle-gpu
   ```
   您可能需要使用国内镜像源（例如百度源, 在pip命令中添加`-i https://mirror.baidu.com/pypi/simple`）来加速下载。
   Paddle Serving Server更多不同运行环境的whl包下载地址，请参考：[下载页面](https://github.com/PaddlePaddle/Serving/blob/v0.7.0/doc/Latest_Packages_CN.md)
@@ -95,9 +99,9 @@ cd models/tutorials/tipc/serving_python
 
 <a name="2.3"></a>
 ### 2.3 准备服务化部署模型
-#### 2.3.1 下载MobilenetV3 inference模型
+#### 2.3.1 准备MobilenetV3 inference模型
 
-参考[MobilenetV3](../../mobilenetv3_prod/Step6/README.md#2)，下载inference模型
+参考[MobilenetV3](../../mobilenetv3_prod/Step6/README.md#2)，确保 inference 模型在当前目录下。
 
 #### 2.3.2 准备服务化部署模型
 
@@ -106,7 +110,7 @@ cd models/tutorials/tipc/serving_python
 为了便于模型服务化部署，需要将静态图模型(模型结构文件：\*.pdmodel和模型参数文件：\*.pdiparams)使用paddle_serving_client.convert按如下命令转换为服务化部署模型：
 
 ```bash
-python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --model_filename {模型结构文件} --params_filename {模型参数文件} --serving_server {转换后的服务器端模型和配置文件存储路径} --serving_client {转换后的客户端模型和配置文件存储路径}
+python -m paddle_serving_client.convert --dirname {静态图模型路径} --model_filename {模型结构文件} --params_filename {模型参数文件} --serving_server {转换后的服务器端模型和配置文件存储路径} --serving_client {转换后的客户端模型和配置文件存储路径}
 ```
 上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。其中`paddle_serving_client.convert`命令是`paddle_serving_client` whl包内置的转换函数，无需修改。
 
@@ -115,7 +119,7 @@ python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --mod
 针对MobileNetV3网络，将inference模型转换为服务化部署模型的示例命令如下，转换完后在本地生成**serving_server**和**serving_client**两个文件夹。本教程后续主要使用serving_server文件夹中的模型。
 
 ```bash
-python3 -m paddle_serving_client.convert \
+python -m paddle_serving_client.convert \
     --dirname ./mobilenet_v3_small_infer/ \
     --model_filename inference.pdmodel \
     --params_filename inference.pdiparams \
@@ -312,7 +316,7 @@ img_path = "./images/demo.jpg"
 当完成服务化部署引擎初始化、数据预处理和预测结果后处理开发，则可以按如下命令启动模型预测服务：
 
 ```bash
-python3 web_service.py &
+python web_service.py &
 ```  
 **【实战】**
 
@@ -332,7 +336,7 @@ python3 web_service.py &
 客户端访问服务的命令如下：
 
 ```bash
-python3 pipeline_http_client.py
+python pipeline_http_client.py
 ```  
 访问成功的界面如下图：
 

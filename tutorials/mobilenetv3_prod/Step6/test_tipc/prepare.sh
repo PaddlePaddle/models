@@ -54,6 +54,8 @@ elif [ ${MODE} = "serving_infer" ];then
         wget -nc -P  ./inference https://paddle-model-ecology.bj.bcebos.com/model/mobilenetv3_reprod/mobilenet_v3_small_infer.tar  --no-check-certificate
         cd ./inference && tar xf mobilenet_v3_small_infer.tar && cd ../
     fi
+    unset https_proxy
+    unset http_proxy
 elif [ ${MODE} = "cpp_infer" ];then
     PADDLEInfer=$3
     # wget model
@@ -104,6 +106,13 @@ elif [ ${MODE} = "cpp_infer" ];then
     bash tools/build.sh
 
 elif [ ${MODE} = "paddle2onnx_infer" ];then
+    # install paddle2onnx
+    python_name_list=$(func_parser_value "${lines[2]}")
+    IFS='|'
+    array=(${python_name_list})
+    python_name=${array[0]}
+    ${python_name} -m pip install paddle2onnx
+    ${python_name} -m pip install onnxruntime==1.9.0
     # get data
     tar -xf ./test_images/lite_data.tar
     # get model

@@ -216,19 +216,7 @@ python deploy/inference_python/infer.py --model-dir=./mobilenet_v3_small_infer/ 
 
 ### 3.2 准备数据与环境
 
-**【基本内容】**
-
-1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
-
-    相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
-
-2. 环境：安装好PaddlePaddle即可进行PACT量化训练推理测试开发
-
-**【注意事项】**
-
-* 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
-    * 压缩命令： `tar -zcf lite_data.tar lite_data`
-    * 解压命令： `tar -xf lite_data.tar`
+可参考[TIPC 数据准备教程](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/train_infer_python/test_train_infer_python.md#32-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%8E%AF%E5%A2%83)
 
 
 <a name="3.3"></a>
