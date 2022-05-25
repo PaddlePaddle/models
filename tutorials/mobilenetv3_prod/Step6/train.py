@@ -281,25 +281,26 @@ def main(args):
         train_one_epoch(model, criterion, optimizer, data_loader, epoch,
                         args.print_freq, args.amp_level, scaler)
         lr_scheduler.step()
-        top1 = evaluate(
-            model, criterion, data_loader_test, amp_level=args.amp_level)
-        if args.output_dir:
-            paddle.save(model.state_dict(),
-                        os.path.join(args.output_dir,
-                                     'model_{}.pdparams'.format(epoch)))
-            paddle.save(optimizer.state_dict(),
-                        os.path.join(args.output_dir,
-                                     'model_{}.pdopt'.format(epoch)))
-            paddle.save(model.state_dict(),
-                        os.path.join(args.output_dir, 'latest.pdparams'))
-            paddle.save(optimizer.state_dict(),
-                        os.path.join(args.output_dir, 'latest.pdopt'))
-            if top1 > best_top1:
-                best_top1 = top1
+        if paddle.distributed.get_rank() == 0:
+            top1 = evaluate(
+                model, criterion, data_loader_test, amp_level=args.amp_level)
+            if args.output_dir:
                 paddle.save(model.state_dict(),
-                            os.path.join(args.output_dir, 'best.pdparams'))
+                            os.path.join(args.output_dir,
+                                         'model_{}.pdparams'.format(epoch)))
                 paddle.save(optimizer.state_dict(),
-                            os.path.join(args.output_dir, 'best.pdopt'))
+                            os.path.join(args.output_dir,
+                                         'model_{}.pdopt'.format(epoch)))
+                paddle.save(model.state_dict(),
+                            os.path.join(args.output_dir, 'latest.pdparams'))
+                paddle.save(optimizer.state_dict(),
+                            os.path.join(args.output_dir, 'latest.pdopt'))
+                if top1 > best_top1:
+                    best_top1 = top1
+                    paddle.save(model.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdparams'))
+                    paddle.save(optimizer.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdopt'))
 
     if args.pact_quant:
         input_spec = [InputSpec(shape=[None, 3, 224, 224], dtype='float32')]
