@@ -26,7 +26,7 @@
 
 为了一键跑通上述所有功能，本文档提供了`训推一体全流程`功能自动化测试工具，它包含3个脚本文件和1个配置文件，分别是：
 
-* `test_ptq_inference_python.sh`: 测试Linux上离线量化训练、推理功能的脚本，会对`train_ptq_infer_python.txt`进行解析，得到具体的执行命令。**该脚本无需修改**。
+* `test_ptq_inference_python.sh`: 测试Linux上离线量化、推理功能的脚本，会对`train_ptq_infer_python.txt`进行解析，得到具体的执行命令。**该脚本无需修改**。
 * `prepare.sh`: 准备测试需要的数据或需要的预训练模型。
 * `common_func.sh`: 在配置文件一些通用的函数，如配置文件的解析函数等，**该脚本无需修改**。
 * `train_ptq_infer_python.txt`: 配置文件，其中的内容会被`test_ptq_inference_python.sh`解析成具体的执行命令字段。
@@ -155,9 +155,9 @@ python  run_script   set_configs
 
 <a name="3"></a>
 
-## 3. 离线PACT量化训练推理功能测试开发
+## 3. 离线量化推理功能测试开发
 
-PACT量化训练推理功能测试开发过程主要分为以下6个步骤。
+离线量化推理功能测试开发过程主要分为以下6个步骤。
 
 <div align="center">
     <img src="../images/post_infer_quant_guide.png" width="800">
@@ -172,14 +172,14 @@ PACT量化训练推理功能测试开发过程主要分为以下6个步骤。
 
 **【基本内容】**
 
-准备离线量化训练、模型推理的命令，后续会将这些命令按照[第2节](#2)所述内容，映射到配置文件中。
+准备离线量化、模型推理的命令，后续会将这些命令按照[第2节](#2)所述内容，映射到配置文件中。
 
 **【实战】**
 
-MobileNetV3的训练、动转静、推理示例运行命令如下所示。
+MobileNetV3的离线量化、动转静、推理示例运行命令如下所示。
 
 ```bash
-# 模型训练
+# 模型离线量化
 python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --batch-size=2 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/ # 模型动转静
 # 推理
 python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./mobilenet_v3_small_infer_ptq/ --batch-size=1 --img-path=./images/demo.jpg --benchmark=True
@@ -189,20 +189,7 @@ python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./mobilen
 
 ### 3.2 准备数据与环境
 
-**【基本内容】**
-
-1. 数据集：为方便快速验证训练/评估/推理过程，需要准备一个小数据集（训练集和验证集各8~16张图像即可，压缩后数据大小建议在`20M`以内），放在`lite_data`文件夹下。
-
-    相关文档可以参考[论文复现赛指南3.2章节](../../../docs/lwfx/ArticleReproduction_CV.md)，代码可以参考`基于ImageNet准备小数据集的脚本`：[prepare.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step2/prepare.py)。
-
-2. 环境：安装好PaddlePaddle即可进行离线量化训练推理测试开发
-
-**【注意事项】**
-
-* 为方便管理，建议在上传至github前，首先将lite_data文件夹压缩为tar包，直接上传tar包即可，在测试训练评估与推理过程时，可以首先对数据进行解压。
-    * 压缩命令： `tar -zcf lite_data.tar lite_data`
-    * 解压命令： `tar -xf lite_data.tar`
-
+可参考[TIPC 数据准备教程](https://github.com/PaddlePaddle/models/blob/release/2.2/tutorials/tipc/train_infer_python/test_train_infer_python.md#32-%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%8E%AF%E5%A2%83)
 
 <a name="3.3"></a>
 
@@ -254,7 +241,7 @@ Run failed with command - python3.7 deploy/ptq_python/post_quant.py --use-gpu=Tr
 
 **【实战】**
 
-以mobilenet_v3_small的`Linux GPU/CPU 离线量化训练推理功能测试` 为例，命令如下所示。
+以mobilenet_v3_small的`Linux GPU/CPU 离线量化推理功能测试` 为例，命令如下所示。
 
 ```bash
 bash test_tipc/test_train_ptq_python.sh ./test_tipc/configs/mobilenet_v3_small/train_ptq_infer_python.txt whole_infer
@@ -281,7 +268,7 @@ bash test_tipc/test_train_ptq_python.sh ./test_tipc/configs/mobilenet_v3_small/t
 撰写TIPC功能总览和测试流程说明文档，分别为
 
 1. TIPC功能总览文档：test_tipc/README.md
-2. Linux GPU/CPU 离线量化训练推理功能测试说明文档：test_tipc/docs/test_ptq_train_infer_python.md
+2. Linux GPU/CPU 离线量化及推理功能测试说明文档：test_tipc/docs/test_ptq_train_infer_python.md
 
 2个文档模板分别位于下述位置，可以直接拷贝到自己的repo中，根据自己的模型进行修改。
 
@@ -293,7 +280,7 @@ bash test_tipc/test_train_ptq_python.sh ./test_tipc/configs/mobilenet_v3_small/t
 mobilenet_v3_small中`test_tipc`文档如下所示。
 
 1. TIPC功能总览文档：[README.md](../../mobilenetv3_prod/Step6/test_tipc/README.md)
-2. Linux GPU/CPU PACT量化训练推理测试说明文档：[test_train_ptq_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_ptq_inference_python.md)
+2. Linux GPU/CPU 离线量化及推理测试说明文档：[test_train_ptq_inference_python.md](../../mobilenetv3_prod/Step6/test_tipc/docs/test_train_ptq_inference_python.md)
 
 **【核验】**
 
