@@ -39,9 +39,9 @@ status_log="${LOG_PATH}/results_infer_cpp.log"
 function func_infer_cpp(){
     # inference cpp
     if test $use_gpu_value -gt 0; then     
-        _save_log_path="${LOG_PATH}/infer_cpp_use_cpu.log" 
+        _save_log_path="${LOG_PATH}/infer_cpp_use_${use_gpu_key}.log" 
     else
-        _save_log_path="${LOG_PATH}/infer_cpp_${use_gpu_key}.log"
+        _save_log_path="${LOG_PATH}/infer_cpp_use_cpu.log"
     fi
     # run infer cpp
     inference_cpp_cmd="./deploy/inference_cpp/build/clas_system"
