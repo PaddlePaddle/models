@@ -109,16 +109,23 @@ python  run_script   set_configs
 | 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
 |----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
 | 10  | serving_dir:./deploy/serving_infer_python.| python部署执行目录    | 否     | 是           | value修改为python部署工作目录 |
-| 11  | web_service:web_service.py | 启动部署服务命令     | 否     | 是           | value修改为自定义的服务部署脚本 |
-| 12 | pipline:pipeline_http_client.py | 启动访问客户端    | 否     | 是           | value修改为自定义的客户端启动脚本  |
-| 13 | --image_dir:../../lite_data/test/ | 预测图片路径    | 否     | 是           | value修改为预测图片路径           |
+| 11  | web_service:web_service.py --config=config.yml | 启动部署服务命令     | 否     | 是           | value修改为自定义的服务部署脚本 |
+| 12 | --opt op.imagenet.local_service_conf.devices:"0"|null | 部署环境修改 | 是 | 否 | "imagenet" 模型名需要与配置文件匹配 |
+| 13 | pipline:pipeline_http_client.py | 启动访问客户端    | 否     | 是           | value修改为自定义的客户端启动脚本  |
+| 14 | --image_dir:../../lite_data/test/ | 预测图片路径    | 否     | 是           | value修改为预测图片路径           |
 
 
 </details>
 
+以启动服务端命令 `python3.7 my_web_service.py --config=my_config.yml --opt op.imagenet.local_service_conf.devices:"2"` 为例，总共包含三个超参数。
+
+* 配置文件路径和启动服务脚本: `my_web_service.py --config=my_config.yml` 需要修改配置文件的第11行， `key`为`web_service`， `value` 为 `my_web_service.py --config=my_config.yml`, 修改后内容为 `web_service:my_web_service.py --config=my_config.yml`
+
+* 部署环境: `--opt op.imagenet.local_service_conf.devices:"1" ` 需要修改配置文件的第12行，`key`为`--opt op.imagenet.local_service_conf.devices`， `value` 为 `"2"`， 表示在 2 号gpu卡上部署 imagenet 模型。
+
 以启动客户端命令 `python3.7 pipeline_http_client.py --image_dir=./my_data/test_img.png` 为例，总共包含1个超参数。
 
-* 预测图片路径：`--image_dir=./my_data/test_img.png`， 则需要修改配置文件的第13行，`key`为`--image_dir`， `value` 为 `./my_data/test_img.png`，修改后内容为`--image_dir=:./my_data/test_img.png`。
+* 预测图片路径：`--image_dir=./my_data/test_img.png`， 则需要修改配置文件的第14行，`key`为`--image_dir`， `value` 为 `./my_data/test_img.png`，修改后内容为`--image_dir=:./my_data/test_img.png`。
 
 
 ## 3. python 服务化部署功能测试开发
@@ -153,7 +160,8 @@ python3.7 -m paddle_serving_client.convert
 --serving_server=./deploy/serving_infer_python.serving_server/ \
 --serving_client=./deploy/serving_infer_python.serving_client/
 # 部署
-python3.7 web_service.py
+# 不同测试环境可通过 --opt 在命令行中修改
+python3.7 web_service.py --config=config.yml --opt op.imagenet.local_service_conf.devices:"0"
 python3.7 pipeline_http_client.py --image_dir=../../lite_data/test/
 ```
 
