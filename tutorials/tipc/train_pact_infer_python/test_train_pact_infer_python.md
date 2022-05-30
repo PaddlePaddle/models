@@ -4,8 +4,6 @@
 
 - [1. 简介](#1)
 - [2. 命令与配置文件解析](#2)
-    - [2.1 命令解析](#2.1)
-    - [2.2 配置文件和运行命令映射解析](#2.2)
 - [3. 基本训练推理功能测试开发](#3)
     - [2.1 准备待测试的命令](#3.1)
     - [2.2 准备数据与环境](#3.2)
@@ -38,94 +36,9 @@
 
 <a name="2.1"></a>
 
-### 2.1 命令解析
+具体可参考[基础训练推理-命令与配置文件解析章节](https://github.com/PaddlePaddle/models/blob/release/2.3/tutorials/tipc/train_infer_python/test_train_infer_python.md#2-%E5%91%BD%E4%BB%A4%E4%B8%8E%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90)
 
-模型训练、动转静、推理过程的运行命令差别很大，但是都可以拆解为3个部分：
-
-```
-python  run_script   set_configs
-```
-
-例如：
-
-* 对于通过配置文件传参的场景来说，`python3.7 train.py -c config.yaml -o epoch_num=120`
-    * `python`部分为`python3.7`
-    * `run_script`部分为`train.py`
-    * `set_configs`部分为`-c config.yaml -o epoch_num=120`
-* 对于通过argparse传参的场景来说，`python3.7 train.py --data-path="./lite_data" --lr=0.1`
-    * `python`部分为`python3.7`
-    * `run_script`部分为`train.py`
-    * `set_configs`部分为`--data-path="./lite_data" --lr=0.1`
-
-其中，可修改参数`set_configs`一般通过`=`进行分隔，`=`前面的内容可以认为是key，后面的内容可以认为是value，那么通过给定配置文件模板，解析配置，得到其中的key和value，结合`python`和`run_script`，便可以组合出一条完整的命令。
-
-<a name="2.2"></a>
-
-### 2.2 配置文件和运行命令映射解析
-
-完整的`train_pact_infer_python.txt`配置文件共有32行，包含5个方面的内容。
-
-* 训练参数：第1~11行
-* 训练脚本配置：第13~14行
-* 评估脚本和配置：第16~17行（本部分无需关注，这里不再展开介绍）
-* 模型导出脚本和配置：第19~25行
-* 模型Inference推理：第26~32行
-
-具体内容见[train_pact_infer_python.txt](../../mobilenetv3_prod/Step6/test_tipc/configs/mobilenet_v3_small/train_pact_infer_python.txt)。
-
-配置文件中主要有以下3种类型的字段。
-
-* 一行内容以冒号为分隔符：该行可以被解析为`key:value`的格式，需要根据实际的含义修改该行内容，下面进行详细说明。
-* 一行内容为`======xxxxx=====`：该行内容为注释信息，无需修改。
-* 一行内容为`##`：该行内容表示段落分隔符，没有实际意义，无需修改。
-
-#### 2.2.1 训练配置参数
-
-在配置文件中，可以通过下面的方式配置一些常用的超参数，如：是否使用GPU、迭代轮数、batch-size、预训练模型路径等，下面给出了常用的训练配置以及需要修改的内容。
-
-<details>
-<summary><b>训练配置参数（点击以展开详细内容或者折叠）
-</b></summary>
-
-
-| 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
-|----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
-| 2  | model_name:mobilenet_v3_small       | 模型名字          | 否         | 是           | value修改为自己的模型名字                  |
-| 3  | python:python3.7                    | python环境      | 否         | 是           | value修改为自己的python环境              |
-| 4  | gpu_list:0                          | gpu id        | 否         | 是           | value修改为自己的GPU ID                |
-| 5  | use-gpu:True                        | 是否使用GPU       | 是         | 是           | key修改为设置GPU的内容，value修改为设置GPU的值         |
-| 6  | --epochs:lite_train_lite_infer=5    | 迭代的epoch数目    | 是         | 否           | key修改为代码中设置epoch数量的内容          |
-| 7  | --output-dir:./output/              | 输出目录          | 是         | 否           | key修改为代码中设置输出路径的内容             |
-| 8  | --batch-size:lite_train_lite_infer=4 | 训练的batch size | 是         | 否           | key修改为代码中设置batch size的内容       |
-| 9 | --pretrained:null                   | 预训练模型         | 是         | 是           | 如果训练时指定了预训练模型，则key和value需要对应修改 |
-| 10 | train_model_name:latest.pdparams    | 训练结果的模型名字  | 否         | 是           | value需要修改为训练完成之后保存的模型名称，用于后续的动转静 |
-| 11 | --data-path:./lite_data             | 数据集路径         | 是         | 是           | key和value需要对应修改为指定的数据集路径              |
-
-</details>
-
-以训练命令`python3.7 train.py --pact_quant --device=gpu --epochs=2 --data-path=./lite_data`为例，总共包含4个超参数。
-
-* 运行设备：`--device=gpu`，则需要修改为配置文件的第5行，`key`为`--device`， `value`为`gpu`，修改后内容为`--device:gpu`
-* 迭代轮数：`--epochs=2`，则需要修改配置文件的第6行，修改后内容为`--epochs:lite_train_lite_infer=2`（`lite_train_lite_infer`为模式设置，表示少量数据训练，少量数据推理，此处无需修改）
-* 数据路径：`--data-path=./lite_data`，则需要修改为配置文件的第11行，修改后内容为`--data-path:./lite_data`
-* 开启量化训练：`--pact_quant`，由于配置文件中不包含该项配置，因此可以将其和`train.py`字段（配置文件第14行）放在一起，具体会在2.2.2节详细说明。
-
-#### 2.2.2 训练命令配置参数
-
-下面给出了配置文件中的训练命令配置参数（点击以展开详细内容或者折叠）
-
-<details>
-<summary><b>训练命令配置参数（点击以展开详细内容或者折叠）
-</b></summary>
-
-| 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
-|----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
-| 13 | trainer:pact_train                          | 训练方法            | 否         | 否           | -                 |
-| 14 | pact_train:train.py --pact_quant          | pact_train的训练脚本 | 否         | 是           | value可以修改为自己的训练命令 |
-
-</details>
-
-以训练命令`python3.7 train.py --pact_quant --device=gpu --epochs=1 --data-path=./lite_data`为例，该命令为PACT量化训练（非裁剪、量化、蒸馏等方式），因此
+需要特别注意的是：
 
 * 配置文件的第13行直接写`pact_train`即可。
 * 第14行配置`pact_train`的具体运行脚本/入口，即上述命令中的`train.py`因此配置文件的14行内容初步可以修改为`pact_train:train.py --pact_quant`，考虑到`--pact_quant`超参数无法在配置文件中配置，因此可以在这里添加，修改后内容为`pact_train:train.py --pact_quant`
