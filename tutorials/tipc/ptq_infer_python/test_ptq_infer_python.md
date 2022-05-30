@@ -93,20 +93,20 @@ python  run_script   set_configs
 | 5  | --model_path:mobilenet_v3_small_infer/| 输出目录          | 是         | 否           | key修改为代码中设置模型路径的内容             |
 | 6  | --output_dir:./mobilenet_v3_small_infer_ptq/ | 输出模型路径 | 是         | 是           | value修改为自定义的模型输出目录                  |
 | 7  | --data_dir:./test_images/lite_data/ | 数据目录      | 是     | 是           | value修改为自己数据集目录            |
-| 8  | --batch_num:2                       | 训练的batch 数量 | 是         | 是       | key修改为代码中设置batch num的内容       |
-| 9  | --batch-size:2 | 训练的batch size | 是         | 是           | key修改为代码中设置batch size的内容       |
+| 8  | --batch_num:1                       | 训练的batch 数量 | 是         | 是       | key修改为代码中设置batch num的内容       |
+| 9  | --batch-size:1 | 训练的batch size | 是         | 是           | key修改为代码中设置batch size的内容       |
 
 
 </details>
 
-以训练命令`python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/ --batch-size=2`为例，总共包含5个超参数。
+以训练命令`python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/ --batch_num=1 --batch-size=1`为例，总共包含5个超参数。
 
 * 运行设备：`--use-gpu=True`，则需要修改为配置文件的第4行，`key`为`--use-gpu`， `value`为`True`，修改后内容为`--use-gpu:True`
 * 离线量化模型： `--model_path=mobilenet_v3_small_infer/`，需要改为配置文件的第5行，`key`为`--model_path`， `value`为`mobilenet_v3_small_infer`，修改后内容为`--model_path:mobilenet_v3_small_infer/`，
 * 离线量化输出模型：`--output_dir:./mobilenet_v3_small_infer_ptq/`，需要修改配置文件的第6行，`key`为`--output_dir`，`value`为`./mobilenet_v3_small_infer_ptq/`，
 * 数据路径：`--data-path=test_images/lite_data/`，则需要修改为配置文件的第11行，修改后内容为`--data-path:test_images/lite_data/`
-* 迭代轮数：`--batch_num=2`，则需要修改配置文件的第8行，修改后内容为`--batch_num:2`
-* 数据批次：`--batch_size=2`，则需要修改配置文件的第8行，修改后内容为`--batch_size:2`
+* 迭代轮数：`--batch_num=1`，则需要修改配置文件的第8行，修改后内容为`--batch_num:1`
+* 数据批次：`--batch_size=1`，则需要修改配置文件的第8行，修改后内容为`--batch_size:1`
 
 #### 2.2.2 训练命令配置参数
 
@@ -118,15 +118,15 @@ python  run_script   set_configs
 
 | 行号 | 参考内容                                        | 含义              | key是否需要修改 | value是否需要修改 |  修改内容                 |
 |----|---------------------------------------------|-----------------|-----------|-------------|-------------------|
-| 11 | trainer:ptq_train                          | 训练方法            | 否         | 否           | -                 |
-| 12 | ptq_train:deploy/ptq_python/post_quant.py  | ptq_train的训练脚本  | 否         | 是           | value可以修改为自己的训练命令 |
+| 11 | trainer:PTQ                          | 训练方法            | 否         | 否           | -                 |
+| 12 | PTQ:deploy/ptq_python/post_quant.py  | ptq_train的训练脚本  | 否         | 是           | value可以修改为自己的训练命令 |
 
 </details>
 
-以训练命令`python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --batch-size=2 --data_dir=./test_images/lite_data/  --output_dir=./mobilenet_v3_small_infer_ptq/`为例，该命令为离线量化训练（非裁剪、量化、蒸馏等方式），因此
+以训练命令`python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --batch-size=2 --data_dir=./test_images/lite_data/  --output_dir=./mobilenet_v3_small_infer_ptq/`为例，该命令为离线量化，因此
 
-* 配置文件的第11行直接写`ptq_train`即可。
-* 第12行配置`ptq_train`的具体运行脚本/入口，即上述命令中的`deploy/ptq_python/post_quant.py`因此配置文件的14行内容初步可以修改为`ptq_train:deploy/ptq_python/post_quant.py`。
+* 配置文件的第11行直接写`PTQ`即可。
+* 第12行配置`PTQ`的具体运行脚本/入口，即上述命令中的`deploy/ptq_python/post_quant.py`因此配置文件的14行内容初步可以修改为`PTQ:deploy/ptq_python/post_quant.py`。
 
 #### 2.2.3 模型推理配置参数
 
@@ -180,7 +180,7 @@ MobileNetV3的离线量化、动转静、推理示例运行命令如下所示。
 
 ```bash
 # 模型离线量化
-python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --batch-size=2 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/ # 模型动转静
+python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=1 --batch-size=1 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/
 # 推理
 python3.7 deploy/inference_python/infer.py --use-gpu=False --model-dir=./mobilenet_v3_small_infer_ptq/ --batch-size=1 --img-path=./images/demo.jpg --benchmark=True
 ```
@@ -236,7 +236,7 @@ bash test_tipc/test_train_inference_python.sh ${your_params_file} whole_infer
 如果运行失败，会输出具体的报错命令，可以根据输出的报错命令排查下配置文件的问题并修改，示例报错如下所示。
 
 ```
-Run failed with command - python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=2 --batch-size=2 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/!
+Run failed with command - python3.7 deploy/ptq_python/post_quant.py --use-gpu=True --model_path=mobilenet_v3_small_infer/ --batch_num=1 --batch-size=1 --data_dir=./test_images/lite_data/ --output_dir=./mobilenet_v3_small_infer_ptq/!
 ```
 
 **【实战】**
@@ -244,7 +244,7 @@ Run failed with command - python3.7 deploy/ptq_python/post_quant.py --use-gpu=Tr
 以mobilenet_v3_small的`Linux GPU/CPU 离线量化推理功能测试` 为例，命令如下所示。
 
 ```bash
-bash test_tipc/test_train_ptq_python.sh ./test_tipc/configs/mobilenet_v3_small/train_ptq_infer_python.txt whole_infer
+bash test_tipc/test_ptq_inference_python.sh ./test_tipc/configs/mobilenet_v3_small/train_ptq_infer_python.txt whole_infer
 ```
 
 输出结果如下，表示命令运行成功。
