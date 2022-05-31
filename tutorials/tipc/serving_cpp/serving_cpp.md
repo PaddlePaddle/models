@@ -168,12 +168,23 @@ feed_var {
 }
 ```
 
-完成代码开发后，将相关代码cp到Serving源码中并进行编译[编译](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/Compile_CN.md)：
+完成代码开发后，将相关代码cp到Serving源码中并进行编译[编译](https://github.com/PaddlePaddle/Serving/blob/v0.8.3/doc/Compile_CN.md)
 
 ```
 cp deploy/serving_cpp/preprocess/general_clas_op.* ${Serving_repo_path}/core/general-server/op
 cp deploy/serving_cpp/preprocess/preprocess_op.* ${Serving_repo_path}/core/predictor/tools/pp_shitu_tools
 ```
+
+
+如当前docker镜像为 `registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda10.1-cudnn7-gcc82` 可使用一键编译脚本：
+
+```
+bash template/build_server.sh
+```
+
+* 注意修改L49-L50，替换自定义op的文件名
+* 使用其他镜像需手动修改 CUDA 和 TensorRT 相关path
+
 
 
 

@@ -30,10 +30,9 @@ op_key=$(func_parser_key "${lines[11]}")
 op_value=$(func_parser_value "${lines[11]}")
 port_key=$(func_parser_key "${lines[12]}")
 port_value=$(func_parser_value "${lines[12]}")
-cpp_client_value=$(func_parser_value "${lines[13]}")
-
-
-
+gpu_key=$(func_parser_key "${lines[13]}")
+gpu_value=$(func_parser_value "${lines[13]}")
+cpp_client_value=$(func_parser_value "${lines[14]}")
 LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 
@@ -63,20 +62,38 @@ function func_serving(){
     unset https_proxy
     unset http_proxy
 
-    _save_log_path="../../log/${model_name}/${MODE}/servering_infer_cpp_gpu_batchsize_1.log"
     # phrase 2: run server
-    cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${op_key} ${op_value} ${port_key} ${port_value} > serving_log.log & "
-    eval $cpp_server_cmd
-    last_status=${PIPESTATUS[0]}
-    status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
-    sleep 5s
-    clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
-    eval $clinet_cmd
-    last_status=${PIPESTATUS[0]}
-    status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
-    # eval "cat ${_save_log_path}"
-    cd ../../
-    ps ux | grep -i ${port_value} | awk '{print $2}' | xargs kill -s 9
+    for gpu_id in ${gpu_value[*]}; do
+        cat gpu_id
+        if [ ${gpu_id} = "null" ]; then
+            _save_log_path="../../log/${model_name}/${MODE}/servering_infer_cpp_cpu_batchsize_1.log"
+            cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${op_key} ${op_value} ${port_key} ${port_value} > serving_log.log & "
+            eval $cpp_server_cmd
+            last_status=${PIPESTATUS[0]}
+            status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
+            sleep 5s
+            clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
+            eval $clinet_cmd
+            last_status=${PIPESTATUS[0]}
+            status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
+            # eval "cat ${_save_log_path}"
+            ps ux | grep -i ${port_value} | awk '{print $2}' | xargs kill -s 9
+        else
+            _save_log_path="../../log/${model_name}/${MODE}/servering_infer_cpp_gpu_batchsize_1.log"
+            cpp_server_cmd="${python} -m paddle_serving_server.serve ${run_model_path_key} ${run_model_path_value} ${op_key} ${op_value} ${port_key} ${port_value} ${gpu_key} ${gpu_id} > serving_log.log & "
+            eval $cpp_server_cmd
+            last_status=${PIPESTATUS[0]}
+            status_check $last_status "${cpp_server_cmd}" "${status_log}" "${model_name}"
+            sleep 5s
+            clinet_cmd="${python} ${cpp_client_value} > ${_save_log_path} 2>&1 "
+            eval $clinet_cmd
+            last_status=${PIPESTATUS[0]}
+            status_check $last_status "${clinet_cmd}" "${status_log}" "${model_name}"
+            # eval "cat ${_save_log_path}"
+            ps ux | grep -i ${port_value} | awk '{print $2}' | xargs kill -s 9
+        fi
+    done
+
 }
 
 
