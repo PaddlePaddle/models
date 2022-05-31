@@ -176,7 +176,7 @@ cp deploy/serving_cpp/preprocess/preprocess_op.* ${Serving_repo_path}/core/predi
 ```
 
 
-如当前docker环节使用镜像为 `registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda10.1-cudnn7-gcc82`可使用一键编译脚本：
+如当前docker镜像为 `registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda10.1-cudnn7-gcc82` 可使用一键编译脚本：
 
 ```
 bash template/build_server.sh
