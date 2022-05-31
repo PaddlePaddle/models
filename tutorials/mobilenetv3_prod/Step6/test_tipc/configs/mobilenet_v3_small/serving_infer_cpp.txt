@@ -11,4 +11,5 @@ serving_dir:./deploy/serving_cpp
 --model:serving_server
 --op:GeneralClasOp
 --port:9997
+--gpu_id:"0"|null
 cpp_client:serving_client.py
