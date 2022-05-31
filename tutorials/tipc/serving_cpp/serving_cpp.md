@@ -176,14 +176,14 @@ cp deploy/serving_cpp/preprocess/preprocess_op.* ${Serving_repo_path}/core/predi
 ```
 
 
-如当前docker环境为 `registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda10.1-cudnn7-gcc82`可使用一键编译脚本：
+如当前docker环节使用镜像为 `registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda10.1-cudnn7-gcc82`可使用一键编译脚本：
 
 ```
 bash template/build_server.sh
 ```
 
 * 注意修改L49-L50，替换自定义op的文件名
-
+* 使用其他镜像需手动修改 CUDA 和 TensorRT 相关path
 
 
 

@@ -30,15 +30,16 @@ wget https://paddle-qa.bj.bcebos.com/PaddleServing/opencv3.tar.gz && tar -xvf op
 export OPENCV_DIR=$PWD/opencv3
 
 # clone Serving
-git clone https://github.com/PaddlePaddle/Serving.git -b v0.8.3 --depth=1
+git clone https://github.com/PaddlePaddle/Serving.git -b develop --depth=1
 cd Serving
 export Serving_repo_path=$PWD
 git submodule update --init --recursive
-python3.7 -m pip install -r python/requirements.txt
+python -m pip install -r python/requirements.txt
 
-export PYTHON_INCLUDE_DIR=/home/Python-3.7.0/Include/
-export PYTHON_LIBRARIES=/usr/local/lib
-export PYTHON_EXECUTABLE=/usr/local/bin/python3.7
+
+export PYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
+export PYTHON_LIBRARIES=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+export PYTHON_EXECUTABLE=`which python`
 
 export CUDA_PATH='/usr/local/cuda'
 export CUDNN_LIBRARY='/usr/local/cuda/lib64/'
@@ -64,5 +65,5 @@ cmake -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR \
             -DWITH_GPU=ON ..
 make -j32
 
-python3.7 -m pip install python/dist/paddle*
+python -m pip install python/dist/paddle*
 export SERVING_BIN=$PWD/core/general-server/serving
