@@ -156,7 +156,7 @@ cp -r ./template/code/*  ./
 
 * [preprocess_op.*](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/preprocess_op.cpp) 是可能会用到的工具类函数，复用 cpp_infer 中的代码；
 
-* [serving_client_conf.prototxt](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/serving_client_conf.prototxt) 由于clint端输入的是原始图像，可能与推理时需要的输入数据类型不同，建议将输入数据类型统一修改成string，tipc测试时每次copy该文件，覆盖自动生成的`serving_client_conf.prototxt`。 具体将 feed_var 中的 feed_type 修改为20，shape修改为1。
+* [serving_client_conf.prototxt](../../mobilenetv3_prod/Step6/deploy/serving_cpp/preprocess/serving_client_conf.prototxt) 由于clint端输入的是原始图像，可能与推理时需要的输入数据类型不同，建议将输入数据类型统一修改成string，tipc测试时每次copy该文件，覆盖自动生成的`serving_client/serving_client_conf.prototxt`。 具体在Clas将 feed_var 中的 feed_type 修改为20，shape修改为1。按模型实际需要修改，可参考[prototxt 字段说明](https://github.com/PaddlePaddle/Serving/blob/v0.9.0/doc/Save_CN.md)
 
 ```
 feed_var {

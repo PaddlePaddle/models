@@ -13,3 +13,4 @@ serving_dir:./deploy/serving_cpp
 --port:9997
 --gpu_id:"0"|null
 cpp_client:serving_client.py
+proto_path:deploy/serving_cpp/preprocess/serving_client_conf.prototxt

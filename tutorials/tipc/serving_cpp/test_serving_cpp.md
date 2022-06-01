@@ -52,9 +52,10 @@ python run_script
 <a name="2.2"></a>
 
 ## 2.2 配置文件和运行命令映射解析
-完整的 `serving_infer_cpp.txt` 配置文件共有13行，包含2个方面的内容。
-- Serving 部署模型转换：第4~10行
-- Serving 启动部署服务：第10~13行
+完整的 `serving_infer_cpp.txt` 配置文件共有13行，包含3个方面的内容。
+- Serving 部署模型转换：第4~9行
+- Serving 启动部署服务：第10~14行
+- Serving 启动客户端：第15行
 
 具体内容见 `serving_infer_cpp.txt`。
 
@@ -91,12 +92,53 @@ python3.7 -m paddle_serving_client.convert --dirname=./inference/resnet50_infer/
 - pdmodel文件名：`--model_filename=inference.pdmodel`，则需要修改第6行
 - 其他参数以此类推
 
+
+
 ### 2.2.2 C++ 服务部署配置参数
+
+C++ 服务的服务端使用命令行启动。
+
+```
+python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9997 --gpu_id "0"
+```
+<details>
+<summary>服务端启动配置参数（点击以展开详细内容或者折叠）</summary>
+
+
+serving_dir:./deploy/serving_cpp
+--model:serving_server
+--op:GeneralClasOp
+--port:9997
+--gpu_id:"0"|null
+
+| 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
+|----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
+| 10  | serving_dir:./deploy/serving_cpp      | serving服务执行路径          | 否         | 是           | value修改实际路径                  |
+| 11  | --model:serving_server                 | 部署模型名称   | 否         | 是           | value修改为实际部署模型名称     |
+| 12  | --op:GeneralClasOp | 自定义OP名称 | 否        | 是           | value修改自定义模型的名称                  |
+| 13 | --port:9997 | 端口号     | 否     | 是           | value修改为实际使用的端口号           |
+| 14 | --gpu_id:"0"|null    | 是否使用gpu | 否        | 否       | 默认在"0"号gpu卡和cpu卡上运行     |
+
+</details>
+
 
 C++ 服务的客户端采用 PYTHON 语言编写。
 ```python
 python3.7 serving_client.py
 ```
+
+<details>
+<summary>服务端启动配置参数（点击以展开详细内容或者折叠）</summary>
+
+
+| 行号 | 参考内容                                | 含义            | key是否需要修改 | value是否需要修改 | 修改内容                             |
+|----|-------------------------------------|---------------|-----------|-------------|----------------------------------|
+| 15  | cpp_client:serving_client.py      | 客户端服务执行路径          | 否         | 是           | value修改实际路径                  |
+| 16  | proto_path:deploy/serving_cpp/preprocess/serving_client_conf.prototxt                | 准备好的prototxt路径   | 否         | 是           | value修改为实际的prototxt文件路径     |
+
+
+</details>
+
 
 <a name="3"></a>
 
@@ -133,7 +175,7 @@ python3.7 -m paddle_serving_client.convert
 --serving_client=./deploy/serving_cpp/serving_client/
 
 # 部署
-python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --port 9993
+python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9997 --gpu_id "0"
 python3.7 serving_client.py
 ```
 
