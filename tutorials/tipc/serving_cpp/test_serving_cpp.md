@@ -80,7 +80,6 @@ python run_script
 | 7  | --params_filename:inference.pdiparams     | pdiparams 文件名 | 否        | 是       | value修改为 pdiparams 文件名       |
 | 8  | --serving_server:./deploy/serving_cpp/serving_server/ | 转换出的部署模型目录 | 否       | 是           | value修改为部署模型模型保存路径      |
 | 9  | --serving_client:./deploy/serving_cpp/serving_client/ | 转换出的服务模型目录 | 否       | 是           | value修改为服务模型保存路径      |
-|
 
 </details>
 
@@ -100,7 +99,7 @@ python3.7 -m paddle_serving_client.convert --dirname=./inference/resnet50_infer/
 C++ 服务的服务端使用命令行启动。
 
 ```
-python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9993 --gpu_id "0"
+python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9997 --gpu_id "0"
 ```
 <details>
 <summary>服务端启动配置参数（点击以展开详细内容或者折叠）</summary>
@@ -176,7 +175,7 @@ python3.7 -m paddle_serving_client.convert
 --serving_client=./deploy/serving_cpp/serving_client/
 
 # 部署
-python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9993 --gpu_id "0"
+python3.7 -m paddle_serving_server.serve --model ./deploy/serving_cpp/serving_server/ --op GeneralClasOp --port 9997 --gpu_id "0"
 python3.7 serving_client.py
 ```
 
