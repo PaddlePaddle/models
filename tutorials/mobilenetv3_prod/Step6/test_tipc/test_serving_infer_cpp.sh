@@ -33,6 +33,8 @@ port_value=$(func_parser_value "${lines[12]}")
 gpu_key=$(func_parser_key "${lines[13]}")
 gpu_value=$(func_parser_value "${lines[13]}")
 cpp_client_value=$(func_parser_value "${lines[14]}")
+proto_path=$(func_parser_value "${lines[15]}")
+
 LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 
@@ -55,7 +57,7 @@ function func_serving(){
     trans_model_cmd="${python} ${trans_model_py} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_serving_server} ${set_serving_client}"
     eval $trans_model_cmd
     last_status=${PIPESTATUS[0]}
-    cp "deploy/serving_cpp/preprocess/serving_client_conf.prototxt" ${serving_client_value}
+    cp ${proto_path} ${serving_client_value}
     cd ${serving_dir_value}
     status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"
     echo $PWD
