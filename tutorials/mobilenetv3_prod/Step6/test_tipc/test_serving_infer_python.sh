@@ -70,7 +70,7 @@ function func_serving(){
             last_status=${PIPESTATUS[0]}
             status_check $last_status "${pipeline_cmd}" "${status_log}" "${model_name}"
             eval "cat ${_save_log_path}"
-            ps ux | grep -E 'web_service|pipeline' | awk '{print $2}' | xargs kill -s 9
+            ps ux | grep -E 'web_service' | awk '{print $2}' | xargs kill -s 9
         else
             _save_log_path="../../log/${model_name}/${MODE}/serving_infer_python_gpu_batchsize_1.log"
             web_service_cmd="${python} ${web_service_py} ${web_use_gpu_key}=${use_gpu} &"
@@ -84,7 +84,7 @@ function func_serving(){
             last_status=${PIPESTATUS[0]}
             status_check $last_status "${pipeline_cmd}" "${status_log}" "${model_name}"
             eval "cat ${_save_log_path}"
-            ps ux | grep -E 'web_service|pipeline' | awk '{print $2}' | xargs kill -s 9
+            ps ux | grep -E 'web_service' | awk '{print $2}' | xargs kill -s 9
         fi
     done
 }
