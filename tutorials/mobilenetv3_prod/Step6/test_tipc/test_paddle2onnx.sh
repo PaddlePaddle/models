@@ -38,7 +38,7 @@ image_dir_key=$(func_parser_key "${lines[12]}")
 image_dir_value=$(func_parser_value "${lines[12]}")
 
 
-LOG_PATH="./test_tipc/output/${model_name}/${MODE}"
+LOG_PATH="./test_tipc/output/${model_name}/paddle2onnx_infer"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_paddle2onnx.log"
 
