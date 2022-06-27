@@ -61,7 +61,7 @@ benchmark_key=$(func_parser_key "${lines[31]}")
 benchmark_value=$(func_parser_value "${lines[31]}")
 
 # log
-LOG_PATH="./log/${model_name}/${MODE}"
+LOG_PATH="./test_tipc/output/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_python.log"
 
@@ -118,7 +118,7 @@ if [ ${MODE} = "whole_infer" ]; then
     fi
     # set CUDA_VISIBLE_DEVICES
     eval $env
-    
+    export Count=0
     IFS="|"
     
     # run export
@@ -126,7 +126,8 @@ if [ ${MODE} = "whole_infer" ]; then
         save_infer_dir="${save_infer_dir}"
         set_export_weight=$(func_set_params "${export_weight}" "${infer_model_dir}")
         set_save_infer_key=$(func_set_params "${save_infer_key}" "${save_infer_dir}")
-        export_cmd="${python} ${infer_export} ${set_export_weight} ${set_save_infer_key}"
+        export_log_path="${LOG_PATH}/export_${Count}.log"
+        export_cmd="${python} ${infer_export} ${set_export_weight} ${set_save_infer_key} > ${export_log_path} 2>&1 "
         echo ${infer_export} 
         echo $export_cmd
         eval $export_cmd
@@ -167,7 +168,10 @@ else
         fi
 
         for trainer in ${trainer_list[*]}; do
-        
+            autocast=False
+            if [ ${trainer} = "amp_train" ]; then
+                export autocast=True
+            fi
             run_train=${trainer_py}
             run_export=${norm_export}
 
@@ -178,13 +182,14 @@ else
             set_pretrain=$(func_set_params "${pretrain_model_key}" "${pretrain_model_value}")
             set_batchsize=$(func_set_params "${train_batch_key}" "${train_batch_value}")
             if [ ${#ips} -le 15 ];then
-                save_log="${LOG_PATH}/${trainer}_gpus_${gpu}"
+                export nodes=1
+                save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}_nodes_${nodes}.log"
             else                  
                 IFS=","
                 ips_array=(${ips})
                 IFS="|"
-                nodes=${#ips_array[@]}
-                save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_nodes_${nodes}"
+                export nodes=${#ips_array[@]}
+                save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}_nodes_${nodes}.log"
             fi
             set_save_model=$(func_set_params "${save_model_key}" "${save_log}")
             if [ ${#gpu} -le 2 ];then  # train with single gpu
@@ -202,18 +207,20 @@ else
 
             # run eval 
             if [ ${eval_py} != "null" ]; then
+                eval_log_path=${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}_nodes_${nodes}_eval.log
                 eval ${env}
-                eval_cmd="${python} ${eval_py} ${set_eval_pretrain}" 
+                eval_cmd="${python} ${eval_py} ${set_eval_pretrain} > ${eval_log_path} 2>&1 "
                 eval $eval_cmd
                 status_check $? "${eval_cmd}" "${status_log}" "${model_name}"
             fi
             # run export model
             if [ ${run_export} != "null" ]; then 
                 # run export model
+                export_log_path="${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}_nodes_${nodes}_export.log"
                 save_infer_path="${save_log}"
                 set_export_weight=$(func_set_params "${export_weight}" "${save_log}/${train_model_name}")
                 set_save_infer_key=$(func_set_params "${save_infer_key}" "${save_infer_path}")
-                export_cmd="${python} ${run_export} ${set_export_weight} ${set_save_infer_key}"
+                export_cmd="${python} ${run_export} ${set_export_weight} ${set_save_infer_key} > ${export_log_path} 2>&1 "
                 eval $export_cmd
                 status_check $? "${export_cmd}" "${status_log}" "${model_name}"
 

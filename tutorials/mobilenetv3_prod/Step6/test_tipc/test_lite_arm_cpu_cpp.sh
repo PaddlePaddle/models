@@ -30,7 +30,7 @@ num_threads_list=$(func_parser_value_lite "${tipc_lines[5]}" ":")
 batch_size_list=$(func_parser_value_lite "${tipc_lines[6]}" ":")
 precision_list=$(func_parser_value_lite "${tipc_lines[7]}" ":")
 
-LOG_PATH="./output"
+LOG_PATH="./test_tipc/output/${model_name}/arm_infer"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results.log"
 

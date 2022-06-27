@@ -38,7 +38,7 @@ image_dir_key=$(func_parser_key "${lines[12]}")
 image_dir_value=$(func_parser_value "${lines[12]}")
 
 
-LOG_PATH="./log/${model_name}/${MODE}"
+LOG_PATH="./test_tipc/output/${model_name}/paddle2onnx_infer"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_paddle2onnx.log"
 
@@ -49,13 +49,14 @@ function func_paddle2onnx(){
 
     # paddle2onnx
     _save_log_path="${LOG_PATH}/paddle2onnx_infer_cpu.log"
+    _trans_model_log="${LOG_PATH}/trans_model.log"
     set_dirname=$(func_set_params "${infer_model_dir_key}" "${infer_model_dir_value}")
     set_model_filename=$(func_set_params "${model_filename_key}" "${model_filename_value}")
     set_params_filename=$(func_set_params "${params_filename_key}" "${params_filename_value}")
     set_save_model=$(func_set_params "${save_file_key}" "${save_file_value}")
     set_opset_version=$(func_set_params "${opset_version_key}" "${opset_version_value}")
     set_enable_onnx_checker=$(func_set_params "${enable_onnx_checker_key}" "${enable_onnx_checker_value}")
-    trans_model_cmd="${padlle2onnx_cmd} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_save_model} ${set_opset_version} ${set_enable_onnx_checker}"
+    trans_model_cmd="${padlle2onnx_cmd} ${set_dirname} ${set_model_filename} ${set_params_filename} ${set_save_model} ${set_opset_version} ${set_enable_onnx_checker} > ${_trans_model_log} 2>&1 "
     eval $trans_model_cmd
     last_status=${PIPESTATUS[0]}
     status_check $last_status "${trans_model_cmd}" "${status_log}" "${model_name}"

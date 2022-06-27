@@ -32,16 +32,16 @@ model_name=$(func_parser_value_cpp "${lines[1]}")
 use_gpu_key=$(func_parser_key_cpp "${lines[2]}")
 use_gpu_value=$(func_parser_value_cpp "${lines[2]}")
 
-LOG_PATH="./log/infer_cpp"
+LOG_PATH="./test_tipc/output/${model_name}/cpp_infer/"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_infer_cpp.log"
 
 function func_infer_cpp(){
     # inference cpp
     if test $use_gpu_value -gt 0; then     
-        _save_log_path="${LOG_PATH}/infer_cpp_use_${use_gpu_key}.log" 
+        _save_log_path="${LOG_PATH}/cpp_infer_${use_gpu_key}.log" 
     else
-        _save_log_path="${LOG_PATH}/infer_cpp_use_cpu.log"
+        _save_log_path="${LOG_PATH}/cpp_infer_cpu.log"
     fi
     # run infer cpp
     inference_cpp_cmd="./deploy/inference_cpp/build/clas_system"
