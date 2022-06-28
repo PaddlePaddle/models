@@ -75,6 +75,8 @@ def verify_paddle_inference_correctness(layer, path):
     input_names = predictor.get_input_names()
     input_data = get_input_shape("xxxxxx")
     dygraph_input = {}
+    if input_names == ["im_shape", "image", "scale_factor"]:
+        input_names = ["image", "im_shape", "scale_factor"]
     for i,name in enumerate(input_names):
         input_tensor = predictor.get_input_handle(name)
         fake_input = input_data[i]
@@ -94,7 +96,7 @@ def verify_paddle_inference_correctness(layer, path):
     correct = np.allclose(pred, prob_out, rtol=1e-4, atol=1e-4)
     absolute_diff = np.abs(pred.numpy() - prob_out)
     max_absolute_diff = np.max(absolute_diff)
-    print("max_absolute_diff:", max_absolute_diff)
+    # print("max_absolute_diff:", max_absolute_diff)
     assert correct, "Result diff when load and inference:\nlayer max_absolute_diff:{}"\
                   .format(max_absolute_diff)
     print("Successful, dygraph and inference predictions are consistent.")'
@@ -194,4 +196,3 @@ if [ `grep -c "check_inference" $export_file` -ne '0' ];then
 else
     sed -i "${line_number} r tmp_file.txt" ${export_file}
 fi 
-
