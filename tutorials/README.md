@@ -8,6 +8,9 @@
 
 具体地，
 
-* 关于论文复现流程与方法，请参考：[论文复现指南](./article-implementation/ArticleReproduction_CV.md)
+* 关于论文复现流程与方法，请参考：
+  - [论文复现指南-计算机视觉 (CV) 方向](./article-implementation/ArticleReproduction_CV.md)
+  - [论文复现指南-自然语言处理 (NLP) 方向](./article-implementation/ArticleReproduction_NLP.md)
+  - [论文复现指南-推荐 (REC) 方向](./article-implementation/ArticleReproduction_REC.md)
 * 关于模型速度与精度优化的方法，请参考：[产业级SOTA模型优化指南](./pp-series/README.md)
 * 关于训推一体全流程功能开发与测试方法，请参考：[飞桨训推一体全流程开发文档](./tipc/README.md)
