@@ -111,7 +111,7 @@ verify_paddle_inference_correctness(layer, path)
   
 ## 2. 测试说明
 
-测试需完成两项工作：
+测试需完成两项工作，下面以 PaddleClas repo 为例， 将 test_export_shell.sh 脚本拷贝到 PaddleClas 根目录下：
 
 1. 根据config生成 check_inference.py 文件，以MobileNetV3为例:
 
@@ -121,5 +121,12 @@ bash test_export_shell.sh test_tipc/config/MobileNetV3/MobileNetV3_large_x0_5_tr
 
 2. 正常执行tipc “lite_train_lite_infer” 链条
 ```
-bash test_train_inference_python.sh test_tipc/config/MobileNetV3/MobileNetV3_large_x0_5_train_infer_python.txt "lite_train_lite_infer"
+bash test_tipc/test_train_inference_python.sh test_tipc/config/MobileNetV3/MobileNetV3_large_x0_5_train_infer_python.txt "lite_train_lite_infer"
+```
+
+完成之后结果会保存在 test_tipc/output/{model_name}/results_python.log 文件中：
+
+```
+Run successfully with command - python3.7 tools/export_model.py -c xxxxxx
+
 ```
