@@ -1,6 +1,6 @@
 # Linux GPU/CPU PYTHON 动转静精度测试
 
-动转静精度测试的主程序为`test_export_shell.sh`，可以测试模型动转静的功能和inferecn预测结果的正确性。
+动转静精度测试的主程序为`test_export_shell.sh`，可以测试模型动转静的功能和inference预测结果的正确性。
 
 <a name="1"></a>
 ## 1. 开发说明
