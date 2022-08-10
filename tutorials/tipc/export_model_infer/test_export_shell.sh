@@ -168,10 +168,10 @@ elif [[ $model_type =~ "PaddleSeg" ]]; then
 elif [[ $model_type =~ "PaddleVideo" ]]; then
     echo "PaddleVideo"
     # get export file
-    export_file=${root_path}/export.py
+    export_file=${root_path}/tools/export_model.py
     # define layer path and img_shape
     layer="model"
-    path="args.output_path"
+    path="osp.join(args.output_path,model_name if args.save_name is None else args.save_name)"
 fi
 
 echo $export_file
@@ -179,10 +179,13 @@ echo $export_file
 if [[ $model_type =~ "PaddleDetection" ]]; then
     tab_num="6"
     # get insert line
-    line_number="782"
+    line_number="867"
 elif [[ $model_type =~ "PaddleGAN" ]]; then
     tab_num="3"
     line_number="205"
+elif [[ $model_type =~ "PaddleVideo" ]]; then
+    tab_num="2"
+    line_number="249"
 else 
     tab_num=`cat ${export_file} | grep "jit.save" | awk -F"  " '{print NF-1}'`
     # get insert line
