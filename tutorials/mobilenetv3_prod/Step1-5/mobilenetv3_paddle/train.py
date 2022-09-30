@@ -242,8 +242,8 @@ def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser(
         description='PaddlePaddle Classification Training', add_help=add_help)
 
-    parser.add_argument('--data-path', default='../data', help='dataset')
-    parser.add_argument('--model', default='alexnet', help='model')
+    parser.add_argument('--data-path', default='../lite_data', help='dataset')
+    parser.add_argument('--model', default='mobilenet_v3_small', help='model')
     parser.add_argument('--device', default='gpu', help='device')
     parser.add_argument('-b', '--batch-size', default=32, type=int)
     parser.add_argument(
