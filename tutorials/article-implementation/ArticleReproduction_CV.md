@@ -83,14 +83,14 @@
 为了减少数据对比中标准不一致、人工对比过程繁杂的问题，我们建立了数据对比日志工具reprod_log。
 
 #### 2.2.1 reprod_log工具简介
-`reprod_log`是用于论文复现赛中辅助自查和核验工具。查看它的[源代码](https://github.com/WenmuZhou/reprod_log)能对它有个更全面理解。我们常用的功能如下：
+`reprod_log`是用于论文复现赛中辅助自查和核验工具。查看它的[源代码](../reprod_log/)能对它有个更全面理解。我们常用的功能如下：
 
 * 存取指定节点的输入输出tensor；
 * 基于文件的tensor读写；
 * 2个字典的对比验证；
 * 对比结果的输出与记录；
 
-更多API与使用方法可以参考：[reprod_log API使用说明](https://github.com/WenmuZhou/reprod_log/blob/master/README.md)。
+更多API与使用方法可以参考：[reprod_log API使用说明](../reprod_log/README.md)。
 
 #### 2.2.2 reprod_log使用demo
 

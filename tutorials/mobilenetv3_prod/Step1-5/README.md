@@ -31,7 +31,7 @@
 
 <a name="2.1"></a>
 ### 2.1 reprod_log 简介
-Reprod_log 是一个用于 numpy 数据记录和对比工具，通过传入需要对比的两个 numpy 数组就可以在指定的规则下得到数据之差是否满足期望的结论。其主要接口的说明可以看它的 [github 主页](https://github.com/WenmuZhou/reprod_log)。
+Reprod_log 是一个用于 numpy 数据记录和对比工具，通过传入需要对比的两个 numpy 数组就可以在指定的规则下得到数据之差是否满足期望的结论。其主要接口的说明可以看它的 [github 主页](../../reprod_log/)。
 
 <a name="3"></a>
 ## 3. 准备数据和环境
