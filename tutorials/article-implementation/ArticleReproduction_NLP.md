@@ -90,14 +90,14 @@
 ### 2.2 reprod_log whl包
 
 #### 2.2.1 reprod_log工具简介
-`reprod_log`是用于论文复现赛中辅助自查和验收工具。该工具源代码地址在：[https://github.com/WenmuZhou/reprod_log](https://github.com/WenmuZhou/reprod_log)。主要功能如下：
+`reprod_log`是用于论文复现赛中辅助自查和验收工具。该工具源代码地址在：[链接](../reprod_log)。主要功能如下：
 
 * 存取指定节点的输入输出tensor
 * 基于文件的tensor读写
 * 2个字典的对比验证
 * 对比结果的输出与记录
 
-更多API与使用方法可以参考：[reprod_log API使用说明](https://github.com/WenmuZhou/reprod_log/blob/master/README.md)。
+更多API与使用方法可以参考：[reprod_log API使用说明](../reprod_log/README.md)。
 
 #### 2.2.2 reprod_log使用demo
 
