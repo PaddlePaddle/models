@@ -5,9 +5,9 @@
 
 |开发套件|PP系列模型|模型简介|快速开始|
 |---|---|---|---|
-|PaddleClas|PP-LCNet|CPU轻量级骨干网络，提供8种不同尺度的模型，在ImageNet 1k分类数据集上，精度可达71.32%，相比MobileNetV3-Small x0.35模型，提高18个百分点，Intel CPU 硬件上预测速度超过400 FPS，相比MobileNetV3-Small x0.35模型提高22%。|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/zh_CN/models/PP-LCNet.md)|
-|PaddleClas|PP-LCNetv2|基于PP-LCNet优化的轻量级SOTA骨干网络，在ImageNet 1k分类数据集上，精度可达77.04%，相较MobileNetV3-Large x1.25精度提高0.64个百分点，同时在  Intel CPU 硬件上，预测速度可达 230 FPS ，相比 MobileNetV3-Large x1.25 预测速度提高 20%|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/zh_CN/models/PP-LCNetV2.md)|
-|PaddleClas|PP-HGNet|GPU高性能骨干网络，在ImageNet 1k分类数据集上，精度可达79.83%、81.51%，同等速度下，相较ResNet34-D提高3.8个百分点，相较ResNet50-D提高2.4个百分点，在使用百度自研 SSLD 蒸馏策略后，精度相较ResNet50-D提高4.7个百分点。|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/zh_CN/models/PP-HGNet.md)|
+|PaddleClas|PP-LCNet|CPU轻量级骨干网络，提供8种不同尺度的模型，在ImageNet 1k分类数据集上，精度可达71.32%，相比MobileNetV3-Small x0.35模型，提高18个百分点，Intel CPU 硬件上预测速度超过400 FPS，相比MobileNetV3-Small x0.35模型提高22%。|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md)|
+|PaddleClas|PP-LCNetv2|基于PP-LCNet优化的轻量级SOTA骨干网络，在ImageNet 1k分类数据集上，精度可达77.04%，相较MobileNetV3-Large x1.25精度提高0.64个百分点，同时在  Intel CPU 硬件上，预测速度可达 230 FPS ，相比 MobileNetV3-Large x1.25 预测速度提高 20%|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNetV2.md)|
+|PaddleClas|PP-HGNet|GPU高性能骨干网络，在ImageNet 1k分类数据集上，精度可达79.83%、81.51%，同等速度下，相较ResNet34-D提高3.8个百分点，相较ResNet50-D提高2.4个百分点，在使用百度自研 SSLD 蒸馏策略后，精度相较ResNet50-D提高4.7个百分点。|[快速开始](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-HGNet.md)|
 |PaddleClas|PP-ShiTu|轻量图像识别系统，集成了目标检测、特征学习、图像检索等模块，广泛适用于各类图像识别任务，CPU上0.2s即可完成在10w+库的图像识别。|[快速开始](https://github.com/PaddlePaddle/PaddleClas/tree/release/2.3#pp-shitu%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D)|
 |PaddleDetection|PP-YOLO|基于YOLOv3优化的高精度目标检测模型，精度达到45.9%，在单卡V100上FP32推理速度为72.9 FPS, V100上开启TensorRT下FP16推理速度为155.6 FPS。|[快速开始](https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.4/configs/ppyolo/README_cn.md)|
 |PaddleDetection|PP-YOLOv2|高精度目标检测模型，对比PP-YOLO， 精度提升 3.6%，达到49.5%；在 640*640 的输入尺寸下，速度可实现68.9FPS，采用 TensorRT 加速，FPS 还可达到106.5FPS。|[快速开始](https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.4/configs/ppyolo/README_cn.md)|
