@@ -1,0 +1,43 @@
+【YOLOv2-YAML】
+
+Model_Info:
+   name: "PP-YOLOv2"
+   description: 
+   update_time: 
+   icon: url 
+
+Task:
+- 
+	tag: CV
+   sub_tag: Object Detection
+   
+
+Example:
+-
+   tag: Smart transportation
+   sub_tag: 
+   title: 
+   url: https://aistudio.baidu.com/aistudio/projectdetail/4228391
+  
+ 
+Datasets: COCO test-dev2017,COCO train2017,COCO val2017,Pascal VOC
+   
+Pulisher: Baidu,xxx,xxx
+
+License: Apache 2.0
+
+Paper: 
+-	
+	title: 
+	url: https://arxiv.org/pdf/2104.10419.pdf
+-	
+	title: 
+	url: https://arxiv.org/pdf/2104.10419.pdf
+
+
+IfTraining: 1
+
+IfOnlineDemo: 1
+
+
+
