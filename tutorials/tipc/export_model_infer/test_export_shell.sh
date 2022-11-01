@@ -12,7 +12,6 @@ input_shape=$(func_parser_value "${lines[1]}")
 function add_check_function(){
     jit_replace='import numpy as np 
 import paddle 
-
 def getdtype(dtype="float32"):
     if dtype == "float32" or dtype == "float":
         return np.float32
@@ -22,7 +21,6 @@ def getdtype(dtype="float32"):
         return np.int32
     if dtype == "int64":
         return np.int64
-
 def randtool(dtype, low, high, shape):
     """
     np random tools
@@ -35,8 +33,6 @@ def randtool(dtype, low, high, shape):
     elif dtype.count("bool"):
         data = np.random.randint(low, high, shape)
     return data.astype(getdtype(dtype))
-
-
 def get_input_shape(data):
     config = {}
     data = data.split(";")
@@ -54,7 +50,6 @@ def get_input_shape(data):
             shape_dict[str(i)]["dtype"].append(dtype)
             shape_dict[str(i)]["shape"].append(shape)
     config["input_shape"] = shape_dict
-
     input_data = []
     for i, val in enumerate(config["input_shape"]):
         input_shape = config["input_shape"][val]
@@ -63,11 +58,9 @@ def get_input_shape(data):
         data = randtool(dtype, -1, 1, shape)
         input_data.append(data)
     return input_data
-
 def verify_paddle_inference_correctness(layer, path):
     from paddle import inference
     import numpy as np
-
     model_file_path = path + ".pdmodel"
     params_file_path = path + ".pdiparams"
     config = inference.Config(model_file_path, params_file_path)
@@ -89,7 +82,6 @@ def verify_paddle_inference_correctness(layer, path):
         output_tensor = predictor.get_output_handle(output_name)
         output_tensors.append(output_tensor)
     prob_out = output_tensors[0].copy_to_cpu()
-
     layer.eval()
     pred = layer(dygraph_input)
     pred = list(pred.values())[0] if isinstance(pred, dict) else pred
@@ -179,7 +171,7 @@ echo $export_file
 if [[ $model_type =~ "PaddleDetection" ]]; then
     tab_num="6"
     # get insert line
-    line_number="867"
+    line_number="1093"
 elif [[ $model_type =~ "PaddleGAN" ]]; then
     tab_num="3"
     line_number="205"
