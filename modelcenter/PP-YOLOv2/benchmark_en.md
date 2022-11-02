@@ -13,8 +13,10 @@ The PP-YOLO model uses COCO dataset centralized train2017 as the training set an
 
 ### 1.3 Benchmark
 
-![](https://ai-studio-static-online.cdn.bcebos.com/3508f4a4e86b4c6f9bff9527f371b64a9210033a43ed444b96551f89aa66d898)
-
+|模型名称 | 模型简介 |             模型体积 | 输入尺寸 | ips |
+|---|---|---|---|---|
+|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 640 |  |
+|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 320 |  |
 
 
 ## 2. Inference Benchmark
@@ -33,10 +35,8 @@ The PP-YOLO model uses COCO dataset centralized train2017 as the training set an
 ### 2.3 Benchmark
 PP-YOLOv2 (R50) mAP in the COCO test dataset rises from 45.9% to 49.5%, an increase of 3.6 percentage points compared to v1. FP32 FPS is up to 68.9FPS, FP16 FPS is up to 106.5FPS, surpassing YOLOv4 and even YOLOv5! If RestNet101 is used as the backbone network, PP-YOLOv2 (R101) has up to 50.3% mAP and 15.9% faster than YOLOv5x with the same accuracy!
 
-![](https://ai-studio-static-online.cdn.bcebos.com/888ef0a9d26249fa94a54532b1786b3d5e2e0ea8e90945449db8684229630f79)
+![](https://raw.githubusercontent.com/PaddlePaddle/PaddleDetection/release/2.4/docs/images/ppyolo_map_fps.png)
 
-
-![](https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.4/docs/images/ppyolo_map_fps.png)
 
 ## 3. Reference
 Ref: https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.4/configs/ppyolo/README_cn.md

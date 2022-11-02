@@ -3,35 +3,27 @@
 Model_Info:
    name: "PP-YOLOv2"
    description: 
+   description_en:
    update_time: 
    icon: url  @后续UE统一设计之后，会存到bos上某个位置
 
 Task:
-- 
-	tag: CV
-   sub_tag: 目标检测,人脸检测
+-
+    tag: 计算机视觉
+    tag_en: Computer Vision
+    sub_tag: 目标检测,人脸检测
+    sub_tag_en: Object Detection
    
-- 
-	tag: NLP
-   sub_tag: 文字识别
-
 Example:
 -
    tag: 智慧安防
+   tag_en: Intelligent Security
    sub_tag: 火灾/烟雾检测
+   sub_tag_en: Smoke Detction
    title: 基于PP-YOLOv2的火灾/烟雾检测
+   title_en: Smoke Detction based on PP-YOLOv2
    url: https://aistudio.baidu.com/aistudio/projectdetail/2503301
--
-	tag: 智慧安防
-   sub_tag: 跌倒检测
-   title: 基于YOLOv3实现跌倒检测
-   url: https://aistudio.baidu.com/aistudio/projectdetail/2500639
- 
--
-   tag: 智慧交通 
-   sub_tag: 雾天行人车辆检测
-   title: 基于PP-YOLOE的雾天行人车辆目标检测
-   url: https://aistudio.baidu.com/aistudio/projectdetail/4228391
+   url_en: 
   
  
 Datasets: COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC
@@ -41,9 +33,6 @@ Pulisher: Baidu
 License: Apache 2.0
 
 Paper: 
--	
-	title: 
-	url: https://arxiv.org/pdf/2104.10419.pdf
 -	
 	title: 
 	url: https://arxiv.org/pdf/2104.10419.pdf

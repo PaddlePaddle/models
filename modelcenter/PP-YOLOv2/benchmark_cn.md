@@ -13,7 +13,10 @@ PP-YOLO模型使用COCO数据集中train2017作为训练集，使用val2017和te
 
 ### 1.3 指标 （字段可根据模型情况，自行定义）
 
-![](https://ai-studio-static-online.cdn.bcebos.com/3508f4a4e86b4c6f9bff9527f371b64a9210033a43ed444b96551f89aa66d898)
+|模型名称 | 模型简介 |             模型体积 | 输入尺寸 | ips |
+|---|---|---|---|---|
+|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 640 |  |
+|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 320 |  |
 
 
 

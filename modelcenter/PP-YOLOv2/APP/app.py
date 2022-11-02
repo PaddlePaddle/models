@@ -4,6 +4,7 @@ import numpy as np
 import cv2 as cv
 
 
+# UGC: Define the inference fn() for your models
 def model_inference(image):
     json_out = {
         "base64": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAg...",
@@ -17,20 +18,20 @@ def clear_all():
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("目标检测")
+    gr.Markdown("Objective Detection")
 
     with gr.Column(scale=1, min_width=100):
 
         img_in = gr.Image(
             value="https://i.picsum.photos/id/867/600/600.jpg?hmac=qE7QFJwLmlE_WKI7zMH6SgH5iY5fx8ec6ZJQBwKRT44",
             shape=(200, 200),
-            label="请上传图片").style(height=200)
+            label="Input").style(height=200)
 
         with gr.Row():
-            btn1 = gr.Button("清除")
-            btn2 = gr.Button("运行")
+            btn1 = gr.Button("Clear")
+            btn2 = gr.Button("Submit")
 
-        img_out = gr.Image(shape=(200, 200), label="输出图片").style(height=200)
+        img_out = gr.Image(shape=(200, 200), label="Output").style(height=200)
         json_out = gr.JSON(label="jsonOutput")
 
     btn2.click(fn=model_inference, inputs=img_in, outputs=[img_out, json_out])
