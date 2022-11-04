@@ -1,11 +1,11 @@
-【PP-YOLOv2-YAML】(注：本yaml样例仅供大家了解数据结构，官网研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
+【PP-YOLOv2-YAML】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
 
 Model_Info:
    name: "PP-YOLOv2"
    description: 
    description_en:
    update_time: 
-   icon: url  @后续UE统一设计之后，会存到bos上某个位置
+   icon: url  
 
 Task:
 -
@@ -34,7 +34,7 @@ License: Apache 2.0
 
 Paper: 
 -	
-	title: 
+	title: PP-YOLOv2: A Practical Object Detector
 	url: https://arxiv.org/pdf/2104.10419.pdf
 
 
