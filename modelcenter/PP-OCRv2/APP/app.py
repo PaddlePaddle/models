@@ -1,6 +1,7 @@
 import gradio as gr
 import base64
 from io import BytesIO
+from PIL import Image
 
 from paddleocr import PaddleOCR, draw_ocr
 
@@ -21,7 +22,6 @@ def model_inference(image):
     result = ocr.ocr(image, cls=True)
 
     # 显示结果
-    from PIL import Image
     result = result[0]
     boxes = [line[0] for line in result]
     txts = [line[1][0] for line in result]
