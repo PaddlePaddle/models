@@ -1,16 +1,39 @@
 import gradio as gr
-import numpy as np
+import base64
+from io import BytesIO
 
-import cv2 as cv
+from paddleocr import PaddleOCR, draw_ocr
+
+ocr = PaddleOCR(ocr_version='PP-OCRv2', use_angle_cls=True, lang="ch")
+
+
+def image_to_base64(image):
+    # 输入为PIL读取的图片，输出为base64格式
+    byte_data = BytesIO()  # 创建一个字节流管道
+    image.save(byte_data, format="JPEG")  # 将图片数据存入字节流管道
+    byte_data = byte_data.getvalue()  # 从字节流管道中获取二进制
+    base64_str = base64.b64encode(byte_data).decode("ascii")  # 二进制转base64
+    return base64_str
 
 
 # UGC: Define the inference fn() for your models
 def model_inference(image):
-    json_out = {
-        "base64": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAg...",
-        "result": "123456"
-    }
-    return image, json_out
+    result = ocr.ocr(image, cls=True)
+
+    # 显示结果
+    from PIL import Image
+    result = result[0]
+    boxes = [line[0] for line in result]
+    txts = [line[1][0] for line in result]
+    scores = [line[1][1] for line in result]
+    im_show = draw_ocr(image, boxes, txts=None, scores=None)
+    im_show = Image.fromarray(im_show)
+
+    res = []
+    for i in range(len(boxes)):
+        res.append(dict(boxes=boxes[i], txt=txts[i], score=scores[i]))
+    json_out = {"base64": image_to_base64(im_show), "result": res}
+    return im_show, json_out
 
 
 def clear_all():
@@ -18,20 +41,17 @@ def clear_all():
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("Objective Detection")
+    gr.Markdown("PP-OCRv2")
 
     with gr.Column(scale=1, min_width=100):
-
         img_in = gr.Image(
-            value="https://i.picsum.photos/id/867/600/600.jpg?hmac=qE7QFJwLmlE_WKI7zMH6SgH5iY5fx8ec6ZJQBwKRT44",
-            shape=(200, 200),
-            label="Input").style(height=200)
+            value="https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/dygraph/doc/imgs/11.jpg",
+            label="Input")
 
         with gr.Row():
             btn1 = gr.Button("Clear")
             btn2 = gr.Button("Submit")
-
-        img_out = gr.Image(shape=(200, 200), label="Output").style(height=200)
+        img_out = gr.Image(label="Output").style(height=400)
         json_out = gr.JSON(label="jsonOutput")
 
     btn2.click(fn=model_inference, inputs=img_in, outputs=[img_out, json_out])

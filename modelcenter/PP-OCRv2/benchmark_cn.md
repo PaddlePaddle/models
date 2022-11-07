@@ -1,46 +1,21 @@
-## 1. 训练Benchmark
+## 1. 推理 Benchmark
 
 ### 1.1 软硬件环境
 
-* PP-YOLO模型训练过程中使用8 GPUs，每GPU batch size为24进行训练，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
-
-* PP-YOLO_MobileNetV3 模型训练过程中使用4GPU，每GPU batch size为32进行训练，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
-
-* PP-YOLO-tiny 模型训练过程中使用8GPU，每GPU batch size为32进行训练，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
+* PP-OCRv2模型推理速度测试采用6148CPU，开启MKLDNN，线程数为10进行测试。
 
 ### 1.2 数据集
-PP-YOLO模型使用COCO数据集中train2017作为训练集，使用val2017和test-dev2017作为测试集.
+使用内部数据集进行测试
 
-### 1.3 指标 （字段可根据模型情况，自行定义）
-
-|模型名称 | 模型简介 |             模型体积 | 输入尺寸 | ips |
-|---|---|---|---|---|
-|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 640 |  |
-|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 320 |  |
+### 1.3 指标
 
 
+| 模型                | 硬件           | det preprocess time | det inference time | det post process time | rec preprocess time | rec inference time | rec post process time | total time (s)    |
+|---|---|---|---|---|---|---|---|---|
+| ppocr_mobile | 6148CPU      | 10.6291             | 103.8162           | 16.0715               | 0.246               | 62.8177            | 4.6695                | 40.4602 + 69.9684 |
+| ppocr_server | 6148CPU      | 10.6834             | 178.5214           | 16.2959               | 0.2741              | 237.5255           | 4.8711                | 63.7052 + 263.783 |
+| ppocr_mobile_v2 | 6148CPU      | 10.58               | 102.9626           | 16.5514               | 0.2418              | 53.395             | 4.4622                | 40.3293 + 62.2241 |
 
-## 2. 推理 Benchmark
-
-### 2.1 软硬件环境
-
-* PP-YOLO模型推理速度测试采用单卡V100，batch size=1进行测试，使用CUDA 10.2, CUDNN 7.5.1，TensorRT推理速度测试使用TensorRT 5.1.2.2。
-
-* PP-YOLO_MobileNetV3 模型推理速度测试环境配置为麒麟990芯片单线程。
-
-* PP-YOLO-tiny 模型推理速度测试环境配置为麒麟990芯片4线程，arm8架构。
-
-### 2.2 数据集
-PP-YOLO模型使用COCO数据集中train2017作为训练集，使用val2017和test-dev2017作为测试集.
-
-### 2.3 指标（字段可根据模型情况，自行定义）
-
-PP-YOLOv2（R50）在COCO test数据集mAP从45.9%达到了49.5%，相较v1提升了3.6个百分点，FP32 FPS高达68.9FPS，FP16 FPS高达106.5FPS，超越了YOLOv4甚至YOLOv5！如果使用RestNet101作为骨架网络，PP-YOLOv2（R101）的mAP更高达50.3%，并且比同等精度下的YOLOv5x快15.9%！
-
-
-
-
-![](https://raw.githubusercontent.com/PaddlePaddle/PaddleDetection/release/2.4/docs/images/ppyolo_map_fps.png)
 
 ## 3. 相关使用说明
-请参考：https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.4/configs/ppyolo/README_cn.md
+1. https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.4#pp-ocrv2-pipeline
