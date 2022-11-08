@@ -8,8 +8,8 @@ Model_Info:
 Task:
    - tag_en: "CV"
      tag: "计算机视觉"
-     sub_tag_en: "Character Recognition"
-     sub_tag: "文字识别"
+     sub_tag_en: "Text Detection, Character Recognition, Optical Character Recognition"
+     sub_tag: "文字检测，文字识别，OCR"
 Example:
    - title: "《动手学OCR》系列课程之：PP-OCRv2预测部署实战"
      url: "https://aistudio.baidu.com/aistudio/projectdetail/3552922?channelType=0&channel=0"
@@ -22,6 +22,6 @@ Pulisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "PP-OCRv2: Bag of Tricks for Ultra Lightweight OCR System"
-     url: "https://arxiv.org/pdf/2109.03144v2.pdf"
+     url: "https://arxiv.org/abs/2109.03144"
 IfTraining: 0
 IfOnlineDemo: 1
