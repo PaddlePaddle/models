@@ -3,6 +3,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 
+import paddleocr
 from paddleocr import PaddleOCR, draw_ocr
 
 ocr = PaddleOCR(ocr_version='PP-OCRv2', use_angle_cls=True, lang="ch")
@@ -22,7 +23,8 @@ def model_inference(image):
     result = ocr.ocr(image, cls=True)
 
     # 显示结果
-    result = result[0]
+    if paddleocr.__version__ >= "2.6.0.2":
+        result = result[0]
     boxes = [line[0] for line in result]
     txts = [line[1][0] for line in result]
     scores = [line[1][1] for line in result]
