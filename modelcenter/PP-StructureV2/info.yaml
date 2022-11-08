@@ -1,0 +1,25 @@
+---
+Model_Info:
+   name: "PP-StructureV2"
+   description: ""
+   description_en: ""
+   icon: "@后续UE统一设计之后，会存到bos上某个位置"
+   from_repo: "PaddleOCR"
+Task:
+   - tag_en: "CV"
+     tag: "计算机视觉"
+     sub_tag_en: "Layout Analysis, Table Recognition, Layout Recovery, Key Information Extraction"
+     sub_tag: "版面分析，表格识别，版面恢复，关键信息提取"
+Example:
+   - title: "表格识别实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/4770296?channelType=0&channel=0"
+   - title: "OCR发票关键信息抽取"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/4823162?channelType=0&channel=0"
+Datasets: "ICDAR 2015, ICDAR2019-LSVT,ICDAR2017-RCTW-17,Total-Text,ICDAR2019-ArT"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+   - title: "PP-StructureV2: A Stronger Document Analysis System"
+     url: "https://arxiv.org/abs/2210.05391v2"
+IfTraining: 0
+IfOnlineDemo: 1
