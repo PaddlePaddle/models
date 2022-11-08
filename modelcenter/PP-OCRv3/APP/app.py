@@ -21,7 +21,7 @@ def image_to_base64(image):
 # UGC: Define the inference fn() for your models
 def model_inference(image):
     result = ocr.ocr(image, cls=True)
-    print(result)
+
     # 显示结果
     if paddleocr.__version__ >= "2.6.0.2":
         result = result[0]
