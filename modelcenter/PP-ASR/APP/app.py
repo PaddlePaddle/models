@@ -1,19 +1,25 @@
 import gradio as gr
 import os
 from paddlespeech.cli.asr.infer import ASRExecutor
+from paddlespeech.cli.text.infer import TextExecutor
 import librosa
 import soundfile as sf
 
 
 def model_inference(audio):
     asr = ASRExecutor()
+    text_punc = TextExecutor()
     if not isinstance(audio, str):
         audio = str(audio.name)
     y, sr = librosa.load(audio)
     if sr != 16000:  # Optional resample to 16000
         y = librosa.resample(y, sr, 16000)
         sf.write(audio, y, 16000)
-    result = asr(audio_file=audio, device="cpu")
+    result = asr(audio_file=audio,
+                 model='conformer_online_wenetspeech',
+                 device="cpu")
+    result = text_punc(
+        text=result, model='ernie_linear_p7_wudao', device="cpu")
     return result
 
 
@@ -39,7 +45,6 @@ with gr.Blocks() as demo:
 
         audio_text_output = gr.Textbox(placeholder="Result...", lines=10)
         micro_text_output = gr.Textbox(placeholder="Micro Result...", lines=10)
-        # json_out = gr.JSON(label="jsonOutput")
 
     btn3.click(
         fn=model_inference,
