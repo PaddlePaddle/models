@@ -1,0 +1,27 @@
+---
+Model_Info:
+  name: "PP-ShiTuV2"
+  description: "PP-ShiTuV2识别系统"
+  description_en: "PP-ShiTuV2, an recognition system"
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: "https://github.com/PaddlePaddle/PaddleClas"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Characteristics of Product Image"
+  sub_tag: "商品图片特征"
+Example:
+- tag_en: "智慧零售"
+  tag: "智慧零售"
+  sub_tag_en: "商品识别"
+  title: "生鲜产品自主结算"
+  sub_tag: "商品识别"
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/4486158?channelType=0&channel=0"
+Datasets: "Aliproduct, GLDv2, VeRI-Wild, LogoDet-3K, SOP, Inshop, bird400, 104flows,\
+  \ Cars, Fashion Product Images, flowerrecognition, food-101, fruits-262, inaturalist,\
+  \ indoor-scenes, Products-10k, CompCars"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper: ""
+IfTraining: 1
+IfOnlineDemo: 1
