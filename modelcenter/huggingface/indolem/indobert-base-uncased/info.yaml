@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "indolem/indobert-base-uncased"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/indolem/indobert-base-uncased"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: ""
+Pulisher: "indolem"
+License: "License: mit"
+Paper:
+   - title: 'IndoLEM and IndoBERT: A Benchmark Dataset and Pre-trained Language Model for Indonesian NLP'
+   -url: 'http://arxiv.org/abs/2011.00677v1'
+IfTraining: 0
+IfOnlineDemo: 0

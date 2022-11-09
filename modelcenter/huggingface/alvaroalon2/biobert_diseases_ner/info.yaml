@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "alvaroalon2/biobert_diseases_ner"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/alvaroalon2/biobert_diseases_ner"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Token Classification"
+     sub_tag: "Token分类"
+
+Example:
+
+Datasets: "ncbi_disease"
+Pulisher: "alvaroalon2"
+License: "License: apache-2.0"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

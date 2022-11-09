@@ -1,0 +1,28 @@
+---
+Model_Info:
+   name: "sentence-transformers/nli-distilroberta-base-v2"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/sentence-transformers/nli-distilroberta-base-v2"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Sentence Similarity"
+     sub_tag: "句子相似度"
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Feature Extraction"
+     sub_tag: "特征抽取"
+
+Example:
+
+Datasets: ""
+Pulisher: "sentence-transformers"
+License: "License: apache-2.0"
+Paper:
+   - title: 'Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks'
+   -url: 'http://arxiv.org/abs/1908.10084v1'
+IfTraining: 0
+IfOnlineDemo: 0

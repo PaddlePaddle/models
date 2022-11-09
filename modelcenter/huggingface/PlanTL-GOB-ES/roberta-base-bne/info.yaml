@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "PlanTL-GOB-ES/roberta-base-bne"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/PlanTL-GOB-ES/roberta-base-bne"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: ""
+Pulisher: "PlanTL-GOB-ES"
+License: "License: apache-2.0"
+Paper:
+   - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
+   -url: 'http://arxiv.org/abs/1907.11692v1'
+IfTraining: 0
+IfOnlineDemo: 0

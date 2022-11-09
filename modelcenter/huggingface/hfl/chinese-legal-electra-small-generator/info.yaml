@@ -1,0 +1,20 @@
+---
+Model_Info:
+   name: "hfl/chinese-legal-electra-small-generator"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/hfl/chinese-legal-electra-small-generator"
+
+Task:
+
+Example:
+
+Datasets: ""
+Pulisher: "hfl"
+License: "License: apache-2.0"
+Paper:
+   - title: 'Revisiting Pre-Trained Models for Chinese Natural Language Processing'
+   -url: 'http://arxiv.org/abs/2004.13922v2'
+IfTraining: 0
+IfOnlineDemo: 0

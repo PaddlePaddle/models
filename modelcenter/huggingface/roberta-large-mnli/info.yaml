@@ -1,0 +1,36 @@
+---
+Model_Info:
+   name: "roberta-large-mnli"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/roberta-large-mnli"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Classification"
+     sub_tag: "文本分类"
+
+Example:
+
+Datasets: "multi_nli,wikipedia,bookcorpus"
+Pulisher: "huggingface"
+License: "License: mit"
+Paper:
+   - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
+   -url: 'http://arxiv.org/abs/1907.11692v1'
+   - title: 'A Simple Method for Commonsense Reasoning'
+   -url: 'http://arxiv.org/abs/1806.02847v2'
+   - title: 'GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding'
+   -url: 'http://arxiv.org/abs/1804.07461v3'
+   - title: 'A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference'
+   -url: 'http://arxiv.org/abs/1704.05426v4'
+   - title: 'A large annotated corpus for learning natural language inference'
+   -url: 'http://arxiv.org/abs/1508.05326v1'
+   - title: 'XNLI: Evaluating Cross-lingual Sentence Representations'
+   -url: 'http://arxiv.org/abs/1809.05053v1'
+   - title: 'Quantifying the Carbon Emissions of Machine Learning'
+   -url: 'http://arxiv.org/abs/1910.09700v2'
+IfTraining: 0
+IfOnlineDemo: 0

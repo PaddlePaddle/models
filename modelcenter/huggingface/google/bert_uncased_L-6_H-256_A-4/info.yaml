@@ -1,0 +1,20 @@
+---
+Model_Info:
+   name: "google/bert_uncased_L-6_H-256_A-4"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/google/bert_uncased_L-6_H-256_A-4"
+
+Task:
+
+Example:
+
+Datasets: ""
+Pulisher: "google"
+License: "License: apache-2.0"
+Paper:
+   - title: 'Well-Read Students Learn Better: On the Importance of Pre-training Compact Models'
+   -url: 'http://arxiv.org/abs/1908.08962v2'
+IfTraining: 0
+IfOnlineDemo: 0

@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "navteca/quora-roberta-base"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/navteca/quora-roberta-base"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Classification"
+     sub_tag: "文本分类"
+
+Example:
+
+Datasets: "quora"
+Pulisher: "navteca"
+License: "License: mit"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

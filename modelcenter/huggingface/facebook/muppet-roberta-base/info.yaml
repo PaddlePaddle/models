@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "facebook/muppet-roberta-base"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/facebook/muppet-roberta-base"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "bookcorpus,wikipedia"
+Pulisher: "facebook"
+License: "License: mit"
+Paper:
+   - title: 'Muppet: Massive Multi-task Representations with Pre-Finetuning'
+   -url: 'http://arxiv.org/abs/2101.11038v1'
+IfTraining: 0
+IfOnlineDemo: 0

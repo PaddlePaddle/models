@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "lassl/roberta-ko-small"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/lassl/roberta-ko-small"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: ""
+Pulisher: "lassl"
+License: "License: apache-2.0"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

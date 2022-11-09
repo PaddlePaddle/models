@@ -1,0 +1,28 @@
+---
+Model_Info:
+   name: "microsoft/xtremedistil-l6-h384-uncased"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/microsoft/xtremedistil-l6-h384-uncased"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Classification"
+     sub_tag: "文本分类"
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Feature Extraction"
+     sub_tag: "特征抽取"
+
+Example:
+
+Datasets: ""
+Pulisher: "microsoft"
+License: "License: mit"
+Paper:
+   - title: 'XtremeDistilTransformers: Task Transfer for Task-agnostic Distillation'
+   -url: 'http://arxiv.org/abs/2106.04563v2'
+IfTraining: 0
+IfOnlineDemo: 0

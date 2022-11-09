@@ -1,0 +1,26 @@
+---
+Model_Info:
+   name: "microsoft/MiniLM-L12-H384-uncased"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/microsoft/MiniLM-L12-H384-uncased"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Classification"
+     sub_tag: "文本分类"
+
+Example:
+
+Datasets: ""
+Pulisher: "microsoft"
+License: "License: mit"
+Paper:
+   - title: 'MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers'
+   -url: 'http://arxiv.org/abs/2002.10957v2'
+   - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+   -url: 'http://arxiv.org/abs/1810.04805v2'
+IfTraining: 0
+IfOnlineDemo: 0

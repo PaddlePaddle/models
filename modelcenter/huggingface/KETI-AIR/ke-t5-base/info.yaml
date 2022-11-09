@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "KETI-AIR/ke-t5-base"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/KETI-AIR/ke-t5-base"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text2Text Generation"
+     sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "KETI-AIR"
+License: "License: apache-2.0"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

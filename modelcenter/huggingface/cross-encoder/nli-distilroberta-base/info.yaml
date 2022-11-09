@@ -1,0 +1,27 @@
+---
+Model_Info:
+   name: "cross-encoder/nli-distilroberta-base"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/cross-encoder/nli-distilroberta-base"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Zero-Shot Classification"
+     sub_tag: "零样本分类"
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Classification"
+     sub_tag: "文本分类"
+
+Example:
+
+Datasets: "multi_nli,snli"
+Pulisher: "cross-encoder"
+License: "License: apache-2.0"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

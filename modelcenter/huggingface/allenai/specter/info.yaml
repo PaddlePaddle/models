@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "allenai/specter"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/allenai/specter"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Feature Extraction"
+     sub_tag: "特征抽取"
+
+Example:
+
+Datasets: ""
+Pulisher: "allenai"
+License: "License: apache-2.0"
+Paper:
+   - title: 'SPECTER: Document-level Representation Learning using Citation-informed Transformers'
+   -url: 'http://arxiv.org/abs/2004.07180v4'
+IfTraining: 0
+IfOnlineDemo: 0

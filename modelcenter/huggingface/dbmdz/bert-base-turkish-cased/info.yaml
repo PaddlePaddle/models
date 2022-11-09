@@ -1,0 +1,19 @@
+---
+Model_Info:
+   name: "dbmdz/bert-base-turkish-cased"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/dbmdz/bert-base-turkish-cased"
+
+Task:
+
+Example:
+
+Datasets: ""
+Pulisher: "dbmdz"
+License: "License: mit"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

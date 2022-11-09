@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "gpt2-medium"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/gpt2-medium"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Generation"
+     sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "huggingface"
+License: "License: mit"
+Paper:
+   - title: 'Quantifying the Carbon Emissions of Machine Learning'
+   -url: 'http://arxiv.org/abs/1910.09700v2'
+IfTraining: 0
+IfOnlineDemo: 0

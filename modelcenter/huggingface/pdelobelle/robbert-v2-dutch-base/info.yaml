@@ -1,0 +1,36 @@
+---
+Model_Info:
+   name: "pdelobelle/robbert-v2-dutch-base"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/pdelobelle/robbert-v2-dutch-base"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "oscar,dbrd,conll2002"
+Pulisher: "pdelobelle"
+License: "License: mit"
+Paper:
+   - title: 'RobBERT: a Dutch RoBERTa-based Language Model'
+   -url: 'http://arxiv.org/abs/2001.06286v2'
+   - title: 'Leveraging the Inherent Hierarchy of Vacancy Titles for Automated Job Ontology Expansion'
+   -url: 'http://arxiv.org/abs/2004.02814v1'
+   - title: 'Dutch Humor Detection by Generating Negative Examples'
+   -url: 'http://arxiv.org/abs/2010.13652v1'
+   - title: 'SICKNL: A Dataset for Dutch Natural Language Inference'
+   -url: 'http://arxiv.org/abs/2101.05716v1'
+   - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
+   -url: 'http://arxiv.org/abs/1907.11692v1'
+   - title: 'Binary and Multitask Classification Model for Dutch Anaphora Resolution: Die/Dat Prediction'
+   -url: 'http://arxiv.org/abs/2001.02943v2'
+   - title: 'ALBERT: A Lite BERT for Self-supervised Learning of Language Representations'
+   -url: 'http://arxiv.org/abs/1909.11942v6'
+IfTraining: 0
+IfOnlineDemo: 0

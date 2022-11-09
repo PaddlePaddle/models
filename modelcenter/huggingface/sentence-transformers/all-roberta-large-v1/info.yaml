@@ -1,0 +1,36 @@
+---
+Model_Info:
+   name: "sentence-transformers/all-roberta-large-v1"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/sentence-transformers/all-roberta-large-v1"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Sentence Similarity"
+     sub_tag: "句子相似度"
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Feature Extraction"
+     sub_tag: "特征抽取"
+
+Example:
+
+Datasets: ""
+Pulisher: "sentence-transformers"
+License: "License: apache-2.0"
+Paper:
+   - title: 'A Repository of Conversational Datasets'
+   -url: 'http://arxiv.org/abs/1904.06472v2'
+   - title: 'PAQ: 65 Million Probably-Asked Questions and What You Can Do With Them'
+   -url: 'http://arxiv.org/abs/2102.07033v1'
+   - title: 'GooAQ: Open Question Answering with Diverse Answer Types'
+   -url: 'http://arxiv.org/abs/2104.08727v2'
+   - title: 'SearchQA: A New Q&A Dataset Augmented with Context from a Search Engine'
+   -url: 'http://arxiv.org/abs/1704.05179v3'
+   - title: 'WikiHow: A Large Scale Text Summarization Dataset'
+   -url: 'http://arxiv.org/abs/1810.09305v1'
+IfTraining: 0
+IfOnlineDemo: 0

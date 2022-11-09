@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "felflare/bert-restore-punctuation"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/felflare/bert-restore-punctuation"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Token Classification"
+     sub_tag: "Token分类"
+
+Example:
+
+Datasets: "yelp_polarity"
+Pulisher: "felflare"
+License: "License: mit"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

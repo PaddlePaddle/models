@@ -1,0 +1,26 @@
+---
+Model_Info:
+   name: "roberta-large"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/roberta-large"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "bookcorpus,wikipedia"
+Pulisher: "huggingface"
+License: "License: mit"
+Paper:
+   - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
+   -url: 'http://arxiv.org/abs/1907.11692v1'
+   - title: 'A Simple Method for Commonsense Reasoning'
+   -url: 'http://arxiv.org/abs/1806.02847v2'
+IfTraining: 0
+IfOnlineDemo: 0

@@ -1,0 +1,23 @@
+---
+Model_Info:
+   name: "gpt2"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/gpt2"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text Generation"
+     sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "huggingface"
+License: "License: mit"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

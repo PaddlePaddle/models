@@ -1,0 +1,24 @@
+---
+Model_Info:
+   name: "Langboat/mengzi-t5-base-mt"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/Langboat/mengzi-t5-base-mt"
+
+Task:
+- tag_en: "NLP"
+     tag: "自然语言处理"
+     sub_tag_en: "Text2Text Generation"
+     sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "Langboat"
+License: "License: apache-2.0"
+Paper:
+   - title: 'Mengzi: Towards Lightweight yet Ingenious Pre-trained Models for Chinese'
+   -url: 'http://arxiv.org/abs/2110.06696v2'
+IfTraining: 0
+IfOnlineDemo: 0

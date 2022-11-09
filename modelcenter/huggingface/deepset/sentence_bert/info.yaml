@@ -1,0 +1,19 @@
+---
+Model_Info:
+   name: "deepset/sentence_bert"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/deepset/sentence_bert"
+
+Task:
+
+Example:
+
+Datasets: ""
+Pulisher: "deepset"
+License: "License: apache-2.0"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0
