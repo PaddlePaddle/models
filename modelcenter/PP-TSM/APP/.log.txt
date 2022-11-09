@@ -1,4 +1,0 @@
-[11/09 08:35:17] main proc 34348 exit, kill process group 34348
-[11/09 08:37:02] main proc 34615 exit, kill process group 34615
-[11/09 09:06:09] main proc 34902 exit, kill process group 34902
-[11/09 09:07:21] main proc 35482 exit, kill process group 35482
