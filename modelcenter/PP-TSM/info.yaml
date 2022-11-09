@@ -1,0 +1,27 @@
+---
+Model_Info:
+  name: "PP-TSM"
+  description: ""
+  description_en: ""
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: "PaddleVideo"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Short Video Content Classification"
+  sub_tag: "短视频内容分类"
+Example:
+- tag_en: "文体互娱"
+  tag: "文体互娱"
+  sub_tag_en: "时刻剪辑"
+  title: "基于PaddleVideo的足球精彩时刻剪辑"
+  sub_tag: "时刻剪辑"
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/3473391?contributionType=1"
+Datasets: "Kinetics-400, UCF-101"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+- title: "TSM: Temporal Shift Module for Efficient Video Understanding"
+  url: "https://arxiv.org/pdf/1811.08383.pdf"
+IfTraining: 1
+IfOnlineDemo: 1
