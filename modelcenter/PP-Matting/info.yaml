@@ -1,0 +1,22 @@
+---
+Model_Info:
+  name: "PP-Matting"
+  description: ""
+  description_en: ""
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: "PaddleSeg"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Image Matting"
+  sub_tag: "图像抠图"
+Example:
+- {}
+Datasets: "Composition-1k, Distinctions-646"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+- title: "PP-Matting: High-Accuracy Natural Image Matting"
+  url: "https://arxiv.org/abs/2204.09433"
+IfTraining: 1
+IfOnlineDemo: 1
