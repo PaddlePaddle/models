@@ -1,0 +1,49 @@
+【PP-HelixFold-YAML】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
+
+Model_Info:
+   name: "PP-HelixFold"
+   description: 
+   description_en:
+   update_time: 
+   icon: 
+   from_repo: "PaddleHelix"
+
+Task:
+-
+    tag: "生物计算"
+    tag_en: "Biological Computing"
+    sub_tag: "蛋白质结构预测"
+    sub_tag_en: "Protein Structure Prediction"
+   
+Example:
+-
+   tag: 
+   tag_en: 
+   sub_tag:
+   sub_tag_en: 
+   title: 
+   title_en: 
+   url: 
+   url_en: 
+  
+ 
+Datasets: "RCSB PDB, Self-distillation datasets, CAMEO, CASP14"
+   
+Pulisher: "Baidu"
+
+License: "Apache 2.0"
+
+Paper: 
+-	
+	title: HelixFold: "An Efficient Implementation of AlphaFold2 using PaddlePaddle"
+	url: "https://arxiv.org/abs/2207.05477"
+-  
+   title: "Efficient AlphaFold2 Training using Parallel Evoformer and Branch Parallelism"
+   url: "https://arxiv.org/abs/2211.00235"
+
+IfTraining: 1
+
+IfOnlineDemo: 1
+
+
+
