@@ -1,0 +1,307 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": false
+   },
+   "source": [
+    "# 1. 模型介绍\n",
+    "## 1.1 简介\n",
+    "PP-ASR 是一个 提供 ASR 功能的工具。其提供了多种中文和英文的模型，支持模型的训练，并且支持使用命令行的方式进行模型的推理。 PP-ASR 也支持流式模型的部署，以及个性化场景的部署。 PP-ASR支持多种预训练模型：[released_model](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/released_model.md)。 其中效果较好的模型为支持流式 ASR 的 Conformer 模型。\n",
+    "\n",
+    "## 1.2 特点\n",
+    "语音识别的基本流程如下图所示：\n",
+    "<div align=center>\n",
+    "<img src=\"https://user-images.githubusercontent.com/87408988/168259962-cbe2008b-47b6-443d-9566-d77a5ca2eb25.png\"/>\n",
+    "<br>\n",
+    "</div>\n",
+    "<br></br>\n",
+    "PP-ASR 的主要特点如下：\n",
+    "\n",
+    "1. 提供在中/英文开源数据集 aishell （中文），wenetspeech（中文），librispeech （英文）上的预训练模型。模型包含 deepspeech2 模型以及 conformer/transformer 模型。\n",
+    "2. 支持中/英文的模型训练功能。\n",
+    "3. 支持命令行方式的模型推理，可使用 paddlespeech asr --model xxx --input xxx.wav 方式调用各个预训练模型进行推理。\n",
+    "4. 支持流式 ASR 的服务部署，也支持输出时间戳。\n",
+    "5. 支持个性化场景的部署。\n",
+    "\n",
+    "更多内容欢迎来 [PaddleSpeech](https://github.com/PaddlePaddle/PaddleSpeech/tree/develop/paddlespeech) 进行体验！\n",
+    "\n",
+    "\n",
+    "# 2. 模型效果及应用场景\n",
+    "## 2.1 流式语音识别任务\n",
+    "\n",
+    "语音识别(Automatic Speech Recognition, ASR) 是一项从一段音频中提取出语言文字内容的任务。而流式语音识别则是用户将一整段语音分段，以流式输入，最后得到识别结果。\n",
+    "\n",
+    "实时语音识别引擎在获得分段的输入语音的同时，就可以同步地对这段数据进行特征提取和解码工作，而不用等到所有数据都获得后再开始工作。因此这样就可以在最后一段语音结束后，仅延迟很短的时间（也即等待处理最后一段语音数据以及获取最终结果的时间）即可返回最终识别结果。这种流式输入方式能缩短整体上获得最终结果的时间，极大地提升用户体验。    \n",
+    "\n",
+    "## 2.2 应用场景\n",
+    "1. 人机交互/语音输入法    \n",
+    "流式语音识别可以在用户说话的时候实时生成文字，加快了机器对人的反馈速度，使得用户的使用体验得到提升。\n",
+    "\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/6a68196417234818b3241616a1649741eef4f919c67141d9b9ad371780d110a8\" height=50%, width=50%/>\n",
+    "<br>\n",
+    "  (百度智能音箱：https://dumall.baidu.com/)\n",
+    "</div>\n",
+    "\n",
+    "  \n",
+    "2. 实时字幕/会议纪要    \n",
+    "在会议场景，边说话，边转写文本。\n",
+    "将会议、庭审、采访等场景的音频信息转换为文字，由实时语音识别服务实现，降低人工记录成本、提升效率。\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/546271f5bad341acb208d3d497874028da5a664e9e1e460eb61af6a742e89aeb\" height=70%, width=70%/>\n",
+    "<br>\n",
+    "(百度智能会议系统：一指禅)\n",
+    "</div>\n",
+    "\n",
+    "3. 同声翻译    \n",
+    "在机器进行同声翻译的时候，机器需要能实时识别出用户的说话内容，才能将说话的内容通过翻译模块实时翻译成别的语言。   \n",
+    "\n",
+    "<div align=center>\n",
+    "<img href=\"https://infoflow.baidu.com/audio-video/#/\" src=\"https://ai-studio-static-online.cdn.bcebos.com/7472f6f976e94e3288dacb0a8bffd9a824f31e392e48496d830f5f11626c0851\" height=50%, width=50%/>\n",
+    "<br>\n",
+    "  (如流：智能会议 https://infoflow.baidu.com/audio-video/#/)\n",
+    "</div>\n",
+    "\n",
+    "4. 电话质检    \n",
+    "将坐席通话转成文字，由实时语音识别服务或录音文件识别服务实现，全面覆盖质检内容、提升质检效率。    \n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/cbd0af3553ff4b8891bb6239069ad76d95bbc36fb98444378a3b3d716eb1fbcb\" height=40%, width=40%/>\n",
+    "</div>\n",
+    "\n",
+    "5. 语音消息转写    \n",
+    "将用户的语音信息转成文字信息，由一句话识别服务实现，提升用户阅读效率。    \n",
+    "\n",
+    "## 2.3 数据集\n",
+    "模型使用10000小时多领域中文语音识别数据集WenetSpeech。\n",
+    "\n",
+    "## 2.4 效果展示\n",
+    "网页上使用 asr server 的效果展示：[streaming_asr_demo_video](https://paddlespeech.readthedocs.io/en/latest/streaming_asr_demo_video.html)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 3. 模型使用\n",
+    "## 3.1 模型推理\n",
+    "### 安装paddlespeech"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!pip install paddlespeech"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 下载测试音频"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!wget https://paddlespeech.bj.bcebos.com/PaddleAudio/zh.wav"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 推理"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from paddlespeech.cli.asr.infer import ASRExecutor\n",
+    "audio = \"zh.wav\"\n",
+    "asr = ASRExecutor()\n",
+    "result = asr(audio_file=audio)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3.2 模型训练\n",
+    "[基于wenetspeech的流式 Conformer 训练](https://github.com/PaddlePaddle/PaddleSpeech/tree/develop/examples/wenetspeech/asr1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": false
+   },
+   "source": [
+    "# 4. 流式 Conformer 模型原理"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": false
+   },
+   "source": [
+    "## 4.1 Confomer 模型结构\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/0fc40fc45a8f4046beea14eb69cfc1eee52196d9db974442a4c4df8007f8d70d\" height=1200, width=800 />\n",
+    "<br>\n",
+    "</div>\n",
+    "  \n",
+    "  \n",
+    "Conformer 主要由 Encoder 和 Decoder 两个部分组成，整体的模型结构和 Transformer 非常相似。  \n",
+    "Conformer 和 Transformer 有着相同的 Decoder，主要的区别有2点：  \n",
+    "1. Conformer 的 Encoder 中包含了 conv 模块。该 conv 模块由 pointwise conv，GLU层，Depthwith conv， RELU层，以及第二层 pointwise conv， 共5个部分组成。  \n",
+    "2. Conformer 的 Encoder 使用了2层 FeedForward，分别位于每层 encoder的头和尾，并且设置每层输出的权重设置为0.5，整体类似于一个汉堡的结构。\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": false
+   },
+   "source": [
+    "\n",
+    "\n",
+    "## 4.2 流式 Conformer\n",
+    "流式解码主要分为2个步骤：\n",
+    "1. 说话中：使用 CTC prefix beam search 进行解码。\n",
+    "2. 说话结束：使用 CTC prefix beam search + attention_rescoring 进行解码。 其中 attention_rescoring 主要是用 decoder 对 ctc 的结果进行重打分，从而改变了 ctc 整句结果的候选排序。\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/c37339dbaf5c4c20a67b76d88c6730bb1cd93fc7f71b4179982f42365b969f49\" height=1200, width=800 />\n",
+    "<br>(图片来自\"Chao Yang http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html\" )\n",
+    "</div>\n",
+    "\n",
+    "\n",
+    "因此，流式解码的核心在于支持流式的 CTC prefix beam search，而流式的 CTC prefix beam search 在于训练一个可以支持流式的 Encoder。\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "### 4.2.1 要点1：因果卷积，避免高时延\n",
+    "如果使用通常的卷积网络，如果使用了很多层卷积，网络输出的每一步将会大量依赖当前步后的多帧，从而增大了流式模型的时延，而 conformer 模型中存在大量的 conv 层，因此，如果使用普通的卷积， 流式 conformer 模型的时延会很大。  \n",
+    "为了解决这个问题，流式 conformer 使用了 因果卷积。因果卷积的每一步的输出只会依赖之前的时间点，而不会依赖之后的时间点，类似于卷积实现的 RNN 结构。从而避免了 conformer 模型的高时延。\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/e77dddf4e0514724b3f24e9f6931aaf1054ebf0b4c1348b59aee6d3a13f833fe\" height=800, width=500 />\n",
+    "<br>(图片来自\"Bai S, Kolter J Z, Koltun V. An empirical evaluation of generic convolutional and recurrent networks for sequence modeling\" )\n",
+    "</div>\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "### 4.2.2 要点2：带有 mask 的 attention\n",
+    "\n",
+    "实现流式的 Encoder 的主要挑战是 conformer 的 attention 结构通常是使用全局的信息，如下图中第一张子图所示，从而无法实现流式。为了解决这个问题，流式 conformer 在训练的过程中会限制 attention 的作用范围。 \n",
+    "关于 attention 的作用范围，主要的策略如下图所示：\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/5a8cecc5d0b54898bd9ee4d4573433de992d68a234de418daaa02e6f80289b46\" height=1200, width=800 />\n",
+    "<br>(图片来自\"Chao Yang http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html\" )\n",
+    "</div>\n",
+    "\n",
+    "为了尽可能多地使用语音地上下文信息，我们一般使用第三种 attention 作用范围。  \n",
+    "在训练的过程中，为了增强模型的健壮性，同时也让模型在解码过程中可以适用于多种 chunk size， 对于每个 batch 的数据，会采用随机的 chunk size 大小进行训练。    \n",
+    "而在解码的过程中，我们使用固定的 chunk size 进行解码。\n",
+    "\n",
+    "### 4.2.3 要点 3： cache\n",
+    "conformer 在进行解码的过程中，会使用 cache 来减小冗余的计算量。  \n",
+    "conformer Encoder 的 cache 主要分为 3 个 部分：  \n",
+    "1. subsampling_cache  \n",
+    "2. conformer_cnn_cache \n",
+    "3. elayers_output_cache \n",
+    "```\n",
+    "\t\t# Feed forward overlap input step by step\n",
+    "        for cur in range(0, num_frames - context + 1, stride):\n",
+    "            end = min(cur + decoding_window, num_frames)\n",
+    "            chunk_xs = xs[:, cur:end, :]\n",
+    "            (y, subsampling_cache, elayers_output_cache,\n",
+    "             conformer_cnn_cache) = self.forward_chunk(\n",
+    "                 chunk_xs, offset, required_cache_size, subsampling_cache,\n",
+    "                 elayers_output_cache, conformer_cnn_cache)\n",
+    "            outputs.append(y)\n",
+    "            offset += y.shape[1]\n",
+    "        ys = paddle.cat(outputs, 1)\n",
+    "```\n",
+    "\n",
+    "<div align=center>\n",
+    "<img src=\"https://ai-studio-static-online.cdn.bcebos.com/a8e0ff53e2b54fbfbc6f8715dfcba8a50d05b13228eb4ef598a0445336dd3a03\" height=1200, width=800 />\n",
+    "<br>(图片来自\"Chao Yang http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html\" )\n",
+    "</div>\n",
+    "\n",
+    "\n",
+    "\n",
+    "1. subsampling cache: [paddle.Tensor]     \n",
+    " subsampling的输出的 cache，即为第一个conformer block 的输入。 用于缓存输入的特征经过 subsampling 模块之后的结果, 而当前的输入 chunk 和 subsampling cache 合并作为 conformer encoder 的输入。conformer 使用的 subsampling 主要由于 2 层 cnn 和一层 linear 构成。  \n",
+    " \n",
+    "2. conformer_cnn_cache: List[paddle.Tensor]   \n",
+    "主要存储每个 conformer block 当中 conv 模块的输入， 由于 conv 模块会依赖之前的帧信息，所以需要对之前的输入进行缓存，节约计算时间。  \n",
+    "\n",
+    "3. layers_output_cache: List[paddle.Tensor]    \n",
+    "主要存储当前 conformer block 的历史输出, 从而可与当前 conformer block 的输出拼接后作为作为下一个 conformer block 的输入。  \n",
+    "\n",
+    "一个非流式的 conformer 模型通过结合以上的 3 个要点，就可以转变为流式的 conformer 模型。"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 5. 注意事项"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": false
+   },
+   "source": [
+    "# 6. 引用       \n",
+    "[1] Chao Yang. http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html    \n",
+    "[2] Gulati A, Qin J, Chiu C C, et al. Conformer: Convolution-augmented transformer for speech recognition[J]. arXiv preprint arXiv:2005.08100, 2020.    \n",
+    "[3] Graves A, Fernández S, Gomez F, et al. Connectionist temporal classification: labelling unsegmented sequence data with recurrent neural networks[C]//Proceedings of the 23rd international conference on Machine learning. 2006: 369-376.    "
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "py35-paddle1.2.0"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}

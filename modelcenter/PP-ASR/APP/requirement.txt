@@ -1,0 +1,5 @@
+paddlepaddle==2.3.2
+paddleaudio==1.0.1
+paddlespeech==1.2.0
+soundfile==0.11.0
+librosa==0.8.1
