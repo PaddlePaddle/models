@@ -3,3 +3,4 @@
 |---|---|---|---|---|
 |ernie-m-base | 自然语言推断 |  | 514 | [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/ernie_m/ernie_m_base.pdparams) |
 |ernie-m-large | 自然语言推断 |  | 514 | [预训练模型](https://paddlenlp.bj.bcebos.com/models/transformers/ernie_m/ernie_m_large.pdparams) |
+

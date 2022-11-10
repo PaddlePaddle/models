@@ -100,4 +100,3 @@ XNLI 是 MNLI 的子集，并且已被翻译成14种不同的语言（包含一�
 | VECO LARGE                              | 86.9     |
 | **ERNIE-M LARGE**                       | **87.9** |
 | **ERNIE-M LARGE（ after fine-tuning）** | 93.3     |
-
