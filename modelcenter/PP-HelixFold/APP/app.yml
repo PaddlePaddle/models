@@ -1,0 +1,11 @@
+【PP-HelixFold-App-YAML】
+
+APP_Info:
+    title: PP-HelixFold-App
+    colorFrom: blue
+    colorTo: yellow
+    sdk: gradio
+    sdk_version: 3.4.1
+    app_file: app.py
+    license: apache-2.0
+    device: gpu

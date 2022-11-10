@@ -1,0 +1,3 @@
+gradio
+paddlepaddle
+paddleocr>=2.6.1.0
