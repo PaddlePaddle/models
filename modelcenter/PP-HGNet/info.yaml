@@ -1,8 +1,8 @@
 ---
 Model_Info:
   name: "PP-HGNet"
-  description: ""
-  description_en: ""
+  description: "面向Nvidia GPU端的高性能卷积神经网络"
+  description_en: "A High-performance Convolutional Neural Network for Nvidia GPU"
   icon: ""
   from_repo: "https://github.com/paddlepaddle/paddleclas"
 Task:

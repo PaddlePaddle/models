@@ -1,8 +1,8 @@
 ---
 Model_Info:
   name: "PP-LCNetv2"
-  description: ""
-  description_en: ""
+  description: "面向Intel CPU端的轻量级卷积神经网络"
+  description_en: "A Lightweight Convolutional Neural Network for Intel CPU"
   icon: ""
   from_repo: "https://github.com/paddlepaddle/paddleclas"
 Task:

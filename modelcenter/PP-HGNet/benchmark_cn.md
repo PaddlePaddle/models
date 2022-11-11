@@ -1,3 +1,7 @@
+## 1. 训练 Benchmark
+
+PP-HGNet 系列模型的训练 Benchmark 评测流程可以参考 [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md)。
+
 ## 1. 推理 Benchmark
 
 ### 1.1 软硬件环境
