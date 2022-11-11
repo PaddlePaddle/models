@@ -1,0 +1,20 @@
+tqdm
+typeguard
+visualdl>=2.2.0
+opencv-python
+PyYAML
+shapely
+scipy
+terminaltables
+Cython
+pycocotools
+setuptools
+
+# for vehicleplate
+pyclipper
+
+# for mot
+lap
+motmetrics
+sklearn
+filterpy

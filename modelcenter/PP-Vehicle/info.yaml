@@ -1,0 +1,19 @@
+---
+Model_Info:
+  name: "PP-Vehicle"
+  description: ""
+  description_en: "t"
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: ""
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Object Detection"
+  sub_tag: "目标检测"
+Example: ""
+Datasets: ""
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper: ""
+IfTraining: 0
+IfOnlineDemo: 1
