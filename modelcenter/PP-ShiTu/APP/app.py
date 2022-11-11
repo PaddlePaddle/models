@@ -66,10 +66,10 @@ def model_inference(image) -> tuple:
     """send given image to inference model and get result from output
 
     Args:
-        image (gr.Image): input image
+        image (gr.Image): _description_
 
     Returns:
-        tuple: (drawn image to display, result in json format)
+        tuple: (image to display, result in json format)
     """
     results = clas_engine.predict(image, print_pred=True, predict_type="shitu")
 
@@ -130,7 +130,7 @@ def clear_all():
 
 
 # download drink_dataset_v2.0.tar
-dataset_url = "https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/data/drink_dataset_v2.0.tar"
+dataset_url = "https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/data/drink_dataset_v1.0.tar"
 download_with_progressbar(dataset_url,
                           os.path.join("./", dataset_url.split("/")[-1]))
 
