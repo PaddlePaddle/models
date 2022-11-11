@@ -11,7 +11,8 @@ Task:
   sub_tag_en: "Image Matting, Figure Cutout"
   sub_tag: "图像抠图, 人像抠图"
 Example:
-- {}
+- title: "【PaddleSeg-Matting实践范例】PP-Matting图像抠图"
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/5002963"
 Datasets: "Composition-1k, Distinctions-646"
 Pulisher: "Baidu"
 License: "apache.2.0"
