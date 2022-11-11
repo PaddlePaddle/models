@@ -1,0 +1,21 @@
+---
+Model_Info:
+   name: "ERNIE-UIE"
+   description: "信息抽取模型"
+   description_en: "Information Extraction Model"
+   icon: "@后续UE统一设计之后，会存到bos上某个位置"
+   from_repo: "PaddleNLP"
+Task:
+   - tag_en: ""
+     tag: ""
+     sub_tag_en: ""
+     sub_tag: ""
+Example:
+Datasets:
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+   - title: "Unified Structure Generation for Universal Information Extraction"
+     url: "https://arxiv.org/pdf/2203.12277.pdf"
+IfTraining: 0
+IfOnlineDemo: 1
