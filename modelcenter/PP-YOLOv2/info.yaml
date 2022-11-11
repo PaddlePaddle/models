@@ -2,10 +2,11 @@
 
 Model_Info:
    name: "PP-YOLOv2"
-   description: 
-   description_en:
+   description: PP-YOLOv2是PP-YOLO的升级版本
+   description_en: PP-YOLOv2 is an upgraded version of PP-YOLO
    update_time: 
    icon: url  
+   from_repo: "PaddleDetection"
 
 Task:
 -
