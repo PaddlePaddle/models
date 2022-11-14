@@ -1,3 +1,4 @@
+---
 Model_Info:
    name: "ERNIE-Layout"
    description: 文心跨模态预训练大模型
@@ -8,10 +9,10 @@ Model_Info:
 
 Task:
 -
-    tag: 跨模态
-    tag_en: Transmodal
-    sub_tag: 文档信息抽取, 文档视觉问答, 文档图像分类
-    sub_tag_en: Document Information Extraction, Document Visual Q&A, Document Image Classification
+    tag: 大模型
+    tag_en: Big model
+    sub_tag: 文心大模型
+    sub_tag_en: ERNIE Big Model
    
 Example:
 -
