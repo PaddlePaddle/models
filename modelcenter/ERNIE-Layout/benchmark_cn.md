@@ -45,5 +45,5 @@ FUNSD和XFUND-ZH使用的lr_scheduler_type策略是constant，因此不对warmup
 | LayoutXLM-Base | 1e-5, 2, _ | 1e-5, 8, 0.1 | 1e-5, 2, _ | 2e-5. 8, 0.1 |
 | ERNIE-LayoutX-Base | 2e-5, 4, _ | 1e-5, 8, 0. | 1e-5, 4, _ | 2e-5. 8, 0.05 |
 
-# 4.相关使用说明
+# 5.相关使用说明
 请参考：[ERNIE-Layout](https://github.com/PaddlePaddle/PaddleNLP/blob/develop/model_zoo/ernie-layout/README_ch.md)
