@@ -5,7 +5,12 @@ Model_Info:
   description_en: "A cross-lingual model"
   icon: "@后续UE统一设计之后，会存到bos上某个位置"
   from_repo: "PaddleNLP"
-Task: ""
+
+Task: 
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Pretrained Model"
+  sub_tag: "Pretrained Model"
 Example: ""
 Datasets: ""
 Pulisher: "Baidu"
