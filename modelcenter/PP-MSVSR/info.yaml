@@ -12,7 +12,9 @@ Task:
   sub_tag: "图像超分辨"
 Example:
 - title: "老北京城影像修复"
+  title_en: "Restoration of old Beijing videos"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/1161285"
+  url_en: 
 Datasets: "REDS, Vimeo90K, Vid4, UDM10"
 Pulisher: "Baidu"
 License: "apache.2.0"
