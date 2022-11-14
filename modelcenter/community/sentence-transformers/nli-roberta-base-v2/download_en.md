@@ -11,7 +11,7 @@ or you can download all of model file with the following steps:
 * install paddlenlp
 
 ```shell
-pip install paddlenlp
+pip install --upgrade paddlenlp
 ```
 
 * download model with cli tool

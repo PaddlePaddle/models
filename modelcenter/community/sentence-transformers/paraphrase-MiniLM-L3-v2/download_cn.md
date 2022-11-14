@@ -11,7 +11,7 @@
 * 安装paddlenlp
 
 ```shell
-pip install paddlenlp
+pip install --upgrade paddlenlp
 ```
 
 * 下载命令行
