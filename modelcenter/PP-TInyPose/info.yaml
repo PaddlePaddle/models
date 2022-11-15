@@ -1,22 +1,29 @@
 ---
 Model_Info:
   name: "PP-TInyPose"
-  description: ""
-  description_en: ""
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
-  from_repo: ""
+  description: "飞桨人体姿态估计"
+  description_en: "PaddlePaddle Estimation of human posture"
+  icon: ""
+  from_repo: "PaddleDetection"
 Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Object Detection"
+  sub_tag: "目标检测"
 - tag_en: "Computer Vision"
   tag: "计算机视觉"
   sub_tag_en: "Keypoints Detection"
   sub_tag: "关键点检测"
 Example:
-- title: "Android Fitness Demo"
+- tag_en: "Intelligent Security"
+  tag: "智慧安防"
+  sub_tag_en: "Keypoints Detection"
+  title: "Android Fitness Demo"
+  sub_tag: "关键点检测"
   url: "https://github.com/zhiboniu/pose_demo_android"
-Datasets: "COCO train2017，AI Challenger trainset，COCO person keypoints val2017，COCO\
+Datasets: "COCO train2017,AI Challenger trainset,COCO person keypoints val2017,COCO\
   \ instances val2017"
 Pulisher: "Baidu"
 License: "apache.2.0"
-Paper: ""
 IfTraining: 0
 IfOnlineDemo: 1
