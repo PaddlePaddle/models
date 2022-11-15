@@ -1,17 +1,16 @@
----
 Model_Info:
    name: "Recognai/bert-base-spanish-wwm-cased-xnli"
-   description: ""
-   description_en: ""
+   description: "bert-base-spanish-wwm-cased-xnli"
+   description_en: "bert-base-spanish-wwm-cased-xnli"
    icon: ""
    from_repo: "https://huggingface.co/Recognai/bert-base-spanish-wwm-cased-xnli"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Zero-Shot Classification"
      sub_tag: "零样本分类"
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text Classification"
      sub_tag: "文本分类"
@@ -20,7 +19,8 @@ Example:
 
 Datasets: "xnli"
 Pulisher: "Recognai"
-License: "License: mit"
+License: "mit"
+Language: "Spanish"
 Paper:
 
 IfTraining: 0

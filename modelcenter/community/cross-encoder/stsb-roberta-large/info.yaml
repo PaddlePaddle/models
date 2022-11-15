@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "cross-encoder/stsb-roberta-large"
-   description: ""
-   description_en: ""
+   description: "Cross-Encoder for Quora Duplicate Questions Detection"
+   description_en: "Cross-Encoder for Quora Duplicate Questions Detection"
    icon: ""
    from_repo: "https://huggingface.co/cross-encoder/stsb-roberta-large"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text Classification"
      sub_tag: "文本分类"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "cross-encoder"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: ""
 Paper:
 
 IfTraining: 0

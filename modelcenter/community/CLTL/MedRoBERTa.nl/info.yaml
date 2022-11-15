@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "CLTL/MedRoBERTa.nl"
-   description: ""
-   description_en: ""
+   description: "MedRoBERTa.nl"
+   description_en: "MedRoBERTa.nl"
    icon: ""
    from_repo: "https://huggingface.co/CLTL/MedRoBERTa.nl"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "CLTL"
-License: "License: mit"
+License: "mit"
+Language: "Dutch"
 Paper:
 
 IfTraining: 0

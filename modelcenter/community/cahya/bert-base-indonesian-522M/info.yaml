@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "cahya/bert-base-indonesian-522M"
-   description: ""
-   description_en: ""
+   description: "Indonesian BERT base model (uncased)"
+   description_en: "Indonesian BERT base model (uncased)"
    icon: ""
    from_repo: "https://huggingface.co/cahya/bert-base-indonesian-522M"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: "wikipedia"
 Pulisher: "cahya"
-License: "License: mit"
+License: "mit"
+Language: "Indonesian"
 Paper:
 
 IfTraining: 0

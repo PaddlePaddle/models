@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "hfl/chinese-roberta-wwm-ext"
-   description: ""
-   description_en: ""
+   description: "Please use 'Bert' related functions to load this model!"
+   description_en: "Please use 'Bert' related functions to load this model!"
    icon: ""
    from_repo: "https://huggingface.co/hfl/chinese-roberta-wwm-ext"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,11 +15,12 @@ Example:
 
 Datasets: ""
 Pulisher: "hfl"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "Chinese"
 Paper:
    - title: 'Pre-Training with Whole Word Masking for Chinese BERT'
-   -url: 'http://arxiv.org/abs/1906.08101v3'
+     url: 'http://arxiv.org/abs/1906.08101v3'
    - title: 'Revisiting Pre-Trained Models for Chinese Natural Language Processing'
-   -url: 'http://arxiv.org/abs/2004.13922v2'
+     url: 'http://arxiv.org/abs/2004.13922v2'
 IfTraining: 0
 IfOnlineDemo: 0

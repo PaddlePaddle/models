@@ -1,0 +1,24 @@
+Model_Info:
+   name: "bert-large-uncased"
+   description: "BERT large model (uncased)"
+   description_en: "BERT large model (uncased)"
+   icon: ""
+   from_repo: "https://huggingface.co/bert-large-uncased"
+
+Task:
+- tag_en: "Natural Language Processing"
+     tag: "自然语言处理"
+     sub_tag_en: "Fill-Mask"
+     sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "bookcorpus,wikipedia"
+Pulisher: "huggingface"
+License: "apache-2.0"
+Language: "English"
+Paper:
+   - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+     url: 'http://arxiv.org/abs/1810.04805v2'
+IfTraining: 0
+IfOnlineDemo: 0

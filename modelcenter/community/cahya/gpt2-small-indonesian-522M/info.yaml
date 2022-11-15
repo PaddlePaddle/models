@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "cahya/gpt2-small-indonesian-522M"
-   description: ""
-   description_en: ""
+   description: "Indonesian GPT2 small model"
+   description_en: "Indonesian GPT2 small model"
    icon: ""
    from_repo: "https://huggingface.co/cahya/gpt2-small-indonesian-522M"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text Generation"
      sub_tag: "文本生成"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "cahya"
-License: "License: mit"
+License: "mit"
+Language: "Indonesian"
 Paper:
 
 IfTraining: 0

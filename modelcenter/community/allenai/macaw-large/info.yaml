@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "allenai/macaw-large"
-   description: ""
-   description_en: ""
+   description: "macaw-large"
+   description_en: "macaw-large"
    icon: ""
    from_repo: "https://huggingface.co/allenai/macaw-large"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text2Text Generation"
      sub_tag: "文本生成"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "allenai"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "English"
 Paper:
 
 IfTraining: 0

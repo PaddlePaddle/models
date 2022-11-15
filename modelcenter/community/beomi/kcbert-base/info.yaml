@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "beomi/kcbert-base"
-   description: ""
-   description_en: ""
+   description: "KcBERT: Korean comments BERT"
+   description_en: "KcBERT: Korean comments BERT"
    icon: ""
    from_repo: "https://huggingface.co/beomi/kcbert-base"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,9 +15,10 @@ Example:
 
 Datasets: ""
 Pulisher: "beomi"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "Korean"
 Paper:
    - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
-   -url: 'http://arxiv.org/abs/1810.04805v2'
+     url: 'http://arxiv.org/abs/1810.04805v2'
 IfTraining: 0
 IfOnlineDemo: 0

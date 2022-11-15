@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "asi/gpt-fr-cased-small"
-   description: ""
-   description_en: ""
+   description: "Model description"
+   description_en: "Model description"
    icon: ""
    from_repo: "https://huggingface.co/asi/gpt-fr-cased-small"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text Generation"
      sub_tag: "文本生成"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "asi"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "French"
 Paper:
 
 IfTraining: 0

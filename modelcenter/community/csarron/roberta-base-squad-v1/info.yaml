@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "csarron/roberta-base-squad-v1"
-   description: ""
-   description_en: ""
+   description: "RoBERTa-base fine-tuned on SQuAD v1"
+   description_en: "RoBERTa-base fine-tuned on SQuAD v1"
    icon: ""
    from_repo: "https://huggingface.co/csarron/roberta-base-squad-v1"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Question Answering"
      sub_tag: "回答问题"
@@ -16,9 +15,10 @@ Example:
 
 Datasets: "squad"
 Pulisher: "csarron"
-License: "License: mit"
+License: "mit"
+Language: "English"
 Paper:
    - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
-   -url: 'http://arxiv.org/abs/1907.11692v1'
+     url: 'http://arxiv.org/abs/1907.11692v1'
 IfTraining: 0
 IfOnlineDemo: 0

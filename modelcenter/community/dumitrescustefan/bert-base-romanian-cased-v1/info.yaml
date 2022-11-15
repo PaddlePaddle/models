@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "dumitrescustefan/bert-base-romanian-cased-v1"
-   description: ""
-   description_en: ""
+   description: "bert-base-romanian-cased-v1"
+   description_en: "bert-base-romanian-cased-v1"
    icon: ""
    from_repo: "https://huggingface.co/dumitrescustefan/bert-base-romanian-cased-v1"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "dumitrescustefan"
-License: "License: mit"
+License: "mit"
+Language: "Romanian"
 Paper:
 
 IfTraining: 0

@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "google/t5-large-ssm"
-   description: ""
-   description_en: ""
+   description: "Abstract"
+   description_en: "Abstract"
    icon: ""
    from_repo: "https://huggingface.co/google/t5-large-ssm"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text2Text Generation"
      sub_tag: "文本生成"
@@ -16,11 +15,12 @@ Example:
 
 Datasets: "c4,wikipedia"
 Pulisher: "google"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "English"
 Paper:
    - title: 'REALM: Retrieval-Augmented Language Model Pre-Training'
-   -url: 'http://arxiv.org/abs/2002.08909v1'
+     url: 'http://arxiv.org/abs/2002.08909v1'
    - title: 'Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer'
-   -url: 'http://arxiv.org/abs/1910.10683v3'
+     url: 'http://arxiv.org/abs/1910.10683v3'
 IfTraining: 0
 IfOnlineDemo: 0

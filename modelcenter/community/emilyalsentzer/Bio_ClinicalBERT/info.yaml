@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "emilyalsentzer/Bio_ClinicalBERT"
-   description: ""
-   description_en: ""
+   description: "ClinicalBERT - Bio + Clinical BERT Model"
+   description_en: "ClinicalBERT - Bio + Clinical BERT Model"
    icon: ""
    from_repo: "https://huggingface.co/emilyalsentzer/Bio_ClinicalBERT"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,11 +15,12 @@ Example:
 
 Datasets: ""
 Pulisher: "emilyalsentzer"
-License: "License: mit"
+License: "mit"
+Language: "English"
 Paper:
    - title: 'Publicly Available Clinical BERT Embeddings'
-   -url: 'http://arxiv.org/abs/1904.03323v3'
+     url: 'http://arxiv.org/abs/1904.03323v3'
    - title: 'BioBERT: a pre-trained biomedical language representation model for biomedical text mining'
-   -url: 'http://arxiv.org/abs/1901.08746v4'
+     url: 'http://arxiv.org/abs/1901.08746v4'
 IfTraining: 0
 IfOnlineDemo: 0

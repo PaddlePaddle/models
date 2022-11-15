@@ -1,8 +1,7 @@
----
 Model_Info:
    name: "dbmdz/bert-base-turkish-cased"
-   description: ""
-   description_en: ""
+   description: "🤗 + 📚 dbmdz Turkish BERT model"
+   description_en: "🤗 + 📚 dbmdz Turkish BERT model"
    icon: ""
    from_repo: "https://huggingface.co/dbmdz/bert-base-turkish-cased"
 
@@ -12,7 +11,8 @@ Example:
 
 Datasets: ""
 Pulisher: "dbmdz"
-License: "License: mit"
+License: "mit"
+Language: "Turkish"
 Paper:
 
 IfTraining: 0

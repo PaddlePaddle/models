@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "PlanTL-GOB-ES/roberta-base-ca"
-   description: ""
-   description_en: ""
+   description: "BERTa: RoBERTa-based Catalan language model"
+   description_en: "BERTa: RoBERTa-based Catalan language model"
    icon: ""
    from_repo: "https://huggingface.co/PlanTL-GOB-ES/roberta-base-ca"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Fill-Mask"
      sub_tag: "槽位填充"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: ""
 Pulisher: "PlanTL-GOB-ES"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: "Catalan"
 Paper:
 
 IfTraining: 0

@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "deepset/roberta-base-squad2-distilled"
-   description: ""
-   description_en: ""
+   description: "Overview"
+   description_en: "Overview"
    icon: ""
    from_repo: "https://huggingface.co/deepset/roberta-base-squad2-distilled"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Question Answering"
      sub_tag: "回答问题"
@@ -16,7 +15,8 @@ Example:
 
 Datasets: "squad_v2"
 Pulisher: "deepset"
-License: "License: mit"
+License: "mit"
+Language: "English"
 Paper:
 
 IfTraining: 0

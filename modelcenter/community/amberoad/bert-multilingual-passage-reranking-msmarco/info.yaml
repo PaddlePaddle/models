@@ -1,13 +1,12 @@
----
 Model_Info:
    name: "amberoad/bert-multilingual-passage-reranking-msmarco"
-   description: ""
-   description_en: ""
+   description: "Passage Reranking Multilingual BERT 🔃 🌍"
+   description_en: "Passage Reranking Multilingual BERT 🔃 🌍"
    icon: ""
    from_repo: "https://huggingface.co/amberoad/bert-multilingual-passage-reranking-msmarco"
 
 Task:
-- tag_en: "NLP"
+- tag_en: "Natural Language Processing"
      tag: "自然语言处理"
      sub_tag_en: "Text Classification"
      sub_tag: "文本分类"
@@ -16,9 +15,10 @@ Example:
 
 Datasets: ""
 Pulisher: "amberoad"
-License: "License: apache-2.0"
+License: "apache-2.0"
+Language: ""
 Paper:
    - title: 'Passage Re-ranking with BERT'
-   -url: 'http://arxiv.org/abs/1901.04085v5'
+     url: 'http://arxiv.org/abs/1901.04085v5'
 IfTraining: 0
 IfOnlineDemo: 0
