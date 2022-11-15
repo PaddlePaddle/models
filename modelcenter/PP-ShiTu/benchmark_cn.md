@@ -2,9 +2,7 @@
 
 ### 1.1 软硬件环境
 
-* PP-ShiTu 的特征提取模型训练过程中使用8 GPUs，每GPU batch size为256进行训练，采样器使用PKSampler，一个含256个样本mini-batch有64个类别，每个类别内含4张不同的图片，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
-
-  **注**：由于本模型使用PKSampler和metric learning相关方法，因此改变batch size可能对性能有比较明显的影响。
+* PP-ShiTu 的特征提取模型训练过程中使用8 GPUs，每GPU batch size为256进行训练，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
 
 * PP-ShiTu 的检测模型训练过程中使用8 GPUs，每GPU batch size为28进行训练，如训练GPU数和batch size不使用上述配置，须参考FAQ调整学习率和迭代次数。
 
