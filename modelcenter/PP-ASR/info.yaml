@@ -18,9 +18,9 @@ Task:
 Example:
 -
    tag: 互联网
-   tag_en: 
+   tag_en: Internet
    sub_tag: 信息抽取
-   sub_tag_en: 
+   sub_tag_en: Information Extraction
    title: 智能语音指令解析系统全流程搭建，实现语音工单信息抽取
    title_en: Build a speech parsing system to extract specific infomation 
    url: https://aistudio.baidu.com/aistudio/projectdetail/4398167?shared=1
