@@ -7,9 +7,9 @@ Model_Info:
 
 Task:
 - tag_en: "Natural Language Processing"
-     tag: "自然语言处理"
-     sub_tag_en: "Token Classification"
-     sub_tag: "Token分类"
+  tag: "自然语言处理"
+  sub_tag_en: "Token Classification"
+  sub_tag: "Token分类"
 
 Example:
 

@@ -7,17 +7,17 @@ Model_Info:
 
 Task:
 - tag_en: "Natural Language Processing"
-     tag: "自然语言处理"
-     sub_tag_en: "Feature Extraction"
-     sub_tag: "特征抽取"
+  tag: "自然语言处理"
+  sub_tag_en: "Feature Extraction"
+  sub_tag: "特征抽取"
 - tag_en: "Natural Language Processing"
-     tag: "自然语言处理"
-     sub_tag_en: "Fill-Mask"
-     sub_tag: "槽位填充"
+  tag: "自然语言处理"
+  sub_tag_en: "Fill-Mask"
+  sub_tag: "槽位填充"
 - tag_en: "Natural Language Processing"
-     tag: "自然语言处理"
-     sub_tag_en: "Sentence Similarity"
-     sub_tag: "句子相似度"
+  tag: "自然语言处理"
+  sub_tag_en: "Sentence Similarity"
+  sub_tag: "句子相似度"
 
 Example:
 
