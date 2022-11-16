@@ -3,10 +3,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-import paddleocr
-from paddleocr import PaddleOCR, draw_ocr
-
-ocr = PaddleOCR(use_angle_cls=True, lang="ch")
+from paddlecv import PaddleCV
+ocr = PaddleCV(task_name="PP-OCRv3")
 
 
 def image_to_base64(image):
@@ -20,20 +18,16 @@ def image_to_base64(image):
 
 # UGC: Define the inference fn() for your models
 def model_inference(image):
-    result = ocr.ocr(image, cls=True)
+    result = ocr(image)[0]
 
-    # 显示结果
-    if paddleocr.__version__ >= "2.6.0.2":
-        result = result[0]
-    boxes = [line[0] for line in result]
-    txts = [line[1][0] for line in result]
-    scores = [line[1][1] for line in result]
-    im_show = draw_ocr(image, boxes, txts=None, scores=None)
-    im_show = Image.fromarray(im_show)
-
+    im_show = Image.open('output/tmp.jpg')
     res = []
-    for i in range(len(boxes)):
-        res.append(dict(boxes=boxes[i], txt=txts[i], score=scores[i]))
+    for i in range(len(result['dt_polys'])):
+        res.append(
+            dict(
+                boxes=result['dt_polys'][i],
+                txt=result['rec_text'][i],
+                score=result['rec_score'][i]))
     json_out = {"base64": image_to_base64(im_show), "result": res}
     return im_show, json_out
 
