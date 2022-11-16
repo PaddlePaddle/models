@@ -14,7 +14,7 @@ Task:
 Example:
 - tag_en: "Intelligent City"
   tag: "智慧城市"
-  sub_tag_en: "路面危害检测"
+  sub_tag_en: "Road Hazard Detection"
   title: "路面病害检测"
   sub_tag: "路面危害检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3898651"

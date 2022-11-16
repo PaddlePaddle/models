@@ -12,9 +12,9 @@ Task:
   sub_tag_en: "Object Detection"
   sub_tag: "目标检测"
 Example:
-- tag_en: "智慧交通"
+- tag_en: "Smart transportation"
   tag: "智慧交通"
-  sub_tag_en: "目标检测"
+  sub_tag_en: "Object Detection"
   title: "基于PP-YOLOE的雾天行人车辆目标检测"
   sub_tag: "目标检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"

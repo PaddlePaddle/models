@@ -5,7 +5,7 @@ APP_Info:
     colorFrom: blue
     colorTo: yellow
     sdk: gradio
-    sdk_version: 3.4.1
+    sdk_version: 3.9.1
     app_file: app.py
     license: apache-2.0
     device: cpu

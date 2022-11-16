@@ -12,8 +12,8 @@ Task:
 -
     tag: 计算机视觉
     tag_en: Computer Vision
-    sub_tag: 目标检测,人脸检测
-    sub_tag_en: Object Detection
+    sub_tag: 目标检测, 人脸检测
+    sub_tag_en: Object Detection, Face Detection
    
 Example:
 -

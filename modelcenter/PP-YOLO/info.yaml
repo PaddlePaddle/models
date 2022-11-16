@@ -11,9 +11,9 @@ Task:
   sub_tag_en: "Object Detection"
   sub_tag: "目标检测"
 Example:
-- tag_en: "工业/能源"
+- tag_en: "industry/energy"
   tag: "工业/能源"
-  sub_tag_en: "表计读数"
+  sub_tag_en: "meter reading"
   title: "基于OpenVINO的工业指针型表计读数"
   sub_tag: "表计读数"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3975848?contributionType=1"
