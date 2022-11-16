@@ -1,5 +1,5 @@
 # List of Models
-|Model | Introduction | Volume | Input size | Download link |
+|Model | Introduction | Model Size | Input size | Download link |
 |---|---|---|---|---|
 | PPHGNet_tiny      | Image classification |  | 224 | [Inference](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/inference/PPHGNet_tiny_infer.tar)/[Pretrained](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/PPHGNet_tiny_pretrained.pdparams) |
 | PPHGNet_tiny_ssld  | Image classification |  | 224 | [Inference](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/inference/PPHGNet_tiny_ssld_infer.tar)/[Pretrained](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/PPHGNet_tiny_ssld_pretrained.pdparams) |

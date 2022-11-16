@@ -1,6 +1,6 @@
 ## 1. Train Benchmark
 
-PP-HGNet series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md)。
+PP-HGNet series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md).
 
 ## 1. Inference Benchmark
 
@@ -26,4 +26,4 @@ The PP-HGNet series models were evaluated using the ImageNet1k validation datase
 
 ## 3. Instructions
 
-For more information please refer to[PaddleClas-PPHGNet](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-HGNet.md)。
+For more information please refer to[PaddleClas-PPHGNet](https://github.com/PaddlePaddle/PaddleClas/blob/release%2F2.5/docs/en/models/PP-HGNet_en.md).
