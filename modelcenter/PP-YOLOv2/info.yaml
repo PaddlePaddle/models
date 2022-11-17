@@ -5,7 +5,8 @@ Model_Info:
    description: 
    description_en:
    update_time: 
-   icon: url  
+   icon: url
+   from_repo: "PaddleDetection"
 
 Task:
 -
