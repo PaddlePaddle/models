@@ -1,0 +1,7 @@
+gradio
+numpy
+opencv-python
+pdf2image
+PyMuPDF
+requests
+frontend
