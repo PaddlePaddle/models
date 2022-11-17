@@ -10,9 +10,9 @@ Model_Info:
 Task:
 -
     tag: 文心大模型
-    tag_en: ERNIE Big Model
-    sub_tag: 跨模态大模型
-    sub_tag_en: ERNIE transmodel
+    tag_en: Wenxin Big Models
+    sub_tag: 文档分析
+    sub_tag_en: Ernie-Layout
    
 Example:
 -
