@@ -17,7 +17,12 @@ Task:
   sub_tag: "人像抠图"
   
 Example:
-- title: "【PaddleSeg-Matting实践范例】PP-Matting图像抠图"
+- 
+  tag: "互联网"
+  sub_tag: "人像抠图"
+  tag_en: "Internet"
+  sub_tag_en: "Figure Cutout"
+  title: "【PaddleSeg-Matting实践范例】PP-Matting图像抠图"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/5002963"
 Datasets: "Composition-1k, Distinctions-646"
 Pulisher: "Baidu"
