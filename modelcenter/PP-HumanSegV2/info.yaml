@@ -11,7 +11,7 @@ Task:
   sub_tag_en: "Image Segmentation"
   sub_tag: "图像分割"
 Example:
-- tag_en: "internet"
+- tag_en: "Internet"
   tag: "互联网"
   sub_tag_en: "Human Segmentation"
   title: "PP-HumanSegV2 SOTA人像分割方案"
