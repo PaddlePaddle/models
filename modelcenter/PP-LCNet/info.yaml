@@ -4,7 +4,7 @@ Model_Info:
   description: "面向Intel CPU端的轻量级卷积神经网络"
   description_en: "A Lightweight Convolutional Neural Network for Intel CPU"
   icon: ""
-  from_repo: "https://github.com/paddlepaddle/paddleclas"
+  from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
   tag: "计算机视觉"
