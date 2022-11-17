@@ -2,17 +2,17 @@
 Model_Info:
    name: "ERNIE-Layout"
    description: 文心跨模态预训练大模型
-   description_en: ERNIE transmodal pre training large model
+   description_en: ERNIE transmodel pre training large model
    update_time: 
    icon: url  
    from_repo: PaddleNLP
 
 Task:
 -
-    tag: 大模型
-    tag_en: Big model
-    sub_tag: 文心大模型
-    sub_tag_en: ERNIE Big Model
+    tag: 文心大模型
+    tag_en: ERNIE Big Model
+    sub_tag: 跨模态大模型
+    sub_tag_en: ERNIE transmodel
    
 Example:
 -
