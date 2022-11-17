@@ -10,7 +10,7 @@ Task:
 - tag_en: "Natural Language Processing"
   tag: "自然语言处理"
   sub_tag_en: "Pretrained Model"
-  sub_tag: "Pretrained Model"
+  sub_tag: "预训练模型"
 Example: ""
 Datasets: ""
 Pulisher: "Baidu"
