@@ -11,8 +11,8 @@ Task:
   sub_tag_en: "Short Video Content Classification"
   sub_tag: "短视频内容分类"
 Example:
-- tag: "文体互娱"
-  tag_en: "Entertainment"
+- tag: "互联网"
+  tag_en: "Internet"
   sub_tag: "时刻剪辑"
   sub_tag_en: "Moment editing"
   title: "基于PaddleVideo的足球精彩时刻剪辑"
