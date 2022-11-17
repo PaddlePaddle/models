@@ -18,20 +18,9 @@ Task:
      tag: "计算机视觉"
      sub_tag_en: "Optical Character Recognition"
      sub_tag: "OCR"
-     
+
 Example:
-   - title: "《动手学OCR》系列课程之：PP-OCRv2预测部署实战"
-     url: "https://aistudio.baidu.com/aistudio/projectdetail/3552922?channelType=0&channel=0"
-     title_en: "Dive into OCR series of courses: PP-OCRv2 prediction and deployment"
-     url_en: "https://aistudio.baidu.com/aistudio/projectdetail/3552922?channelType=0&channel=0"
-   - title: "《动手学OCR》系列课程之：OCR文本识别实战"
-     url: "https://aistudio.baidu.com/aistudio/projectdetail/3552051?channelType=0&channel=0"
-     title_en: "Dive into OCR series of courses: text recognition in practice"
-     url_en: "https://aistudio.baidu.com/aistudio/projectdetail/3552051?channelType=0&channel=0"
-   - title: "《动手学OCR》系列课程之：OCR文本检测实践"
-     url: "https://aistudio.baidu.com/aistudio/projectdetail/3551779?channelType=0&channel=0"
-     title_en: "Dive into OCR series of courses: text detection in practice"
-     url_en: "https://aistudio.baidu.com/aistudio/projectdetail/3551779?channelType=0&channel=0"
+
 Datasets: "ICDAR 2015, ICDAR2019-LSVT,ICDAR2017-RCTW-17,Total-Text,ICDAR2019-ArT"
 Pulisher: "Baidu"
 License: "apache.2.0"
