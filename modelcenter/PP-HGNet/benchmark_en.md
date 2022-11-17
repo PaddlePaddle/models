@@ -2,9 +2,9 @@
 
 PP-HGNet series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md).
 
-## 1. Inference Benchmark
+## 2. Inference Benchmark
 
-### 1.1 Environment
+### 2.1 Environment
 
 * The following tests are based on the NVIDIA® Tesla® V100,and the TensorRT engine is turned on;
 * The precision type is FP32;

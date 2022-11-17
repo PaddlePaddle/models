@@ -1,10 +1,10 @@
 ## 1. Train Benchmark
 
-PP-LCNetV2 series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md)。
+PP-LCNetV2 series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md).
 
-## 1. Inference Benchmark
+## 2. Inference Benchmark
 
-### 1.1 Environment
+### 2.1 Environment
 
 * The following tests are based on the Intel Xeon Gold 6271C and the OpenVINO 2021.4.2;
 * The precision type is FP32;

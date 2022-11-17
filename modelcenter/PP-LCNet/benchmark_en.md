@@ -2,9 +2,9 @@
 
 PP-LCNet series model training Benchmark evaluation process can be referred to [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md).
 
-## 1. Inference Benchmark
+## 2. Inference Benchmark
 
-### 1.1 Environment
+### 2.1 Environment
 
 * The inference speed of PP-LCNet series model is evaluated based on various hardware platforms including Intel CPU, V100 GPU and SD855.
 * The precision type is FP32;
@@ -17,7 +17,7 @@ The PP-LCNet series models were evaluated using the ImageNet1k validation datase
 
 ### 2.3 Metrics
 
-#### 2.3.1 Predicted speed based on Intel Xeon Gold 6148  
+#### 2.3.1 Inference speed based on Intel Xeon Gold 6148  
 
 | Model | Latency(ms)<br/>bs=1, thread=10 |
 |:--:|:--:|
@@ -30,7 +30,7 @@ The PP-LCNet series models were evaluated using the ImageNet1k validation datase
 | PPLCNet_x2_0   | 4.27 |
 | PPLCNet_x2_5   | 5.39 |
 
-#### 2.3.2 Predicted speed based on V100 GPU
+#### 2.3.2 Inference speed based on V100 GPU
 
 | Models        | Latency(ms)<br>bs=1 | Latency(ms)<br/>bs=4 | Latency(ms)<br/>bs=8 |
 | :--: | :--:| :--: | :--: |
@@ -42,7 +42,7 @@ The PP-LCNet series models were evaluated using the ImageNet1k validation datase
 | PPLCNet_x1_5  | 0.82                         | 2.06                             | 3.12                           |
 | PPLCNet_x2_0  | 0.94                         | 2.58                             | 4.08                           |
 
-#### 2.3.3 Predicted speed based on SD855
+#### 2.3.3 Inference speed based on SD855
 
 | Models        | Latency(ms)<br>bs=1, thread=1 | Latency(ms)<br/>bs=1, thread=2 | Latency(ms)<br/>bs=1, thread=4 |
 | :--: | :--: | :--: | :--: |
