@@ -1,0 +1,19 @@
+---
+Model_Info:
+  name: "PP-HGNet"
+  description: "面向Nvidia GPU端的高性能卷积神经网络"
+  description_en: "A High-performance Convolutional Neural Network for Nvidia GPU"
+  icon: ""
+  from_repo: "PaddleClas"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Image Classification"
+  sub_tag: "图像分类"
+Example: ""
+Datasets: "ImageNet1k"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper: ""
+IfTraining: 1
+IfOnlineDemo: 1

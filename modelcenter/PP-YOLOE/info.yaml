@@ -1,0 +1,28 @@
+---
+Model_Info:
+  name: "PP-YOLOE"
+  description: "PP-YOLOE是基于PP-YOLOv2的卓越的单阶段Anchor-free模型，超越了多种流行的YOLO模型"
+  description_en: "PP-YOLOE is an excellent single-stage anchor-free model based on\
+    \ PP-YOLOv2, surpassing a variety of popular YOLO models"
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: "PaddleDetection"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Object Detection"
+  sub_tag: "目标检测"
+Example:
+- tag_en: "Intelligent Transportation"
+  tag: "智慧交通"
+  sub_tag_en: "Object Detection"
+  title: "基于PP-YOLOE的雾天行人车辆目标检测"
+  sub_tag: "目标检测"
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"
+Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+- title: "PP-YOLOE: An evolved version of YOLO"
+  url: "https://arxiv.org/pdf/2203.16250v2.pdf"
+IfTraining: 1
+IfOnlineDemo: 1
