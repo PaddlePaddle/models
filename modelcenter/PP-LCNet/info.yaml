@@ -13,9 +13,9 @@ Task:
 Example:
 - tag_en: "Intelligent Security"
   tag: "智慧安防"
-  sub_tag_en: "进出管理"
+  sub_tag_en: "Personnel access management"
   title: "人员进出视频管理方案详解"
-  sub_tag: "进出管理"
+  sub_tag: "人员进出管理"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4094475"
 Datasets: "ImageNet1k"
 Pulisher: "Baidu"
