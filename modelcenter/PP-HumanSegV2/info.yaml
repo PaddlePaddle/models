@@ -13,7 +13,7 @@ Task:
 Example:
 - tag_en: "internet"
   tag: "互联网"
-  sub_tag_en: "Humanseg Segmentation"
+  sub_tag_en: "Human Segmentation"
   title: "PP-HumanSegV2 SOTA人像分割方案"
   sub_tag: "人像分割"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4504982"
