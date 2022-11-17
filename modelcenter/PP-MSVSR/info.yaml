@@ -4,14 +4,18 @@ Model_Info:
   description: "视频超分"
   description_en: "video super resolution"
   icon: "@后续UE统一设计之后，会存到bos上某个位置"
-  from_repo: "https://github.com/PaddlePaddle/PaddleGAN"
+  from_repo: "PaddleGAN"
 Task:
 - tag_en: "Computer Vision"
   tag: "计算机视觉"
   sub_tag_en: "Image Super-resolution"
   sub_tag: "图像超分辨"
 Example:
-- title: "老北京城影像修复"
+- tag_en: "文体互娱"
+  tag: "Mutual entertainment"
+  sub_tag_en: "视频修复"
+  sub_tag: "video repair"
+  title: "老北京城影像修复"
   title_en: "Restoration of old Beijing videos"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/1161285"
   url_en: 
