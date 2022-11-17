@@ -1,5 +1,5 @@
 # 提供模型所支持的任务场景、推理和预训练模型文件：
-|模型名称 | 模型简介 |             模型体积 | 输入尺寸 | 下载地址 |
-|---|---|---|---|---|
-|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 640 | [推理模型]()/[预训练模型]() |
-|ppyolov2_r50vd_dcn_1x_coco | 目标检测 |  | 320 | [推理模型]()/[预训练模型]() |
+|      模型    | 骨干网络 | 模型下载 | 配置文件 |
+|:-----------:|:-------:|:-------:|:-------:|
+| PP-YOLOv2   | ResNet50vd | [model](https://paddledet.bj.bcebos.com/models/ppyolov2_r50vd_dcn_365e_coco.pdparams) | [config](https://github.com/PaddlePaddle/PaddleDetection/tree/develop/configs/ppyolo/ppyolov2_r50vd_dcn_365e_coco.yml)                   |
+| PP-YOLOv2   | ResNet101vd | [model](https://paddledet.bj.bcebos.com/models/ppyolov2_r101vd_dcn_365e_coco.pdparams) | [config](https://github.com/PaddlePaddle/PaddleDetection/tree/develop/configs/ppyolo/ppyolov2_r101vd_dcn_365e_coco.yml)                   |

@@ -18,6 +18,7 @@ Task:
      tag: "计算机视觉"
      sub_tag_en: "Optical Character Recognition"
      sub_tag: "OCR"
+
 Example:
 
 Datasets: "ICDAR 2015, ICDAR2019-LSVT,ICDAR2017-RCTW-17,Total-Text,ICDAR2019-ArT"

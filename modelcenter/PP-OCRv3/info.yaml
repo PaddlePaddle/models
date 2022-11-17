@@ -18,6 +18,7 @@ Task:
      tag: "计算机视觉"
      sub_tag_en: "Optical Character Recognition"
      sub_tag: "OCR"    
+
 Example:
    - title: "鸟枪换炮！基于PP-OCRv3的电表检测识别"
      url: "https://aistudio.baidu.com/aistudio/projectdetail/511591?channelType=0&channel=0"

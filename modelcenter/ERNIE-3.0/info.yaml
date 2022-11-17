@@ -1,0 +1,33 @@
+---
+Model_Info:
+   name: "ERNIE 3.0"
+   description: "ERNIE 3.0 轻量级模型"
+   description_en: "ERNIE Tiny"
+   icon: "@后续UE统一设计之后，会存到bos上某个位置"
+   from_repo: "PaddleNLP"
+Task:
+   - tag_en: "Natural Language Processing"
+     tag: "自然语言处理"
+     sub_tag_en: "Pretrained Model"
+     sub_tag: "预训练模型"
+Example:
+   - title: "【快速上手ERNIE 3.0】中文情感分析实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/3955163"
+   - title: "【快速上手ERNIE 3.0】法律文本多标签分类实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/3996601"
+   - title: "【快速上手ERNIE 3.0】中文语义匹配实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/3986803"
+   - title: "【快速上手ERNIE 3.0】MSRA序列标注实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/3989073"
+   - title: "【快速上手ERNIE 3.0】机器阅读理解实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/2017189"
+   - title: "【快速上手ERNIE 3.0】对话意图识别实战"
+     url: "https://aistudio.baidu.com/aistudio/projectdetail/2017202?contributionType=1"
+Datasets: ""
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+   - title: "ERNIE-Tiny: A Progressive Distillation Framework for Pretrained Transformer Compression"
+     url: "https://arxiv.org/abs/2106.02241"
+IfTraining: 0
+IfOnlineDemo: 1
