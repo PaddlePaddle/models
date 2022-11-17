@@ -1,0 +1,5 @@
+# Related pretrained model and inference model：
+| model name                          | role               | storage | input size(inference) | download link |
+| ----------------------------------- | ------------------ | ------- | --------------------- | ---------------------------- |
+| picodet_lcnet_x2_5_640_mainbody     | mainbody detection | 30MB    | 640   | [inference model](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/models/inference/picodet_PPLCNet_x2_5_mainbody_lite_v1.0_infer.tar)/[pretrained model](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/models/inference/picodet_PPLCNet_x2_5_mainbody_lite_v1.0_infer.tar)                  |
+| GeneralRecognition_PPLCNet_x2_5 | feature extraction | 19MB    | 224   | [inference model](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/models/inference/general_PPLCNet_x2_5_lite_v1.0_infer.tar)/[pretrained model](https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/rec/models/pretrain/general_PPLCNet_x2_5_pretrained_v1.0.pdparams) |
