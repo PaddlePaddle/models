@@ -15,9 +15,9 @@ Task:
   sub_tag_en: "Video Single-target Tracking"
   sub_tag: "视频单目标跟踪"
 Example:
-- tag_en: "智慧交通"
+- tag_en: "Intelligent Transportation"
   tag: "智慧交通"
-  sub_tag_en: "车辆检测"
+  sub_tag_en: "Vehicle Detection"
   title: "基于PP-YOLOE的雾天行人车辆目标检测"
   sub_tag: "车辆检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"
