@@ -11,8 +11,8 @@ Task:
   sub_tag_en: "Image Super-resolution"
   sub_tag: "图像超分辨"
 Example:
-- tag_en: "文体互娱"
-  tag: "Mutual entertainment"
+- tag_en: "Internet"
+  tag: "互联网"
   sub_tag_en: "视频修复"
   sub_tag: "video repair"
   title: "老北京城影像修复"
