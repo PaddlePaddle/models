@@ -6,7 +6,7 @@ from src.detection import Detector
 
 # UGC: Define the inference fn() for your models
 def model_inference(image):
-    image, json_out = Detector('PP-YOLOv2')(image)
+    image, json_out = Detector('PP-YOLOE+')(image)
     return image, json_out
 
 
