@@ -11,15 +11,15 @@ PP-LCNetV2 series model training Benchmark evaluation process can be referred to
 
 ### 2.2 Dataset
 
-The PP-LCNetv2 series models were evaluated using the ImageNet1k validation dataset.
+The PP-LCNetV2 series models were evaluated using the ImageNet1k validation dataset.
 
 ### 2.3 Metrics
 
 | Model | Latency(ms) |
 |:--:|:--:|
-| <b>PPLCNetv2_base<b>  | <b>4.32<b> |
-| <b>PPLCNetv2_base_ssld<b>  | <b>4.32<b> |
+| <b>PPLCNetV2_base<b>  | <b>4.32<b> |
+| <b>PPLCNetV2_base_ssld<b>  | <b>4.32<b> |
 
 ## 3. Instructions
 
-For more information please refer to [PaddleClas-PPLCNetv2](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/en/models/PP-LCNetV2_en.md).
+For more information please refer to [PaddleClas-PPLCNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/en/models/PP-LCNetV2_en.md).

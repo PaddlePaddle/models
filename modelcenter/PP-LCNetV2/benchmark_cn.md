@@ -11,15 +11,15 @@ PP-LCNetV2 系列模型的训练 Benchmark 评测流程可以参考 [PaddleClas-
 
 ### 2.2 数据集
 
-PP-LCNetv2 系列模型使用 ImageNet1k validation 数据集进行评测。
+PP-LCNetV2 系列模型使用 ImageNet1k validation 数据集进行评测。
 
 ### 2.3 指标
 
 | Model | Latency(ms) |
 |:--:|:--:|
-| <b>PPLCNetv2_base<b>  | <b>4.32<b> | 
-| <b>PPLCNetv2_base_ssld<b>  | <b>4.32<b> |
+| <b>PPLCNetV2_base<b>  | <b>4.32<b> | 
+| <b>PPLCNetV2_base_ssld<b>  | <b>4.32<b> |
 
 ## 3. 相关使用说明
 
-更多信息请参考[PaddleClas-PPLCNetv2](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNetV2.md)。
+更多信息请参考[PaddleClas-PPLCNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNetV2.md)。
