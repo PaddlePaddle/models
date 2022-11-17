@@ -31,7 +31,7 @@ Example:
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4497591"
 - tag_en: "智慧物流"
   tag: "智慧物流"
-  sub_tag_en: "Express bill information extraction"
+  sub_tag_en: "Express Bill Information Extraction"
   title: "五条标注数据搞定快递单信息抽取，PaddleNLP信息抽取技术重磅升级！"
   sub_tag: "快递单信息抽取"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4038499"
