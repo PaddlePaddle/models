@@ -1,0 +1,29 @@
+---
+Model_Info:
+  name: "PP-TSM"
+  description: "PP-TSM是PaddleVideo自研的实用产业级视频分类模型，考虑精度和速度的平衡，进行模型瘦身和精度优化，在Kinetics-400数据集上精度较原论文提升4个点。"
+  description_en: "PP-TSM is a practical industrial video classification model developed by PaddleVideo. We slim the model size and optimize the accuracy with the considerations of the trade-off between speed and precision and achieve 76.16% in Kinetics-400 dataset."
+  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  from_repo: "PaddleVideo"
+Task:
+- tag_en: "Video"
+  tag: "视频"
+  sub_tag_en: "Short Video Content Classification"
+  sub_tag: "短视频内容分类"
+Example:
+- tag: "文体互娱"
+  tag_en: "Entertainment"
+  sub_tag: "时刻剪辑"
+  sub_tag_en: "Moment editing"
+  title: "基于PaddleVideo的足球精彩时刻剪辑"
+  title_en: "Soccer video highlights clip based on PaddleVideo"
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/3473391?contributionType=1"
+  url_en: 
+Datasets: "Kinetics-400, UCF-101"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+- title: "TSM: Temporal Shift Module for Efficient Video Understanding"
+  url: "https://arxiv.org/pdf/1811.08383.pdf"
+IfTraining: 1
+IfOnlineDemo: 1

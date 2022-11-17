@@ -1,0 +1,44 @@
+【PP-ASR】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
+
+Model_Info:
+   name: "PP-ASR"
+   description: "飞桨开源语音识别系统，支持端到端识别与流式识别"
+   description_en: "Open source speech recognition system based on PaddlePaddle, supporting end-to-end recognition and streaming recognition"
+   update_time: 
+   icon: 
+   from_repo: "PaddleSpeech"
+
+Task:
+-
+    tag: "智能语音"
+    tag_en: "Speech&Audio"
+    sub_tag: "语音识别"
+    sub_tag_en: "Speech Recognition"
+   
+Example:
+-
+   tag: 互联网
+   tag_en: Internet
+   sub_tag: 信息抽取
+   sub_tag_en: Information Extraction
+   title: 智能语音指令解析系统全流程搭建，实现语音工单信息抽取
+   title_en: Build a speech parsing system to extract specific infomation 
+   url: https://aistudio.baidu.com/aistudio/projectdetail/4398167?shared=1
+   url_en: 
+  
+ 
+Datasets: "Aishell1, GigaSpeech, LibriSpeech, WenetSpeech"
+   
+Pulisher: "Baidu"
+
+License: "Apache 2.0"
+
+Paper: 
+-	
+	title: "PaddleSpeech: An Easy-to-Use All-in-One Speech Toolkit"
+	url: "https://arxiv.org/abs/2205.12007"
+
+
+IfTraining: 1
+
+IfOnlineDemo: 1

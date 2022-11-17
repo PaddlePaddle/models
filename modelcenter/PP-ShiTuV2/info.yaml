@@ -11,9 +11,9 @@ Task:
   sub_tag_en: "Characteristics of Product Image"
   sub_tag: "商品图片特征"
 Example:
-- tag_en: "智慧零售"
+- tag_en: "Intelligent Retail"
   tag: "智慧零售"
-  sub_tag_en: "商品识别"
+  sub_tag_en: "Commodity identification"
   title: "生鲜产品自主结算"
   sub_tag: "商品识别"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4486158?channelType=0&channel=0"
