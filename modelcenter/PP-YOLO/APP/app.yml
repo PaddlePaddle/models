@@ -1,7 +1,7 @@
-【PP-YOLOv2-App-YAML】
+【PP-YOLO-App-YAML】
 
 APP_Info:
-    title: PP-YOLOv2-App
+    title: PP-YOLO-App
     colorFrom: blue
     colorTo: yellow
     sdk: gradio
