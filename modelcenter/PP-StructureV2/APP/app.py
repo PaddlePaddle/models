@@ -3,9 +3,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-from paddleocr import PPStructure
-
-table_engine = PPStructure(layout=False, show_log=True)
+from paddlecv import PaddleCV
+table_engine = PaddleCV(task_name="PP-StructureV2-table")
 
 
 def image_to_base64(image):
@@ -19,8 +18,8 @@ def image_to_base64(image):
 
 # UGC: Define the inference fn() for your models
 def model_inference(image):
-    result = table_engine(image)
-    res = result[0]['res']['html']
+    result = table_engine(image)[0]
+    res = result['html']
     json_out = {"result": res}
     return res, json_out
 

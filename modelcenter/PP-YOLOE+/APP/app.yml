@@ -1,0 +1,11 @@
+【PP-YOLOE+-App-YAML】
+
+APP_Info:
+    title: PP-YOLOE+-App
+    colorFrom: blue
+    colorTo: yellow
+    sdk: gradio
+    sdk_version: 3.9.1
+    app_file: app.py
+    license: apache-2.0
+    device: cpu

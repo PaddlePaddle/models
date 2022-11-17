@@ -1,0 +1,3 @@
+gradio
+paddlepaddle
+ppvideo==2.3.1
