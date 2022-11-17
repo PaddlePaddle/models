@@ -2,9 +2,9 @@
 
 PP-LCNetV2 系列模型的训练 Benchmark 评测流程可以参考 [PaddleClas-TIPC](https://github.com/paddlepaddle/paddleclas/blob/release%2F2.5/test_tipc/docs/benchmark_train.md)。
 
-## 1. 推理 Benchmark
+## 2. 推理 Benchmark
 
-### 1.1 软硬件环境
+### 2.1 软硬件环境
 
 * 下列测试基于 Intel Xeon Gold 6271C 硬件平台与 OpenVINO 2021.4.2 推理平台完成；
 * 下列测试均基于 FP32 精度完成；
