@@ -395,7 +395,7 @@ with gr.Blocks(css=CSS) as demo:
     document = gr.Variable()
     example_prompt = gr.Textbox(visible=False)
     example_image = gr.Image(visible=False)
-    with gr.Row(equal_height=True):
+    with gr.Row():
         with gr.Column():
             with gr.Row():
                 gr.Markdown("## 1. Select a file", elem_id="select-a-file")
@@ -403,7 +403,7 @@ with gr.Blocks(css=CSS) as demo:
                     "Clear", variant="secondary", elem_id="file-clear", visible=False
                 )
             image = gr.Gallery(visible=False)
-            with gr.Row(equal_height=True):
+            with gr.Row():
                 with gr.Column():
                     with gr.Row():
                         url = gr.Textbox(
@@ -516,4 +516,4 @@ with gr.Blocks(css=CSS) as demo:
 
 
 if __name__ == "__main__":
-    demo.launch(enable_queue=False)
+    demo.launch(enable_queue=False,share=True)
