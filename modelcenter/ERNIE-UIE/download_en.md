@@ -4,7 +4,7 @@
   | :---: | :--------: | :--------: | :--------: | :--------: |:--------: |
   | `uie-base` (default)| 12-layers, 768-hidden, 12-heads | Information Extraction  | ZH |450MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/models/transformers/uie/uie_base.pdparams) |
   | `uie-base-en` | 12-layers, 768-hidden, 12-heads | Information Extraction  | EN |418MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/models/transformers/uie/uie_base_en.pdparams) |
-  | `uie-medical-base` | 12-layers, 768-hidden, 12-heads | Information Extraction  | ZH |288MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/taskflow/information_extraction/uie_medium_v1.0/model_state.pdparams) |
+  | `uie-medical-base` | 12-layers, 768-hidden, 12-heads | Information Extraction  | ZH |450MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/taskflow/information_extraction/uie_medical_base_v0.1/model_state.pdparams) |
   | `uie-medium`| 6-layers, 768-hidden, 12-heads | Information Extraction  | ZH |288MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/models/transformers/uie/uie_medium.pdparams) |
   | `uie-mini`| 6-layers, 384-hidden, 12-heads | Information Extraction  | ZH |103MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/models/transformers/uie/uie_mini.pdparams) |
   | `uie-micro`| 4-layers, 384-hidden, 12-heads | Information Extraction  | ZH |90MB|[Pretrained Model](https://bj.bcebos.com/paddlenlp/models/transformers/uie/uie_micro.pdparams) |
