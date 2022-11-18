@@ -1,0 +1,31 @@
+Model_Info:
+   name: "cointegrated/rubert-tiny"
+   description: "pip install transformers sentencepiece"
+   description_en: "pip install transformers sentencepiece"
+   icon: ""
+   from_repo: "https://huggingface.co/cointegrated/rubert-tiny"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Feature Extraction"
+  sub_tag: "特征抽取"
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Fill-Mask"
+  sub_tag: "槽位填充"
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Sentence Similarity"
+  sub_tag: "句子相似度"
+
+Example:
+
+Datasets: ""
+Pulisher: "cointegrated"
+License: "mit"
+Language: "Russian,English"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

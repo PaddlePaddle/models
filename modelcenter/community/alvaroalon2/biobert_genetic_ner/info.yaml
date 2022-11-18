@@ -1,0 +1,23 @@
+Model_Info:
+   name: "alvaroalon2/biobert_genetic_ner"
+   description: ""
+   description_en: ""
+   icon: ""
+   from_repo: "https://huggingface.co/alvaroalon2/biobert_genetic_ner"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Token Classification"
+  sub_tag: "Token分类"
+
+Example:
+
+Datasets: ""
+Pulisher: "alvaroalon2"
+License: "apache-2.0"
+Language: "English"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0
