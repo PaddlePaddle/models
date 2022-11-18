@@ -1,0 +1,23 @@
+Model_Info:
+   name: "dbmdz/bert-base-german-uncased"
+   description: "🤗 + 📚 dbmdz German BERT models"
+   description_en: "🤗 + 📚 dbmdz German BERT models"
+   icon: ""
+   from_repo: "https://huggingface.co/dbmdz/bert-base-german-uncased"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Fill-Mask"
+  sub_tag: "槽位填充"
+
+Example:
+
+Datasets: ""
+Pulisher: "dbmdz"
+License: "mit"
+Language: "German"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

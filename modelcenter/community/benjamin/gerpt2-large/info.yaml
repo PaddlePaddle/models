@@ -1,0 +1,23 @@
+Model_Info:
+   name: "benjamin/gerpt2-large"
+   description: "GerPT2"
+   description_en: "GerPT2"
+   icon: ""
+   from_repo: "https://huggingface.co/benjamin/gerpt2-large"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Text Generation"
+  sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "benjamin"
+License: "mit"
+Language: "German"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0
