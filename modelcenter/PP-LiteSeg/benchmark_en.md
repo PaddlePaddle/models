@@ -2,12 +2,12 @@
 
 ### 1.1 Environment
 
-* Test the segmentation accuracy (mIoU): PaddleSeg is used for training and testing on Cityscapes dataset.
-* Test the segmentation speed (FPS): The hardware is Nvidia GPU (1080Ti). To keep the same as other methods, first use [infer_onnx_trt.py](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/deploy/python/infer_onnx_trt.py) to convert the model to ONNX format, and then use the native TRT prediction engine for testing.
+* Segmentation accuracy (mIoU): PP-LightSeg is used for training and testing on Cityscapes dataset.
+* Inference latency on Nvidia GPU: The hardware is Nvidia GPU (1080Ti). To keep the same as other methods, first use [infer_onnx_trt.py](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/deploy/python/infer_onnx_trt.py) to convert the model to ONNX format, and then use the native TRT prediction engine for testing.
 
 ### 1.2 Datasets
 
-* Use the Cityscapes dataset for testing.
+* Cityscapes dataset is used for testing.
 
 ### 1.3 Benchmark
 
