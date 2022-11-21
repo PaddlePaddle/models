@@ -1,6 +1,6 @@
 # Model Lists
 
-## 1 Semantic segmentation model on Cityscapes
+## 1 Semantic segmentation models on Cityscapes
 
 | Model | Backbone | Training Iters | Train Resolution | Test Resolution | mIoU | mIoU (flip) | mIoU (ms+flip) | Links |
 | --- | --- | --- | ---| --- | --- | --- | --- | --- |
@@ -11,7 +11,7 @@
 |PP-LiteSeg-B|STDC2|160000|1024x512|1536x768|78.75%|79.23%|-|[config](./pp_liteseg_stdc2_cityscapes_1024x512_scale0.75_160k.yml)\|[Pretrained_model](https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc2_cityscapes_1024x512_scale0.75_160k/model.pdparams)\|[inference_model](https://paddleseg.bj.bcebos.com/inference/pp_liteseg_infer_models/pp_liteseg_stdc2_cityscapes_1024x512_scale0.75_160k_inference_model.zip)|
 |PP-LiteSeg-B|STDC2|160000|1024x512|2048x1024|79.04%|79.52%|79.85%|[config](./pp_liteseg_stdc2_cityscapes_1024x512_scale1.0_160k.yml)\|[Pretrained_model](https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc2_cityscapes_1024x512_scale1.0_160k/model.pdparams)\|[inference_model](https://paddleseg.bj.bcebos.com/inference/pp_liteseg_infer_models/pp_liteseg_stdc2_cityscapes_1024x512_scale1.0_160k_inference_model.zip)|
 
-## 2 Semantic segmentation model on CamVid
+## 2 Semantic segmentation models on CamVid
 
 | Model | Backbone | Training Iters | Train Resolution | Test Resolution | mIoU | mIoU (flip) | mIoU (ms+flip) | Links |
 | --- | --- | --- | ---| --- | --- | --- | --- | --- |
