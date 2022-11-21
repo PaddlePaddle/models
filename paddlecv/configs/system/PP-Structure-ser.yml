@@ -1,0 +1,105 @@
+ENV:
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: true
+  save_res: true
+  return_res: False
+
+MODEL:
+  - OcrDbDetOp:
+      name: det
+      param_path: paddlecv://models/ch_PP-OCRv3_det_infer/inference.pdiparams
+      model_path: paddlecv://models/ch_PP-OCRv3_det_infer/inference.pdmodel
+      batch_size: 1
+      PreProcess:
+        - DetResizeForTest:
+            limit_side_len: 960
+            limit_type: "max"
+        - NormalizeImage:
+            std: [ 0.229, 0.224, 0.225 ]
+            mean: [ 0.485, 0.456, 0.406 ]
+            scale: '1./255.'
+            order: 'hwc'
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+        - KeepKeys:
+            keep_keys: [ 'image', 'shape' ]
+      PostProcess:
+        - DBPostProcess:
+            thresh: 0.3
+            box_thresh: 0.6
+            max_candidates: 1000
+            unclip_ratio: 1.5
+            use_dilation: False
+            score_mode: "fast"
+            box_type: "quad"
+      Inputs:
+        - input.image
+  - PolyCropOp:
+      name: crop
+      Inputs:
+        - input.image
+        - det.dt_polys
+  - OcrCrnnRecOp:
+      name: rec
+      param_path: paddlecv://models/ch_PP-OCRv3_rec_infer/inference.pdiparams
+      model_path: paddlecv://models/ch_PP-OCRv3_rec_infer/inference.pdmodel
+      batch_size: 6
+      PreProcess:
+        - ReisizeNormImg:
+            rec_image_shape: [ 3, 48, 320 ]
+      PostProcess:
+        - CTCLabelDecode:
+            character_dict_path: paddlecv://dict/ocr/ch_dict.txt
+            use_space_char: true
+      Inputs:
+        - crop.crop_image
+  - PPStructureKieSerOp:
+      name: ser
+      param_path: paddlecv://models/PP-Structure_ser_vi_layoutxlm_xfund_infer/inference.pdiparams
+      model_path: paddlecv://models/PP-Structure_ser_vi_layoutxlm_xfund_infer/inference.pdmodel
+      batch_size: 1
+      use_visual_backbone: False
+      PreProcess:
+        - VQATokenLabelEncode:
+            algorithm: LayoutXLM
+            class_path: paddlecv://dict/ocr/class_list_xfun.txt
+            contains_re: False
+            order_method: tb-yx
+        - VQATokenPad:
+            max_seq_len: 512
+            return_attention_mask: true
+        - VQASerTokenChunk:
+            max_seq_len: 512
+            return_attention_mask: true
+        - Resize:
+            size: [224, 224]
+        - NormalizeImage:
+            scale: 1.
+            mean: [123.675, 116.28, 103.53]
+            std: [58.395, 57.12, 57.375]
+            order: 'hwc'
+        - ToCHWImage:
+        - KeepKeys:
+            keep_keys: [ 'input_ids', 'bbox', 'attention_mask', 'token_type_ids', 'image', 'labels', 'segment_offset_id', 'ocr_info', 'entities']
+      PostProcess:
+        - VQASerTokenLayoutLMPostProcess:
+            class_path: paddlecv://dict/ocr/class_list_xfun.txt
+      Inputs:
+        - input.image
+        - det.dt_polys
+        - rec.rec_text
+  - PPStructureSerOutput:
+      name: vis
+      font_path: paddlecv://fonts/simfang.ttf
+      Inputs:
+        - input.fn
+        - input.image
+        - ser.pred_id
+        - ser.pred
+        - ser.dt_polys
+        - ser.rec_text

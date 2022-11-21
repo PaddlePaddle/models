@@ -1,0 +1,8 @@
+include LICENSE
+include README.md
+include ppcv/model_zoo/MODEL_ZOO
+include paddlecv.py
+recursive-include configs/ *.*
+recursive-include ppcv/ *.py
+recursive-include tools/ *.py
+recursive-include tests/ *.py
