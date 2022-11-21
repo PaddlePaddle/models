@@ -1,0 +1,83 @@
+ENV:
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: True
+  save_res: True
+  return_res: True
+  print_res: True
+
+MODEL:
+  - DetectionOp:
+      name: det
+      param_path: paddlecv://models/picodet_PPLCNet_x2_5_mainbody_lite_v1.0_infer/inference.pdiparams
+      model_path: paddlecv://models/picodet_PPLCNet_x2_5_mainbody_lite_v1.0_infer/inference.pdmodel
+      batch_size: 2
+      image_shape: [3, 640, 640]
+      PreProcess:
+        - Resize:
+            interp: 2
+            keep_ratio: false
+            target_size: [640, 640]
+        - NormalizeImage:
+            is_scale: true
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+        - Permute:
+      PostProcess:
+        - ParserDetResults:
+            label_list:
+              - foreground
+            threshold: 0.2
+            max_det_results: 5
+      Inputs:
+        - input.image
+
+  - BboxCropOp:
+      name: crop
+      Inputs:
+        - input.image
+        - det.dt_bboxes
+
+  - FeatureExtractionOp:
+      name: feature
+      param_path: paddlecv://models/general_PPLCNetV2_base_pretrained_v1.0_infer/inference.pdiparams
+      model_path: paddlecv://models/general_PPLCNetV2_base_pretrained_v1.0_infer/inference.pdmodel
+      batch_size: 2
+      PreProcess:
+        - ResizeImage:
+            size: [224, 224]
+            return_numpy: False
+            interpolation: bilinear
+            backend: cv2
+        - NormalizeImage:
+            scale: 1.0/255.0
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+            order: hwc
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - NormalizeFeature:
+        - Index:
+            index_method: "HNSW32" # supported: HNSW32, IVF, Flat
+            dist_type: "IP"
+            index_dir: "./drink_dataset_v2.0/index"
+            score_thres: 0.5
+        - NMS4Rec:
+            thresh: 0.05
+      Inputs:
+        - input.image
+        - crop.crop_image
+        - det.dt_bboxes
+
+  - FeatureOutput:
+      name: print
+      Inputs:
+        - input.fn
+        - feature.dt_bboxes
+        - feature.rec_score
+        - feature.rec_doc

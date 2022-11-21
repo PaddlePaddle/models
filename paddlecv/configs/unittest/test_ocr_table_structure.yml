@@ -1,0 +1,46 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: true
+  save_res: true
+  return_res: False
+
+MODEL:
+  - PPStructureTableStructureOp:
+      name: table
+      param_path: paddlecv://models/ch_PP-StructureV2_SLANet_infer/inference.pdiparams
+      model_path: paddlecv://models/ch_PP-StructureV2_SLANet_infer/inference.pdmodel
+      batch_size: 1
+      PreProcess:
+        - RGB2BGR:
+        - ResizeTableImage:
+            max_len: 488
+        - NormalizeImage:
+            scale: 1./255.
+            mean: [ 0.485, 0.456, 0.406 ]
+            std: [ 0.229, 0.224, 0.225 ]
+            order: 'hwc'
+        - PaddingTableImage:
+            size: [ 488, 488 ]
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - TableLabelDecode:
+            character_dict_path: "paddlecv://dict/ocr/table_structure_dict_ch.txt"
+            merge_no_span_structure: true
+      Inputs:
+        - input.image
+  - OCRTableOutput:
+      name: vis
+      Inputs:
+        - input.fn
+        - input.image
+        - table.dt_bboxes
+        - table.structures
+        - table.scores
