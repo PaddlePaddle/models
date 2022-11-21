@@ -4,7 +4,7 @@ Model_Info:
   description: "PP-PicoDet是轻量级系列模型，在移动端具有卓越的性能"
   description_en: "PP-PicoDet has a series of lightweight models, which are very suitable\
     \ for deployment on mobile or CPU"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_Picodet.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"

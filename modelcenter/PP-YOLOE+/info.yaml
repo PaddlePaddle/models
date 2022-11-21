@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-YOLOE+"
   description: "PP-YOLOE+是PP-YOLOE的升级版"
   description_en: "PP-YOLOE+ is an upgraded version of PP-YOLOE"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-YOLOE%2B.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"

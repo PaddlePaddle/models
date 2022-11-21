@@ -4,7 +4,7 @@ Model_Info:
   description: "PP-YOLOE是基于PP-YOLOv2的卓越的单阶段Anchor-free模型，超越了多种流行的YOLO模型"
   description_en: "PP-YOLOE is an excellent single-stage anchor-free model based on\
     \ PP-YOLOv2, surpassing a variety of popular YOLO models"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-YOLOE.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"
