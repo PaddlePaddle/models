@@ -1,0 +1,26 @@
+Model_Info:
+   name: "google/t5-large-lm-adapt"
+   description: "Version 1.1 - LM-Adapted"
+   description_en: "Version 1.1 - LM-Adapted"
+   icon: ""
+   from_repo: "https://huggingface.co/google/t5-large-lm-adapt"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Text2Text Generation"
+  sub_tag: "文本生成"
+
+Example:
+
+Datasets: "c4"
+Pulisher: "google"
+License: "apache-2.0"
+Language: "English"
+Paper:
+   - title: 'GLU Variants Improve Transformer'
+     url: 'http://arxiv.org/abs/2002.05202v1'
+   - title: 'Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer'
+     url: 'http://arxiv.org/abs/1910.10683v3'
+IfTraining: 0
+IfOnlineDemo: 0

@@ -1,0 +1,26 @@
+Model_Info:
+   name: "distilroberta-base"
+   description: "Model Card for DistilRoBERTa base"
+   description_en: "Model Card for DistilRoBERTa base"
+   icon: ""
+   from_repo: "https://huggingface.co/distilroberta-base"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Fill-Mask"
+  sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "openwebtext"
+Pulisher: "huggingface"
+License: "apache-2.0"
+Language: "English"
+Paper:
+   - title: 'DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter'
+     url: 'http://arxiv.org/abs/1910.01108v4'
+   - title: 'Quantifying the Carbon Emissions of Machine Learning'
+     url: 'http://arxiv.org/abs/1910.09700v2'
+IfTraining: 0
+IfOnlineDemo: 0

@@ -1,0 +1,24 @@
+Model_Info:
+   name: "bhadresh-savani/roberta-base-emotion"
+   description: "robert-base-emotion"
+   description_en: "robert-base-emotion"
+   icon: ""
+   from_repo: "https://huggingface.co/bhadresh-savani/roberta-base-emotion"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Text Classification"
+  sub_tag: "文本分类"
+
+Example:
+
+Datasets: "emotion,emotion"
+Pulisher: "bhadresh-savani"
+License: "apache-2.0"
+Language: "English"
+Paper:
+   - title: 'RoBERTa: A Robustly Optimized BERT Pretraining Approach'
+     url: 'http://arxiv.org/abs/1907.11692v1'
+IfTraining: 0
+IfOnlineDemo: 0
