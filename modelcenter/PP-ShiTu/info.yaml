@@ -18,7 +18,7 @@ Example:
   sub_tag: "商品识别"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4003418?channelType=0&channel=0"
 Datasets: "Aliproduct, GLDv2, VeRI, LogoDet, iCartoonFace, SOP, Inshop"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1
