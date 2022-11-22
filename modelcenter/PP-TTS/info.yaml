@@ -29,7 +29,7 @@ Example:
  
 Datasets: "Aishell3, LJ Speech, Chinese Standard Mandarin Speech Copus, VCTK"
    
-Pulisher: "Baidu"
+Publisher: "Baidu"
 
 License: "Apache 2.0"
 
