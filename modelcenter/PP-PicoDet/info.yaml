@@ -19,7 +19,7 @@ Example:
   sub_tag: "路面危害检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3898651"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices"
