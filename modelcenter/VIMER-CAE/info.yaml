@@ -14,7 +14,7 @@ Task:
 
      
 Datasets: "ImageNet1K, MSCOCO, ADE20K"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "Context Autoencoder for Self-Supervised Representation Learning"
