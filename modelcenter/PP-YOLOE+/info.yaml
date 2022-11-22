@@ -18,7 +18,7 @@ Example:
   sub_tag: "目标检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-YOLOE: An evolved version of YOLO"
