@@ -3,7 +3,7 @@ Model_Info:
    description: "飞桨开源语音识别系统，支持端到端识别与流式识别"
    description_en: "Open source speech recognition system based on PaddlePaddle, supporting end-to-end recognition and streaming recognition"
    update_time: 
-   icon: 
+   icon: https://paddlespeech.bj.bcebos.com/demos/speech_web/e1cbf586e8da856faf4b4b4a6d236894.jpg
    from_repo: "PaddleSpeech"
 
 Task:
