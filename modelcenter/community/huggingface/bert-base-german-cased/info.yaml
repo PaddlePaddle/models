@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: ""
-Pulisher: "huggingface"
+Publisher: "huggingface"
 License: "mit"
 Language: "German"
 Paper:

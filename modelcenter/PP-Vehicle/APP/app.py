@@ -26,7 +26,7 @@ with gr.Blocks() as demo:
 
         with gr.TabItem("image"):
 
-            img_in = gr.Image(label="Input")
+            img_in = gr.Image(value="https://paddledet.bj.bcebos.com/modelcenter/images/PP-Vehicle/demo_vehicle.jpg",label="Input")
             img_out = gr.Image(label="Output")
 
             img_avtivity_list = gr.CheckboxGroup(
@@ -36,7 +36,7 @@ with gr.Blocks() as demo:
 
         with gr.TabItem("video"):
 
-            video_in = gr.Video(label="Input")
+            video_in = gr.Video(value="https://paddledet.bj.bcebos.com/modelcenter/images/PP-Vehicle/demo_vehicle.mp4",label="Input")
             video_out = gr.Video(label="Output")
 
             video_avtivity_list = gr.CheckboxGroup(

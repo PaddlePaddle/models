@@ -19,7 +19,7 @@ with gr.Blocks() as demo:
 
     with gr.Column(scale=1, min_width=100):
 
-        img_in = gr.Image(label="Input").style(height=200)
+        img_in = gr.Image(value="https://paddledet.bj.bcebos.com/modelcenter/images/General/000000014439.jpg",label="Input").style(height=200)
 
         with gr.Row():
             btn1 = gr.Button("Clear")

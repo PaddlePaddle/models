@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "wikipedia"
-Pulisher: "huggingface"
+Publisher: "huggingface"
 License: "apache-2.0"
 Language: ""
 Paper:

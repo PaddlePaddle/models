@@ -13,7 +13,7 @@ Task:
   sub_tag: "预训练模型"
 Example: ""
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "ERNIE-M: Enhanced Multilingual Representation by Aligning Cross-lingual\

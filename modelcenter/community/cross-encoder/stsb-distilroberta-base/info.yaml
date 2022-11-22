@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: ""
-Pulisher: "cross-encoder"
+Publisher: "cross-encoder"
 License: "apache-2.0"
 Language: ""
 Paper:

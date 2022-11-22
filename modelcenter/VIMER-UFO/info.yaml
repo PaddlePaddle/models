@@ -14,7 +14,7 @@ Task:
 
      
 Datasets: "More than 20 datasets details refs to github repo"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "UFO:Unified Feature Optimization"

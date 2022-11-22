@@ -1,11 +1,10 @@
-【PP-TTS】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
-
+---
 Model_Info:
    name: "PP-TTS"
    description: "飞桨开源流式语音合成系统"
    description_en: "Streaming speech synthesis system based on PaddlePaddle"
    update_time: 
-   icon: 
+   icon: "https://paddlespeech.bj.bcebos.com/demos/speech_web/a38c49d08413b68080c8abb882487f26.jpg"
    from_repo: "PaddleSpeech"
 
 Task:
@@ -29,7 +28,7 @@ Example:
  
 Datasets: "Aishell3, LJ Speech, Chinese Standard Mandarin Speech Copus, VCTK"
    
-Pulisher: "Baidu"
+Publisher: "Baidu"
 
 License: "Apache 2.0"
 

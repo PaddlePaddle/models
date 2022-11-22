@@ -24,7 +24,7 @@ Example:
    - title: "【快速上手ERNIE 3.0】对话意图识别实战"
      url: "https://aistudio.baidu.com/aistudio/projectdetail/2017202?contributionType=1"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "ERNIE-Tiny: A Progressive Distillation Framework for Pretrained Transformer Compression"

@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: ""
-Pulisher: "PlanTL-GOB-ES"
+Publisher: "PlanTL-GOB-ES"
 License: "apache-2.0"
 Language: "Spanish"
 Paper:
