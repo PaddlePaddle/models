@@ -1,5 +1,3 @@
-!pip install -q gradio
-
 import gradio as gr
 import os
 

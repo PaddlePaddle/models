@@ -1,0 +1,23 @@
+Model_Info:
+   name: "dbmdz/bert-base-italian-uncased"
+   description: "🤗 + 📚 dbmdz BERT and ELECTRA models"
+   description_en: "🤗 + 📚 dbmdz BERT and ELECTRA models"
+   icon: ""
+   from_repo: "https://huggingface.co/dbmdz/bert-base-italian-uncased"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Fill-Mask"
+  sub_tag: "槽位填充"
+
+Example:
+
+Datasets: "wikipedia"
+Pulisher: "dbmdz"
+License: "mit"
+Language: "Italian"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

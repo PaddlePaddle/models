@@ -1,0 +1,66 @@
+image_shape: &image_shape 640
+
+ENV:
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: True
+  save_res: True
+  return_res: True
+
+
+MODEL:
+  - DetectionOp:
+      name: det
+      param_path: paddlecv://models/mot_ppyoloe_l_36e_ppvehicle/model.pdiparams
+      model_path: paddlecv://models/mot_ppyoloe_l_36e_ppvehicle/model.pdmodel
+      batch_size: 1
+      image_shape: [3, *image_shape, *image_shape]
+      PreProcess:
+        - Resize:
+            interp: 2
+            keep_ratio: false
+            target_size: [*image_shape, *image_shape]
+        - Permute:
+      PostProcess:
+        - ParserDetResults:
+            label_list:
+              - vehicle
+            threshold: 0.1
+      Inputs:
+        - input.image
+
+  - TrackerOP:
+      name: tracker
+      type: OCSORTTracker
+      tracker_configs:
+        det_thresh: 0.4
+        max_age: 30
+        min_hits: 3
+        iou_threshold: 0.3
+        delta_t: 3
+        inertia: 0.2
+        vertical_ratio: 0
+        min_box_area: 0
+        use_byte: False
+      PostProcess:
+        - ParserTrackerResults:
+            label_list:
+              - vehicle
+      Inputs:
+        - det.dt_bboxes
+        - det.dt_scores
+        - det.dt_class_ids
+
+  - TrackerOutput:
+      name: vis
+      Inputs:
+        - input.fn
+        - input.image
+        - tracker.tk_bboxes
+        - tracker.tk_scores
+        - tracker.tk_ids
+        - tracker.tk_cls_ids
+        - tracker.tk_cls_names
