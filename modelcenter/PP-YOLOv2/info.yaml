@@ -5,7 +5,7 @@ Model_Info:
    description: PP-YOLOv2是PP-YOLO的升级版本
    description_en: PP-YOLOv2 is an upgraded version of PP-YOLO
    update_time: 
-   icon: url  
+   icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-YOLOv2.png"
    from_repo: "PaddleDetection"
 
 Task:
@@ -31,7 +31,7 @@ Example:
  
 Datasets: COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC
    
-Pulisher: Baidu
+Publisher: Baidu
 
 License: Apache 2.0
 
