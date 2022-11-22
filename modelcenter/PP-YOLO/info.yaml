@@ -18,7 +18,7 @@ Example:
   sub_tag: "表计读数"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3975848?contributionType=1"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-YOLO: An Effective and Efficient Implementation of Object Detector"
