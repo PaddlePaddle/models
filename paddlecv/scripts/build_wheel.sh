@@ -50,7 +50,7 @@ function init() {
     rm -rf $DIST_DIR $BUILD_DIR $EGG_DIR $TEST_DIR
     if [ `pip list | grep paddlecv | wc -l` -gt 0  ]; then
       echo -e "${BLUE}[init]${NONE} uninstalling paddlecv..."
-      #pip uninstall -y paddlecv
+      pip uninstall -y paddlecv
     fi
     echo -e "${BLUE}[init]${NONE} ${GREEN}init success\n"
 }
