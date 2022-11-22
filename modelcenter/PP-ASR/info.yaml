@@ -29,7 +29,7 @@ Example:
  
 Datasets: "Aishell1, GigaSpeech, LibriSpeech, WenetSpeech"
    
-Pulisher: "Baidu"
+Publisher: "Baidu"
 
 License: "Apache 2.0"
 
