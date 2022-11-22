@@ -1,5 +1,3 @@
-【PP-ASR】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
-
 Model_Info:
    name: "PP-ASR"
    description: "飞桨开源语音识别系统，支持端到端识别与流式识别"
