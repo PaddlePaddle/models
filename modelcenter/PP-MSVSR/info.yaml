@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-MSVSR"
   description: "视频超分"
   description_en: "video super resolution"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/23690325/203386955-a86f6d3e-9ca1-4c56-9a7d-07be5acf9076.png"
   from_repo: "PaddleGAN"
 Task:
 - tag_en: "Computer Vision"

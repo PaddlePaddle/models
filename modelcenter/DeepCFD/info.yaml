@@ -1,31 +1,17 @@
 ---
 Model_Info:
-  name: "DeepCFD"
+  name: "DeepCFD 模型"
   description: "基于DeepCFD模型实现流体绕过任意障碍物的定常流场仿真"
   description_en: "Simulation of steady flow of fluid bypassing any obstacle based on DeepCFD model"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
-  from_repo: ""
-
+  icon: "https://ai-studio-static-online.cdn.bcebos.com/f221a878e6c04cf4a71432040d85cc734e5960b6d9e946baad166b6a54ad62fe"
+  from_repo: "https://github.com/zbyandmoon/DeepCFD_with_PaddlePaddle/tree/main/paddle"
 Task:
--
-    tag: "科学计算"
-    tag_en: "Scientific Computing"
-    sub_tag: "计算流体力学"
-    sub_tag_en: "Computational fluid dynamics"
-
-Example:
--
-   tag: "工业/能源"
-   tag_en: "Industrial/Energy"
-   sub_tag: "计算流体力学"
-   sub_tag_en: "Computational fluid dynamics"
-   title: "基于PaddlePaddle的DeepCFD复现"
-   
-   url: https://aistudio.baidu.com/aistudio/projectdetail/4400677?channelType=0&channel=0
-   url_en: https://aistudio.baidu.com/aistudio/projectdetail/4400677?channelType=0&channel=0
-
-Datasets: "Data_DeepCFD"
-Publisher: "Baidu"
+- tag: "科学计算"
+  tag_en: "Scientific Computing"
+  sub_tag: "计算流体力学"
+  sub_tag_en: "Computational Fluid Dynamics"
+Datasets: "deepcfd-data"
+Pulisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1
