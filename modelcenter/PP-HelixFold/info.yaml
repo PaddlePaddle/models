@@ -1,45 +1,20 @@
 ---
 Model_Info:
-   name: "PP-HelixFold"
-   description: "适配国产软硬件的蛋白质结构预测模型"
-   description_en: "A protein structure prediction model adapted to domestic software and hardware"
-   update_time: 
-   icon: 
-   from_repo: "PaddleHelix"
-
+  name: "PP-HelixFold"
+  description: "适配国产软硬件的蛋白质结构预测模型"
+  description_en: "A protein structure prediction model adapted to domestic software and hardware"
+  icon: ""
+  from_repo: "PaddleHelix"
 Task:
--
-    tag: "科学计算"
-    tag_en: "Scientific Computing"
-    sub_tag: "蛋白质结构预测"
-    sub_tag_en: "Protein Structure Prediction"
-   
-Example:
--
-   tag: 
-   tag_en: 
-   sub_tag:
-   sub_tag_en: 
-   title: 
-   title_en: 
-   url: 
-   url_en: 
-  
- 
+- tag_en: "Scientific Computing"
+  tag: "科学计算"
+  sub_tag_en: "Protein Structure Prediction"
+  sub_tag: "蛋白质结构预测"
 Datasets: "RCSB PDB, Self-distillation datasets, CAMEO, CASP14"
-   
 Publisher: "Baidu"
-
 License: "Apache 2.0"
-
-Paper: 
--  
-   title: "Efficient AlphaFold2 Training using Parallel Evoformer and Branch Parallelism"
-   url: "https://arxiv.org/abs/2211.00235"
-
+Paper:
+- title: "HelixFold: An Efficient Implementation of AlphaFold2 using PaddlePaddle"
+  url: "https://arxiv.org/abs/2207.05477"
 IfTraining: 1
-
 IfOnlineDemo: 1
-
-
-
