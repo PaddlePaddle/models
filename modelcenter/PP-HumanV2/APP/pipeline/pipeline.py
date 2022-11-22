@@ -135,7 +135,7 @@ def get_model_dir_with_list(cfg, args):
                     cfg[key]["rec_model_dir"] = rec_model_dir
                 print("rec_model_dir model dir: ", rec_model_dir)
 
-            if key == 'ID_BASED_DETACTION' or key == 'SKELETON_ACTION' or key == 'ATTR' or key =='ID_BASED_CLSACTION' or key=='REID':
+            if (key == 'ID_BASED_DETACTION' and (key in activate_list)) or (key == 'SKELETON_ACTION' and (key in activate_list))or (key == 'ATTR' and (key in activate_list)) or (key =='ID_BASED_CLSACTION' and (key in activate_list)) or (key=='REID' and (key in activate_list)):
                 model_dir = cfg['MOT']["model_dir"]
                 downloaded_model_dir = auto_download_model(model_dir)
                 if downloaded_model_dir:
