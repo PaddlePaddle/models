@@ -18,7 +18,7 @@ Example:
   sub_tag: "人员进出管理"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4094475"
 Datasets: "ImageNet1k"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-LCNet: A Lightweight CPU Convolutional Neural Network"
