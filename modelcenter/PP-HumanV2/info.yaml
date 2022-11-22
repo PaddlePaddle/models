@@ -38,7 +38,7 @@ Example:
   sub_tag: "进出管理"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4537344"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 0
 IfOnlineDemo: 1
