@@ -22,7 +22,7 @@ Example:
   sub_tag: "动作分类"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4385813"
 Datasets: "COCO train2017,AI Challenger trainset,COCO person keypoints val2017,COCO instances val2017"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 0
 IfOnlineDemo: 1
