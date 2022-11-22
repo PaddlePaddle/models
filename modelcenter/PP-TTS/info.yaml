@@ -4,7 +4,7 @@ Model_Info:
    description: "飞桨开源流式语音合成系统"
    description_en: "Streaming speech synthesis system based on PaddlePaddle"
    update_time: 
-   icon: https://paddlespeech.bj.bcebos.com/demos/speech_web/a38c49d08413b68080c8abb882487f26.jpg
+   icon: "https://paddlespeech.bj.bcebos.com/demos/speech_web/a38c49d08413b68080c8abb882487f26.jpg"
    from_repo: "PaddleSpeech"
 Task:
 - tag: "智能语音"

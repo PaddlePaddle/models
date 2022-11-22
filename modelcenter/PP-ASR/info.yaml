@@ -4,7 +4,7 @@ Model_Info:
    description: "飞桨开源语音识别系统，支持端到端识别与流式识别"
    description_en: "Open source speech recognition system based on PaddlePaddle, supporting end-to-end recognition and streaming recognition"
    update_time: 
-   icon: https://paddlespeech.bj.bcebos.com/demos/speech_web/e1cbf586e8da856faf4b4b4a6d236894.jpg
+   icon: "https://paddlespeech.bj.bcebos.com/demos/speech_web/e1cbf586e8da856faf4b4b4a6d236894.jpg"
    from_repo: "PaddleSpeech"
 Task:
 -
@@ -19,7 +19,7 @@ Example:
   sub_tag_en: Information Extraction
   title: 智能语音指令解析系统全流程搭建，实现语音工单信息抽取
   title_en: Build a speech parsing system to extract specific infomation 
-  url: https://aistudio.baidu.com/aistudio/projectdetail/4398167?shared=1
+  url: "https://aistudio.baidu.com/aistudio/projectdetail/4398167?shared=1"
   url_en: 
 Datasets: "Aishell1, GigaSpeech, LibriSpeech, WenetSpeech"  
 Pulisher: "Baidu"
