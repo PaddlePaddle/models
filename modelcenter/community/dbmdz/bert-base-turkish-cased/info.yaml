@@ -1,0 +1,19 @@
+Model_Info:
+   name: "dbmdz/bert-base-turkish-cased"
+   description: "🤗 + 📚 dbmdz Turkish BERT model"
+   description_en: "🤗 + 📚 dbmdz Turkish BERT model"
+   icon: ""
+   from_repo: "https://huggingface.co/dbmdz/bert-base-turkish-cased"
+
+Task:
+
+Example:
+
+Datasets: ""
+Pulisher: "dbmdz"
+License: "mit"
+Language: "Turkish"
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0

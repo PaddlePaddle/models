@@ -1,0 +1,19 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: False
+  save_res: False
+  return_res: False
+
+MODEL:
+  - BlankOp:
+      name: blank
+      param_path: paddlecv://models/PPLCNet_x1_0_infer/inference.pdiparams
+      model_path: paddlecv://models/PPLCNet_x1_0_infer/inference.pdmodel
+      Inputs:
+        - input.image

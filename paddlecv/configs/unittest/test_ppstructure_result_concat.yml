@@ -1,0 +1,21 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  shape_info_filename: ./
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+
+MODEL:
+  - PPStructureResultConcatOp:
+      name: concat
+      Inputs:
+        - input.table.structures
+        - input.Matcher.html
+        - input.layout.dt_bboxes
+        - input.table.dt_bboxes
+        - input.filter_table.dt_polys
+        - input.filter_table.rec_text
+        - input.filter_txts.dt_polys
+        - input.filter_txts.rec_text

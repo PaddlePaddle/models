@@ -10,8 +10,8 @@ Model_Info:
 
 Task:
 -
-    tag: "生物计算"
-    tag_en: "Biological Computing"
+    tag: "科学计算"
+    tag_en: "Scientific Computing"
     sub_tag: "蛋白质结构预测"
     sub_tag_en: "Protein Structure Prediction"
    

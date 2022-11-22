@@ -1,0 +1,23 @@
+Model_Info:
+   name: "deepparag/DumBot"
+   description: "THIS AI IS OUTDATED. See [Aeona](https://huggingface.co/deepparag/Aeona)"
+   description_en: "THIS AI IS OUTDATED. See [Aeona](https://huggingface.co/deepparag/Aeona)"
+   icon: ""
+   from_repo: "https://huggingface.co/deepparag/DumBot"
+
+Task:
+- tag_en: "Natural Language Processing"
+  tag: "自然语言处理"
+  sub_tag_en: "Text Generation"
+  sub_tag: "文本生成"
+
+Example:
+
+Datasets: ""
+Pulisher: "deepparag"
+License: "mit"
+Language: ""
+Paper:
+
+IfTraining: 0
+IfOnlineDemo: 0
