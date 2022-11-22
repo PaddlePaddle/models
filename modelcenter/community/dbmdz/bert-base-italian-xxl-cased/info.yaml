@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "wikipedia"
-Pulisher: "dbmdz"
+Publisher: "dbmdz"
 License: "mit"
 Language: "Italian"
 Paper:

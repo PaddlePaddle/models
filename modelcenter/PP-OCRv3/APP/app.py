@@ -40,9 +40,7 @@ with gr.Blocks() as demo:
     gr.Markdown("PP-OCRv3")
 
     with gr.Column(scale=1, min_width=100):
-        img_in = gr.Image(
-            value="https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/dygraph/doc/imgs/11.jpg",
-            label="Input")
+        img_in = gr.Image(label="Input")
 
         with gr.Row():
             btn1 = gr.Button("Clear")

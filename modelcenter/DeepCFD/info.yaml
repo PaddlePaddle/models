@@ -25,7 +25,7 @@ Example:
    url_en: https://aistudio.baidu.com/aistudio/projectdetail/4400677?channelType=0&channel=0
 
 Datasets: "Data_DeepCFD"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1

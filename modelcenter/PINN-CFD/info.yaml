@@ -25,7 +25,7 @@ Example:
 
    
 Datasets: "cylinder2D_continuous"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1

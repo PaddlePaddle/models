@@ -40,7 +40,7 @@ Example:
      sub_tag_en: "Invoice key information extraction"
      sub_tag: "发票关键信息抽取"
 Datasets: "ICDAR 2015, ICDAR2019-LSVT,ICDAR2017-RCTW-17,Total-Text,ICDAR2019-ArT"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "PP-StructureV2: A Stronger Document Analysis System"

@@ -18,7 +18,7 @@ Task:
 Example:
 
 Datasets: "openwebtext"
-Pulisher: "johngiorgi"
+Publisher: "johngiorgi"
 License: "apache-2.0"
 Language: "English"
 Paper:
