@@ -22,7 +22,7 @@ Example:
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4398167?shared=1"
   url_en: 
 Datasets: "Aishell1, GigaSpeech, LibriSpeech, WenetSpeech"  
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "Apache 2.0"
 Paper: 
 - title: "PaddleSpeech: An Easy-to-Use All-in-One Speech Toolkit"
