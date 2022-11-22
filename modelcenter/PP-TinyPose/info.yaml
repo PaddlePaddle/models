@@ -17,7 +17,7 @@ Task:
 Example:
 - tag_en: "Intelligent Sport"
   tag: "智慧体育"
-  sub_tag_en: "motion classification"
+  sub_tag_en: "Motion Classification"
   title: "智能健身动作识别"
   sub_tag: "动作分类"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4385813"

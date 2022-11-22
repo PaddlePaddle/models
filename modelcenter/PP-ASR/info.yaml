@@ -7,11 +7,10 @@ Model_Info:
    icon: "https://paddlespeech.bj.bcebos.com/demos/speech_web/e1cbf586e8da856faf4b4b4a6d236894.jpg"
    from_repo: "PaddleSpeech"
 Task:
--
-    tag: "智能语音"
-    tag_en: "Speech&Audio"
-    sub_tag: "语音识别"
-    sub_tag_en: "Speech Recognition"
+- tag: "智能语音"
+  tag_en: "Speech&Audio"
+  sub_tag: "语音识别"
+  sub_tag_en: "Speech Recognition"
 Example:
 - tag: 互联网
   tag_en: Internet

@@ -13,7 +13,7 @@ Task:
   sub_tag_en: Object Detection 
 Example:
 - tag: 智慧安防
-  tag_en: Smart Security
+  tag_en: Intelligent Security
   sub_tag: 火灾/烟雾检测
   sub_tag_en: Smoke Detction
   title: 基于PP-YOLOv2的火灾/烟雾检测
