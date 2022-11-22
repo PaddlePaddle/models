@@ -21,7 +21,7 @@ Example:
   url: 
   url_en: 
 Datasets: "Aishell3, LJ Speech, Chinese Standard Mandarin Speech Copus, VCTK"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "Apache 2.0"
 Paper: 
 - title: "PaddleSpeech: An Easy-to-Use All-in-One Speech Toolkit"
