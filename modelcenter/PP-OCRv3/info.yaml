@@ -37,7 +37,7 @@ Example:
      sub_tag_en: "PCB character recognition"
      sub_tag: "PCB字符识别"
 Datasets: "ICDAR 2015, ICDAR2019-LSVT,ICDAR2017-RCTW-17,Total-Text,ICDAR2019-ArT"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "PP-OCRv3: More Attempts for the Improvement of Ultra Lightweight OCR System"
