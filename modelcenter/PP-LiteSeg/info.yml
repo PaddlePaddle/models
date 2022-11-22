@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-LiteSeg"
   description: "PP-LiteSeg轻量级实时语义分割SOTA模型"
   description_en: "PP-LiteSeg real-time semantic segmentation model with SOTA performance"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddleseg.bj.bcebos.com/resources/PP-LiteSeg.jpeg"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"
@@ -24,7 +24,7 @@ Example:
   sub_tag: "语义分割"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3873145"
 Datasets: "Cityscapes, CamVid"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-LiteSeg: A Superior Real-Time Semantic Segmentation Model"

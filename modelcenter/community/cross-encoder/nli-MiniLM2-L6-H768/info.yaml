@@ -18,7 +18,7 @@ Task:
 Example:
 
 Datasets: "multi_nli,snli"
-Pulisher: "cross-encoder"
+Publisher: "cross-encoder"
 License: "apache-2.0"
 Language: "English"
 Paper:

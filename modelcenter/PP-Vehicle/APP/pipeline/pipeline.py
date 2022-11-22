@@ -133,13 +133,12 @@ def get_model_dir_with_list(cfg, args):
                     cfg[key]["rec_model_dir"] = rec_model_dir
                 print("rec_model_dir model dir: ", rec_model_dir)
 
-        elif key == "MOT" and (
-                key in activate_list):  # for idbased and skeletonbased actions
-            model_dir = cfg[key]["model_dir"]
+        if (key == "MOT" and (key in activate_list)) or (key == "VEHICLE_PLATE" and (key in activate_list)) or (key == "VEHICLE_ATTR" and (key in activate_list)):  # for idbased and skeletonbased actions
+            model_dir = cfg["MOT"]["model_dir"]
             downloaded_model_dir = auto_download_model(model_dir)
             if downloaded_model_dir:
                 model_dir = downloaded_model_dir
-                cfg[key]["model_dir"] = model_dir
+                cfg["MOT"]["model_dir"] = model_dir
             print("mot_model_dir model_dir: ", model_dir)
 
 
@@ -219,10 +218,12 @@ class PipePredictor(object):
         # only for ppvehicle
         self.with_vehicleplate = True if 'VEHICLE_PLATE' in activate_list else False
         if self.with_vehicleplate:
+            self.with_mot = True
             print('Vehicle Plate Recognition enabled')
 
         self.with_vehicle_attr = True if 'VEHICLE_ATTR' in activate_list else False
         if self.with_vehicle_attr:
+            self.with_mot = True
             print('Vehicle Attribute Recognition enabled')
 
         self.modebase = {

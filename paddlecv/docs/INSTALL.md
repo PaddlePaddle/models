@@ -40,11 +40,9 @@ python -c "import paddle; print(paddle.__version__)"
 
 ```
 # 克隆PaddleModelPipeline仓库
-cd <path/to/clone/PaddleModelPipeline>
-git clone https://github.com/jerrywgz/PaddleModelPipeline.git
-
-# 安装其他依赖
-cd PaddleModelPipeline
+cd <path/to/clone/models>
+git clone https://github.com/PaddlePaddle/models.git
+cd models/paddlecv
 
 # 编译安装paddlecv
 python setup.py install

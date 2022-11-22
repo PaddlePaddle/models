@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "squad"
-Pulisher: "csarron"
+Publisher: "csarron"
 License: "mit"
 Language: "English"
 Paper:
