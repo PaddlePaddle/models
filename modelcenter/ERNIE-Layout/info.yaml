@@ -10,7 +10,7 @@ Task:
 - tag: 文心大模型
   tag_en: Wenxin Big Models
   sub_tag: 文档分析
-   sub_tag_en: Ernie-Layout
+  sub_tag_en: Ernie-Layout
 Example:
 - tag: 互联网
   tag_en: Internet
