@@ -8,8 +8,8 @@ Model_Info:
 Task:
 - tag: "科学计算"
   tag_en: "Scientific Computing"
-  sub_tag: "2D圆柱绕流"
-  sub_tag_en: "2D cylinder flow"
+  sub_tag: "圆柱绕流"
+  sub_tag_en: "Cylinder Flow"
 Example:
 - tag: "工业/能源"
   tag_en: "Industrial/Energy"
