@@ -36,7 +36,7 @@ Example:
   sub_tag: "快递单信息抽取"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4038499"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "Unified Structure Generation for Universal Information Extraction"
