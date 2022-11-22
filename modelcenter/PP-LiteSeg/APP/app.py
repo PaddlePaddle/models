@@ -221,4 +221,4 @@ with gr.Blocks() as demo:
     btn1.click(fn=clear_all, inputs=None, outputs=[img_in, img_out])
     gr.Button.style(1)
 
-demo.launch(share=True)
+demo.launch()
