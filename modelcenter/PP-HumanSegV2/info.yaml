@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HumanSegV2"
   description: "PP-HumanSegV2实时人像分割SOTA方案"
   description_en: "PP-HumanSegV2 real-time portrait segmentation solution"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddleseg.bj.bcebos.com/resources/PP-HumanSegV2.jpeg"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"
@@ -18,7 +18,7 @@ Example:
   sub_tag: "人像分割"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4504982"
 Datasets: "PP-HumanSeg14K,EG1800"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1

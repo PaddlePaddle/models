@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-Matting"
   description: "PP-Matting图像抠图模型"
   description_en: "PP-Matting image matting model"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddleseg.bj.bcebos.com/resources/PP-Matting.jpeg"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"
@@ -25,7 +25,7 @@ Example:
   title: "【PaddleSeg-Matting实践范例】PP-Matting图像抠图"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/5002963"
 Datasets: "Composition-1k, Distinctions-646"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-Matting: High-Accuracy Natural Image Matting"
