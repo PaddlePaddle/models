@@ -28,13 +28,13 @@ Example:
  
 Datasets: FUNSD, XFUND-ZH, DocVQA-ZH, RVL-CDIP (sampled)
    
-Pulisher: Baidu
+Publisher: Baidu
 
 License: Apache 2.0
 
 Paper: 
 -	
-	title: ERNIE-Layout: Layout-Knowledge Enhanced Multi-modal Pre-training for Document Understanding
+	title: "ERNIE-Layout: Layout-Knowledge Enhanced Multi-modal Pre-training for Document Understanding"
 	url: https://arxiv.org/pdf/2210.06155.pdf
 
 

@@ -11,7 +11,7 @@ Task:
   sub_tag_en: "ERNIE-3.0 Zeus"
   sub_tag: "任务知识增强"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1

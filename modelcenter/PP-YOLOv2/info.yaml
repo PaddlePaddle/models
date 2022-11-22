@@ -1,5 +1,4 @@
-【PP-YOLOv2-YAML】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
-
+---
 Model_Info:
    name: "PP-YOLOv2"
    description: PP-YOLOv2是PP-YOLO的升级版本
@@ -9,18 +8,14 @@ Model_Info:
    from_repo: "PaddleDetection"
 
 Task:
--
-    tag: 计算机视觉
+-   tag: 计算机视觉
     tag_en: Computer Vision
     sub_tag: 目标检测
-    sub_tag_en: Object Detection,
-    sub_tag: 人脸检测
-    sub_tag_en: Face Detection
+    sub_tag_en: Object Detection
    
 Example:
--
-   tag: 智慧安防
-   tag_en: Intelligent Security
+-  tag: 智慧安防
+   tag_en: Smart Security
    sub_tag: 火灾/烟雾检测
    sub_tag_en: Smoke Detction
    title: 基于PP-YOLOv2的火灾/烟雾检测
@@ -36,8 +31,7 @@ Publisher: Baidu
 License: Apache 2.0
 
 Paper: 
--	
-	title: PP-YOLOv2: A Practical Object Detector
+-	title: "PP-YOLOv2: A Practical Object Detector"
 	url: https://arxiv.org/pdf/2104.10419.pdf
 
 
