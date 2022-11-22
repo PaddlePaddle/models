@@ -6,38 +6,25 @@ Model_Info:
    update_time: 
    icon: url  
    from_repo: PaddleNLP
-
 Task:
--
-    tag: 文心大模型
-    tag_en: Wenxin Big Models
-    sub_tag: 文档分析
-    sub_tag_en: Ernie-Layout
-   
+- tag: 文心大模型
+  tag_en: Wenxin Big Models
+  sub_tag: 文档分析
+  sub_tag_en: Ernie-Layout
 Example:
--
-   tag: 互联网
-   tag_en: Internet
-   sub_tag: 文档智能
-   sub_tag_en: Document Intelligence
-   title: PaddleNLP文档智能技术重磅升级，动手搭建端到端文档抽取问答模型
-   title_en: PaddleNLP document intelligent technology has been heavily upgraded, and the end-to-end document extraction question and answer model has been set up
-   url: https://aistudio.baidu.com/aistudio/projectdetail/4881278?channelType=0&channel=0
-   url_en: https://aistudio.baidu.com/aistudio/projectdetail/4881278?channelType=0&channel=0
-  
- 
+- tag: 互联网
+  tag_en: Internet
+  sub_tag: 文档智能
+  sub_tag_en: Document Intelligence
+  title: PaddleNLP文档智能技术重磅升级，动手搭建端到端文档抽取问答模型
+  title_en: PaddleNLP document intelligent technology has been heavily upgraded, and the end-to-end document extraction question and answer model has been set up
+  url: https://aistudio.baidu.com/aistudio/projectdetail/4881278?channelType=0&channel=0
+  url_en: https://aistudio.baidu.com/aistudio/projectdetail/4881278?channelType=0&channel=0
 Datasets: FUNSD, XFUND-ZH, DocVQA-ZH, RVL-CDIP (sampled)
-   
 Publisher: Baidu
-
 License: Apache 2.0
-
 Paper: 
--	
-	title: "ERNIE-Layout: Layout-Knowledge Enhanced Multi-modal Pre-training for Document Understanding"
-	url: https://arxiv.org/pdf/2210.06155.pdf
-
-
+- title: "ERNIE-Layout: Layout-Knowledge Enhanced Multi-modal Pre-training for Document Understanding"
+  url: https://arxiv.org/pdf/2210.06155.pdf
 IfTraining: 1
-
 IfOnlineDemo: 1
