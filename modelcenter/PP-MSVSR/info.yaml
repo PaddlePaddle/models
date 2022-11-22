@@ -20,7 +20,7 @@ Example:
   url: "https://aistudio.baidu.com/aistudio/projectdetail/1161285"
   url_en: 
 Datasets: "REDS, Vimeo90K, Vid4, UDM10"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-MSVSR: Multi-Stage Video Super-Resolution"
