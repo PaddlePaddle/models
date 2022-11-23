@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd  FastDeploy/examples/vision/classification/paddleclas/python
 
-#  Download LCNet Model and Test Image
+#  download LCNet model and test image
 wget https://bj.bcebos.com/paddlehub/fastdeploy/PPLCNet_x1_0_infer.tgz
 tar -xvf PPLCNet_x1_0_infer.tgz
 wget https://gitee.com/paddlepaddle/PaddleClas/raw/release/2.4/deploy/images/ImageNet/ILSVRC2012_val_00000010.jpeg
