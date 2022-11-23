@@ -11,7 +11,7 @@ Task:
   sub_tag: "计算流体力学"
   sub_tag_en: "Computational Fluid Dynamics"
 Datasets: "deepcfd-data"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1
