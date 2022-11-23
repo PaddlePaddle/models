@@ -5,19 +5,19 @@ Model_Info:
   description_en: "A cross-lingual model"
   icon: "https://user-images.githubusercontent.com/11793384/203492376-77d159e8-d687-44b5-b164-a436eef91256.png"
   from_repo: "PaddleNLP"
-
 Task: 
 - tag_en: "Natural Language Processing"
   tag: "自然语言处理"
   sub_tag_en: "Pretrained Model"
   sub_tag: "预训练模型"
-  Example: ""
-  Datasets: ""
-  Publisher: "Baidu"
-  License: "apache.2.0"
-  Paper:
+
+Example:
+Datasets: ""
+Publisher: "Baidu"
+License: "apache.2.0"
+Paper:
 - title: "ERNIE-M: Enhanced Multilingual Representation by Aligning Cross-lingual\
     \ Semantics with Monolingual Corpora"
   url: "https://arxiv.org/pdf/2012.15674.pdf"
-    IfTraining: 0
-    IfOnlineDemo: 0
+IfTraining: 0
+IfOnlineDemo: 0
