@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd FastDeploy/examples/vision/detection/paddledetection/python/
 
-#  Download PPYOLOE Model and Test Image
+#  download PPYOLOE model and test image
 wget https://bj.bcebos.com/fastdeploy/models/ppyoloe_plus_crn_m_80e_coco.tgz
 wget https://gitee.com/paddlepaddle/PaddleDetection/raw/release/2.4/demo/000000014439.jpg
 tar xvf ppyoloe_plus_crn_m_80e_coco.tgz
