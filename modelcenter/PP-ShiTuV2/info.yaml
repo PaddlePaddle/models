@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-ShiTuV2"
   description: "PP-ShiTuV2识别系统"
   description_en: "PP-ShiTuV2, an light-weighted recognition system"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddleocr.bj.bcebos.com/icon/shitu.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
