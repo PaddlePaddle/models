@@ -1,31 +1,27 @@
-Model_Info:
-   name: "cointegrated/rubert-tiny2"
-   description: "pip install transformers sentencepiece"
-   description_en: "pip install transformers sentencepiece"
-   icon: ""
-   from_repo: "https://huggingface.co/cointegrated/rubert-tiny2"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Feature Extraction"
-  sub_tag: "特征抽取"
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Fill-Mask"
-  sub_tag: "槽位填充"
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Sentence Similarity"
-  sub_tag: "句子相似度"
-
-Example:
-
-Datasets: ""
-Publisher: "cointegrated"
-License: "mit"
-Language: "Russian"
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: Russian
+License: mit
+Model_Info:
+  description: pip install transformers sentencepiece
+  description_en: pip install transformers sentencepiece
+  from_repo: https://huggingface.co/cointegrated/rubert-tiny2
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: cointegrated/rubert-tiny2
+Paper: null
+Publisher: cointegrated
+Task:
+- sub_tag: 特征抽取
+  sub_tag_en: Feature Extraction
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 句子相似度
+  sub_tag_en: Sentence Similarity
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

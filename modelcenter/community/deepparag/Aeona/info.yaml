@@ -1,23 +1,19 @@
-Model_Info:
-   name: "deepparag/Aeona"
-   description: "Aeona | Chatbot"
-   description_en: "Aeona | Chatbot"
-   icon: ""
-   from_repo: "https://huggingface.co/deepparag/Aeona"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Generation"
-  sub_tag: "文本生成"
-
-Example:
-
-Datasets: ""
-Publisher: "deepparag"
-License: "mit"
-Language: ""
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: ''
+License: mit
+Model_Info:
+  description: Aeona | Chatbot
+  description_en: Aeona | Chatbot
+  from_repo: https://huggingface.co/deepparag/Aeona
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: deepparag/Aeona
+Paper: null
+Publisher: deepparag
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text Generation
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

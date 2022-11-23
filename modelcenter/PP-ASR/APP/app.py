@@ -5,13 +5,20 @@ from paddlespeech.cli.text.infer import TextExecutor
 import librosa
 import soundfile as sf
 
+os.system("wget -c 'https://paddlespeech.bj.bcebos.com/PaddleAudio/zh.wav'")
+asr = ASRExecutor()
+text_punc = TextExecutor()
+tmp_result = asr(audio_file='zh.wav',
+                 model='conformer_online_wenetspeech',
+                 device="cpu")
+tmp_result = text_punc(
+    text=tmp_result, model='ernie_linear_p7_wudao', device="cpu")
+
 
 def model_inference(audio):
-    asr = ASRExecutor()
-    text_punc = TextExecutor()
     if not isinstance(audio, str):
         audio = str(audio.name)
-    y, sr = librosa.load(audio)
+    y, sr = sf.read(audio)
     if sr != 16000:  # Optional resample to 16000
         y = librosa.resample(y, sr, 16000)
         sf.write(audio, y, 16000)

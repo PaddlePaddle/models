@@ -1,27 +1,23 @@
-Model_Info:
-   name: "Recognai/bert-base-spanish-wwm-cased-xnli"
-   description: "bert-base-spanish-wwm-cased-xnli"
-   description_en: "bert-base-spanish-wwm-cased-xnli"
-   icon: ""
-   from_repo: "https://huggingface.co/Recognai/bert-base-spanish-wwm-cased-xnli"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Zero-Shot Classification"
-  sub_tag: "零样本分类"
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Classification"
-  sub_tag: "文本分类"
-
-Example:
-
-Datasets: "xnli"
-Publisher: "Recognai"
-License: "mit"
-Language: "Spanish"
-Paper:
-
-IfTraining: 0
+Datasets: xnli
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: Spanish
+License: mit
+Model_Info:
+  description: bert-base-spanish-wwm-cased-xnli
+  description_en: bert-base-spanish-wwm-cased-xnli
+  from_repo: https://huggingface.co/Recognai/bert-base-spanish-wwm-cased-xnli
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: Recognai/bert-base-spanish-wwm-cased-xnli
+Paper: null
+Publisher: Recognai
+Task:
+- sub_tag: 零样本分类
+  sub_tag_en: Zero-Shot Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 文本分类
+  sub_tag_en: Text Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -1,32 +1,30 @@
-Model_Info:
-   name: "distilgpt2"
-   description: "DistilGPT2"
-   description_en: "DistilGPT2"
-   icon: ""
-   from_repo: "https://huggingface.co/distilgpt2"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Generation"
-  sub_tag: "文本生成"
-
-Example:
-
-Datasets: "openwebtext"
-Publisher: "huggingface"
-License: "apache-2.0"
-Language: "English"
-Paper:
-   - title: 'DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter'
-     url: 'http://arxiv.org/abs/1910.01108v4'
-   - title: 'Can Model Compression Improve NLP Fairness'
-     url: 'http://arxiv.org/abs/2201.08542v1'
-   - title: 'Mitigating Gender Bias in Distilled Language Models via Counterfactual Role Reversal'
-     url: 'http://arxiv.org/abs/2203.12574v1'
-   - title: 'Quantifying the Carbon Emissions of Machine Learning'
-     url: 'http://arxiv.org/abs/1910.09700v2'
-   - title: 'Distilling the Knowledge in a Neural Network'
-     url: 'http://arxiv.org/abs/1503.02531v1'
-IfTraining: 0
+Datasets: openwebtext
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: apache-2.0
+Model_Info:
+  description: DistilGPT2
+  description_en: DistilGPT2
+  from_repo: https://huggingface.co/distilgpt2
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: distilgpt2
+Paper:
+- title: 'DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter'
+  url: http://arxiv.org/abs/1910.01108v4
+- title: Can Model Compression Improve NLP Fairness
+  url: http://arxiv.org/abs/2201.08542v1
+- title: Mitigating Gender Bias in Distilled Language Models via Counterfactual Role
+    Reversal
+  url: http://arxiv.org/abs/2203.12574v1
+- title: Quantifying the Carbon Emissions of Machine Learning
+  url: http://arxiv.org/abs/1910.09700v2
+- title: Distilling the Knowledge in a Neural Network
+  url: http://arxiv.org/abs/1503.02531v1
+Publisher: huggingface
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text Generation
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -83,13 +83,13 @@ def update(fastaName='',fastaContent=''):
 
 demo = gr.Blocks()
 with demo:
-    gr.Markdown("# PDB viewer using 3Dmol.js")
+    gr.Markdown("# PP-HelixFold Protein Structure Prediction Demo")
     with gr.Row():
         with gr.Box():
             fastaName = gr.Textbox(interactive=False,label='Fasta label')
             fastaContent = gr.Textbox(interactive=False,label='Fasta content')
             gr.Examples([["T1026", read_mol( "T1026.fasta")],["T1037", read_mol("T1037.fasta")]], [fastaName,fastaContent])
-            btn = gr.Button("View")
+            btn = gr.Button("Predict")
     mol = gr.HTML()
     btn.click(fn=update, inputs=[fastaName,fastaContent], outputs=mol)
 demo.launch()
