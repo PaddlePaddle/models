@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd  FastDeploy/examples/vision/classification/paddleclas/python
 
-#  Download HGNet Model and Test Image
+#  download HGNet model and test image
 wget https://bj.bcebos.com/paddlehub/fastdeploy/PPHGNet_tiny_ssld_infer.tgz
 tar xvfz PPHGNet_tiny_ssld_infer.tgz
 wget https://gitee.com/paddlepaddle/PaddleClas/raw/release/2.4/deploy/images/ImageNet/ILSVRC2012_val_00000010.jpeg
