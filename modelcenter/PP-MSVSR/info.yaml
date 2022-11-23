@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-MSVSR"
   description: "视频超分"
   description_en: "video super resolution"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/23690325/203386955-a86f6d3e-9ca1-4c56-9a7d-07be5acf9076.png"
   from_repo: "PaddleGAN"
 Task:
 - tag_en: "Computer Vision"
@@ -13,14 +13,14 @@ Task:
 Example:
 - tag_en: "Internet"
   tag: "互联网"
-  sub_tag_en: "视频修复"
-  sub_tag: "video repair"
+  sub_tag_en: "Video Restoration"
+  sub_tag: "视频修复"
   title: "老北京城影像修复"
   title_en: "Restoration of old Beijing videos"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/1161285"
   url_en: 
 Datasets: "REDS, Vimeo90K, Vid4, UDM10"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-MSVSR: Multi-Stage Video Super-Resolution"

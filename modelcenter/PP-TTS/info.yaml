@@ -1,44 +1,30 @@
-【PP-TTS】(注：本yaml样例仅供大家了解数据结构，研发同学会提供页面配置前端工具，到时候自动生成yaml文件)
-
+---
 Model_Info:
    name: "PP-TTS"
    description: "飞桨开源流式语音合成系统"
    description_en: "Streaming speech synthesis system based on PaddlePaddle"
    update_time: 
-   icon: 
+   icon: "https://paddlespeech.bj.bcebos.com/demos/speech_web/a38c49d08413b68080c8abb882487f26.jpg"
    from_repo: "PaddleSpeech"
-
 Task:
--
-    tag: "智能语音"
-    tag_en: "Speech&Audio"
-    sub_tag: "语音合成"
-    sub_tag_en: "Speech Synthesis"
-   
+- tag: "智能语音"
+  tag_en: "Speech&Audio"
+  sub_tag: "语音合成"
+  sub_tag_en: "Speech Synthesis"
 Example:
--
-   tag: 
-   tag_en: 
-   sub_tag:
-   sub_tag_en: 
-   title: 
-   title_en: 
-   url: 
-   url_en: 
-  
- 
+- tag: 
+  tag_en: 
+  sub_tag:
+  sub_tag_en: 
+  title: 
+  title_en: 
+  url: 
+  url_en: 
 Datasets: "Aishell3, LJ Speech, Chinese Standard Mandarin Speech Copus, VCTK"
-   
-Pulisher: "Baidu"
-
+Publisher: "Baidu"
 License: "Apache 2.0"
-
 Paper: 
--	
-	title: "PaddleSpeech: An Easy-to-Use All-in-One Speech Toolkit"
-	url: "https://arxiv.org/abs/2205.12007"
-
-
+- title: "PaddleSpeech: An Easy-to-Use All-in-One Speech Toolkit"
+  url: "https://arxiv.org/abs/2205.12007"
 IfTraining: 1
-
 IfOnlineDemo: 1

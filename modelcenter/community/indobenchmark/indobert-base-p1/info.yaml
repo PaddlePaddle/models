@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "indonlu"
-Pulisher: "indobenchmark"
+Publisher: "indobenchmark"
 License: "mit"
 Language: "Indonesian"
 Paper:

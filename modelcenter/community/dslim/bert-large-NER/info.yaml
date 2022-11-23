@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "conll2003"
-Pulisher: "dslim"
+Publisher: "dslim"
 License: "mit"
 Language: "English"
 Paper:

@@ -20,7 +20,7 @@ Example:
 Datasets: "Aliproduct, GLDv2, VeRI-Wild, LogoDet-3K, SOP, Inshop, bird400, 104flows,\
   \ Cars, Fashion Product Images, flowerrecognition, food-101, fruits-262, inaturalist,\
   \ indoor-scenes, Products-10k, CompCars"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1

@@ -4,9 +4,9 @@ PaddleCV是飞桨视觉统一的推理部署套件，提供了单模型、多模
 
 - [安装](#1)
 - [预测部署](#2)
-  -      [部署示例](#2.1)
-  -      [参数说明](#2.2)
-  -      [配置文件](#2.3)
+  - [部署示例](#2.1)
+  - [参数说明](#2.2)
+  - [配置文件](#2.3)
 - [二次开发](#3)
 
 <a name="1"></a>
@@ -45,6 +45,9 @@ python -u tools/predict.py --config=configs/single_op/PP-HGNet.yml --input=demo/
 # 目标检测任务
 python -u tools/predict.py --config=configs/single_op/PP-YOLOE+.yml --input=demo/000000014439.jpg
 
+# 图像分割任务
+python -u tools/predict.py --config=configs/single_op/PP-HumanSegV2.yml --input=demo/pp_humansegv2_demo.jpg
+
 # OCR任务
 python -u tools/predict.py --config=configs/system/PP-OCRv3.yml --input=demo/word_1.jpg
 ```
@@ -79,14 +82,13 @@ res = paddlecv("../demo/00056221.jpg")
 
 ```
 # 通过-o修改检测后处理阈值
-# -o 中的`0`表示MODEL的Op位置，防止模型串联过程中出现同类Op的情况
 python -u tools/predict.py --config=configs/single_op/PP-YOLOE+.yml --input=demo/000000014439.jpg -o MODEL.0.DetectionOp.PostProcess.0.ParserDetResults.threshold=0.6
 ```
 
 **注意：**
 
 1. 优先级排序：命令行输入 > 配置文件配置
-
+2. -o 中的`0`表示MODEL的Op位置，防止模型串联过程中出现同类Op的情况
 
 <a name="3"></a>
 

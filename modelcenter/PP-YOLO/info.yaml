@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-YOLO"
   description: "PP-YOLO是PaddleDetection优化和改进的YOLOv3的模型"
   description_en: "PP-YOLO is a optimized model based on YOLOv3 in PaddleDetection"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-YOLO.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"
@@ -18,7 +18,7 @@ Example:
   sub_tag: "表计读数"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/3975848?contributionType=1"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-YOLO: An Effective and Efficient Implementation of Object Detector"
