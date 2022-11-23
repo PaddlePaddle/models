@@ -1,19 +1,15 @@
-Model_Info:
-   name: "dbmdz/bert-base-turkish-128k-cased"
-   description: "🤗 + 📚 dbmdz Turkish BERT model"
-   description_en: "🤗 + 📚 dbmdz Turkish BERT model"
-   icon: ""
-   from_repo: "https://huggingface.co/dbmdz/bert-base-turkish-128k-cased"
-
-Task:
-
-Example:
-
-Datasets: ""
-Publisher: "dbmdz"
-License: "mit"
-Language: "Turkish"
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: Turkish
+License: mit
+Model_Info:
+  description: 🤗 + 📚 dbmdz Turkish BERT model
+  description_en: 🤗 + 📚 dbmdz Turkish BERT model
+  from_repo: https://huggingface.co/dbmdz/bert-base-turkish-128k-cased
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: dbmdz/bert-base-turkish-128k-cased
+Paper: null
+Publisher: dbmdz
+Task: null

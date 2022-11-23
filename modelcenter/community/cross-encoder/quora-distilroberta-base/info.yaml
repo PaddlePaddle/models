@@ -1,23 +1,19 @@
-Model_Info:
-   name: "cross-encoder/quora-distilroberta-base"
-   description: "Cross-Encoder for Quora Duplicate Questions Detection"
-   description_en: "Cross-Encoder for Quora Duplicate Questions Detection"
-   icon: ""
-   from_repo: "https://huggingface.co/cross-encoder/quora-distilroberta-base"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Classification"
-  sub_tag: "文本分类"
-
-Example:
-
-Datasets: ""
-Publisher: "cross-encoder"
-License: "apache-2.0"
-Language: ""
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: ''
+License: apache-2.0
+Model_Info:
+  description: Cross-Encoder for Quora Duplicate Questions Detection
+  description_en: Cross-Encoder for Quora Duplicate Questions Detection
+  from_repo: https://huggingface.co/cross-encoder/quora-distilroberta-base
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: cross-encoder/quora-distilroberta-base
+Paper: null
+Publisher: cross-encoder
+Task:
+- sub_tag: 文本分类
+  sub_tag_en: Text Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

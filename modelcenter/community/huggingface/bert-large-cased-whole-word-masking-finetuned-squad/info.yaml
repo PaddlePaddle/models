@@ -1,24 +1,21 @@
-Model_Info:
-   name: "bert-large-cased-whole-word-masking-finetuned-squad"
-   description: "BERT large model (cased) whole word masking finetuned on SQuAD"
-   description_en: "BERT large model (cased) whole word masking finetuned on SQuAD"
-   icon: ""
-   from_repo: "https://huggingface.co/bert-large-cased-whole-word-masking-finetuned-squad"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Question Answering"
-  sub_tag: "回答问题"
-
-Example:
-
-Datasets: "bookcorpus,wikipedia"
-Publisher: "huggingface"
-License: "apache-2.0"
-Language: "English"
-Paper:
-   - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
-     url: 'http://arxiv.org/abs/1810.04805v2'
-IfTraining: 0
+Datasets: bookcorpus,wikipedia
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: apache-2.0
+Model_Info:
+  description: BERT large model (cased) whole word masking finetuned on SQuAD
+  description_en: BERT large model (cased) whole word masking finetuned on SQuAD
+  from_repo: https://huggingface.co/bert-large-cased-whole-word-masking-finetuned-squad
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: bert-large-cased-whole-word-masking-finetuned-squad
+Paper:
+- title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+  url: http://arxiv.org/abs/1810.04805v2
+Publisher: huggingface
+Task:
+- sub_tag: 回答问题
+  sub_tag_en: Question Answering
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

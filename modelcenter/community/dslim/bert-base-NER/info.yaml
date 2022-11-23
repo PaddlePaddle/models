@@ -1,24 +1,21 @@
-Model_Info:
-   name: "dslim/bert-base-NER"
-   description: "bert-base-NER"
-   description_en: "bert-base-NER"
-   icon: ""
-   from_repo: "https://huggingface.co/dslim/bert-base-NER"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Token Classification"
-  sub_tag: "Token分类"
-
-Example:
-
-Datasets: "conll2003"
-Publisher: "dslim"
-License: "mit"
-Language: "English"
-Paper:
-   - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
-     url: 'http://arxiv.org/abs/1810.04805v2'
-IfTraining: 0
+Datasets: conll2003
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: mit
+Model_Info:
+  description: bert-base-NER
+  description_en: bert-base-NER
+  from_repo: https://huggingface.co/dslim/bert-base-NER
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: dslim/bert-base-NER
+Paper:
+- title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+  url: http://arxiv.org/abs/1810.04805v2
+Publisher: dslim
+Task:
+- sub_tag: Token分类
+  sub_tag_en: Token Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

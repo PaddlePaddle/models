@@ -1,24 +1,21 @@
-Model_Info:
-   name: "bert-base-multilingual-cased"
-   description: "BERT multilingual base model (cased)"
-   description_en: "BERT multilingual base model (cased)"
-   icon: ""
-   from_repo: "https://huggingface.co/bert-base-multilingual-cased"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Fill-Mask"
-  sub_tag: "槽位填充"
-
-Example:
-
-Datasets: "wikipedia"
-Publisher: "huggingface"
-License: "apache-2.0"
-Language: ""
-Paper:
-   - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
-     url: 'http://arxiv.org/abs/1810.04805v2'
-IfTraining: 0
+Datasets: wikipedia
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: ''
+License: apache-2.0
+Model_Info:
+  description: BERT multilingual base model (cased)
+  description_en: BERT multilingual base model (cased)
+  from_repo: https://huggingface.co/bert-base-multilingual-cased
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: bert-base-multilingual-cased
+Paper:
+- title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+  url: http://arxiv.org/abs/1810.04805v2
+Publisher: huggingface
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

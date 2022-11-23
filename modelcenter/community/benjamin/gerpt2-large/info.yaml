@@ -1,23 +1,19 @@
-Model_Info:
-   name: "benjamin/gerpt2-large"
-   description: "GerPT2"
-   description_en: "GerPT2"
-   icon: ""
-   from_repo: "https://huggingface.co/benjamin/gerpt2-large"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Generation"
-  sub_tag: "文本生成"
-
-Example:
-
-Datasets: ""
-Publisher: "benjamin"
-License: "mit"
-Language: "German"
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: German
+License: mit
+Model_Info:
+  description: GerPT2
+  description_en: GerPT2
+  from_repo: https://huggingface.co/benjamin/gerpt2-large
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: benjamin/gerpt2-large
+Paper: null
+Publisher: benjamin
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text Generation
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

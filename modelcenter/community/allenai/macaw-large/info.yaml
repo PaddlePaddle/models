@@ -1,23 +1,19 @@
-Model_Info:
-   name: "allenai/macaw-large"
-   description: "macaw-large"
-   description_en: "macaw-large"
-   icon: ""
-   from_repo: "https://huggingface.co/allenai/macaw-large"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text2Text Generation"
-  sub_tag: "文本生成"
-
-Example:
-
-Datasets: ""
-Publisher: "allenai"
-License: "apache-2.0"
-Language: "English"
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: apache-2.0
+Model_Info:
+  description: macaw-large
+  description_en: macaw-large
+  from_repo: https://huggingface.co/allenai/macaw-large
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: allenai/macaw-large
+Paper: null
+Publisher: allenai
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text2Text Generation
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

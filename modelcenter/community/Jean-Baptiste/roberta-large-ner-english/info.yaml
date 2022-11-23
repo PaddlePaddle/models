@@ -1,23 +1,21 @@
-Model_Info:
-   name: "Jean-Baptiste/roberta-large-ner-english"
-   description: "roberta-large-ner-english: model fine-tuned from roberta-large for NER task"
-   description_en: "roberta-large-ner-english: model fine-tuned from roberta-large for NER task"
-   icon: ""
-   from_repo: "https://huggingface.co/Jean-Baptiste/roberta-large-ner-english"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Token Classification"
-  sub_tag: "Token分类"
-
-Example:
-
-Datasets: "conll2003"
-Publisher: "Jean-Baptiste"
-License: "mit"
-Language: "English"
-Paper:
-
-IfTraining: 0
+Datasets: conll2003
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: mit
+Model_Info:
+  description: 'roberta-large-ner-english: model fine-tuned from roberta-large for
+    NER task'
+  description_en: 'roberta-large-ner-english: model fine-tuned from roberta-large
+    for NER task'
+  from_repo: https://huggingface.co/Jean-Baptiste/roberta-large-ner-english
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: Jean-Baptiste/roberta-large-ner-english
+Paper: null
+Publisher: Jean-Baptiste
+Task:
+- sub_tag: Token分类
+  sub_tag_en: Token Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
