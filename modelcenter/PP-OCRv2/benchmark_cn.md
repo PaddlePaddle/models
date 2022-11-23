@@ -17,5 +17,5 @@
 | ppocr_mobile_v2 | 6148CPU      | 10.58               | 102.9626           | 16.5514               | 0.2418              | 53.395             | 4.4622                | 40.3293 + 62.2241 |
 
 
-## 3. 相关使用说明
+## 2. 相关使用说明
 1. https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.4#pp-ocrv2-pipeline
