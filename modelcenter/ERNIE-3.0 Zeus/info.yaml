@@ -6,7 +6,7 @@ Model_Info:
   icon: "https://user-images.githubusercontent.com/23690325/203383033-946fdbd7-3756-49cd-aedb-66d000020964.jpg"
   from_repo: ""
 Task:
-- tag_en: "Wenxin Big Model"
+- tag_en: "Wenxin Big Models"
   tag: "文心大模型"
   sub_tag_en: "Knowledge Enhancement"
   sub_tag: "任务知识增强"
