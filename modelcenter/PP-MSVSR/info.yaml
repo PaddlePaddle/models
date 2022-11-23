@@ -13,8 +13,8 @@ Task:
 Example:
 - tag_en: "Internet"
   tag: "互联网"
-  sub_tag_en: "视频修复"
-  sub_tag: "video repair"
+  sub_tag_en: "Video Restoration"
+  sub_tag: "视频修复"
   title: "老北京城影像修复"
   title_en: "Restoration of old Beijing videos"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/1161285"
