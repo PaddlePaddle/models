@@ -4,7 +4,7 @@ Model_Info:
    description: 文心跨模态预训练大模型
    description_en: ERNIE transmodel pre training large model
    update_time: 
-   icon: url  
+   icon: "https://user-images.githubusercontent.com/11793384/203492273-64f38a22-a347-464b-9d87-6583ce5c3121.png"
    from_repo: PaddleNLP
 Task:
 - tag: 文心大模型
