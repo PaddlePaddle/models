@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "squad_v2"
-Publisher: "deepset"
+Pulisher: "deepset"
 License: "mit"
 Language: "English"
 Paper:

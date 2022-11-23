@@ -14,7 +14,7 @@ Task:
 Example:
 
 Datasets: "c4"
-Publisher: "google"
+Pulisher: "google"
 License: "apache-2.0"
 Language: "English"
 Paper:
