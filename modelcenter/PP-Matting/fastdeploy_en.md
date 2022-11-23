@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd FastDeploy/examples/vision/matting/ppmatting/python
 
-#  Download PP-Matting Model and Test Image
+#  download PP-Matting model and test image
 wget https://bj.bcebos.com/paddlehub/fastdeploy/PP-Matting-512.tgz
 tar -xvf PP-Matting-512.tgz
 wget https://bj.bcebos.com/paddlehub/fastdeploy/matting_input.jpg
