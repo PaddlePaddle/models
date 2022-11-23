@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HelixFold"
   description: "适配国产软硬件的蛋白质结构预测模型"
   description_en: "A protein structure prediction model adapted to domestic software and hardware"
-  icon: ""
+  icon: "https://user-images.githubusercontent.com/23690325/203377707-5823cb12-9cfe-4d07-ba97-e1acd3f339b7.jpg"
   from_repo: "PaddleHelix"
 Task:
 - tag_en: "Scientific Computing"

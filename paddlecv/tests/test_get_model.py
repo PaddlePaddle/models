@@ -26,7 +26,7 @@ import paddle
 import ppcv
 import unittest
 
-TASK_NAME = 'detection'
+TASK_NAME = 'PP-YOLOE'
 MODEL_NAME = 'paddlecv://models/PPLCNet_x1_0_infer/inference.pdiparams'
 
 

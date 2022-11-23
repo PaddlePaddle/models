@@ -94,8 +94,8 @@ class Executor(object):
     The executor which implements model series pipeline
 
     Args:
-        env_cfg: The enrionment configuration
         model_cfg: The models configuration
+        env_cfg: The enrionment configuration
     """
 
     def __init__(self, model_cfg, env_cfg):
