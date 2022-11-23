@@ -13,7 +13,7 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download model, image and dictionary files
+# download model, image and dictionary files
 wget https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_det_infer.tar
 tar xvf ch_PP-OCRv3_det_infer.tar
 
@@ -27,7 +27,7 @@ wget https://gitee.com/paddlepaddle/PaddleOCR/raw/release/2.6/doc/imgs/12.jpg
 
 wget https://gitee.com/paddlepaddle/PaddleOCR/raw/release/2.6/ppocr/utils/ppocr_keys_v1.txt
 
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd examples/vison/ocr/PP-OCRv3/python/
 
