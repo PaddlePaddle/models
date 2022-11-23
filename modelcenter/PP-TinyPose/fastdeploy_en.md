@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd FastDeploy/examples/vision/keypointdetection/tiny_pose/python
 
-#  Download TinyPose Model and Test Image
+#  download TinyPose model and test image
 wget https://bj.bcebos.com/paddlehub/fastdeploy/PP_TinyPose_256x192_infer.tgz
 tar -xvf PP_TinyPose_256x192_infer.tgz
 wget https://bj.bcebos.com/paddlehub/fastdeploy/hrnet_demo.jpg
