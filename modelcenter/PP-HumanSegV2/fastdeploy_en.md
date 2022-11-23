@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd FastDeploy/examples/vision/segmentation/paddleseg/python
 
-#  Download HumanSegV2 Model and Test Image
+#  download HumanSegV2 model and test image
 wget https://bj.bcebos.com/paddle2onnx/libs/PP_HumanSegV2_Lite_192x192_infer.tgz
 tar -xvf PP_HumanSegV2_Lite_192x192_infer.tgz
 wget https://paddleseg.bj.bcebos.com/dygraph/demo/cityscapes_demo.png
