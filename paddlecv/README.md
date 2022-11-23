@@ -6,24 +6,25 @@
 
 | 单模型/串联系统 | 方向 | 模型名称
 |:------:|:-----:|:------:|
-| 单模型 |   图像分类 |  PP-LCNet |
-| 单模型 |   图像分类 |  PP-LCNet v2 |
-| 单模型 |   图像分类 |  PP-HGNet |
-| 单模型 |   目标检测 |  PP-YOLO |
-| 单模型 |   目标检测 |  PP-YOLO v2 |
-| 单模型 |   目标检测 |  PP-YOLOE |
-| 单模型 |   目标检测 |  PP-YOLOE+ |
-| 单模型 |   目标检测 |  PP-PicoDet |
-| 单模型 |   图像分割 |  PP-HumanSeg v2 |
-| 单模型 |   图像分割 |  PP-LiteSeg |
-| 单模型 |   图像分割 |  PP-Matting v1 |
-| 串联系统 |   OCR |  PP-OCR v2 |
-| 串联系统 |   OCR |  PP-OCR v3 |
-| 串联系统 |   OCR |  PP-Structure |
-| 串联系统 |   图像识别 |  PP-ShiTu |
-| 串联系统 |   图像识别 |  PP-ShiTu v2 |
-| 串联系统 |   行人分析 |  PP-Human |
-| 串联系统 |   车辆分析 |  PP-Vehicle |
+| 单模型 |   图像分类 |  [PP-LCNet](configs/single_op/PP-LCNet.yml) |
+| 单模型 |   图像分类 |  [PP-LCNet v2](configs/single_op/PP-LCNetV2.yml) |
+| 单模型 |   图像分类 |  [PP-HGNet](configs/single_op/PP-HGNet.yml) |
+| 单模型 |   目标检测 |  [PP-YOLO](configs/single_op/PP-YOLO.yml) |
+| 单模型 |   目标检测 |  [PP-YOLO v2](configs/single_op/PP-YOLOv2.yml) |
+| 单模型 |   目标检测 |  [PP-YOLOE](configs/single_op/PP-YOLOE.yml) |
+| 单模型 |   目标检测 |  [PP-YOLOE+](configs/single_op/PP-YOLOE+.yml) |
+| 单模型 |   目标检测 |  [PP-PicoDet](configs/single_op/PP-PicoDet.yml) |
+| 单模型 |   图像分割 |  [PP-HumanSeg v2](configs/single_op/PP-HumanSegV2.yml) |
+| 单模型 |   图像分割 |  [PP-LiteSeg](configs/single_op/PP-LiteSeg.yml) |
+| 单模型 |   图像分割 |  [PP-Matting v1](configs/single_op/PP-MattingV1.yml) |
+| 串联系统 |   OCR |  [PP-OCR v2](configs/system/PP-OCRv2.yml) |
+| 串联系统 |   OCR |  [PP-OCR v3](configs/system/PP-OCRv3.yml) |
+| 串联系统 |   OCR |  [PP-Structure](configs/system/PP-Structure.yml) |
+| 串联系统 |   图像识别 |  [PP-ShiTu](configs/system/PP-ShiTu.yml) |
+| 串联系统 |   图像识别 |  [PP-ShiTu v2](configs/system/PP-ShiTuV2.yml) |
+| 串联系统 |   行人分析 |  [PP-Human](configs/system/PP-Human.yml) |
+| 串联系统 |   车辆分析 |  [PP-Vehicle](configs/system/PP-Vehicle.yml) |
+| 串联系统 |   关键点检测 |  [PP-TinyPose](configs/system/PP-TinyPose.yml) |
 
 ## <img src="https://user-images.githubusercontent.com/48054808/157828296-d5eb0ccb-23ea-40f5-9957-29853d7d13a9.png" width="20"/> 文档教程
 
