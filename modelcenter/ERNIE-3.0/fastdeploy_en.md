@@ -17,7 +17,7 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd  FastDeploy/examples/text/ernie-3.0/python
 
-#  Download the fine-tuned ERNIE 3.0 model for the AFQMC dataset
+#  Download the fine-tuned ERNIE 3.0 model trained from the AFQMC dataset
 wget https://bj.bcebos.com/fastdeploy/models/ernie-3.0/ernie-3.0-medium-zh-afqmc.tgz
 tar xvfz ernie-3.0-medium-zh-afqmc.tgz
 
