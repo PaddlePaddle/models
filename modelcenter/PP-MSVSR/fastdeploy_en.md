@@ -13,11 +13,11 @@ pip install fastdeploy-gpu-python==0.0.0 -f https://www.paddlepaddle.org.cn/whl/
 ```
 ## 2. Run Deployment Example
 ```
-# Download Deployment Example
+# download deployment example
 git clone https://github.com/PaddlePaddle/FastDeploy.git
 cd FastDeploy/examples/vision/sr/ppmsvsr/python
 
-#  Download VSR Model and Test Image
+#  download VSR model and test image
 wget https://bj.bcebos.com/paddlehub/fastdeploy/PP-MSVSR_reds_x4.tar
 tar -xvf PP-MSVSR_reds_x4.tar
 wget https://bj.bcebos.com/paddlehub/fastdeploy/vsr_src.mp4
