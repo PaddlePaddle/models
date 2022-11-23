@@ -41,7 +41,7 @@ with gr.Blocks() as demo:
 
     with gr.Column(scale=1, min_width=100):
         img_in = gr.Image(
-            value="https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/dygraph/doc/imgs/11.jpg",
+            value="https://gitee.com/PaddlePaddle/PaddleOCR/raw/dygraph/doc/imgs/11.jpg",
             label="Input")
 
         with gr.Row():
