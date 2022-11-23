@@ -21,14 +21,14 @@ def argsparser():
     parser.add_argument(
         "--det_model_dir",
         type=str,
-        default='output_inference/picodet_v2_s_320_pedestrian',
+        default='https://paddledet.bj.bcebos.com/models/keypoint/tinypose_enhance/picodet_v2_s_320_pedestrian.zip',
         help=("Directory include:'model.pdiparams', 'model.pdmodel', "
               "'infer_cfg.yml', created by tools/export_model.py."),
         required=False)
     parser.add_argument(
         "--keypoint_model_dir",
         type=str,
-        default='output_inference/tinypose_128x96',
+        default='https://bj.bcebos.com/v1/paddledet/models/keypoint/tinypose_enhance/tinypose_128x96.zip',
         help=("Directory include:'model.pdiparams', 'model.pdmodel', "
               "'infer_cfg.yml', created by tools/export_model.py."),
         required=False)
