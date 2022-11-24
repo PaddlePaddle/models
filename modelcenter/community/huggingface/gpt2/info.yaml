@@ -1,23 +1,19 @@
-Model_Info:
-   name: "gpt2"
-   description: "GPT-2"
-   description_en: "GPT-2"
-   icon: ""
-   from_repo: "https://huggingface.co/gpt2"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Text Generation"
-  sub_tag: "文本生成"
-
-Example:
-
-Datasets: ""
-Pulisher: "huggingface"
-License: "mit"
-Language: "English"
-Paper:
-
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: mit
+Model_Info:
+  description: GPT-2
+  description_en: GPT-2
+  from_repo: https://huggingface.co/gpt2
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: gpt2
+Paper: null
+Publisher: huggingface
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text Generation
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

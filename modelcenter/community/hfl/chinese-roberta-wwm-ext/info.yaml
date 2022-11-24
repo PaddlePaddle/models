@@ -1,26 +1,23 @@
-Model_Info:
-   name: "hfl/chinese-roberta-wwm-ext"
-   description: "Please use 'Bert' related functions to load this model!"
-   description_en: "Please use 'Bert' related functions to load this model!"
-   icon: ""
-   from_repo: "https://huggingface.co/hfl/chinese-roberta-wwm-ext"
-
-Task:
-- tag_en: "Natural Language Processing"
-  tag: "自然语言处理"
-  sub_tag_en: "Fill-Mask"
-  sub_tag: "槽位填充"
-
-Example:
-
-Datasets: ""
-Pulisher: "hfl"
-License: "apache-2.0"
-Language: "Chinese"
-Paper:
-   - title: 'Pre-Training with Whole Word Masking for Chinese BERT'
-     url: 'http://arxiv.org/abs/1906.08101v3'
-   - title: 'Revisiting Pre-Trained Models for Chinese Natural Language Processing'
-     url: 'http://arxiv.org/abs/2004.13922v2'
-IfTraining: 0
+Datasets: ''
+Example: null
 IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Please use 'Bert' related functions to load this model!
+  description_en: Please use 'Bert' related functions to load this model!
+  from_repo: https://huggingface.co/hfl/chinese-roberta-wwm-ext
+  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  name: hfl/chinese-roberta-wwm-ext
+Paper:
+- title: Pre-Training with Whole Word Masking for Chinese BERT
+  url: http://arxiv.org/abs/1906.08101v3
+- title: Revisiting Pre-Trained Models for Chinese Natural Language Processing
+  url: http://arxiv.org/abs/2004.13922v2
+Publisher: hfl
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

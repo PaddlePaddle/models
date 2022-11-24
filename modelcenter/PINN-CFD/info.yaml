@@ -1,31 +1,25 @@
 ---
 Model_Info:
   name: "PINN_CFD"
-  description: "基于PINN的2D圆柱绕流模型设计及仿真验证"
+  description: "2D圆柱绕流模型设计及仿真验证"
   description_en: "Design and simulation of 2D cylinder flow model"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://ai-studio-static-online.cdn.bcebos.com/18932a98076948e7bf26c79c60015250af10b7aa3d114283ae53536189697a56"
   from_repo: "PaddleScience"
 Task:
--
-    tag: "科学计算"
-    tag_en: "Scientific Computing"
-    sub_tag: "2D圆柱绕流"
-    sub_tag_en: "2D cylinder flow"
-
+- tag: "科学计算"
+  tag_en: "Scientific Computing"
+  sub_tag: "圆柱绕流"
+  sub_tag_en: "Cylinder Flow"
 Example:
--
-   tag: "工业/能源"
-   tag_en: "Industrial/Energy"
-   sub_tag: "圆柱绕流"
-   sub_tag_en: "Cylinder Flow"
-   title: "基于AI求解2D非定常圆柱绕流，真的很流体"
-   
-   url: https://aistudio.baidu.com/aistudio/projectdetail/4178470?contributionType=1
-   url_en: https://aistudio.baidu.com/aistudio/projectdetail/4178470?contributionType=1
-
-   
+- tag: "工业/能源"
+  tag_en: "Industrial/Energy"
+  sub_tag: "圆柱绕流"
+  sub_tag_en: "Cylinder Flow"
+  title: "基于AI求解2D非定常圆柱绕流，真的很流体"
+  url: https://aistudio.baidu.com/aistudio/projectdetail/4178470?contributionType=1
+  url_en: 
 Datasets: "cylinder2D_continuous"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 1
 IfOnlineDemo: 1

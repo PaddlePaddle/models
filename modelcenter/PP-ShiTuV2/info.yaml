@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-ShiTuV2"
   description: "PP-ShiTuV2识别系统"
   description_en: "PP-ShiTuV2, an light-weighted recognition system"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://paddleocr.bj.bcebos.com/icon/shitu.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
@@ -20,7 +20,7 @@ Example:
 Datasets: "Aliproduct, GLDv2, VeRI-Wild, LogoDet-3K, SOP, Inshop, bird400, 104flows,\
   \ Cars, Fashion Product Images, flowerrecognition, food-101, fruits-262, inaturalist,\
   \ indoor-scenes, Products-10k, CompCars"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1

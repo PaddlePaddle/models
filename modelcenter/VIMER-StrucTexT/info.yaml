@@ -1,0 +1,20 @@
+---
+Model_Info:
+  name: "VIMER-StrucTexT1.0"
+  description: "结构化文本理解"
+  description_en: "Structured Text Understanding"
+  icon: "https://user-images.githubusercontent.com/23690325/203381082-18717d2e-2080-4233-91c5-84f48e1fdef2.png"
+  from_repo: "VIMER"
+Task:
+- tag_en: "Wenxin Big Models"
+  tag: "文心大模型"
+  sub_tag_en: "Multi-modal Information Extraction"
+  sub_tag: "多模态信息提取"
+Datasets: "SROIE,FUNSD,EPHOIE,XFUND"
+Pulisher: "Baidu"
+License: "apache.2.0"
+Paper:
+   - title: "Structured Text Understanding with Multi-Modal Transformers"
+     url: "https://arxiv.org/pdf/2108.02923.pdf"
+IfTraining: 0
+IfOnlineDemo: 1

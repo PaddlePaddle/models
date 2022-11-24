@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-LCNet"
   description: "面向Intel CPU端的轻量级卷积神经网络"
   description_en: "A Lightweight Convolutional Neural Network for Intel CPU"
-  icon: ""
+  icon: "https://paddleocr.bj.bcebos.com/icon/backbone.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
@@ -13,12 +13,12 @@ Task:
 Example:
 - tag_en: "Intelligent Security"
   tag: "智慧安防"
-  sub_tag_en: "Personnel access management"
+  sub_tag_en: "Personnel Access Management"
   title: "人员进出视频管理方案详解"
   sub_tag: "人员进出管理"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4094475"
 Datasets: "ImageNet1k"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-LCNet: A Lightweight CPU Convolutional Neural Network"

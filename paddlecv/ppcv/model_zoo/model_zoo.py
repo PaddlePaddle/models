@@ -31,18 +31,23 @@ __all__ = [
 MODEL_ZOO_FILENAME = 'MODEL_ZOO'
 TASK_DICT = {
     # single model
-    'classification': 'paddlecv://configs/single_op/PP-HGNet',
-    'detection': 'paddlecv://configs/single_op/PP-YOLOE+.yml',
-    'segmentation': 'paddlecv://configs/single_op/PP-LiteSeg.yml',
+    'PP-LCNet': 'paddlecv://configs/single_op/PP-LCNet.yml',
+    'PP-LCNetV2': 'paddlecv://configs/single_op/PP-LCNetV2.yml',
+    'PP-HGNet': 'paddlecv://configs/single_op/PP-HGNet.yml',
+    'PP-YOLOE+': 'paddlecv://configs/single_op/PP-YOLOE+.yml',
+    'PP-YOLOE': 'paddlecv://configs/single_op/PP-YOLOE.yml',
+    'PP-YOLO': 'paddlecv://configs/single_op/PP-YOLO.yml',
+    'PP-YOLOv2': 'paddlecv://configs/single_op/PP-YOLOv2.yml',
+    'PP-PicoDet': 'paddlecv://configs/single_op/PP-PicoDet.yml',
+    'PP-HumanSegV2': 'paddlecv://configs/single_op/PP-HumanSegV2.yml',
+    'PP-LiteSeg': 'paddlecv://configs/single_op/PP-LiteSeg.yml',
+    'PP-MattingV1': 'paddlecv://configs/single_op/PP-MattingV1.yml',
     # system
     'PP-OCRv2': 'paddlecv://configs/system/PP-OCRv2.yml',
     'PP-OCRv3': 'paddlecv://configs/system/PP-OCRv3.yml',
-    'PP-StructureV2': 'paddlecv://configs/system/PP-Structure.yml',
-    'PP-StructureV2-layout-table':
-    'paddlecv://configs/system/PP-Structure-layout-table.yml',
-    'PP-StructureV2-table': 'paddlecv://configs/system/PP-Structure-table.yml',
-    'PP-StructureV2-ser': 'paddlecv://configs/system/PP-Structure-ser.yml',
-    'PP-StructureV2-re': 'paddlecv://configs/system/PP-Structure-re.yml',
+    'PP-Structure': 'paddlecv://configs/system/PP-Structure.yml',
+    'PP-ShiTuV2': 'paddlecv://configs/system/PP-ShiTuV2.yml',
+    'PP-ShiTu': 'paddlecv://configs/system/PP-ShiTu.yml',
     'PP-Human': 'paddlecv://configs/system/PP-Human.yml',
     'PP-Vehicle': 'paddlecv://configs/system/PP-Vehicle.yml',
     'PP-TinyPose': 'paddlecv://configs/system/PP-TinyPose.yml',

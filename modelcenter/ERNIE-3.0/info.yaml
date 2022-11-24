@@ -3,7 +3,7 @@ Model_Info:
    name: "ERNIE 3.0"
    description: "ERNIE 3.0 轻量级模型"
    description_en: "ERNIE Tiny"
-   icon: "@后续UE统一设计之后，会存到bos上某个位置"
+   icon: "https://user-images.githubusercontent.com/11793384/203492126-501d2920-8f49-4d0b-a7f1-a6cecd003f7e.png"
    from_repo: "PaddleNLP"
 Task:
    - tag_en: "Natural Language Processing"
@@ -24,7 +24,7 @@ Example:
    - title: "【快速上手ERNIE 3.0】对话意图识别实战"
      url: "https://aistudio.baidu.com/aistudio/projectdetail/2017202?contributionType=1"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "ERNIE-Tiny: A Progressive Distillation Framework for Pretrained Transformer Compression"

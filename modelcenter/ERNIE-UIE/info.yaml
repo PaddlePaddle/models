@@ -3,7 +3,7 @@ Model_Info:
   name: "ERNIE-UIE"
   description: "信息抽取模型"
   description_en: "Information Extraction Model"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/11793384/203492521-8d09d089-5576-41d3-8bc7-eec7a5385c35.png"
   from_repo: "PaddleNLP"
 Task:
 - tag_en: "Natural Language Processing"
@@ -36,7 +36,7 @@ Example:
   sub_tag: "快递单信息抽取"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4038499"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "Unified Structure Generation for Universal Information Extraction"
