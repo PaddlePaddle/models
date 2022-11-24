@@ -96,7 +96,8 @@ class DetOutput(OutputBaseOp):
     def __call__(self, inputs):
         total_res = []
         for res in inputs:
-            fn, image, dt_bboxes, dt_scores, dt_cls_names = res.values()
+            fn, image, dt_bboxes, dt_scores, dt_cls_names = list(res.values(
+            ))[:5]
             image = draw_det(image, dt_bboxes, dt_scores, dt_cls_names)
             res.pop('input.image')
             if self.frame_id != -1:

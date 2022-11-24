@@ -72,8 +72,8 @@ class TrackerOutput(OutputBaseOp):
         total_res = []
         vis_images = []
         for res in inputs:
-            fn, image, tk_bboxes, tk_scores, tk_ids, tk_cls_ids, tk_cls_names = res.values(
-            )
+            fn, image, tk_bboxes, tk_scores, tk_ids, tk_cls_ids, tk_cls_names = list(
+                res.values())[:7]
             tk_names = [
                 '{} {}'.format(tk_cls_name, tk_id)
                 for tk_id, tk_cls_name in zip(tk_ids, tk_cls_names)
