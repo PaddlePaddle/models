@@ -100,10 +100,16 @@ class ClassificationOp(ModelBaseOp):
             sub_start_idx = curr_offsef_id
             sub_end_idx = curr_offsef_id + sub_index_list[idx]
             output = outputs[sub_start_idx:sub_end_idx]
-            output = {k: [o[k] for o in output] for k in output[0]}
-            if is_list is not True:
-                output = {k: output[k][0] for k in output}
+            if len(output) > 0:
+                output = {k: [o[k] for o in output] for k in output[0]}
+                if is_list is not True:
+                    output = {k: output[k][0] for k in output}
+            else:
+                output = {
+                    self.output_keys[0]: [],
+                    self.output_keys[1]: [],
+                    self.output_keys[2]: []
+                }
             pipe_outputs.append(output)
-
             curr_offsef_id = sub_end_idx
         return pipe_outputs

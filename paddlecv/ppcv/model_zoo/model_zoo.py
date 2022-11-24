@@ -45,12 +45,18 @@ TASK_DICT = {
     # system
     'PP-OCRv2': 'paddlecv://configs/system/PP-OCRv2.yml',
     'PP-OCRv3': 'paddlecv://configs/system/PP-OCRv3.yml',
+    'PP-OCRv3-IE': 'paddlecv://configs/system/PP-OCRv3-IE.yml',
+    'PP-OCRv3-SA': 'paddlecv://configs/system/PP-OCRv3-SA.yml',
+    'PP-OCRv3-TTS': 'paddlecv://configs/system/PP-OCRv3-TTS.yml',
     'PP-Structure': 'paddlecv://configs/system/PP-Structure.yml',
     'PP-ShiTuV2': 'paddlecv://configs/system/PP-ShiTuV2.yml',
     'PP-ShiTu': 'paddlecv://configs/system/PP-ShiTu.yml',
     'PP-Human': 'paddlecv://configs/system/PP-Human.yml',
+    'PP-Human-Attr': 'paddlecv://configs/system/PP-Human-Attr.yml',
     'PP-Vehicle': 'paddlecv://configs/system/PP-Vehicle.yml',
+    'PP-Vehicle-Attr': 'paddlecv://configs/system/PP-Vehicle-Attr.yml',
     'PP-TinyPose': 'paddlecv://configs/system/PP-TinyPose.yml',
+    'Face-Detection-Attr': 'paddlecv://configs/system/Face-Detection-Attr.yml',
 }
 
 
