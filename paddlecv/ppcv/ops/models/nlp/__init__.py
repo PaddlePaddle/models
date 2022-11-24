@@ -12,22 +12,6 @@
 # See the License for the specific language governing permissions and   
 # limitations under the License.
 
-from . import classification
-from . import detection
-from . import keypoint
-from . import ocr
-from . import segmentation
-from . import nlp
+from .inference import InformationExtractionOp, SentimentAnalysisOp
 
-from .classification import *
-from .feature_extraction import *
-from .detection import *
-from .keypoint import *
-from .segmentation import *
-from .ocr import *
-from .nlp import *
-
-__all__ = classification.__all__ + detection.__all__ + keypoint.__all__
-__all__ += segmentation.__all__
-__all__ += ocr.__all__
-__all__ += nlp.__all__
+__all__ = ['InformationExtractionOp', 'SentimentAnalysisOp']
