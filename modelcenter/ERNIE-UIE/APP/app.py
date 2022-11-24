@@ -24,11 +24,11 @@ with gr.Blocks() as demo:
     with gr.Column(scale=1, min_width=100):
         schema = gr.Textbox(
             placeholder="ex. ['时间', '选手', '赛事名称']",
-            label="Schema (You can type any schema.)",
+            label="Type any schema you want:",
             lines=2)
         text = gr.Textbox(
             placeholder="ex. 2月8日上午北京冬奥会自由式滑雪女子大跳台决赛中中国选手谷爱凌以188.25分获得金牌！",
-            label="Text (You can type any input sequence.)",
+            label="Input Sequence:",
             lines=2)
 
         with gr.Row():

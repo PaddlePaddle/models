@@ -10,7 +10,10 @@ Task:
   tag: "自然语言处理"
   sub_tag_en: "Pretrained Model"
   sub_tag: "预训练模型"
-
+- tag_en: "Wenxin Big Models"
+  tag: "文心大模型"
+  sub_tag_en: "Pretrained Model"
+  sub_tag: "预训练模型"
 Example:
 Datasets: ""
 Publisher: "Baidu"
