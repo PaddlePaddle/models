@@ -7,7 +7,6 @@
 ```
 ENV:
   min_subgraph_size: 3          # TensorRT最小子图大小
-  shape_info_filename: ./       # TensorRT shape收集文件路径
   trt_calib_mode: False         # 如果设置TensorRT离线量化校准，需要设置为True
   cpu_threads: 1                # CPU部署时线程数
   trt_use_static: False         # TensorRT部署是否加载预生成的engine文件
