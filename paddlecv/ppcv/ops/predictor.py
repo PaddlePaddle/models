@@ -31,7 +31,7 @@ class PaddlePredictor(object):
         run_mode = config.get("run_mode", "paddle")  # used trt or mkldnn
         shape_info_filename = os.path.join(
             config.get("output_dir", "output"),
-            '{}_{}_dynamic_shape.txt'.format(name, run_mode))
+            '{}_{}_shape_info.txt'.format(name, run_mode))
 
         self.predictor, self.inference_config, self.input_names, self.input_tensors, self.output_tensors = self.create_paddle_predictor(
             param_path,
