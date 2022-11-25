@@ -8,7 +8,7 @@ Model_Info:
   description: This is a re-trained 3-layer RoBERTa-wwm-ext model.
   description_en: This is a re-trained 3-layer RoBERTa-wwm-ext model.
   from_repo: https://huggingface.co/hfl/rbt3
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: hfl/rbt3
 Paper:
 - title: Pre-Training with Whole Word Masking for Chinese BERT

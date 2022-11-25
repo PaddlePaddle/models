@@ -8,7 +8,7 @@ Model_Info:
   description: ''
   description_en: ''
   from_repo: https://huggingface.co/alvaroalon2/biobert_chemical_ner
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: alvaroalon2/biobert_chemical_ner
 Paper: null
 Publisher: alvaroalon2

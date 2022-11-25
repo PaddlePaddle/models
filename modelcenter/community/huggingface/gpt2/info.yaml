@@ -8,7 +8,7 @@ Model_Info:
   description: GPT-2
   description_en: GPT-2
   from_repo: https://huggingface.co/gpt2
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: gpt2
 Paper: null
 Publisher: huggingface

@@ -8,7 +8,7 @@ Model_Info:
   description: Version 1.1 - LM-Adapted
   description_en: Version 1.1 - LM-Adapted
   from_repo: https://huggingface.co/google/t5-large-lm-adapt
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: google/t5-large-lm-adapt
 Paper:
 - title: GLU Variants Improve Transformer

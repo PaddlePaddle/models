@@ -8,7 +8,7 @@ Model_Info:
   description: bert-base-spanish-wwm-cased-xnli
   description_en: bert-base-spanish-wwm-cased-xnli
   from_repo: https://huggingface.co/Recognai/bert-base-spanish-wwm-cased-xnli
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: Recognai/bert-base-spanish-wwm-cased-xnli
 Paper: null
 Publisher: Recognai

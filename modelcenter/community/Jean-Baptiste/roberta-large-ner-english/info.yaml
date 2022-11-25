@@ -10,7 +10,7 @@ Model_Info:
   description_en: 'roberta-large-ner-english: model fine-tuned from roberta-large
     for NER task'
   from_repo: https://huggingface.co/Jean-Baptiste/roberta-large-ner-english
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: Jean-Baptiste/roberta-large-ner-english
 Paper: null
 Publisher: Jean-Baptiste

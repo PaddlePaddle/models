@@ -8,7 +8,7 @@ Model_Info:
   description: Please use 'Bert' related functions to load this model!
   description_en: Please use 'Bert' related functions to load this model!
   from_repo: https://huggingface.co/hfl/chinese-roberta-wwm-ext
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: hfl/chinese-roberta-wwm-ext
 Paper:
 - title: Pre-Training with Whole Word Masking for Chinese BERT

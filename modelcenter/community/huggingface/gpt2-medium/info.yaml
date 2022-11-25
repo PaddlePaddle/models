@@ -8,7 +8,7 @@ Model_Info:
   description: GPT-2 Medium
   description_en: GPT-2 Medium
   from_repo: https://huggingface.co/gpt2-medium
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: gpt2-medium
 Paper:
 - title: Quantifying the Carbon Emissions of Machine Learning

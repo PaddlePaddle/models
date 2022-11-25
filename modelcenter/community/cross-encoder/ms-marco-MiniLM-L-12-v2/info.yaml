@@ -8,7 +8,7 @@ Model_Info:
   description: Cross-Encoder for MS Marco
   description_en: Cross-Encoder for MS Marco
   from_repo: https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: cross-encoder/ms-marco-MiniLM-L-12-v2
 Paper: null
 Publisher: cross-encoder

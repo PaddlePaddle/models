@@ -8,7 +8,7 @@ Model_Info:
   description: Aeona | Chatbot
   description_en: Aeona | Chatbot
   from_repo: https://huggingface.co/deepparag/Aeona
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: deepparag/Aeona
 Paper: null
 Publisher: deepparag

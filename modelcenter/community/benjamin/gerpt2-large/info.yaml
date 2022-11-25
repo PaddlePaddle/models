@@ -8,7 +8,7 @@ Model_Info:
   description: GerPT2
   description_en: GerPT2
   from_repo: https://huggingface.co/benjamin/gerpt2-large
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: benjamin/gerpt2-large
 Paper: null
 Publisher: benjamin
