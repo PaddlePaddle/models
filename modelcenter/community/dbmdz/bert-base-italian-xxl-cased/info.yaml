@@ -8,7 +8,7 @@ Model_Info:
   description: 🤗 + 📚 dbmdz BERT and ELECTRA models
   description_en: 🤗 + 📚 dbmdz BERT and ELECTRA models
   from_repo: https://huggingface.co/dbmdz/bert-base-italian-xxl-cased
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: dbmdz/bert-base-italian-xxl-cased
 Paper: null
 Publisher: dbmdz

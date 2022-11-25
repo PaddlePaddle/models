@@ -8,7 +8,7 @@ Model_Info:
   description: bert-base-romanian-uncased-v1
   description_en: bert-base-romanian-uncased-v1
   from_repo: https://huggingface.co/dumitrescustefan/bert-base-romanian-uncased-v1
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: dumitrescustefan/bert-base-romanian-uncased-v1
 Paper: null
 Publisher: dumitrescustefan

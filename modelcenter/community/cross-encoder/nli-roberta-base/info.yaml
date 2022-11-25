@@ -8,7 +8,7 @@ Model_Info:
   description: Cross-Encoder for Natural Language Inference
   description_en: Cross-Encoder for Natural Language Inference
   from_repo: https://huggingface.co/cross-encoder/nli-roberta-base
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: cross-encoder/nli-roberta-base
 Paper: null
 Publisher: cross-encoder
