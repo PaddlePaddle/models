@@ -3,7 +3,7 @@ Model_Info:
    name: "ERNIE 3.0"
    description: "ERNIE 3.0 轻量级模型"
    description_en: "ERNIE Tiny"
-   icon: "https://user-images.githubusercontent.com/11793384/203492126-501d2920-8f49-4d0b-a7f1-a6cecd003f7e.png"
+   icon: "https://user-images.githubusercontent.com/11793384/203991641-2cbf2337-fb23-4238-b20f-9310f3d2a1c6.png"
    from_repo: "PaddleNLP"
 Task:
    - tag_en: "Natural Language Processing"

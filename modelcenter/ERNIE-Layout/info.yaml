@@ -1,10 +1,10 @@
 ---
 Model_Info:
    name: "ERNIE-Layout"
-   description: 文心跨模态预训练大模型
-   description_en: ERNIE transmodel pre training large model
+   description: 文心多语言跨模态布局增强文档智能大模型 
+   description_en: ERNIE Cross-modal Pretrained Model
    update_time: 
-   icon: "https://user-images.githubusercontent.com/11793384/203492273-64f38a22-a347-464b-9d87-6583ce5c3121.png"
+   icon: "https://user-images.githubusercontent.com/11793384/203991610-5dbd3e53-4183-47ca-8d93-d99f8e22cc4d.png"
    from_repo: PaddleNLP
 Task:
 - tag: 自然语言处理

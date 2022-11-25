@@ -3,7 +3,7 @@ Model_Info:
   name: "ERNIE-M"
   description: "多语言的语言模型"
   description_en: "A cross-lingual model"
-  icon: "https://user-images.githubusercontent.com/11793384/203492376-77d159e8-d687-44b5-b164-a436eef91256.png"
+  icon: "https://user-images.githubusercontent.com/11793384/203991496-bbaee158-1c92-43ac-84a8-c83315ed09dd.png"
   from_repo: "PaddleNLP"
 Task: 
 - tag_en: "Natural Language Processing"
