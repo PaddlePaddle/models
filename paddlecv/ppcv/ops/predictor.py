@@ -28,7 +28,7 @@ class PaddlePredictor(object):
                  delete_pass=[],
                  name='model'):
         super().__init__()
-        run_mode = config.get("run_mode", "paddle"),  # used trt or mkldnn
+        run_mode = config.get("run_mode", "paddle")  # used trt or mkldnn
         shape_info_filename = os.path.join(
             config.get("output_dir", "output"),
             '{}_{}_dynamic_shape.txt'.format(name, run_mode))
