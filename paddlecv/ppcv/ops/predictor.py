@@ -21,7 +21,12 @@ from paddle.inference import create_predictor
 
 
 class PaddlePredictor(object):
-    def __init__(self, param_path, model_path, config, delete_pass=[]):
+    def __init__(self,
+                 param_path,
+                 model_path,
+                 config,
+                 delete_pass=[],
+                 name='model'):
         super().__init__()
         self.predictor, self.inference_config, self.input_names, self.input_tensors, self.output_tensors = self.create_paddle_predictor(
             param_path,
@@ -30,7 +35,9 @@ class PaddlePredictor(object):
             run_mode=config.get("run_mode", "paddle"),  # used trt or mkldnn
             device=config.get("device", "CPU"),
             min_subgraph_size=config["min_subgraph_size"],
-            shape_info_filename=config["shape_info_filename"],
+            shape_info_filename=os.path.join(
+                config.get("shape_info_filename", "./"),
+                '{}_trt_dynamic_shape.txt'.format(name)),
             trt_calib_mode=config["trt_calib_mode"],
             cpu_threads=config["cpu_threads"],
             trt_use_static=config["trt_use_static"],
@@ -85,7 +92,7 @@ class PaddlePredictor(object):
                 max_batch_size=batch_size,
                 min_subgraph_size=min_subgraph_size,
                 precision_mode=precision_map[run_mode],
-                trt_use_static=trt_use_static,
+                use_static=trt_use_static,
                 use_calib_mode=trt_calib_mode)
 
             if shape_info_filename is not None:
