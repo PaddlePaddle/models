@@ -28,16 +28,19 @@ class PaddlePredictor(object):
                  delete_pass=[],
                  name='model'):
         super().__init__()
+        run_mode = config.get("run_mode", "paddle"),  # used trt or mkldnn
+        shape_info_filename = os.path.join(
+            config.get("shape_info_filename", "./"),
+            '{}_{}_dynamic_shape.txt'.format(name, run_mode))
+
         self.predictor, self.inference_config, self.input_names, self.input_tensors, self.output_tensors = self.create_paddle_predictor(
             param_path,
             model_path,
             batch_size=config['batch_size'],
-            run_mode=config.get("run_mode", "paddle"),  # used trt or mkldnn
+            run_mode=run_mode,
             device=config.get("device", "CPU"),
             min_subgraph_size=config["min_subgraph_size"],
-            shape_info_filename=os.path.join(
-                config.get("shape_info_filename", "./"),
-                '{}_trt_dynamic_shape.txt'.format(name)),
+            shape_info_filename=shape_info_filename,
             trt_calib_mode=config["trt_calib_mode"],
             cpu_threads=config["cpu_threads"],
             trt_use_static=config["trt_use_static"],
