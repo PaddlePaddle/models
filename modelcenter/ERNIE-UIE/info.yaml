@@ -65,5 +65,5 @@ License: "apache.2.0"
 Paper:
 - title: "Unified Structure Generation for Universal Information Extraction"
   url: "https://arxiv.org/pdf/2203.12277.pdf"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 1

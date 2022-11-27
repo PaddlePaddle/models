@@ -22,5 +22,5 @@ Paper:
 - title: "ERNIE-M: Enhanced Multilingual Representation by Aligning Cross-lingual\
     \ Semantics with Monolingual Corpora"
   url: "https://arxiv.org/pdf/2012.15674.pdf"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 0

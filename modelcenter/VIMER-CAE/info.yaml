@@ -17,4 +17,4 @@ Paper:
    - title: "Context Autoencoder for Self-Supervised Representation Learning"
      url: "https://arxiv.org/abs/2202.03026"
 IfTraining: 0
-IfOnlineDemo: 1
+IfOnlineDemo: 0

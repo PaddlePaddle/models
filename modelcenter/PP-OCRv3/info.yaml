@@ -42,5 +42,5 @@ License: "apache.2.0"
 Paper:
    - title: "PP-OCRv3: More Attempts for the Improvement of Ultra Lightweight OCR System"
      url: "https://arxiv.org/abs/2206.03001"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 1

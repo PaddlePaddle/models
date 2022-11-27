@@ -45,5 +45,5 @@ License: "apache.2.0"
 Paper:
    - title: "PP-StructureV2: A Stronger Document Analysis System"
      url: "https://arxiv.org/abs/2210.05391v2"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 1

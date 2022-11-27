@@ -22,4 +22,4 @@ Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1
-IfOnlineDemo: 1
+IfOnlineDemo: 0

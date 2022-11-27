@@ -17,4 +17,4 @@ Paper:
    - title: "UFO:Unified Feature Optimization"
      url: "https://arxiv.org/pdf/2207.10341v1.pdf"
 IfTraining: 0
-IfOnlineDemo: 1
+IfOnlineDemo: 0
