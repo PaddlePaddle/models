@@ -33,5 +33,5 @@ License: "apache.2.0"
 Paper:
    - title: "ERNIE-Tiny: A Progressive Distillation Framework for Pretrained Transformer Compression"
      url: "https://arxiv.org/abs/2106.02241"
-IfTraining: 0
-IfOnlineDemo: 1
+IfTraining: 1
+IfOnlineDemo: 0

@@ -1,0 +1,20 @@
+---
+Model_Info:
+   name: "PQ-VSQL"
+   description: "基于影子特征的量子-经典混合模型"
+   description_en: "Hybrid quantum-classical model based on the shadow features"
+   update_time: 
+   icon: "https://user-images.githubusercontent.com/23690325/203944010-3f7e9373-d6d3-4bf5-989a-d5817b15e20f.png"
+Task:
+-  tag: "量子计算"
+   tag_en: "Quantum Computing"
+   sub_tag: "变分影子量子学习"
+   sub_tag_en: "VSQL"
+Datasets: MNIST
+Pulisher: Baidu
+License: Apache 2.0
+Paper: 
+-  title: "VSQL: Variational Shadow Quantum Learning for Classification"
+   url: https://ojs.aaai.org/index.php/AAAI/article/view/17016
+IfTraining: 0
+IfOnlineDemo: 0

@@ -14,4 +14,4 @@ Datasets: ""
 Publisher: "Baidu"
 License: "apache.2.0"
 IfTraining: 0
-IfOnlineDemo: 1
+IfOnlineDemo: 0

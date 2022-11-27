@@ -26,4 +26,4 @@ Paper:
 - title: "PP-MSVSR: Multi-Stage Video Super-Resolution"
   url: "https://arxiv.org/pdf/2112.02828.pdf"
 IfTraining: 1
-IfOnlineDemo: 1
+IfOnlineDemo: 0
