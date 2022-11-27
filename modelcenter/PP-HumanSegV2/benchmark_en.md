@@ -39,4 +39,4 @@ PP-HumanSegV2 | 256x144 | 96.63 | 70.67
 
 
 ## 2. Reference
-Ref: https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/contrib/PP-HumanSeg
+Ref: [https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/contrib/PP-HumanSeg](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/contrib/PP-HumanSeg)

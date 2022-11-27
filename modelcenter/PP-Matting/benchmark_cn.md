@@ -35,4 +35,4 @@
 | ppmatting_hrnet_w18 | PPM-AIM-195 | 31.56|0.0022|31.80|30.13| 24.5 | 91.28 | 28.9 |
 
 ## 3. 相关使用说明
-1. https://github.com/PaddlePaddle/PaddleSeg/tree/develop/Matting
+1. [https://github.com/PaddlePaddle/PaddleSeg/tree/develop/Matting](https://github.com/PaddlePaddle/PaddleSeg/tree/develop/Matting)
