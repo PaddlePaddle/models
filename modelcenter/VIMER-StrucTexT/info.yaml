@@ -15,7 +15,7 @@ Task:
   sub_tag_en: "Multi-modal Information Extraction"
   sub_tag: "多模态信息提取"
 Datasets: "SROIE,FUNSD,EPHOIE,XFUND"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
    - title: "Structured Text Understanding with Multi-Modal Transformers"
