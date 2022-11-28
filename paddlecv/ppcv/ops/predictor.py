@@ -21,16 +21,26 @@ from paddle.inference import create_predictor
 
 
 class PaddlePredictor(object):
-    def __init__(self, param_path, model_path, config, delete_pass=[]):
+    def __init__(self,
+                 param_path,
+                 model_path,
+                 config,
+                 delete_pass=[],
+                 name='model'):
         super().__init__()
+        run_mode = config.get("run_mode", "paddle")  # used trt or mkldnn
+        shape_info_filename = os.path.join(
+            config.get("output_dir", "output"),
+            '{}_{}_shape_info.txt'.format(name, run_mode))
+
         self.predictor, self.inference_config, self.input_names, self.input_tensors, self.output_tensors = self.create_paddle_predictor(
             param_path,
             model_path,
             batch_size=config['batch_size'],
-            run_mode=config.get("run_mode", "paddle"),  # used trt or mkldnn
+            run_mode=run_mode,
             device=config.get("device", "CPU"),
             min_subgraph_size=config["min_subgraph_size"],
-            shape_info_filename=config["shape_info_filename"],
+            shape_info_filename=shape_info_filename,
             trt_calib_mode=config["trt_calib_mode"],
             cpu_threads=config["cpu_threads"],
             trt_use_static=config["trt_use_static"],
@@ -53,9 +63,12 @@ class PaddlePredictor(object):
                 f"inference model: {model_path} or param: {param_path} does not exist, please check again..."
             )
         assert run_mode in [
-            "paddle", "trt_fp32", "trt_fp16", "trt_int8", "mkldnn",
-            "mkldnn_bf16"
-        ], "The run_mode must be 'paddle', 'trt_fp32', 'trt_fp16', 'trt_int8', 'mkldnn', 'mkldnn_bf16', but received run_mode: {}".format(
+            "paddle",
+            "trt_fp32",
+            "trt_fp16",
+            "trt_int8",
+            "mkldnn",
+        ], "The run_mode must be 'paddle', 'trt_fp32', 'trt_fp16', 'trt_int8', 'mkldnn', but received run_mode: {}".format(
             run_mode)
         config = Config(model_path, param_path)
         if device == 'GPU':
@@ -66,8 +79,6 @@ class PaddlePredictor(object):
                 try:
                     config.enable_mkldnn()
                     config.set_cpu_math_library_num_threads(cpu_threads)
-                    if 'bf16' in run_mode:
-                        config.enable_mkldnn_bfloat16()
                 except Exception as e:
                     print(
                         "The current environment does not support `mkldnn`, so disable mkldnn."
@@ -85,7 +96,7 @@ class PaddlePredictor(object):
                 max_batch_size=batch_size,
                 min_subgraph_size=min_subgraph_size,
                 precision_mode=precision_map[run_mode],
-                trt_use_static=trt_use_static,
+                use_static=trt_use_static,
                 use_calib_mode=trt_calib_mode)
 
             if shape_info_filename is not None:

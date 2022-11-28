@@ -18,32 +18,37 @@ import os
 import numpy as np
 import math
 import paddle
+from paddlenlp import Taskflow
 from ..base import ModelBaseOp
 
-from ppcv.ops.base import create_operators
+from ppcv.ops.base import create_operators, BaseOp
 from ppcv.core.workspace import register
 
-from .preprocess import *
 from .postprocess import *
 
 
 @register
-class ClassificationOp(ModelBaseOp):
+class SentimentAnalysisOp(BaseOp):
     def __init__(self, model_cfg, env_cfg):
-        super(ClassificationOp, self).__init__(model_cfg, env_cfg)
+        super(SentimentAnalysisOp, self).__init__(model_cfg, env_cfg)
         mod = importlib.import_module(__name__)
-        self.preprocessor = create_operators(model_cfg["PreProcess"], mod)
+        env_cfg["batch_size"] = model_cfg.get("batch_size", 1)
+        self.batch_size = env_cfg["batch_size"]
+        self.name = model_cfg["name"]
+        self.frame = -1
+        keys = self.get_output_keys()
+        self.output_keys = [self.name + '.' + key for key in keys]
+
         self.postprocessor = create_operators(model_cfg["PostProcess"], mod)
+        self._init_task(model_cfg)
+
+    def _init_task(self, model_cfg):
+        task = model_cfg.get('task', 'sentiment_analysis')
+        self.nlp = Taskflow(task)
 
     @classmethod
     def get_output_keys(cls):
-        return ["class_ids", "scores", "label_names"]
-
-    def preprocess(self, inputs):
-        outputs = inputs
-        for ops in self.preprocessor:
-            outputs = ops(outputs)
-        return outputs
+        return ["label"]
 
     def postprocess(self, inputs, result):
         outputs = result
@@ -54,6 +59,10 @@ class ClassificationOp(ModelBaseOp):
                 outputs = ops(outputs)
         return outputs
 
+    @classmethod
+    def type(self):
+        return 'MODEL'
+
     def infer(self, image_list):
         inputs = []
         batch_loop_cnt = math.ceil(float(len(image_list)) / self.batch_size)
@@ -63,10 +72,8 @@ class ClassificationOp(ModelBaseOp):
             end_index = min((i + 1) * self.batch_size, len(image_list))
             batch_image_list = image_list[start_index:end_index]
             # preprocess
-            inputs = [self.preprocess(img) for img in batch_image_list]
-            inputs = np.concatenate(inputs, axis=0)
             # model inference
-            result = self.predictor.run(inputs)[0]
+            result = self.nlp(batch_image_list)
             # postprocess
             result = self.postprocess(inputs, result)
             results.extend(result)
@@ -100,16 +107,26 @@ class ClassificationOp(ModelBaseOp):
             sub_start_idx = curr_offsef_id
             sub_end_idx = curr_offsef_id + sub_index_list[idx]
             output = outputs[sub_start_idx:sub_end_idx]
-            if len(output) > 0:
-                output = {k: [o[k] for o in output] for k in output[0]}
-                if is_list is not True:
-                    output = {k: output[k][0] for k in output}
-            else:
-                output = {
-                    self.output_keys[0]: [],
-                    self.output_keys[1]: [],
-                    self.output_keys[2]: []
-                }
+            output = {k: [o[k] for o in output] for k in output[0]}
+            if is_list is not True:
+                output = {k: output[k][0] for k in output}
             pipe_outputs.append(output)
+
             curr_offsef_id = sub_end_idx
         return pipe_outputs
+
+
+@register
+class InformationExtractionOp(SentimentAnalysisOp):
+    def __init__(self, model_cfg, env_cfg):
+        super(InformationExtractionOp, self).__init__(model_cfg, env_cfg)
+        self._init_task(model_cfg)
+
+    def _init_task(self, model_cfg):
+        task = model_cfg.get('task', 'information_extraction')
+        schema = model_cfg.get('schema', ['时间', '地点', '人物'])
+        self.nlp = Taskflow(task, schema=schema)
+
+    @classmethod
+    def get_output_keys(cls):
+        return ["text", "type"]

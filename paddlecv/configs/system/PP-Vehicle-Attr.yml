@@ -6,15 +6,15 @@ ENV:
   cpu_threads: 1
   trt_use_static: False
   save_img: True
-  save_res: False
+  save_res: True
   return_res: True
 
 
 MODEL:
   - DetectionOp:
       name: det
-      param_path: paddlecv://models/mot_ppyoloe_l_36e_pphuman/model.pdiparams
-      model_path: paddlecv://models/mot_ppyoloe_l_36e_pphuman/model.pdmodel
+      param_path: paddlecv://models/mot_ppyoloe_l_36e_ppvehicle/model.pdiparams
+      model_path: paddlecv://models/mot_ppyoloe_l_36e_ppvehicle/model.pdmodel
       batch_size: 1
       image_shape: [3, *image_shape, *image_shape]
       PreProcess:
@@ -26,7 +26,7 @@ MODEL:
       PostProcess:
         - ParserDetResults:
             label_list:
-              - pedestrian
+              - vehicle
             threshold: 0.1
       Inputs:
         - input.image
@@ -47,12 +47,37 @@ MODEL:
       PostProcess:
         - ParserTrackerResults:
             label_list:
-              - pedestrian
+              - vehicle
       Inputs:
         - det.dt_bboxes
         - det.dt_scores
         - det.dt_class_ids
-
+  - BboxCropOp:
+      name: bbox_crop
+      Inputs:
+        - input.image
+        - tracker.tk_bboxes
+  - ClassificationOp:
+      name: cls
+      param_path: paddlecv://models/vehicle_attribute/inference.pdiparams
+      model_path: paddlecv://models/vehicle_attribute/inference.pdmodel
+      batch_size: 8
+      PreProcess:
+        - ResizeImage:
+            size: [256, 192]
+        - NormalizeImage:
+            scale: 0.00392157
+            mean: [ 0.485, 0.456, 0.406 ]
+            std: [ 0.229, 0.224, 0.225 ]
+            order: ''
+            channel_num: 3
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - VehicleAttribute:
+      Inputs:
+        - bbox_crop.crop_image
   - TrackerOutput:
       name: vis
       Inputs:
@@ -63,3 +88,6 @@ MODEL:
         - tracker.tk_ids
         - tracker.tk_cls_ids
         - tracker.tk_cls_names
+        - cls.class_ids
+        - cls.scores
+        - cls.label_names

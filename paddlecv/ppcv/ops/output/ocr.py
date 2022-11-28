@@ -83,27 +83,27 @@ class OCROutput(OutputBaseOp):
     def __init__(self, model_cfg, env_cfg):
         super(OCROutput, self).__init__(model_cfg, env_cfg)
         font_path = model_cfg.get('font_path', None)
-        self.font_path = get_font_path(font_path)
+        if font_path is not None:
+            self.font_path = get_font_path(font_path)
+        else:
+            self.font_path = None
 
     def __call__(self, inputs):
         total_res = []
         for input in inputs:
             fn, image, dt_polys = list(input.values())[:3]
-            rec_text = input.get('rec.rec_text', None)
-            rec_score = input.get('rec.rec_score', None)
-            res = dict(
-                filename=fn,
-                dt_polys=dt_polys.tolist(),
-                rec_text=rec_text,
-                rec_score=rec_score)
+            input.pop('input.image')
+            input['det.dt_polys'] = input['det.dt_polys'].tolist()
+            res = input
             if self.frame_id != -1:
                 res.update({'frame_id': frame_id})
             logger.info(res)
             if self.save_img:
                 image = image[:, :, ::-1]
-                if rec_text is not None:
+                if 'rec.rec_text' in input:
                     image = self.draw_ocr_box_txt(
-                        Image.fromarray(image), dt_polys, rec_text, rec_score)
+                        Image.fromarray(image), input['det.dt_polys'],
+                        input['rec.rec_text'], input['rec.rec_score'])
                 else:
                     image = draw_boxes(image, dt_polys.reshape([-1, 8]))
                 file_name = os.path.split(fn)[-1]
@@ -132,7 +132,7 @@ class OCROutput(OutputBaseOp):
         img_left = image.copy()
         img_right = np.ones((h, w, 3), dtype=np.uint8) * 255
         random.seed(0)
-
+        boxes = np.array(boxes)
         draw_left = ImageDraw.Draw(img_left)
         if txts is None or len(txts) != len(boxes):
             txts = [None] * len(boxes)

@@ -44,7 +44,7 @@ class PaddleCV(object):
     def __init__(self,
                  task_name=None,
                  config_path=None,
-                 output_dir=None,
+                 output_dir='output',
                  run_mode='paddle',
                  device='CPU'):
 

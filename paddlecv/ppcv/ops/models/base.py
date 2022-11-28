@@ -41,7 +41,7 @@ class ModelBaseOp(BaseOp):
         self.name = model_cfg["name"]
         self.frame = -1
         self.predictor = PaddlePredictor(param_path, model_path, env_cfg,
-                                         delete_pass)
+                                         delete_pass, self.name)
         self.input_names = self.predictor.get_input_names()
 
         keys = self.get_output_keys()

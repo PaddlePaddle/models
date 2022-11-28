@@ -44,7 +44,9 @@ class DetectionOp(ModelBaseOp):
                 [1., 1.], dtype=np.float32),
             'im_shape': np.array(
                 image.shape[:2], dtype=np.float32),
-            'input_shape': self.model_cfg["image_shape"],
+            'input_shape': self.model_cfg["image_shape"]
+            if 'image_shape' in self.model_cfg else np.array(
+                image.shape[:2], dtype=np.float32),
         }
         for ops in self.preprocessor:
             image, im_info = ops(image, im_info)

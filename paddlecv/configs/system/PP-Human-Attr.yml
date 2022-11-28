@@ -52,7 +52,32 @@ MODEL:
         - det.dt_bboxes
         - det.dt_scores
         - det.dt_class_ids
-
+  - BboxCropOp:
+      name: bbox_crop
+      Inputs:
+        - input.image
+        - tracker.tk_bboxes
+  - ClassificationOp:
+      name: cls
+      param_path: paddlecv://models/person_attribute/inference.pdiparams
+      model_path: paddlecv://models/person_attribute/inference.pdmodel
+      batch_size: 8
+      PreProcess:
+        - ResizeImage:
+            size: [256, 192]
+        - NormalizeImage:
+            scale: 0.00392157
+            mean: [ 0.485, 0.456, 0.406 ]
+            std: [ 0.229, 0.224, 0.225 ]
+            order: ''
+            channel_num: 3
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - PersonAttribute:
+      Inputs:
+        - bbox_crop.crop_image
   - TrackerOutput:
       name: vis
       Inputs:
@@ -63,3 +88,6 @@ MODEL:
         - tracker.tk_ids
         - tracker.tk_cls_ids
         - tracker.tk_cls_names
+        - cls.class_ids
+        - cls.scores
+        - cls.label_names

@@ -1,6 +1,5 @@
 ENV:
   min_subgraph_size: 3
-  shape_info_filename: ./
   trt_calib_mode: False
   cpu_threads: 1
   trt_use_static: False

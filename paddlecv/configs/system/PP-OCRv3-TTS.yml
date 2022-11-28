@@ -10,8 +10,8 @@ ENV:
 MODEL:
   - OcrDbDetOp:
       name: det
-      param_path: paddlecv://models/ch_PP-OCRv2_det_infer/inference.pdiparams
-      model_path: paddlecv://models/ch_PP-OCRv2_det_infer/inference.pdmodel
+      param_path: paddlecv://models/ch_PP-OCRv3_det_infer/inference.pdiparams
+      model_path: paddlecv://models/ch_PP-OCRv3_det_infer/inference.pdmodel
       batch_size: 1
       PreProcess:
         - RGB2BGR:
@@ -46,19 +46,24 @@ MODEL:
         - det.dt_polys
   - OcrCrnnRecOp:
       name: rec
-      param_path: paddlecv://models/ch_PP-OCRv2_rec_infer/inference.pdiparams
-      model_path: paddlecv://models/ch_PP-OCRv2_rec_infer/inference.pdmodel
+      param_path: paddlecv://models/ch_PP-OCRv3_rec_infer/inference.pdiparams
+      model_path: paddlecv://models/ch_PP-OCRv3_rec_infer/inference.pdmodel
       batch_size: 6
       PreProcess:
         - RGB2BGR:
         - ReisizeNormImg:
-            rec_image_shape: [3, 32, 320]
+            rec_image_shape: [3, 48, 320]
       PostProcess:
         - CTCLabelDecode:
             character_dict_path: "paddlecv://dict/ocr/ch_dict.txt"
             use_space_char: true
       Inputs:
         - crop.crop_image
+  - TTSOp:
+      name: tts
+      Inputs:
+        - input.fn
+        - rec.rec_text
   - OCROutput:
       name: vis
       font_path: paddlecv://fonts/simfang.ttf
@@ -68,3 +73,4 @@ MODEL:
         - det.dt_polys
         - rec.rec_text
         - rec.rec_score
+        - tts.fn
