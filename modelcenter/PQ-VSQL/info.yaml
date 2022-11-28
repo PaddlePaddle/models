@@ -11,7 +11,7 @@ Task:
    sub_tag: "变分影子量子学习"
    sub_tag_en: "VSQL"
 Datasets: MNIST
-Pulisher: Baidu
+Publisher: Baidu
 License: Apache 2.0
 Paper: 
 -  title: "VSQL: Variational Shadow Quantum Learning for Classification"
