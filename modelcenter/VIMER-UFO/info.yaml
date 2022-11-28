@@ -3,7 +3,7 @@ Model_Info:
    name: "VIMER-UFO2.0"
    description: "视觉多任务大模型"
    description_en: "UFO:Unified Feature Optimization"
-   icon: "https://user-images.githubusercontent.com/23690325/203381746-0fb8e96f-f13d-4106-8d8f-be4f6fe29834.jpg"
+   icon: "https://user-images.githubusercontent.com/23690325/204211162-a49335b0-e15b-4dcd-9aa1-729c4b7959cf.png"
    from_repo: "VIMER"
 Task:
    - tag_en: "Wenxin Big Models"

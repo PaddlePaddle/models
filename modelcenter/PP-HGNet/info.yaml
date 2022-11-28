@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HGNet"
   description: "面向Nvidia GPU端的高性能卷积神经网络"
   description_en: "A High-performance Convolutional Neural Network for Nvidia GPU"
-  icon: "https://paddleocr.bj.bcebos.com/icon/backbone.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210516-da473832-6872-4e5a-a871-b280ee62975d.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"

@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-Matting"
   description: "PP-Matting图像抠图模型"
   description_en: "PP-Matting image matting model"
-  icon: "https://paddleseg.bj.bcebos.com/resources/PP-Matting.jpeg"
+  icon: "https://user-images.githubusercontent.com/23690325/204210637-bb5bfdad-e280-4d87-8fff-c0b264e7f1d3.png"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"

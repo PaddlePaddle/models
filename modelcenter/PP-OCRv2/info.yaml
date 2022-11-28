@@ -3,7 +3,7 @@ Model_Info:
    name: "PP-OCRv2"
    description: "PP-OCRv2文字检测识别系统"
    description_en: "PP-OCRv2 text detection and recognition system"
-   icon: "https://paddleocr.bj.bcebos.com/icon/ocr.png"
+   icon: "https://user-images.githubusercontent.com/23690325/204210676-6bc7a5c3-bc4b-4129-ac5c-5cdf7edd7dc8.png"
    from_repo: "PaddleOCR"
 Task:
 - tag_en: "Computer Vision"

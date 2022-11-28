@@ -3,7 +3,7 @@ Model_Info:
    name: "VIMER-CAE1.0"
    description: "自监督预训练方法"
    description_en: "masked image modeling approach for self-supervised representation pretraining"
-   icon: "https://user-images.githubusercontent.com/23690325/203380905-1bb0b00b-7c40-4044-a248-492436199b7d.jpg"
+   icon: "https://user-images.githubusercontent.com/23690325/204211143-852a7bae-8fe4-47d2-a465-c16167745efa.png"
    from_repo: "VIMER"
 Task:
 -  tag_en: "Wenxin Big Models"

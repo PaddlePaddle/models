@@ -4,7 +4,7 @@ Model_Info:
    description: PP-YOLOv2是PP-YOLO的升级版本
    description_en: PP-YOLOv2 is an upgraded version of PP-YOLO
    update_time: 
-   icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-YOLOv2.png"
+   icon: "https://user-images.githubusercontent.com/23690325/204210980-9ee0f09b-f5bc-4515-b0f8-86450d2b3498.png"
    from_repo: "PaddleDetection"
 Task:
 - tag: 计算机视觉

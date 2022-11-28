@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-Vehicle"
   description: "飞桨车辆场景分析工具"
   description_en: "PaddlePaddle Vehicle Scene Analysis Tool"
-  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-Vehicle.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210913-b0abfd94-1d7a-474a-b012-7ba06ca3590f.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"

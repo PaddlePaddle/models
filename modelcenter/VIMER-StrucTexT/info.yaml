@@ -3,7 +3,7 @@ Model_Info:
   name: "VIMER-StrucTexT1.0"
   description: "结构化文本理解"
   description_en: "Structured Text Understanding"
-  icon: "https://user-images.githubusercontent.com/23690325/203381082-18717d2e-2080-4233-91c5-84f48e1fdef2.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210800-976f5d12-714d-4171-b54e-14bd39bab89f.png"
   from_repo: "VIMER"
 Task:
 - tag_en: "Wenxin Big Models"

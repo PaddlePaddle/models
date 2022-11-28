@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-LCNet"
   description: "面向Intel CPU端的轻量级卷积神经网络"
   description_en: "A Lightweight Convolutional Neural Network for Intel CPU"
-  icon: "https://paddleocr.bj.bcebos.com/icon/backbone.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210567-ca028af1-ba4c-4232-b046-8dd8cad444eb.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
