@@ -46,6 +46,11 @@ cd models/paddlecv
 
 # 编译安装paddlecv
 python setup.py install
+
+# 安装其他依赖
+# linux环境
+apt-get install libsndfile1
+# windows环境参考http://www.mega-nerd.com/libsndfile/#Download
 ```
 
 同时支持whl包安装使用，详细步骤参考[文档](whl.md)
