@@ -6,3 +6,7 @@ Pillow
 faiss-cpu==1.7.1.post2
 paddlenlp
 paddlespeech
+pycocotools
+filterpy
+shapely
+pyclipper
