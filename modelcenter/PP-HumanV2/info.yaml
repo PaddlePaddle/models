@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HumanV2"
   description: "飞桨行人场景分析工具"
   description_en: "PaddlePadle Pedestrian Scene Analysis Tool"
-  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-HumanV2_1.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210545-e0df3d2f-e10d-45b6-aace-81ba9eed6bad.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"

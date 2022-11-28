@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HumanSegV2"
   description: "PP-HumanSegV2实时人像分割SOTA方案"
   description_en: "PP-HumanSegV2 real-time portrait segmentation solution"
-  icon: "https://paddleseg.bj.bcebos.com/resources/PP-HumanSegV2.jpeg"
+  icon: "https://user-images.githubusercontent.com/23690325/204210529-35d7087a-8b81-48f7-9ad0-d95cbb88babf.png"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"

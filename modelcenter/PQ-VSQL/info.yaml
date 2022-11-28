@@ -4,7 +4,7 @@ Model_Info:
    description: "基于影子特征的量子-经典混合模型"
    description_en: "Hybrid quantum-classical model based on the shadow features"
    update_time: 
-   icon: "https://user-images.githubusercontent.com/23690325/203944010-3f7e9373-d6d3-4bf5-989a-d5817b15e20f.png"
+   icon: "https://user-images.githubusercontent.com/23690325/204210998-f3e40918-6654-4780-98f4-58eb8353b33b.png"
 Task:
 -  tag: "量子计算"
    tag_en: "Quantum Computing"

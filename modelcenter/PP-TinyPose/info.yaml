@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-TInyPose"
   description: "飞桨人体姿态估计"
   description_en: "test"
-  icon: "https://paddledet.bj.bcebos.com/modelcenter/images/icons/icon_PP-TinyPose.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210827-acc0c23c-fa01-43c1-b260-d7daf2ffeae4.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"

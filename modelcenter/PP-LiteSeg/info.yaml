@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-LiteSeg"
   description: "PP-LiteSeg轻量级实时语义分割SOTA模型"
   description_en: "PP-LiteSeg real-time semantic segmentation model with SOTA performance"
-  icon: "https://paddleseg.bj.bcebos.com/resources/PP-LiteSeg.jpeg"
+  icon: "https://user-images.githubusercontent.com/23690325/204210611-510b46fa-cebd-4020-91ce-b4cb0ce07bee.png"
   from_repo: "PaddleSeg"
 Task:
 - tag_en: "Computer Vision"

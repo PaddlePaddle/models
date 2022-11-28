@@ -3,7 +3,7 @@ Model_Info:
   name: "ERNIE-UIE"
   description: "信息抽取模型"
   description_en: "Information Extraction Model"
-  icon: "https://user-images.githubusercontent.com/11793384/203991653-26697503-691b-4150-94f5-9f47c9077262.png"
+  icon: "https://user-images.githubusercontent.com/23690325/204210272-85def4db-a543-4344-b07f-94c2e3a154c0.png"
   from_repo: "PaddleNLP"
 Task:
 - tag_en: "Natural Language Processing"

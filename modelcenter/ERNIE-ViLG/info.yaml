@@ -3,7 +3,7 @@ Model_Info:
   name: "ERNIE-ViLG"
   description: "文心知识增强跨模态图文生成大模型"
   description_en: "Large model of text centered knowledge enhanced cross modal text generation"
-  icon: "https://user-images.githubusercontent.com/23690325/203378609-e7ab3c5e-fb70-48b8-a669-47d2d866abee.jpg"
+  icon: "https://user-images.githubusercontent.com/23690325/204210290-43058fd2-898c-4ef4-a5d3-fdcc62c8efc2.png"
   from_repo: ""
 Task:
 - tag_en: "Wenxin Big Models"

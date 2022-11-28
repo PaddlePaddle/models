@@ -3,7 +3,7 @@ Model_Info:
   name: "PINN_CFD"
   description: "2D圆柱绕流模型设计及仿真验证"
   description_en: "Design and simulation of 2D cylinder flow model"
-  icon: "https://ai-studio-static-online.cdn.bcebos.com/18932a98076948e7bf26c79c60015250af10b7aa3d114283ae53536189697a56"
+  icon: "https://user-images.githubusercontent.com/23690325/204210395-b8c1f5ff-cfea-4e3c-8e41-cd9bcf6acd56.png"
   from_repo: "PaddleScience"
 Task:
 - tag: "科学计算"

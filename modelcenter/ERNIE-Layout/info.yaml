@@ -4,7 +4,7 @@ Model_Info:
    description: 文心多语言跨模态布局增强文档智能大模型 
    description_en: ERNIE Cross-modal Pretrained Model
    update_time: 
-   icon: "https://user-images.githubusercontent.com/11793384/203991610-5dbd3e53-4183-47ca-8d93-d99f8e22cc4d.png"
+   icon: "https://user-images.githubusercontent.com/23690325/204210234-3e0ad7d5-7387-4e74-a295-07181ebb77dd.png"
    from_repo: PaddleNLP
 Task:
 - tag: 自然语言处理

@@ -3,7 +3,7 @@ Model_Info:
    name: "PP-StructureV2"
    description: "PP-StructureV2文档分析系统，包含版面分析，表格识别，版面恢复和关键信息抽取"
    description_en: "PP-StructureV2 document analysis system, including layout analysis, table recognition, layout recovery and key information extraction"
-   icon: "https://paddleocr.bj.bcebos.com/icon/structure.png"
+   icon: "https://user-images.githubusercontent.com/23690325/204210800-976f5d12-714d-4171-b54e-14bd39bab89f.png"
    from_repo: "PaddleOCR"
 Task:
    - tag_en: "Computer Vision"
