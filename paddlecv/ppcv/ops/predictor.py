@@ -63,9 +63,12 @@ class PaddlePredictor(object):
                 f"inference model: {model_path} or param: {param_path} does not exist, please check again..."
             )
         assert run_mode in [
-            "paddle", "trt_fp32", "trt_fp16", "trt_int8", "mkldnn",
-            "mkldnn_bf16"
-        ], "The run_mode must be 'paddle', 'trt_fp32', 'trt_fp16', 'trt_int8', 'mkldnn', 'mkldnn_bf16', but received run_mode: {}".format(
+            "paddle",
+            "trt_fp32",
+            "trt_fp16",
+            "trt_int8",
+            "mkldnn",
+        ], "The run_mode must be 'paddle', 'trt_fp32', 'trt_fp16', 'trt_int8', 'mkldnn', but received run_mode: {}".format(
             run_mode)
         config = Config(model_path, param_path)
         if device == 'GPU':
@@ -76,8 +79,6 @@ class PaddlePredictor(object):
                 try:
                     config.enable_mkldnn()
                     config.set_cpu_math_library_num_threads(cpu_threads)
-                    if 'bf16' in run_mode:
-                        config.enable_mkldnn_bfloat16()
                 except Exception as e:
                     print(
                         "The current environment does not support `mkldnn`, so disable mkldnn."
