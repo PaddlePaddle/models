@@ -1,7 +1,7 @@
-【PP-TInyPose-App-YAML】
+【PP-TinyPose-App-YAML】
 
 APP_Info:
-    title: PP-TInyPose-App
+    title: PP-TinyPose-App
     colorFrom: blue
     colorTo: yellow
     sdk: gradio

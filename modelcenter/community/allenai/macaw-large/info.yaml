@@ -13,7 +13,7 @@ Model_Info:
 Paper: null
 Publisher: allenai
 Task:
-- sub_tag: 文本生成
+- sub_tag: 文本序列生成
   sub_tag_en: Text2Text Generation
   tag: 自然语言处理
   tag_en: Natural Language Processing

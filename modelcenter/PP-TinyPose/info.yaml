@@ -1,6 +1,6 @@
 ---
 Model_Info:
-  name: "PP-TInyPose"
+  name: "PP-TinyPose"
   description: "飞桨人体姿态估计"
   description_en: "test"
   icon: "https://user-images.githubusercontent.com/23690325/204210827-acc0c23c-fa01-43c1-b260-d7daf2ffeae4.png"

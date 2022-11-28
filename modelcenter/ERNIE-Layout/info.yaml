@@ -15,6 +15,10 @@ Task:
   tag_en: Wenxin Big Models
   sub_tag: 文档分析
   sub_tag_en: Document Analysis
+- tag: 跨模态
+  tag_en: Cross-Modal
+  sub_tag: 文档分析
+  sub_tag_en: Document Analysis
 Example:
 - tag: 互联网
   tag_en: Internet
