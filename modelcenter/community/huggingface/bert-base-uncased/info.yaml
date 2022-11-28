@@ -8,7 +8,7 @@ Model_Info:
   description: BERT base model (uncased)
   description_en: BERT base model (uncased)
   from_repo: https://huggingface.co/bert-base-uncased
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: bert-base-uncased
 Paper:
 - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'

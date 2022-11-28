@@ -17,4 +17,4 @@ Paper:
    - title: "Structured Text Understanding with Multi-Modal Transformers"
      url: "https://arxiv.org/pdf/2108.02923.pdf"
 IfTraining: 0
-IfOnlineDemo: 1
+IfOnlineDemo: 0

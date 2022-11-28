@@ -8,7 +8,7 @@ Model_Info:
   description: Version 1.1
   description_en: Version 1.1
   from_repo: https://huggingface.co/google/t5-v1_1-small
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: google/t5-v1_1-small
 Paper:
 - title: GLU Variants Improve Transformer

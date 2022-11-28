@@ -8,7 +8,7 @@ Model_Info:
   description: bert-base-NER
   description_en: bert-base-NER
   from_repo: https://huggingface.co/dslim/bert-base-NER
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: dslim/bert-base-NER
 Paper:
 - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'

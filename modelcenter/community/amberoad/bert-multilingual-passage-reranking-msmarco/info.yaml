@@ -8,7 +8,7 @@ Model_Info:
   description: Passage Reranking Multilingual BERT 🔃 🌍
   description_en: Passage Reranking Multilingual BERT 🔃 🌍
   from_repo: https://huggingface.co/amberoad/bert-multilingual-passage-reranking-msmarco
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: amberoad/bert-multilingual-passage-reranking-msmarco
 Paper:
 - title: Passage Re-ranking with BERT

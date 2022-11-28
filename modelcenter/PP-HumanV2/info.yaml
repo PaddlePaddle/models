@@ -40,5 +40,5 @@ Example:
 Datasets: ""
 Publisher: "Baidu"
 License: "apache.2.0"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 1

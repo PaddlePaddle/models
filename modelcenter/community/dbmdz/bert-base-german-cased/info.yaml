@@ -8,7 +8,7 @@ Model_Info:
   description: 🤗 + 📚 dbmdz German BERT models
   description_en: 🤗 + 📚 dbmdz German BERT models
   from_repo: https://huggingface.co/dbmdz/bert-base-german-cased
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: dbmdz/bert-base-german-cased
 Paper: null
 Publisher: dbmdz

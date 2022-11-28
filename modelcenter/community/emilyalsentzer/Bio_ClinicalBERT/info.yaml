@@ -8,7 +8,7 @@ Model_Info:
   description: ClinicalBERT - Bio + Clinical BERT Model
   description_en: ClinicalBERT - Bio + Clinical BERT Model
   from_repo: https://huggingface.co/emilyalsentzer/Bio_ClinicalBERT
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: emilyalsentzer/Bio_ClinicalBERT
 Paper:
 - title: Publicly Available Clinical BERT Embeddings

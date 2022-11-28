@@ -3,11 +3,15 @@ Model_Info:
    name: "ERNIE 3.0"
    description: "ERNIE 3.0 轻量级模型"
    description_en: "ERNIE Tiny"
-   icon: "@后续UE统一设计之后，会存到bos上某个位置"
+   icon: "https://user-images.githubusercontent.com/11793384/203991641-2cbf2337-fb23-4238-b20f-9310f3d2a1c6.png"
    from_repo: "PaddleNLP"
 Task:
    - tag_en: "Natural Language Processing"
      tag: "自然语言处理"
+     sub_tag_en: "Pretrained Model"
+     sub_tag: "预训练模型"
+   - tag_en: "Wenxin Big Models"
+     tag: "文心大模型"
      sub_tag_en: "Pretrained Model"
      sub_tag: "预训练模型"
 Example:
@@ -29,5 +33,5 @@ License: "apache.2.0"
 Paper:
    - title: "ERNIE-Tiny: A Progressive Distillation Framework for Pretrained Transformer Compression"
      url: "https://arxiv.org/abs/2106.02241"
-IfTraining: 0
-IfOnlineDemo: 1
+IfTraining: 1
+IfOnlineDemo: 0

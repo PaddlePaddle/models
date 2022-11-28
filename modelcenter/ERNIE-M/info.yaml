@@ -3,15 +3,18 @@ Model_Info:
   name: "ERNIE-M"
   description: "多语言的语言模型"
   description_en: "A cross-lingual model"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/11793384/203991496-bbaee158-1c92-43ac-84a8-c83315ed09dd.png"
   from_repo: "PaddleNLP"
-
 Task: 
 - tag_en: "Natural Language Processing"
   tag: "自然语言处理"
   sub_tag_en: "Pretrained Model"
   sub_tag: "预训练模型"
-Example: ""
+- tag_en: "Wenxin Big Models"
+  tag: "文心大模型"
+  sub_tag_en: "Pretrained Model"
+  sub_tag: "预训练模型"
+Example:
 Datasets: ""
 Publisher: "Baidu"
 License: "apache.2.0"
@@ -19,5 +22,5 @@ Paper:
 - title: "ERNIE-M: Enhanced Multilingual Representation by Aligning Cross-lingual\
     \ Semantics with Monolingual Corpora"
   url: "https://arxiv.org/pdf/2012.15674.pdf"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 0

@@ -8,7 +8,7 @@ Model_Info:
   description: IndoBERT Base Model (phase1 - uncased)
   description_en: IndoBERT Base Model (phase1 - uncased)
   from_repo: https://huggingface.co/indobenchmark/indobert-base-p1
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: indobenchmark/indobert-base-p1
 Paper:
 - title: 'IndoNLU: Benchmark and Resources for Evaluating Indonesian Natural Language

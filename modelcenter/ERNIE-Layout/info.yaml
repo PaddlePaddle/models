@@ -1,12 +1,16 @@
 ---
 Model_Info:
    name: "ERNIE-Layout"
-   description: 文心跨模态预训练大模型
-   description_en: ERNIE transmodel pre training large model
+   description: 文心多语言跨模态布局增强文档智能大模型 
+   description_en: ERNIE Cross-modal Pretrained Model
    update_time: 
-   icon: url  
+   icon: "https://user-images.githubusercontent.com/11793384/203991610-5dbd3e53-4183-47ca-8d93-d99f8e22cc4d.png"
    from_repo: PaddleNLP
 Task:
+- tag: 自然语言处理
+  tag_en: Natural Language Processing
+  sub_tag: 文档分析
+  sub_tag_en: Document Analysis
 - tag: 文心大模型
   tag_en: Wenxin Big Models
   sub_tag: 文档分析
@@ -27,4 +31,4 @@ Paper:
 - title: "ERNIE-Layout: Layout-Knowledge Enhanced Multi-modal Pre-training for Document Understanding"
   url: https://arxiv.org/pdf/2210.06155.pdf
 IfTraining: 1
-IfOnlineDemo: 1
+IfOnlineDemo: 0

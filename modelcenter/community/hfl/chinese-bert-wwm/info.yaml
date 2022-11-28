@@ -8,7 +8,7 @@ Model_Info:
   description: Chinese BERT with Whole Word Masking
   description_en: Chinese BERT with Whole Word Masking
   from_repo: https://huggingface.co/hfl/chinese-bert-wwm
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: hfl/chinese-bert-wwm
 Paper:
 - title: Pre-Training with Whole Word Masking for Chinese BERT

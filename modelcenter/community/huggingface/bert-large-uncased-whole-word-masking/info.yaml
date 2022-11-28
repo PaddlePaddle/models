@@ -8,7 +8,7 @@ Model_Info:
   description: BERT large model (uncased) whole word masking
   description_en: BERT large model (uncased) whole word masking
   from_repo: https://huggingface.co/bert-large-uncased-whole-word-masking
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
   name: bert-large-uncased-whole-word-masking
 Paper:
 - title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
