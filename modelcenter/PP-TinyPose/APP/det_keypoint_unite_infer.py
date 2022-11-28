@@ -107,18 +107,18 @@ def topdown_unite_predict_video(FLAGS,
         capture = cv2.VideoCapture(camera_id)
     else:
         capture = cv2.VideoCapture(FLAGS.video_file)
-        video_name,suffix = FLAGS.video_file.split('.')
-        video_name = video_name+"_output."+suffix
+        video_name,suffix = os.path.splitext(FLAGS.video_file) 
+        video_name = video_name+"_output"+suffix
+    
     # Get Video info : resolution, fps, frame count
     width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(capture.get(cv2.CAP_PROP_FPS))
     frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
     print("fps: %d, frame_count: %d" % (fps, frame_count))
-
-   
-    fourcc = cv2.VideoWriter_fourcc(* 'mp4v')
-    writer = cv2.VideoWriter(video_name, fourcc, fps, (width, height))
+    
+    codec = int(capture.get(cv2.CAP_PROP_FOURCC))
+    writer = cv2.VideoWriter(video_name, codec, fps, (width, height))
     index = 0
     store_res = []
     keypoint_smoothing = KeypointSmoothing(
