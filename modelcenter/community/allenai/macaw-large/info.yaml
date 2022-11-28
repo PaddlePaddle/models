@@ -8,11 +8,7 @@ Model_Info:
   description: macaw-large
   description_en: macaw-large
   from_repo: https://huggingface.co/allenai/macaw-large
-<<<<<<< HEAD
-  icon: https://paddlenlp.bj.bcebos.com/models/community/transformer-layer.png
-=======
   icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
->>>>>>> 59568bbb6301a6a3a573129dc6bc78381fc8c984
   name: allenai/macaw-large
 Paper: null
 Publisher: allenai
