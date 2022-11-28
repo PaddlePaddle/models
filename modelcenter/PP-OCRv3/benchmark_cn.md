@@ -19,4 +19,4 @@
 
 
 ## 2. 相关使用说明
-1. https://github.com/PaddlePaddle/PaddleOCR/edit/dygraph/doc/doc_ch/PP-OCRv3_introduction.md
+1. https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/PP-OCRv3_introduction.md
