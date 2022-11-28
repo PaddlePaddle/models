@@ -27,6 +27,7 @@ from keypoint_infer import KeyPointDetector, PredictConfig_KeyPoint
 from visualize import visualize_pose
 from utils import get_current_memory_mb
 from keypoint_postprocess import translate_to_ori_images
+from download import auto_download_model
 
 KEYPOINT_SUPPORT_MODELS = {
     'HigherHRNet': 'keypoint_bottomup',
@@ -264,6 +265,14 @@ def def_keypoint(input_date):
     assert FLAGS.device in ['CPU', 'GPU', 'XPU'
                             ], "device should be CPU, GPU or XPU"
     
+    det_downloaded_model_dir = auto_download_model(FLAGS.det_model_dir)
+    if det_downloaded_model_dir:
+       FLAGS.det_model_dir = det_downloaded_model_dir
+
+    keypoint_downloaded_model_dir = auto_download_model(FLAGS.keypoint_model_dir)
+    if keypoint_downloaded_model_dir:
+       FLAGS.keypoint_model_dir = keypoint_downloaded_model_dir
+    
     deploy_file = os.path.join(FLAGS.det_model_dir, 'infer_cfg.yml')
     with open(deploy_file) as f:
         yml_conf = yaml.safe_load(f)
@@ -271,7 +280,7 @@ def def_keypoint(input_date):
     detector_func = 'Detector'
     if arch == 'PicoDet':
         detector_func = 'DetectorPicoDet'
-
+    
     detector = eval(detector_func)(FLAGS.det_model_dir,
                                    device=FLAGS.device,
                                    run_mode=FLAGS.run_mode,

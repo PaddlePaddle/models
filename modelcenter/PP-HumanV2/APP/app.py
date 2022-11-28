@@ -3,15 +3,21 @@ import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
-
+import os
 from pipeline.pipeline import pp_humanv2
 
 
 # UGC: Define the inference fn() for your models
 def model_inference(input_date, avtivity_list):
+    
+    if isinstance(input_date, str):
+        if  os.path.splitext(input_date)[-1] not in ['.avi','.mp4']:
+            return None
+            
     if 'do_entrance_counting'in avtivity_list or 'draw_center_traj' in avtivity_list:
         if 'MOT' not in avtivity_list:
             avtivity_list.append('MOT')
+    
     result = pp_humanv2(input_date, avtivity_list)
 
     return result
@@ -37,7 +43,7 @@ with gr.Blocks() as demo:
 
         with gr.TabItem("video"):
 
-            video_in = gr.Video(value="https://paddledet.bj.bcebos.com/modelcenter/images/PP-Human/human_attr.mp4",label="Input")
+            video_in = gr.Video(value="https://paddledet.bj.bcebos.com/modelcenter/images/PP-Human/human_attr.mp4",label="Input only support .mp4 or .avi")
             video_out = gr.Video(label="Output")
 
             video_avtivity_list = gr.CheckboxGroup(["MOT","ATTR","VIDEO_ACTION","SKELETON_ACTION","ID_BASED_DETACTION","ID_BASED_CLSACTION","REID",\
