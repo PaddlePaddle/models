@@ -31,9 +31,9 @@ MODEL:
       PostProcess:
         - NormalizeFeature:
         - Index:
-            index_method: "HNSW32" # supported: HNSW32, IVF, Flat
             dist_type: "IP"
-            index_dir: "./drink_dataset_v2.0/index"
+            vector_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0/vector.index"
+            id_map_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0/id_map.pkl"
             score_thres: 0.5
       Inputs:
         - input.image

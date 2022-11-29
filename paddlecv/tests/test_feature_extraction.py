@@ -28,7 +28,7 @@ from ppcv.core.config import ConfigParser
 class TestFeatureExtraction(unittest.TestCase):
     def setUp(self):
         self.config = 'configs/unittest/test_feature_extraction.yml'
-        self.input = 'demo/ILSVRC2012_val_00020010.jpeg'
+        self.input = 'demo/drink_dataset_v2.0_test_100.jpeg'
         self.cfg_dict = dict(config=self.config, input=self.input)
         cfg = argparse.Namespace(**self.cfg_dict)
         config = ConfigParser(cfg)
