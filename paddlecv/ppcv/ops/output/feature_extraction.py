@@ -44,6 +44,9 @@ class FeatureOutput(OutputBaseOp):
             if self.print_res:
                 msg = " ".join([f"{key}: {res[key]}" for key in res])
                 logger.info(msg)
+            if self.save_res:
+                msg = "The FeatureOutput op does not yet support to save prediction results."
+                logger.warning(msg)
             if self.return_res:
                 total_res.append(res)
         if self.return_res:
