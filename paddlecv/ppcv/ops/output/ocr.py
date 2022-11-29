@@ -217,6 +217,8 @@ class PPStructureOutput(OutputBaseOp):
             logger.info(res)
             if self.save_res or self.return_res:
                 total_res.append(res)
+        if self.save_img:
+            logger.info('save img is not support in PPStructure')
         if self.save_res:
             res_file_name = 'output.json'
             out_path = os.path.join(self.output_dir, res_file_name)
