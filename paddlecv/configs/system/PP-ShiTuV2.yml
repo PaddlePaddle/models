@@ -62,8 +62,8 @@ MODEL:
         - NormalizeFeature:
         - Index:
             dist_type: "IP"
-            vector_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0/vector.index"
-            id_map_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0/id_map.pkl"
+            vector_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0_vector.index"
+            id_map_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0_id_map.pkl"
             score_thres: 0.5
         - NMS4Rec:
             thresh: 0.05
