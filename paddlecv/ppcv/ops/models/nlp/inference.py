@@ -22,6 +22,7 @@ from ..base import ModelBaseOp
 
 from ppcv.ops.base import create_operators, BaseOp
 from ppcv.core.workspace import register
+from ppcv.utils.utility import check_install
 
 from .postprocess import *
 
@@ -42,6 +43,7 @@ class SentimentAnalysisOp(BaseOp):
         self._init_task(model_cfg)
 
     def _init_task(self, model_cfg):
+        check_install('paddlenlp', 'paddlenlp')
         from paddlenlp import Taskflow
         task = model_cfg.get('task', 'sentiment_analysis')
         self.nlp = Taskflow(task)
@@ -123,6 +125,7 @@ class InformationExtractionOp(SentimentAnalysisOp):
         self._init_task(model_cfg)
 
     def _init_task(self, model_cfg):
+        check_install('paddlenlp', 'paddlenlp')
         from paddlenlp import Taskflow
         task = model_cfg.get('task', 'information_extraction')
         schema = model_cfg.get('schema', ['时间', '地点', '人物'])
