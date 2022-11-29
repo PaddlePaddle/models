@@ -15,16 +15,19 @@
 import importlib
 import pathlib
 import os
-from paddlespeech.cli.tts import TTSExecutor
 
 from ppcv.ops.base import create_operators, BaseOp
 from ppcv.core.workspace import register
+from ppcv.utils.utility import check_install
 
 
 @register
 class TTSOp(BaseOp):
     def __init__(self, model_cfg, env_cfg):
         super(TTSOp, self).__init__(model_cfg, env_cfg)
+        check_install('paddlespeech', 'paddlespeech')
+        from paddlespeech.cli.tts import TTSExecutor
+
         mod = importlib.import_module(__name__)
         env_cfg["batch_size"] = model_cfg.get("batch_size", 1)
         self.batch_size = env_cfg["batch_size"]
