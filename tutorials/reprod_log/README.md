@@ -93,7 +93,7 @@ pip3 install https://paddle-model-ecology.bj.bcebos.com/whl/reprod_log-1.0.1-py3
 
 模块 `compare` 提供了基础的网络前向和反向过程对比工具
 
-* compare_forward 用于对比网络的反向过程，其参数为
+* compare_forward 用于对比网络的前向过程，其参数为
   * torch_model: torch.nn.Module,
   * paddle_model: paddle.nn.Layer,
   * input_dict: dict, dict值为numpy矩阵
