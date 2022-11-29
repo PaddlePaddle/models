@@ -18,7 +18,6 @@ import os
 import numpy as np
 import math
 import paddle
-from paddlenlp import Taskflow
 from ..base import ModelBaseOp
 
 from ppcv.ops.base import create_operators, BaseOp
@@ -43,6 +42,7 @@ class SentimentAnalysisOp(BaseOp):
         self._init_task(model_cfg)
 
     def _init_task(self, model_cfg):
+        from paddlenlp import Taskflow
         task = model_cfg.get('task', 'sentiment_analysis')
         self.nlp = Taskflow(task)
 
@@ -123,6 +123,7 @@ class InformationExtractionOp(SentimentAnalysisOp):
         self._init_task(model_cfg)
 
     def _init_task(self, model_cfg):
+        from paddlenlp import Taskflow
         task = model_cfg.get('task', 'information_extraction')
         schema = model_cfg.get('schema', ['时间', '地点', '人物'])
         self.nlp = Taskflow(task, schema=schema)
