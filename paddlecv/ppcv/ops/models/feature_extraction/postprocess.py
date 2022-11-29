@@ -18,6 +18,7 @@ import numpy as np
 import faiss
 import pickle
 
+from ppcv.utils.download import get_dict_path
 from ppcv.utils.logger import setup_logger
 
 logger = setup_logger('FeatureExtraction')
@@ -37,17 +38,13 @@ class NormalizeFeature(object):
 
 class Index(object):
     def __init__(self,
-                 index_method,
-                 index_dir,
+                 vector_path,
+                 id_map_path,
                  dist_type,
                  hamming_radius=None,
                  score_thres=None):
-        vector_path = os.path.join(index_dir, "vector.index")
-        id_map_path = os.path.join(index_dir, "id_map.pkl")
-        if not os.path.exists(vector_path) or not os.path.exists(id_map_path):
-            msg = "The directory \"index_dir\" must contain files \"vector.index\", and \"id_map.pkl\". Please check again!"
-            logger.error(msg)
-            raise Exception(msg)
+        vector_path = get_dict_path(vector_path)
+        id_map_path = get_dict_path(id_map_path)
 
         if dist_type == "hamming":
             self.searcher = faiss.read_index_binary(vector_path)

@@ -4,7 +4,6 @@ ENV:
   cpu_threads: 1
   trt_use_static: False
   save_img: True
-  save_res: True
   return_res: True
   print_res: True
 
@@ -62,9 +61,9 @@ MODEL:
       PostProcess:
         - NormalizeFeature:
         - Index:
-            index_method: "HNSW32" # supported: HNSW32, IVF, Flat
             dist_type: "IP"
-            index_dir: "./drink_dataset_v1.0/index"
+            vector_path: "paddlecv://dict/pp-shitu/drink_dataset_v1.0_vector.index"
+            id_map_path: "paddlecv://dict/pp-shitu/drink_dataset_v1.0_id_map.pkl"
             score_thres: 0.5
         - NMS4Rec:
             thresh: 0.05
