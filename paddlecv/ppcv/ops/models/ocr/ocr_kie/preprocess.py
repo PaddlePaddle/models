@@ -566,7 +566,7 @@ class ReInput(object):
             end.append(entity['end'])
             label.append(self.entities_labels[pred])
 
-        entities = np.full([max_seq_len + 1, 3], fill_value=-1)
+        entities = np.full([max_seq_len + 1, 3], fill_value=-1, dtype=np.int64)
         entities[0, 0] = len(start)
         entities[1:len(start) + 1, 0] = start
         entities[0, 1] = len(end)
@@ -583,7 +583,7 @@ class ReInput(object):
                     head.append(i)
                     tail.append(j)
 
-        relations = np.full([len(head) + 1, 2], fill_value=-1)
+        relations = np.full([len(head) + 1, 2], fill_value=-1, dtype=np.int64)
         relations[0, 0] = len(head)
         relations[1:len(head) + 1, 0] = head
         relations[0, 1] = len(tail)
