@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: falsr_b is a super resolution model.
+  description_en: falsr_b is a super resolution model.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: falsr_b
+Publisher: PaddleHub
+Task:
+- sub_tag: image_editing
+  sub_tag_en: image_editing
+  tag: CV
+  tag_en: CV

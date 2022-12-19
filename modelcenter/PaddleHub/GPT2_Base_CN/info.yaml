@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: GPT2_Base_CN
+  description_en: GPT2_Base_CN
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: GPT2_Base_CN
+Publisher: PaddleHub
+Task:
+- sub_tag: NLG
+  sub_tag_en: NLG
+  tag: NLP
+  tag_en: NLP

@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ''
+  description_en: ''
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: w2v_people_daily_target_word-char_dim300
+Publisher: PaddleHub
+Task:
+- sub_tag: semantic_model
+  sub_tag_en: semantic_model
+  tag: nlp
+  tag_en: nlp

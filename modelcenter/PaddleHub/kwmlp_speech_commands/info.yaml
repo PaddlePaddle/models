@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ''
+  description_en: ''
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: kwmlp_speech_commands
+Publisher: PaddleHub
+Task:
+- sub_tag: language_identification
+  sub_tag_en: language_identification
+  tag: audio
+  tag_en: audio

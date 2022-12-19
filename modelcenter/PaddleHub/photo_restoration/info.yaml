@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: photo_restoration is a photo restoration model based on deoldify and
+    realsr.
+  description_en: photo_restoration is a photo restoration model based on deoldify
+    and realsr.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: photo_restoration
+Publisher: PaddleHub
+Task:
+- sub_tag: image_editing
+  sub_tag_en: image_editing
+  tag: CV
+  tag_en: CV

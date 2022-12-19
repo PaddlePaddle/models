@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: The model uses convolution neural network to tell you the key to identify
+    marine fish, so that anyone can call out the names of the creatures.
+  description_en: The model uses convolution neural network to tell you the key to
+    identify marine fish, so that anyone can call out the names of the creatures.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: marine_biometrics
+Publisher: PaddleHub
+Task:
+- sub_tag: classification
+  sub_tag_en: classification
+  tag: cv
+  tag_en: cv

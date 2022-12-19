@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Ultra-Light-Fast-Generic-Face-Detector-1MB is a high-performance object
+    detection model release on https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB.
+  description_en: Ultra-Light-Fast-Generic-Face-Detector-1MB is a high-performance
+    object detection model release on https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ultra_light_fast_generic_face_detector_1mb_320
+Publisher: PaddleHub
+Task:
+- sub_tag: face_detection
+  sub_tag_en: face_detection
+  tag: CV
+  tag_en: CV

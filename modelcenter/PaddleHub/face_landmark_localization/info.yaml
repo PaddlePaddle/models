@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Face_Landmark_Localization can be used to locate face landmark. This
+    Module is trained through the MPII Human Pose dataset.
+  description_en: Face_Landmark_Localization can be used to locate face landmark.
+    This Module is trained through the MPII Human Pose dataset.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: face_landmark_localization
+Publisher: PaddleHub
+Task:
+- sub_tag: keypoint_detection
+  sub_tag_en: keypoint_detection
+  tag: CV
+  tag_en: CV

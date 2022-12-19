@@ -1,0 +1,22 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Transformer TTS introduces and adapts the multi-head attention mechanism
+    to replace the RNN structures and also the original attention mechanism in Tacotron2.
+    See https://arxiv.org/abs/1809.08895 for details
+  description_en: Transformer TTS introduces and adapts the multi-head attention mechanism
+    to replace the RNN structures and also the original attention mechanism in Tacotron2.
+    See https://arxiv.org/abs/1809.08895 for details
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: transformer_tts_ljspeech
+Publisher: PaddleHub
+Task:
+- sub_tag: tts
+  sub_tag_en: tts
+  tag: nlp
+  tag_en: nlp

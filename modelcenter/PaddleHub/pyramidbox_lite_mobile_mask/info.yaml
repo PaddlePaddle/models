@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Pyramidbox-Lite-Mobile-Mask is a high-performance face detection model
+    used to detect whether people wear masks.
+  description_en: Pyramidbox-Lite-Mobile-Mask is a high-performance face detection
+    model used to detect whether people wear masks.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: pyramidbox_lite_mobile_mask
+Publisher: PaddleHub
+Task:
+- sub_tag: face_detection
+  sub_tag_en: face_detection
+  tag: CV
+  tag_en: CV

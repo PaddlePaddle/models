@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: A novel pre-training model for dialogue generation, incorporated with
+    latent discrete variables for one-to-many relationship modeling.
+  description_en: A novel pre-training model for dialogue generation, incorporated
+    with latent discrete variables for one-to-many relationship modeling.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: plato2_en_large
+Publisher: PaddleHub
+Task:
+- sub_tag: text_generation
+  sub_tag_en: text_generation
+  tag: nlp
+  tag_en: nlp

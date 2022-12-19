@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: res2net101_vd_26w_4s is a image classfication model, this module is
+    trained with imagenet datasets.
+  description_en: res2net101_vd_26w_4s is a image classfication model, this module
+    is trained with imagenet datasets.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: res2net101_vd_26w_4s_imagenet
+Publisher: PaddleHub
+Task:
+- sub_tag: image_classification
+  sub_tag_en: image_classification
+  tag: CV
+  tag_en: CV

@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: OCRNetHRNetW18 is a segmentation model pretrained by pascal voc.
+  description_en: OCRNetHRNetW18 is a segmentation model pretrained by pascal voc.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ocrnet_hrnetw18_voc
+Publisher: PaddleHub
+Task:
+- sub_tag: semantic_segmentation
+  sub_tag_en: semantic_segmentation
+  tag: CV
+  tag_en: CV

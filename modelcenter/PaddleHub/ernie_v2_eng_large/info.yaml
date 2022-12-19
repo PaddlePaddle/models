@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Baidu
+  description_en: Baidu
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ernie_v2_eng_large
+Publisher: PaddleHub
+Task:
+- sub_tag: semantic_model
+  sub_tag_en: semantic_model
+  tag: nlp
+  tag_en: nlp

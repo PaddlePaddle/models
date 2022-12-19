@@ -1,0 +1,22 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: FastSpeech proposes a novel feed-forward network based on Transformer
+    to generate mel-spectrogram in parallel for TTS. See https://arxiv.org/abs/1905.09263
+    for details.
+  description_en: FastSpeech proposes a novel feed-forward network based on Transformer
+    to generate mel-spectrogram in parallel for TTS. See https://arxiv.org/abs/1905.09263
+    for details.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: fastspeech_ljspeech
+Publisher: PaddleHub
+Task:
+- sub_tag: tts
+  sub_tag_en: tts
+  tag: nlp
+  tag_en: nlp

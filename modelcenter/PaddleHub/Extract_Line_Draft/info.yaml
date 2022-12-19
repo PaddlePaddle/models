@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Import the color picture and generate the line draft of the picture
+  description_en: Import the color picture and generate the line draft of the picture
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: Extract_Line_Draft
+Publisher: PaddleHub
+Task:
+- sub_tag: segmentation
+  sub_tag_en: segmentation
+  tag: cv
+  tag_en: cv

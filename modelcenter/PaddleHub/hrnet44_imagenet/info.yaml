@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: 'hrnet44_imagenet is a classification model, '
+  description_en: 'hrnet44_imagenet is a classification model, '
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: hrnet44_imagenet
+Publisher: PaddleHub
+Task:
+- sub_tag: classification
+  sub_tag_en: classification
+  tag: CV
+  tag_en: CV

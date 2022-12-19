@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Deep Voice 3, a fully-convolutional attention-based neural text-to-speech
+    (TTS) system.
+  description_en: Deep Voice 3, a fully-convolutional attention-based neural text-to-speech
+    (TTS) system.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: deepvoice3_ljspeech
+Publisher: PaddleHub
+Task:
+- sub_tag: tts
+  sub_tag_en: tts
+  tag: nlp
+  tag_en: nlp

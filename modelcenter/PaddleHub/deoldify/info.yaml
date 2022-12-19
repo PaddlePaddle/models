@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Deoldify is a colorizaton model
+  description_en: Deoldify is a colorizaton model
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: deoldify
+Publisher: PaddleHub
+Task:
+- sub_tag: image_editing
+  sub_tag_en: image_editing
+  tag: CV
+  tag_en: CV

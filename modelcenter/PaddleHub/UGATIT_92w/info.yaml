@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: UGATIT_92w
+  description_en: UGATIT_92w
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: UGATIT_92w
+Publisher: PaddleHub
+Task:
+- sub_tag: style_transfer
+  sub_tag_en: style_transfer
+  tag: CV
+  tag_en: CV

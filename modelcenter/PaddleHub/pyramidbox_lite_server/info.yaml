@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: PyramidBox-Lite-Server is a high-performance face detection model.
+  description_en: PyramidBox-Lite-Server is a high-performance face detection model.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: pyramidbox_lite_server
+Publisher: PaddleHub
+Task:
+- sub_tag: face_detection
+  sub_tag_en: face_detection
+  tag: CV
+  tag_en: CV

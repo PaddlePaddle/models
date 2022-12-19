@@ -1,0 +1,5 @@
+paddlepaddle
+paddlehub
+gradio
+requests
+tqdm

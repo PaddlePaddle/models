@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: animegan_v2_paprika_98
+  description_en: animegan_v2_paprika_98
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: animegan_v2_paprika_98
+Publisher: PaddleHub
+Task:
+- sub_tag: style_transfer
+  sub_tag_en: style_transfer
+  tag: CV
+  tag_en: CV

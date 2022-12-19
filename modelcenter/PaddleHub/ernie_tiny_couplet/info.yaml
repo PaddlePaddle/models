@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: couplet generation model fine-tuned with ernie_tiny module
+  description_en: couplet generation model fine-tuned with ernie_tiny module
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ernie_tiny_couplet
+Publisher: PaddleHub
+Task:
+- sub_tag: text_generation
+  sub_tag_en: text_generation
+  tag: nlp
+  tag_en: nlp

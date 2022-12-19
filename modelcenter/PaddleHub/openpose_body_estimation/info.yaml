@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Openpose_body_estimation is a body pose estimation model based on Realtime
+    Multi-Person 2D Pose \Estimation using Part Affinity Fields.
+  description_en: Openpose_body_estimation is a body pose estimation model based on
+    Realtime Multi-Person 2D Pose \Estimation using Part Affinity Fields.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: openpose_body_estimation
+Publisher: PaddleHub
+Task:
+- sub_tag: image_editing
+  sub_tag_en: image_editing
+  tag: CV
+  tag_en: CV

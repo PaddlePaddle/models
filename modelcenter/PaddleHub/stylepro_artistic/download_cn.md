@@ -1,0 +1,12 @@
+# stylepro_artistic
+* 安装 PaddleHub：
+
+    ```bash
+    $ pip install --upgrade paddlehub
+    ```
+
+* 安装 stylepro_artistic：
+
+    ```bash
+    $ hub install stylepro_artistic
+    ```
