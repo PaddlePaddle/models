@@ -15,6 +15,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 风格迁移
-  sub_tag_en: style_transfer
+  sub_tag_en: Style Transfer
   tag: 计算机视觉
-  tag_en: cv
+  tag_en: CV

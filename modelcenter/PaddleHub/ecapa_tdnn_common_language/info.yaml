@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 语种识别
-  sub_tag_en: language_identification
+  sub_tag_en: Language Identification
   tag: 音频
-  tag_en: audio
+  tag_en: Audio

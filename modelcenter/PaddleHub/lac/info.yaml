@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 词法分析
-  sub_tag_en: lexical_analysis
+  sub_tag_en: Lexical Analysis
   tag: 自然语言处理
-  tag_en: nlp
+  tag_en: NLP

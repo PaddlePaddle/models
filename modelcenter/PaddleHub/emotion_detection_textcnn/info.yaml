@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 情感分析
-  sub_tag_en: sentiment_analysis
+  sub_tag_en: Sentiment Analysis
   tag: 自然语言处理
-  tag_en: nlp
+  tag_en: NLP

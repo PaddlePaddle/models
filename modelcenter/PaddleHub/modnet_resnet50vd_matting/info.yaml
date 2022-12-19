@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 抠图
-  sub_tag_en: matting
+  sub_tag_en: Matting
   tag: 计算机视觉
   tag_en: CV

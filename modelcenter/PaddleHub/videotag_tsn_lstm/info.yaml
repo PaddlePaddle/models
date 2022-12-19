@@ -15,6 +15,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 分类
-  sub_tag_en: classification
+  sub_tag_en: Classification
   tag: 视频
-  tag_en: video
+  tag_en: Video

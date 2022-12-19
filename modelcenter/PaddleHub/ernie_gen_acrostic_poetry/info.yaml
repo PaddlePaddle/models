@@ -16,6 +16,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 文本生成
-  sub_tag_en: text_generation
+  sub_tag_en: Text Generation
   tag: 自然语言处理
-  tag_en: nlp
+  tag_en: NLP

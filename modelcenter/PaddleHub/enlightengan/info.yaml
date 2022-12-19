@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 暗光增强
-  sub_tag_en: enlighten
+  sub_tag_en: Enlighten
   tag: 计算机视觉
   tag_en: CV

@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 文本纠错
-  sub_tag_en: text_correction
+  sub_tag_en: Text Correction
   tag: 自然语言处理
-  tag_en: nlp
+  tag_en: NLP

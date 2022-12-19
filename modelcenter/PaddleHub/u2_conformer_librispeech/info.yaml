@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 语音识别
-  sub_tag_en: asr
+  sub_tag_en: ASR
   tag: 音频
-  tag_en: audio
+  tag_en: Audio

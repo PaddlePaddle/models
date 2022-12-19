@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 语义分割
-  sub_tag_en: semantic-segmentation
+  sub_tag_en: Semantic Segmentation
   tag: 计算机视觉
   tag_en: CV

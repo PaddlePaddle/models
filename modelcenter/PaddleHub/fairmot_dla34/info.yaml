@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 多目标跟踪
-  sub_tag_en: multiple_object_tracking
+  sub_tag_en: Multiple Object Tracking
   tag: 计算机视觉
   tag_en: CV

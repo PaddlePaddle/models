@@ -15,6 +15,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 文本识别
-  sub_tag_en: text_recognition
+  sub_tag_en: Text Recognition
   tag: 计算机视觉
-  tag_en: cv
+  tag_en: CV

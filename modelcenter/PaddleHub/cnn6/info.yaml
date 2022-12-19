@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 声音分类
-  sub_tag_en: sound_classification
+  sub_tag_en: Sound Classification
   tag: 音频
-  tag_en: audio
+  tag_en: Audio

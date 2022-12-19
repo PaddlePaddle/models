@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 声音克隆
-  sub_tag_en: voice_cloning
+  sub_tag_en: Voice Cloning
   tag: 音频
-  tag_en: audio
+  tag_en: Audio

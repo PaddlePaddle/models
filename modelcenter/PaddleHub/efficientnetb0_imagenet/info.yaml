@@ -15,6 +15,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 图像分类
-  sub_tag_en: image_classification
+  sub_tag_en: Image Classification
   tag: 计算机视觉
   tag_en: CV

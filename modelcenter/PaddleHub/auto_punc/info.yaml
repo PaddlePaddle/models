@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 标点复原
-  sub_tag_en: punctuation_restoration
+  sub_tag_en: Punctuation Restoration
   tag: 文本
-  tag_en: text
+  tag_en: Text

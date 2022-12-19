@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 说话人识别
-  sub_tag_en: speaker_recognition
+  sub_tag_en: Speaker Recognition
   tag: 音频
-  tag_en: audio
+  tag_en: Audio

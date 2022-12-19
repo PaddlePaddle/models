@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 实例分割
-  sub_tag_en: instance_segmentation
+  sub_tag_en: Instance Segmentation
   tag: 计算机视觉
   tag_en: CV

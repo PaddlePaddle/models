@@ -15,6 +15,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 关键点检测
-  sub_tag_en: keypoint_detection
+  sub_tag_en: Keypoint Detection
   tag: 计算机视觉
   tag_en: CV

@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 视频编辑
-  sub_tag_en: Video_editing
+  sub_tag_en: Video Editing
   tag: 计算机视觉
   tag_en: CV

@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 歌唱声音合成
-  sub_tag_en: svs
+  sub_tag_en: SVS
   tag: 音频
   tag_en: Audio

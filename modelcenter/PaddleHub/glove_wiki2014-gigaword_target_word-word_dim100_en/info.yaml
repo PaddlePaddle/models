@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 语义模型
-  sub_tag_en: semantic_model
+  sub_tag_en: Semantic Model
   tag: 自然语言处理
-  tag_en: nlp
+  tag_en: NLP

@@ -13,6 +13,6 @@ Model_Info:
 Publisher: PaddleHub
 Task:
 - sub_tag: 文图生成
-  sub_tag_en: text_to_image
+  sub_tag_en: Text to Image
   tag: 图像
-  tag_en: image
+  tag_en: Image
