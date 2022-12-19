@@ -12,7 +12,7 @@ Model_Info:
   name: senta_bow
 Publisher: PaddleHub
 Task:
-- sub_tag: sentiment_analysis
+- sub_tag: 情感分析
   sub_tag_en: sentiment_analysis
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

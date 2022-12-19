@@ -12,7 +12,7 @@ Model_Info:
   name: falsr_b
 Publisher: PaddleHub
 Task:
-- sub_tag: image_editing
+- sub_tag: 图像编辑
   sub_tag_en: image_editing
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

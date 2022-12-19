@@ -14,7 +14,7 @@ Model_Info:
   name: se_resnet18_vd_imagenet
 Publisher: PaddleHub
 Task:
-- sub_tag: image_classification
+- sub_tag: 图像分类
   sub_tag_en: image_classification
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

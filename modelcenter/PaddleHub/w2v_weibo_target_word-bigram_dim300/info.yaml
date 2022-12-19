@@ -12,7 +12,7 @@ Model_Info:
   name: w2v_weibo_target_word-bigram_dim300
 Publisher: PaddleHub
 Task:
-- sub_tag: semantic_model
+- sub_tag: 语义模型
   sub_tag_en: semantic_model
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

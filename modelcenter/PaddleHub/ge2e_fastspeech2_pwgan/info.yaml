@@ -12,7 +12,7 @@ Model_Info:
   name: ge2e_fastspeech2_pwgan
 Publisher: PaddleHub
 Task:
-- sub_tag: voice_cloning
+- sub_tag: 声音克隆
   sub_tag_en: voice_cloning
-  tag: audio
+  tag: 音频
   tag_en: audio

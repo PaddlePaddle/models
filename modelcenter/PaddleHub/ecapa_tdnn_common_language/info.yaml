@@ -12,7 +12,7 @@ Model_Info:
   name: ecapa_tdnn_common_language
 Publisher: PaddleHub
 Task:
-- sub_tag: language_identification
+- sub_tag: 语种识别
   sub_tag_en: language_identification
-  tag: audio
+  tag: 音频
   tag_en: audio

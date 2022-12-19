@@ -14,7 +14,7 @@ Model_Info:
   name: jieba_paddle
 Publisher: PaddleHub
 Task:
-- sub_tag: lexical_analysis
+- sub_tag: 词法分析
   sub_tag_en: lexical_analysis
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

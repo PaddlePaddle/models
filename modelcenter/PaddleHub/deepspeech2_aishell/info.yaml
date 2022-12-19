@@ -12,7 +12,7 @@ Model_Info:
   name: deepspeech2_aishell
 Publisher: PaddleHub
 Task:
-- sub_tag: asr
+- sub_tag: 语音识别
   sub_tag_en: asr
-  tag: audio
+  tag: 音频
   tag_en: audio

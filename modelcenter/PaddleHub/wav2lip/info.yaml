@@ -12,7 +12,7 @@ Model_Info:
   name: wav2lip
 Publisher: PaddleHub
 Task:
-- sub_tag: generation
+- sub_tag: 生成
   sub_tag_en: generation
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

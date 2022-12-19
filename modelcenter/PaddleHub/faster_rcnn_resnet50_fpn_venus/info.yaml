@@ -12,7 +12,7 @@ Model_Info:
   name: faster_rcnn_resnet50_fpn_venus
 Publisher: PaddleHub
 Task:
-- sub_tag: object_detection
+- sub_tag: 目标检测
   sub_tag_en: object_detection
-  tag: cv
+  tag: 计算机视觉
   tag_en: cv

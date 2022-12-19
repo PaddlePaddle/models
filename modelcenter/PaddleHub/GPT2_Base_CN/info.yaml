@@ -12,7 +12,7 @@ Model_Info:
   name: GPT2_Base_CN
 Publisher: PaddleHub
 Task:
-- sub_tag: NLG
+- sub_tag: 自然语言生成
   sub_tag_en: NLG
-  tag: NLP
+  tag: 自然语言处理
   tag_en: NLP

@@ -12,7 +12,7 @@ Model_Info:
   name: auto_punc
 Publisher: PaddleHub
 Task:
-- sub_tag: punctuation_restoration
+- sub_tag: 标点复原
   sub_tag_en: punctuation_restoration
-  tag: text
+  tag: 文本
   tag_en: text

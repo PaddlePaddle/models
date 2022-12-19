@@ -12,7 +12,7 @@ Model_Info:
   name: disco_diffusion_clip_rn50
 Publisher: PaddleHub
 Task:
-- sub_tag: text_to_image
+- sub_tag: 文图生成
   sub_tag_en: text_to_image
-  tag: image
+  tag: 图像
   tag_en: image

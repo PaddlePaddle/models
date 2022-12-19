@@ -12,7 +12,7 @@ Model_Info:
   name: transformer_en-de
 Publisher: PaddleHub
 Task:
-- sub_tag: machine_translation
+- sub_tag: 机器翻译
   sub_tag_en: machine_translation
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

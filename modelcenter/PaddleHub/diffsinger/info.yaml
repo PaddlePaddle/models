@@ -12,7 +12,7 @@ Model_Info:
   name: diffsinger
 Publisher: PaddleHub
 Task:
-- sub_tag: svs
+- sub_tag: 歌唱声音合成
   sub_tag_en: svs
-  tag: Audio
+  tag: 音频
   tag_en: Audio

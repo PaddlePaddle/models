@@ -15,7 +15,7 @@ Model_Info:
   name: ernie_gen_poetry
 Publisher: PaddleHub
 Task:
-- sub_tag: text_generation
+- sub_tag: 文本生成
   sub_tag_en: text_generation
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

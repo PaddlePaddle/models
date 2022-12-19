@@ -12,7 +12,7 @@ Model_Info:
   name: first_order_motion
 Publisher: PaddleHub
 Task:
-- sub_tag: gan
+- sub_tag: 生成对抗网络
   sub_tag_en: gan
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

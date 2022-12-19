@@ -12,7 +12,7 @@ Model_Info:
   name: hand_pose_localization
 Publisher: PaddleHub
 Task:
-- sub_tag: keypoint_detection
+- sub_tag: 关键点检测
   sub_tag_en: keypoint_detection
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

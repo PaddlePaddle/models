@@ -12,7 +12,7 @@ Model_Info:
   name: repvgg_a1_imagenet
 Publisher: PaddleHub
 Task:
-- sub_tag: classification
+- sub_tag: 分类
   sub_tag_en: classification
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

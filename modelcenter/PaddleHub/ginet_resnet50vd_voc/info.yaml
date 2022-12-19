@@ -12,7 +12,7 @@ Model_Info:
   name: ginet_resnet50vd_voc
 Publisher: PaddleHub
 Task:
-- sub_tag: semantic_segmentation
+- sub_tag: 语义分割
   sub_tag_en: semantic_segmentation
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

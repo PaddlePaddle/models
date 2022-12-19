@@ -12,7 +12,7 @@ Model_Info:
   name: ecapa_tdnn_voxceleb
 Publisher: PaddleHub
 Task:
-- sub_tag: speaker_recognition
+- sub_tag: 说话人识别
   sub_tag_en: speaker_recognition
-  tag: audio
+  tag: 音频
   tag_en: audio

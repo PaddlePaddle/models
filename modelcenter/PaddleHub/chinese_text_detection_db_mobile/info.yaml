@@ -14,7 +14,7 @@ Model_Info:
   name: chinese_text_detection_db_mobile
 Publisher: PaddleHub
 Task:
-- sub_tag: text_recognition
+- sub_tag: 文本识别
   sub_tag_en: text_recognition
-  tag: cv
+  tag: 计算机视觉
   tag_en: cv

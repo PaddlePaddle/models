@@ -16,7 +16,7 @@ Model_Info:
   name: ch_pp-ocrv3
 Publisher: PaddleHub
 Task:
-- sub_tag: text_recognition
+- sub_tag: 文本识别
   sub_tag_en: text_recognition
-  tag: cv
+  tag: 计算机视觉
   tag_en: cv

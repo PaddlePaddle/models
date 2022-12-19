@@ -12,7 +12,7 @@ Model_Info:
   name: stgan_bald
 Publisher: PaddleHub
 Task:
-- sub_tag: gan
+- sub_tag: 生成对抗网络
   sub_tag_en: gan
-  tag: image
+  tag: 图像
   tag_en: image

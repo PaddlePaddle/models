@@ -12,7 +12,7 @@ Model_Info:
   name: prnet
 Publisher: PaddleHub
 Task:
-- sub_tag: ''
-  sub_tag_en: ''
-  tag: CV
+- sub_tag: 计算机视觉
+  sub_tag_en: CV
+  tag: 计算机视觉
   tag_en: CV

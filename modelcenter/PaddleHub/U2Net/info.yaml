@@ -12,7 +12,7 @@ Model_Info:
   name: U2Net
 Publisher: PaddleHub
 Task:
-- sub_tag: CV
+- sub_tag: 计算机视觉
   sub_tag_en: CV
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

@@ -12,7 +12,7 @@ Model_Info:
   name: fairmot_dla34
 Publisher: PaddleHub
 Task:
-- sub_tag: multiple_object_tracking
+- sub_tag: 多目标跟踪
   sub_tag_en: multiple_object_tracking
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

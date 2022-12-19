@@ -12,7 +12,7 @@ Model_Info:
   name: WatermeterSegmentation
 Publisher: PaddleHub
 Task:
-- sub_tag: semantic_segmentatio
+- sub_tag: 语义分割
   sub_tag_en: semantic_segmentatio
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

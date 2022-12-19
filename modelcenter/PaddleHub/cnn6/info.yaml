@@ -12,7 +12,7 @@ Model_Info:
   name: panns_cnn6
 Publisher: PaddleHub
 Task:
-- sub_tag: sound_classification
+- sub_tag: 声音分类
   sub_tag_en: sound_classification
-  tag: audio
+  tag: 音频
   tag_en: audio

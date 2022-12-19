@@ -12,7 +12,7 @@ Model_Info:
   name: ernie-csc
 Publisher: PaddleHub
 Task:
-- sub_tag: text_correction
+- sub_tag: 文本纠错
   sub_tag_en: text_correction
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

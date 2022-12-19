@@ -14,7 +14,7 @@ Model_Info:
   name: stylepro_artistic
 Publisher: PaddleHub
 Task:
-- sub_tag: style_transfer
+- sub_tag: 风格迁移
   sub_tag_en: style_transfer
-  tag: cv
+  tag: 计算机视觉
   tag_en: cv

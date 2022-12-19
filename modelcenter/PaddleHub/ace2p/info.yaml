@@ -12,7 +12,7 @@ Model_Info:
   name: ace2p
 Publisher: PaddleHub
 Task:
-- sub_tag: semantic-segmentation
+- sub_tag: 语义分割
   sub_tag_en: semantic-segmentation
-  tag: CV
+  tag: 计算机视觉
   tag_en: CV

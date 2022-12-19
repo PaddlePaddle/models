@@ -12,7 +12,7 @@ Model_Info:
   name: nptag
 Publisher: PaddleHub
 Task:
-- sub_tag: text_to_knowledge
+- sub_tag: 文本转知识图谱
   sub_tag_en: text_to_knowledge
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

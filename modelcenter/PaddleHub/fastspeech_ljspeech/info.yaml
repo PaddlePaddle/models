@@ -16,7 +16,7 @@ Model_Info:
   name: fastspeech_ljspeech
 Publisher: PaddleHub
 Task:
-- sub_tag: tts
+- sub_tag: 文本转语音
   sub_tag_en: tts
-  tag: nlp
+  tag: 自然语言处理
   tag_en: nlp

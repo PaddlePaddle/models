@@ -14,7 +14,7 @@ Model_Info:
   name: videotag_tsn_lstm
 Publisher: PaddleHub
 Task:
-- sub_tag: classification
+- sub_tag: 分类
   sub_tag_en: classification
-  tag: video
+  tag: 视频
   tag_en: video
