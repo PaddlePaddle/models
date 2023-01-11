@@ -2,12 +2,12 @@ import gradio as gr
 from predictor import Predictor
 
 
-model_path = "paddlecv://vit/v2.4/imagenet2012-ViT-B_16-224_infer.pdmodel"
-params_path = "paddlecv://vit/v2.4/imagenet2012-ViT-B_16-224_infer.pdiparams"
-
+model_path = "paddlecv://models/vit/v2.4/imagenet2012-ViT-B_16-224_infer.pdmodel"
+params_path = "paddlecv://models/vit/v2.4/imagenet2012-ViT-B_16-224_infer.pdiparams"
+label_path = "paddlecv://dataset/imagenet2012_labels.txt"
 
 def model_inference(image):
-    predictor = Predictor(model_path=model_path, params_path=params_path)
+    predictor = Predictor(model_path=model_path, params_path=params_path, label_path=label_path)
     scores, labels = predictor.predict(image)
     json_out = {"scores": scores.tolist(), "labels": labels.tolist()}
     return image, json_out

@@ -30,18 +30,19 @@ __all__ = [
     'get_model_path',
     'get_config_path',
     'get_dict_path',
+    'get_data_path',
 ]
 
 WEIGHTS_HOME = osp.expanduser("~/.cache/paddlecv/models")
 CONFIGS_HOME = osp.expanduser("~/.cache/paddlecv/configs")
 DICTS_HOME = osp.expanduser("~/.cache/paddlecv/dicts")
-
+DATA_HOME = osp.expanduser("~/.cache/paddlecv/dataset")
 # dict of {dataset_name: (download_info, sub_dirs)}
 # download info: [(url, md5sum)]
 
 DOWNLOAD_RETRY_LIMIT = 3
 
-PMP_DOWNLOAD_URL_PREFIX = 'https://plsc.bj.bcebos.com/models/'
+PMP_DOWNLOAD_URL_PREFIX = 'https://plsc.bj.bcebos.com/'
 
 
 def is_url(path):
@@ -68,6 +69,17 @@ def get_model_path(path):
         return path
     url = parse_url(path)
     path, _ = get_path(url, WEIGHTS_HOME, path_depth=2)
+    return path
+
+
+def get_data_path(path):
+    """Get model path from DATA_HOME, if not exists,
+    download it from url.
+    """
+    if not is_url(path):
+        return path
+    url = parse_url(path)
+    path, _ = get_path(url, DATA_HOME, path_depth=2)
     return path
 
 

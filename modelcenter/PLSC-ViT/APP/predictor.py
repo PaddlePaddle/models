@@ -2,13 +2,14 @@ import os
 import cv2
 import numpy as np
 import paddle
-from download import get_model_path
+from download import get_model_path, get_data_path
 
 class Predictor(object):
     def __init__(self,
                  model_type="paddle",
                  model_path=None,
-                 params_path=None):
+                 params_path=None,
+                 label_path=None):
         '''
         model_path: str, http url
         params_path: str, http url, could be downloaded
@@ -26,7 +27,7 @@ class Predictor(object):
         self.predictor = paddle_infer.create_predictor(config)
         self.input_names = self.predictor.get_input_names()
         self.output_names = self.predictor.get_output_names()
-        self.labels = self.parse_labes()
+        self.labels = self.parse_labes(get_data_path(label_path))
         self.model_type = model_type
 
     def predict(self, img):
@@ -62,8 +63,8 @@ class Predictor(object):
         return {'x': img}
 
     @staticmethod
-    def parse_labes():
-        with open('labels.txt', 'r') as f:
+    def parse_labes(label_path):
+        with open(label_path, 'r') as f:
             labels = []
             for line in f:
                 if len(line) < 2:
