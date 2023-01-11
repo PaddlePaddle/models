@@ -1,7 +1,7 @@
-【VisionTransformer-App-YAML】
+【PLSC-ViT-App-YAML】
 
 APP_Info:
-    title: VisionTransformer-App
+    title: PLSC-ViT-App
     colorFrom: blue
     colorTo: yellow
     sdk: gradio
