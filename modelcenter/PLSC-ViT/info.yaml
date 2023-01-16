@@ -4,7 +4,7 @@ Model_Info:
    description: Vision Transformer
    description_en: Vision Transformer
    update_time:
-   icon: "https://raw.githubusercontent.com/PaddlePaddle/PLSC/master/plsc-logo.png"
+   icon: "https://plsc.bj.bcebos.com/assets/modelcenter-icon.png"
    from_repo: "PLSC"
 Task:
 - tag: 计算机视觉
