@@ -329,7 +329,8 @@ class PipePredictor(object):
 
     def set_file_name(self, path):
         if path is not None:
-            self.file_name = path
+            if "." in path:
+                self.file_name = path.split(".")[-2]
         else:
             # use camera id
             self.file_name = None
@@ -396,9 +397,9 @@ class PipePredictor(object):
         frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
         print("video fps: %d, frame_count: %d" % (fps, frame_count))
 
-        video_name,suffix = os.path.splitext(self.file_name)
-        out_path = video_name + "_output"+suffix
-        fourcc = int(capture.get(cv2.CAP_PROP_FOURCC))
+        video_out_name = 'output' if self.file_name is None else self.file_name
+        out_path = video_out_name + "_output.mp4"
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         writer = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
 
         frame_id = 0
