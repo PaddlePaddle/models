@@ -1,0 +1,19 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: apache-2.0
+Model_Info:
+  description: ''
+  description_en: ''
+  from_repo: https://huggingface.co/alvaroalon2/biobert_genetic_ner
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: alvaroalon2/biobert_genetic_ner
+Paper: null
+Publisher: alvaroalon2
+Task:
+- sub_tag: Token分类
+  sub_tag_en: Token Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

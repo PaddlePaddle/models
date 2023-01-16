@@ -1,0 +1,46 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  return_res: True
+  print_res: True
+
+MODEL:
+  - FeatureExtractionOp:
+      name: feature
+      param_path: paddlecv://models/general_PPLCNetV2_base_pretrained_v1.0_infer/inference.pdiparams
+      model_path: paddlecv://models/general_PPLCNetV2_base_pretrained_v1.0_infer/inference.pdmodel
+      batch_size: 1
+      PreProcess:
+        - ResizeImage:
+            size: [224, 224]
+            return_numpy: False
+            interpolation: bilinear
+            backend: cv2
+        - NormalizeImage:
+            scale: 1.0/255.0
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+            order: hwc
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - NormalizeFeature:
+        - Index:
+            dist_type: "IP"
+            vector_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0_vector.index"
+            id_map_path: "paddlecv://dict/pp-shitu/drink_dataset_v2.0_id_map.pkl"
+            score_thres: 0.5
+      Inputs:
+        - input.image
+
+  - FeatureOutput:
+      name: print
+      Inputs:
+        - input.fn
+        - feature.rec_score
+        - feature.rec_doc

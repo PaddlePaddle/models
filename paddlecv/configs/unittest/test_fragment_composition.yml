@@ -1,0 +1,13 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+
+MODEL:
+  - FragmentCompositionOp:
+      name: text_merge
+      Inputs:
+        - input.text

@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-YOLOE+"
   description: "PP-YOLOE+是PP-YOLOE的升级版"
   description_en: "PP-YOLOE+ is an upgraded version of PP-YOLOE"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/23690325/204210973-2d21766d-04e0-46c8-8c9d-439ac203b05d.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"
@@ -18,7 +18,7 @@ Example:
   sub_tag: "目标检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-YOLOE: An evolved version of YOLO"

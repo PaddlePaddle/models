@@ -1,0 +1,23 @@
+Datasets: multi_nli,snli
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: apache-2.0
+Model_Info:
+  description: Cross-Encoder for Natural Language Inference
+  description_en: Cross-Encoder for Natural Language Inference
+  from_repo: https://huggingface.co/cross-encoder/nli-distilroberta-base
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: cross-encoder/nli-distilroberta-base
+Paper: null
+Publisher: cross-encoder
+Task:
+- sub_tag: 零样本分类
+  sub_tag_en: Zero-Shot Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 文本分类
+  sub_tag_en: Text Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

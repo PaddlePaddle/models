@@ -1,0 +1,36 @@
+ENV:
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: True
+  save_res: True
+  return_res: True
+
+MODEL:
+  - SegmentationOp:
+      name: seg
+      param_path: paddlecv://models/PP_HumanSegV2_256x144_with_Softmax/model.pdiparams
+      model_path: paddlecv://models/PP_HumanSegV2_256x144_with_Softmax/model.pdmodel
+      batch_size: 8
+      PreProcess:
+        - Resize:
+            target_size: [256, 144]
+        - Normalize:
+            scale: 0.00392157
+            mean: [0.5, 0.5, 0.5]
+            std: [0.5, 0.5, 0.5]
+            order: ''
+        - ToCHWImage
+        - ExpandDim
+      PostProcess:
+        - SegPostProcess
+      Inputs:
+        - input.image
+
+  - HumanSegOutput:
+      name: out
+      Inputs:
+        - input.fn
+        - input.image
+        - seg.seg_map

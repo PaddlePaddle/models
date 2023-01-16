@@ -1,0 +1,17 @@
+---
+Model_Info:
+  name: "ERNIE 3.0 Zeus"
+  description: "文心任务知识增强大模型"
+  description_en: "Large model of task knowledge enhancement"
+  icon: "https://user-images.githubusercontent.com/23690325/204210223-7f861d21-8d91-492b-9e27-ba1075105ae1.png"
+  from_repo: ""
+Task:
+- tag_en: "Wenxin Big Models"
+  tag: "文心大模型"
+  sub_tag_en: "Knowledge Enhancement"
+  sub_tag: "任务知识增强"
+Datasets: ""
+Publisher: "Baidu"
+License: "apache.2.0"
+IfTraining: 0
+IfOnlineDemo: 0

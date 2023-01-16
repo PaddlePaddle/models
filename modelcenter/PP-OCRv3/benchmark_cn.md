@@ -18,5 +18,5 @@
 | PP-OCRv3 | 62.90% | 15.6 | 331.00 |
 
 
-## 3. 相关使用说明
-1. https://github.com/PaddlePaddle/PaddleOCR/edit/dygraph/doc/doc_ch/PP-OCRv3_introduction.md
+## 2. 相关使用说明
+1. https://github.com/PaddlePaddle/PaddleOCR/blob/dygraph/doc/doc_ch/PP-OCRv3_introduction.md

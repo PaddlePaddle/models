@@ -1,0 +1,21 @@
+---
+Model_Info:
+  name: "ERNIE-ViLG"
+  description: "文心知识增强跨模态图文生成大模型"
+  description_en: "Large model of text centered knowledge enhanced cross modal text generation"
+  icon: "https://user-images.githubusercontent.com/23690325/204210290-43058fd2-898c-4ef4-a5d3-fdcc62c8efc2.png"
+  from_repo: ""
+Task:
+- tag_en: "Wenxin Big Models"
+  tag: "文心大模型"
+  sub_tag_en: "Text2Image"
+  sub_tag: "图文生成"
+- tag: "跨模态"
+  tag_en: "Cross-Modal"
+  sub_tag_en: "Text2Image"
+  sub_tag: "图文生成"
+Datasets: ""
+Publisher: "Baidu"
+License: "apache.2.0"
+IfTraining: 0
+IfOnlineDemo: 0

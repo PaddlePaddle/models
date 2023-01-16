@@ -1,0 +1,21 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Korean
+License: apache-2.0
+Model_Info:
+  description: 'KcBERT: Korean comments BERT'
+  description_en: 'KcBERT: Korean comments BERT'
+  from_repo: https://huggingface.co/beomi/kcbert-base
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: beomi/kcbert-base
+Paper:
+- title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'
+  url: http://arxiv.org/abs/1810.04805v2
+Publisher: beomi
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

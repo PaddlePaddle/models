@@ -141,7 +141,7 @@ with gr.Blocks() as demo:
 
     with gr.Column(scale=1, min_width=100):
         img_in = gr.Image(
-            value="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/images/recognition/drink_data_demo/test_images/100.jpeg?raw=true",
+            value="https://gitee.com/PaddlePaddle/PaddleClas/raw/release/2.5/docs/images/recognition/drink_data_demo/test_images/100.jpeg",
             label="Input")
 
         with gr.Row():
@@ -154,4 +154,4 @@ with gr.Blocks() as demo:
     btn1.click(fn=clear_all, inputs=None, outputs=[img_in, img_out, json_out])
     gr.Button.style(1)
 
-demo.launch(share=True)
+demo.launch()

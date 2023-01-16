@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-ShiTu"
   description: "PP-ShiTu识别系统"
   description_en: "PP-ShiTu, a light-weighted recognition system"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/23690325/204210779-12ff299e-b8f4-48f3-83ba-d8f3d10cab4e.png"
   from_repo: "PaddleClas"
 Task:
 - tag_en: "Computer Vision"
@@ -18,8 +18,8 @@ Example:
   sub_tag: "商品识别"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4003418?channelType=0&channel=0"
 Datasets: "Aliproduct, GLDv2, VeRI, LogoDet, iCartoonFace, SOP, Inshop"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper: ""
 IfTraining: 1
-IfOnlineDemo: 1
+IfOnlineDemo: 0

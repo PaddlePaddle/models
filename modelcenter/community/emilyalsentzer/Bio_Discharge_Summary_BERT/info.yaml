@@ -1,0 +1,24 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: mit
+Model_Info:
+  description: ClinicalBERT - Bio + Discharge Summary BERT Model
+  description_en: ClinicalBERT - Bio + Discharge Summary BERT Model
+  from_repo: https://huggingface.co/emilyalsentzer/Bio_Discharge_Summary_BERT
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: emilyalsentzer/Bio_Discharge_Summary_BERT
+Paper:
+- title: Publicly Available Clinical BERT Embeddings
+  url: http://arxiv.org/abs/1904.03323v3
+- title: 'BioBERT: a pre-trained biomedical language representation model for biomedical
+    text mining'
+  url: http://arxiv.org/abs/1901.08746v4
+Publisher: emilyalsentzer
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

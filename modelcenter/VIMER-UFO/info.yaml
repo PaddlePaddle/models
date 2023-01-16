@@ -1,0 +1,20 @@
+---
+Model_Info:
+   name: "VIMER-UFO2.0"
+   description: "视觉多任务大模型"
+   description_en: "UFO:Unified Feature Optimization"
+   icon: "https://user-images.githubusercontent.com/23690325/204211162-a49335b0-e15b-4dcd-9aa1-729c4b7959cf.png"
+   from_repo: "VIMER"
+Task:
+   - tag_en: "Wenxin Big Models"
+     tag: "文心大模型"
+     sub_tag_en: "VIMER-UFO"
+     sub_tag: "多任务大一统模型"     
+Datasets: ""
+Publisher: "Baidu"
+License: "apache.2.0"
+Paper:
+   - title: "UFO:Unified Feature Optimization"
+     url: "https://arxiv.org/pdf/2207.10341v1.pdf"
+IfTraining: 0
+IfOnlineDemo: 0

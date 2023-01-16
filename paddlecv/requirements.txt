@@ -1,0 +1,12 @@
+scipy>=1.0.0
+opencv-python
+opencv-contrib-python
+PyYAML>=5.1
+Pillow
+faiss-cpu==1.7.1.post2
+paddlenlp
+paddlespeech
+pycocotools
+filterpy
+shapely
+pyclipper

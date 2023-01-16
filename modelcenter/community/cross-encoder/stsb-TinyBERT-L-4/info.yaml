@@ -1,0 +1,19 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: ''
+License: apache-2.0
+Model_Info:
+  description: Cross-Encoder for Quora Duplicate Questions Detection
+  description_en: Cross-Encoder for Quora Duplicate Questions Detection
+  from_repo: https://huggingface.co/cross-encoder/stsb-TinyBERT-L-4
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: cross-encoder/stsb-TinyBERT-L-4
+Paper: null
+Publisher: cross-encoder
+Task:
+- sub_tag: 文本分类
+  sub_tag_en: Text Classification
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

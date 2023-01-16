@@ -1,0 +1,46 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: True
+  save_res: True
+  return_res: True
+
+MODEL:
+  - ClassificationOp:
+      name: cls
+      param_path: paddlecv://models/PPLCNet_x1_0_infer/inference.pdiparams
+      model_path: paddlecv://models/PPLCNet_x1_0_infer/inference.pdmodel
+      batch_size: 8
+      PreProcess:
+        - ResizeImage:
+            resize_short: 256
+        - CropImage:
+            size: 224
+        - NormalizeImage:
+            scale: 0.00392157
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+            order: ''
+            channel_num: 3
+        - ToCHWImage:
+        - ExpandDim:
+            axis: 0
+      PostProcess:
+        - Topk:
+            topk: 5
+            class_id_map_file: "paddlecv://dict/classification/imagenet1k_label_list.txt"
+      Inputs:
+        - input.image
+
+  - ClasOutput:
+      name: vis
+      Inputs:
+        - input.fn
+        - input.image
+        - cls.class_ids
+        - cls.scores
+        - cls.label_names

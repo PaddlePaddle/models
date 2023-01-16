@@ -1,0 +1,27 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Russian,English
+License: mit
+Model_Info:
+  description: pip install transformers sentencepiece
+  description_en: pip install transformers sentencepiece
+  from_repo: https://huggingface.co/cointegrated/rubert-tiny
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: cointegrated/rubert-tiny
+Paper: null
+Publisher: cointegrated
+Task:
+- sub_tag: 特征抽取
+  sub_tag_en: Feature Extraction
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing
+- sub_tag: 句子相似度
+  sub_tag_en: Sentence Similarity
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -1,0 +1,19 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: German
+License: mit
+Model_Info:
+  description: 🤗 + 📚 dbmdz German BERT models
+  description_en: 🤗 + 📚 dbmdz German BERT models
+  from_repo: https://huggingface.co/dbmdz/bert-base-german-uncased
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: dbmdz/bert-base-german-uncased
+Paper: null
+Publisher: dbmdz
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

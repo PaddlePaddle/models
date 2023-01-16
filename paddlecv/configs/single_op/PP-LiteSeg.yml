@@ -1,0 +1,34 @@
+ENV:
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+  save_img: True
+  save_res: True
+  return_res: True
+
+MODEL:
+  - SegmentationOp:
+      name: seg
+      param_path: paddlecv://models/PP_LiteSeg_Cityscapes/model.pdiparams
+      model_path: paddlecv://models/PP_LiteSeg_Cityscapes/model.pdmodel
+      batch_size: 8
+      PreProcess:
+        - Normalize:
+            scale: 0.00392157
+            mean: [0.5, 0.5, 0.5]
+            std: [0.5, 0.5, 0.5]
+            order: ''
+        - ToCHWImage
+        - ExpandDim
+      PostProcess:
+        - SegPostProcess
+      Inputs:
+        - input.image
+
+  - SegOutput:
+      name: out
+      Inputs:
+        - input.fn
+        - input.image
+        - seg.seg_map

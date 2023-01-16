@@ -4,7 +4,7 @@ Model_Info:
   description: "PP-YOLOE是基于PP-YOLOv2的卓越的单阶段Anchor-free模型，超越了多种流行的YOLO模型"
   description_en: "PP-YOLOE is an excellent single-stage anchor-free model based on\
     \ PP-YOLOv2, surpassing a variety of popular YOLO models"
-  icon: "@后续UE统一设计之后，会存到bos上某个位置"
+  icon: "https://user-images.githubusercontent.com/23690325/204210957-b79603db-1406-4e0b-afa9-3745e9e69ff1.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"
@@ -19,7 +19,7 @@ Example:
   sub_tag: "目标检测"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4228391"
 Datasets: "COCO test-dev2017, COCO train2017, COCO val2017, Pascal VOC"
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
 Paper:
 - title: "PP-YOLOE: An evolved version of YOLO"

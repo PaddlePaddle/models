@@ -1,0 +1,23 @@
+Datasets: ''
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: Chinese BERT with Whole Word Masking
+  description_en: Chinese BERT with Whole Word Masking
+  from_repo: https://huggingface.co/hfl/chinese-bert-wwm-ext
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: hfl/chinese-bert-wwm-ext
+Paper:
+- title: Pre-Training with Whole Word Masking for Chinese BERT
+  url: http://arxiv.org/abs/1906.08101v3
+- title: Revisiting Pre-Trained Models for Chinese Natural Language Processing
+  url: http://arxiv.org/abs/2004.13922v2
+Publisher: hfl
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -1,0 +1,23 @@
+Datasets: wikipedia
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: ''
+License: apache-2.0
+Model_Info:
+  description: Model Card for DistilBERT base multilingual (cased)
+  description_en: Model Card for DistilBERT base multilingual (cased)
+  from_repo: https://huggingface.co/distilbert-base-multilingual-cased
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: distilbert-base-multilingual-cased
+Paper:
+- title: 'DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter'
+  url: http://arxiv.org/abs/1910.01108v4
+- title: Quantifying the Carbon Emissions of Machine Learning
+  url: http://arxiv.org/abs/1910.09700v2
+Publisher: huggingface
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -1,0 +1,20 @@
+ENV:
+  run_mode: paddle
+  device: GPU
+  min_subgraph_size: 3
+  trt_calib_mode: False
+  cpu_threads: 1
+  trt_use_static: False
+
+MODEL:
+  - KeyFrameExtractionOp:
+      name: kfe
+      algo: "luv_diff" # one of [luv_diff, ]
+      params:
+        thresh: null # you can also set is as 0.6
+        use_top_order: False
+        use_local_maxima: True
+        num_top_frames: 50
+        window_len: 50
+      Inputs:
+        - input.video_path

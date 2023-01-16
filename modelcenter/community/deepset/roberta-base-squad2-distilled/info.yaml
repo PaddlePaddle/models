@@ -1,0 +1,19 @@
+Datasets: squad_v2
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: English
+License: mit
+Model_Info:
+  description: Overview
+  description_en: Overview
+  from_repo: https://huggingface.co/deepset/roberta-base-squad2-distilled
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: deepset/roberta-base-squad2-distilled
+Paper: null
+Publisher: deepset
+Task:
+- sub_tag: 回答问题
+  sub_tag_en: Question Answering
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

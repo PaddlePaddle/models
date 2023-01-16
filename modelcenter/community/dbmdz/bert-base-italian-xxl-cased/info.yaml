@@ -1,0 +1,19 @@
+Datasets: wikipedia
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Italian
+License: mit
+Model_Info:
+  description: 🤗 + 📚 dbmdz BERT and ELECTRA models
+  description_en: 🤗 + 📚 dbmdz BERT and ELECTRA models
+  from_repo: https://huggingface.co/dbmdz/bert-base-italian-xxl-cased
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: dbmdz/bert-base-italian-xxl-cased
+Paper: null
+Publisher: dbmdz
+Task:
+- sub_tag: 槽位填充
+  sub_tag_en: Fill-Mask
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -135,14 +135,13 @@ def get_model_dir_with_list(cfg, args):
                     cfg[key]["rec_model_dir"] = rec_model_dir
                 print("rec_model_dir model dir: ", rec_model_dir)
 
-        elif key == "MOT" and (
-                key in activate_list):  # for idbased and skeletonbased actions
-            model_dir = cfg[key]["model_dir"]
-            downloaded_model_dir = auto_download_model(model_dir)
-            if downloaded_model_dir:
-                model_dir = downloaded_model_dir
-                cfg[key]["model_dir"] = model_dir
-            print("mot_model_dir model_dir: ", model_dir)
+            if (key == 'ID_BASED_DETACTION' and (key in activate_list)) or (key == 'SKELETON_ACTION' and (key in activate_list))or (key == 'ATTR' and (key in activate_list)) or (key =='ID_BASED_CLSACTION' and (key in activate_list)) or (key=='REID' and (key in activate_list)):
+                model_dir = cfg['MOT']["model_dir"]
+                downloaded_model_dir = auto_download_model(model_dir)
+                if downloaded_model_dir:
+                    model_dir = downloaded_model_dir
+                    cfg['MOT']["model_dir"] = model_dir
+                print("mot_model_dir model_dir: ", model_dir)
 
 
 def get_model_dir(cfg):
@@ -890,6 +889,7 @@ def pp_humanv2(input_date, avtivity_list):
         FLAGS.video_file = input_date
     else:
         FLAGS.image_file = input_date
+
     FLAGS.avtivity_list = avtivity_list
 
     pipeline = Pipeline(FLAGS, cfg)

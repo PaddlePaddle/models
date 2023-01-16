@@ -1,0 +1,22 @@
+Datasets: indonlu
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Indonesian
+License: mit
+Model_Info:
+  description: IndoBERT Base Model (phase1 - uncased)
+  description_en: IndoBERT Base Model (phase1 - uncased)
+  from_repo: https://huggingface.co/indobenchmark/indobert-base-p1
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: indobenchmark/indobert-base-p1
+Paper:
+- title: 'IndoNLU: Benchmark and Resources for Evaluating Indonesian Natural Language
+    Understanding'
+  url: http://arxiv.org/abs/2009.05387v3
+Publisher: indobenchmark
+Task:
+- sub_tag: 特征抽取
+  sub_tag_en: Feature Extraction
+  tag: 自然语言处理
+  tag_en: Natural Language Processing

@@ -3,7 +3,7 @@ Model_Info:
   name: "PP-HumanV2"
   description: "飞桨行人场景分析工具"
   description_en: "PaddlePadle Pedestrian Scene Analysis Tool"
-  icon: ""
+  icon: "https://user-images.githubusercontent.com/23690325/204210545-e0df3d2f-e10d-45b6-aace-81ba9eed6bad.png"
   from_repo: "PaddleDetection"
 Task:
 - tag_en: "Computer Vision"
@@ -19,7 +19,7 @@ Task:
   sub_tag_en: "Behavior Recognition"
   sub_tag: "行为识别"
 Example:
-- tag_en: "Intelligent Security"
+- tag_en: "Intelligent Security"  
   tag: "智慧安防"
   sub_tag_en: "Fall detection"
   title: "基于PP-Human v2的摔倒检测"
@@ -38,7 +38,7 @@ Example:
   sub_tag: "进出管理"
   url: "https://aistudio.baidu.com/aistudio/projectdetail/4537344"
 Datasets: ""
-Pulisher: "Baidu"
+Publisher: "Baidu"
 License: "apache.2.0"
-IfTraining: 0
+IfTraining: 1
 IfOnlineDemo: 1

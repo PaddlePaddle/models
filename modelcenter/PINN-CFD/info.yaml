@@ -1,0 +1,25 @@
+---
+Model_Info:
+  name: "PINN_CFD"
+  description: "2D圆柱绕流模型设计及仿真验证"
+  description_en: "Design and simulation of 2D cylinder flow model"
+  icon: "https://user-images.githubusercontent.com/23690325/204210395-b8c1f5ff-cfea-4e3c-8e41-cd9bcf6acd56.png"
+  from_repo: "PaddleScience"
+Task:
+- tag: "科学计算"
+  tag_en: "Scientific Computing"
+  sub_tag: "圆柱绕流"
+  sub_tag_en: "Cylinder Flow"
+Example:
+- tag: "工业/能源"
+  tag_en: "Industrial/Energy"
+  sub_tag: "圆柱绕流"
+  sub_tag_en: "Cylinder Flow"
+  title: "基于AI求解2D非定常圆柱绕流，真的很流体"
+  url: https://aistudio.baidu.com/aistudio/projectdetail/4178470?contributionType=1
+  url_en: 
+Datasets: "cylinder2D_continuous"
+Publisher: "Baidu"
+License: "apache.2.0"
+IfTraining: 1
+IfOnlineDemo: 0
