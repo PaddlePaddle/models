@@ -1,0 +1,30 @@
+---
+Model_Info:
+   name: "PLSC-ViT"
+   description:  "PaddlePaddle reimplementation of Google's repository for the Vision Transformer model that was released with the paper An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale."
+   description_en: "PaddlePaddle reimplementation of Google's repository for the Vision Transformer model that was released with the paper An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale."
+   update_time:
+   icon: "https://plsc.bj.bcebos.com/assets/modelcenter-icon.png"
+   from_repo: "PLSC"
+Task:
+- tag: 计算机视觉
+  tag_en: Computer Vision
+  sub_tag: 图像分类
+  sub_tag_en: Image Classification
+Example:
+- tag:
+  tag_en:
+  sub_tag:
+  sub_tag_en:
+  title:
+  title_en:
+  url:
+  url_en:
+Datasets: ImageNet 1K, ImageNet 21K
+Publisher: Baidu
+License: Apache 2.0
+Paper:
+- title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+  url: https://arxiv.org/abs/2010.11929
+IfTraining: 1
+IfOnlineDemo: 1
