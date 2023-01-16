@@ -1,8 +1,8 @@
 ---
 Model_Info:
    name: "PLSC-ViT"
-   description: Vision Transformer
-   description_en: Vision Transformer
+   description:  "PaddlePaddle reimplementation of Google's repository for the Vision Transformer model that was released with the paper An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale."
+   description_en: "PaddlePaddle reimplementation of Google's repository for the Vision Transformer model that was released with the paper An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale."
    update_time:
    icon: "https://plsc.bj.bcebos.com/assets/modelcenter-icon.png"
    from_repo: "PLSC"
