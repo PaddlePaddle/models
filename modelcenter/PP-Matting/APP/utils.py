@@ -62,7 +62,7 @@ def delete_result():
     root = '.temp'
     results = sorted(os.listdir(root))
     for res in results:
-        if int(time.time()) - int(os.path.splitext(res)[0]) > 10000:
+        if int(time.time()) - int(os.path.splitext(res)[0]) > 900:
             os.remove(os.path.join(root, res))
 
 
