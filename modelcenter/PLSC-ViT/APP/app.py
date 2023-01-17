@@ -15,8 +15,12 @@ def model_inference(image):
             model_path=model_path,
             params_path=params_path,
             label_path=label_path)
-    scores, labels = predictor.predict(image)
-    json_out = {"scores": scores.tolist(), "labels": labels.tolist()}
+    class_ids, scores, labels = predictor.predict(image)
+    json_out = {
+        "class_ids": class_ids.tolist(),
+        "scores": scores.tolist(),
+        "labels": labels.tolist()
+    }
     return image, json_out
 
 
