@@ -33,10 +33,10 @@ __all__ = [
     'get_data_path',
 ]
 
-WEIGHTS_HOME = osp.expanduser("~/.cache/paddlecv/models")
-CONFIGS_HOME = osp.expanduser("~/.cache/paddlecv/configs")
-DICTS_HOME = osp.expanduser("~/.cache/paddlecv/dicts")
-DATA_HOME = osp.expanduser("~/.cache/paddlecv/dataset")
+WEIGHTS_HOME = osp.expanduser("~/.cache/paddlecv/models/plsc")
+CONFIGS_HOME = osp.expanduser("~/.cache/paddlecv/configs/plsc")
+DICTS_HOME = osp.expanduser("~/.cache/paddlecv/dicts/plsc/")
+DATA_HOME = osp.expanduser("~/.cache/paddlecv/dataset/plsc")
 # dict of {dataset_name: (download_info, sub_dirs)}
 # download info: [(url, md5sum)]
 
@@ -68,7 +68,7 @@ def get_model_path(path):
     if not is_url(path):
         return path
     url = parse_url(path)
-    path, _ = get_path(url, WEIGHTS_HOME, path_depth=2)
+    path, _ = get_path(url, WEIGHTS_HOME, path_depth=3)
     return path
 
 
@@ -79,7 +79,7 @@ def get_data_path(path):
     if not is_url(path):
         return path
     url = parse_url(path)
-    path, _ = get_path(url, DATA_HOME, path_depth=2)
+    path, _ = get_path(url, DATA_HOME, path_depth=1)
     return path
 
 
@@ -161,7 +161,6 @@ def _download(url, path, md5sum=None):
         else:
             raise RuntimeError("Download from {} failed. "
                                "Retry limit reached".format(url))
-
 
         # NOTE: windows path join may incur \, which is invalid in url
         if sys.platform == "win32":
