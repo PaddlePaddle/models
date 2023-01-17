@@ -2,3 +2,4 @@ gradio
 paddlepaddle
 opencv-python
 pyyaml >= 5.1
+pymatting
