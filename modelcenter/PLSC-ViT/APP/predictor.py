@@ -4,6 +4,7 @@ import numpy as np
 import paddle
 from download import get_model_path, get_data_path
 
+
 class Predictor(object):
     def __init__(self,
                  model_type="paddle",
@@ -42,8 +43,8 @@ class Predictor(object):
         self.predictor.run()
         outputs = []
         for output_idx in range(len(self.output_names)):
-            output_tensor = self.predictor.get_output_handle(
-                self.output_names[output_idx])
+            output_tensor = self.predictor.get_output_handle(self.output_names[
+                output_idx])
             outputs.append(output_tensor.copy_to_cpu())
         if self.postprocess is not None:
             output_data = self.postprocess(outputs)
@@ -69,7 +70,7 @@ class Predictor(object):
             for line in f:
                 if len(line) < 2:
                     continue
-                label = line.strip().split(',')[0].split(' ')[2]
+                label = line.strip().split(',')[1].strip()
                 labels.append(label)
         return labels
 
@@ -83,6 +84,5 @@ class Predictor(object):
         pred = np.array(logits).squeeze()
         pred = self.softmax(pred)
         class_idx = pred.argsort()[::-1]
-        return pred[class_idx[:5]], np.array(self.labels)[class_idx[:5]]
-
-
+        return class_idx[:5], pred[class_idx[:5]], np.array(self.labels)[
+            class_idx[:5]]
