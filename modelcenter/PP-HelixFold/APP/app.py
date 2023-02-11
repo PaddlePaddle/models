@@ -1,12 +1,12 @@
 import gradio as gr
 import os
 
+
 def molecule(input_pdb):
 
     mol = read_mol(input_pdb)
 
-    x = (
-        """<!DOCTYPE html>
+    x = ("""<!DOCTYPE html>
         <html>
         <head>    
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -24,14 +24,13 @@ def molecule(input_pdb):
     }
     </style>
     <script src="https://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
     </head>
     <body>  
     <div id="container" class="mol-container"></div>
   
             <script>
-               let pdb = `"""
-        + mol
-        + """`  
+               let pdb = `""" + mol + """`  
       
              $(document).ready(function () {
                 let element = $("#container");
@@ -44,14 +43,14 @@ def molecule(input_pdb):
                 viewer.zoom(1, 1000); /* slight zoom */
               })
         </script>
-        </body></html>"""
-    )
+        </body></html>""")
 
     return f"""<iframe style="width: 100%; height: 600px" name="result" allow="midi; geolocation; microphone; camera; 
     display-capture; encrypted-media;" sandbox="allow-modals allow-forms 
     allow-scripts allow-same-origin allow-popups 
     allow-top-navigation-by-user-activation allow-downloads" allowfullscreen="" 
     allowpaymentrequest="" frameborder="0" srcdoc='{x}'></iframe>"""
+
 
 def get_pdb(pdb_code="", filepath=""):
     if pdb_code is None or pdb_code == "":
@@ -73,23 +72,24 @@ def read_mol(molpath):
     return mol
 
 
-
-def update(fastaName='',fastaContent=''):
-    if(fastaName==''):
-      return None
+def update(fastaName='', fastaContent=''):
+    if (fastaName == ''):
+        return None
     else:
-      return molecule(fastaName+"_pred.pdb")
+        return molecule(fastaName + "_pred.pdb")
 
 
 demo = gr.Blocks()
 with demo:
-    gr.Markdown("# PP-HelixFold Protein Structure Prediction Demo")
+    gr.Markdown("# PP-HelixFold Demo")
     with gr.Row():
         with gr.Box():
-            fastaName = gr.Textbox(interactive=False,label='Fasta label')
-            fastaContent = gr.Textbox(interactive=False,label='Fasta content')
-            gr.Examples([["T1026", read_mol( "T1026.fasta")],["T1037", read_mol("T1037.fasta")]], [fastaName,fastaContent])
+            fastaName = gr.Textbox(interactive=False, label='Fasta label')
+            fastaContent = gr.Textbox(interactive=False, label='Fasta content')
+            gr.Examples([["T1026", read_mol("T1026.fasta")],
+                         ["T1037", read_mol("T1037.fasta")]],
+                        [fastaName, fastaContent])
             btn = gr.Button("Predict")
     mol = gr.HTML()
-    btn.click(fn=update, inputs=[fastaName,fastaContent], outputs=mol)
+    btn.click(fn=update, inputs=[fastaName, fastaContent], outputs=mol)
 demo.launch()
