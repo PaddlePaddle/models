@@ -56,19 +56,15 @@ COLOR_MAP = {
 # jpg compress ratio
 SAVE_SIZE = {'Small': 50, 'Middle': 75, 'Large': 95}
 
+CACHE_DIR = ".temp"
+
 
 def delete_result():
     """clear old result in `.temp`"""
-    root = '.temp'
-    results = sorted(os.listdir(root))
+    results = sorted(os.listdir(CACHE_DIR))
     for res in results:
-        if int(time.time()) - int(os.path.splitext(res)[0]) > 900:
-            os.remove(os.path.join(root, res))
-
-
-def clear_all():
-    delete_result()
-    return None, None, size_play()[0], 'White', 'Large', None
+        if int(time.time()) - int(os.path.splitext(res)[0]) > 10000:
+            os.remove(os.path.join(CACHE_DIR, res))
 
 
 def size_play():
@@ -86,10 +82,10 @@ def bg_replace(img, alpha, bg_name):
     bg = COLOR_MAP[bg_name]
     bg = np.array(bg)[None, None, :]
     alpha = alpha / 255.
-    pymatting.estimate_foreground_ml(img / 255., alpha) * 255
+    fg = pymatting.estimate_foreground_ml(img / 255., alpha, return_background=False) * 255
     alpha = alpha[:, :, None]
-    res = alpha * img + (1 - alpha) * bg
-    return res.astype('uint8')
+    res = alpha * fg + (1 - alpha) * bg
+    return res.astype('uint8'), fg.astype('uint8')
 
 
 def adjust_size(img, size_index):
@@ -121,16 +117,15 @@ def adjust_size(img, size_index):
 
 def download(img, size):
     q = SAVE_SIZE[size]
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
     while True:
         name = str(int(time.time()))
-        tmp_name = './.temp/' + name + '.jpg'
+        tmp_name = os.path.join(CACHE_DIR, name + '.jpg')
         if not os.path.exists(tmp_name):
             break
         else:
             time.sleep(1)
-    dir_name = os.path.dirname(tmp_name)
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
 
     im = Image.fromarray(img)
     im.save(tmp_name, 'jpeg', quality=q, dpi=(300, 300))
