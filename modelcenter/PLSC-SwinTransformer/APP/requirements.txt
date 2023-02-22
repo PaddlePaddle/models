@@ -1,3 +1,4 @@
+plsc==2.4
 gradio
 opencv-python
 paddlepaddle

@@ -2,7 +2,9 @@
 
 ## 1.1 Environment
 
-- We train the Swin Transformer on 1 node with 8 A100(40G) gpus.
+* 8 A100(40G) on single Node
+* CUDA 11.2
+* CUDNN 8.1
 
 ## 1.2 DataSet
 - We train the Swin Transformer on ImageNet.
