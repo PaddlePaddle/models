@@ -2,10 +2,10 @@
 
 ## 1.1 Environment
 
-- We train the ViT on 1 node with 8 A100(40G) gpus.
+- We train the Swin Transformer on 1 node with 8 A100(40G) gpus.
 
 ## 1.2 DataSet
-- We train the ViT on ImageNet.
+- We train the Swin Transformer on ImageNet.
 
 ## 1.3 Benchmark
 
