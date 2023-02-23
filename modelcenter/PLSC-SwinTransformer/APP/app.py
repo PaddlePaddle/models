@@ -1,10 +1,10 @@
 import numpy as np
-
-import cv2
 import gradio as gr
 
-from plsc.engine.inference import Predictor
 from download import get_model_path, get_data_path
+
+from plsc.data.preprocess import Resize
+from plsc.engine.inference import Predictor
 
 predictor = None
 
@@ -33,7 +33,8 @@ def model_inference(image):
         labels = parse_labels(get_data_path(label_path))
 
         def preprocess(img):
-            img = cv2.resize(img, (224, 224))
+            resize = Resize(size=224, interpolation="bicubic", backend="pil")
+            img = np.array(resize(img))
             scale = 1.0 / 255.0
             mean = np.array([0.485, 0.456, 0.406])
             std = np.array([0.229, 0.224, 0.225])
@@ -78,7 +79,7 @@ with gr.Blocks() as demo:
 
     with gr.Column(scale=1, min_width=100):
         img_in = gr.Image(
-            value="https://plsc.bj.bcebos.com/dataset/test_images/cat.jpg",
+            value="https://plsc.bj.bcebos.com/dataset/test_images/zebra.png",
             label="Input").style(height=200)
 
         with gr.Row():
