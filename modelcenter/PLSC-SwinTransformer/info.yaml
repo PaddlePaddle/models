@@ -1,0 +1,30 @@
+---
+Model_Info:
+   name: "PLSC-SwinTransformer"
+   description:  "PaddlePaddle 重新实现 Microsoft 官方 Repo 中的 Swin Transformer 算法 《Swin Transformer: Hierarchical Vision Transformer using Shifted Windows》"
+   description_en: "PaddlePaddle reimplementation of Google's repository for the Swin Transformer model that was released with the paper Swin Transformer: Hierarchical Vision Transformer using Shifted Windows."
+   update_time:
+   icon: "https://plsc.bj.bcebos.com/assets/modelcenter-icon.png"
+   from_repo: "PLSC"
+Task:
+- tag: 计算机视觉
+  tag_en: Computer Vision
+  sub_tag: 图像分类
+  sub_tag_en: Image Classification
+Example:
+- tag:
+  tag_en:
+  sub_tag:
+  sub_tag_en:
+  title:
+  title_en:
+  url:
+  url_en:
+Datasets: ImageNet 1K
+Publisher: Baidu
+License: Apache 2.0
+Paper:
+- title: "Swin Transformer: Hierarchical Vision Transformer using Shifted Windows"
+  url: https://arxiv.org/pdf/2103.14030.pdf
+IfTraining: 1
+IfOnlineDemo: 1

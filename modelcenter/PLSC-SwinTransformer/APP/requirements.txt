@@ -1,0 +1,12 @@
+plsc==2.4
+gradio
+opencv-python
+paddlepaddle
+PyYAML
+shapely
+scipy
+Cython
+numpy
+setuptools
+pillow
+tqdm
