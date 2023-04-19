@@ -34,9 +34,5 @@
 感谢所有为飞桨产业级模型库贡献代码的开发者，也期待你的加入。
 
 
-## License
-This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
-
-
 ## 许可证书
 此向导由[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)贡献，受[Apache-2.0 license](LICENSE)许可认证。
