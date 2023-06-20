@@ -2,6 +2,21 @@
 
 飞桨为开发者精选并汇聚了600+面向产业实践的优质模型，分方向汇总如下：
 
+### 模型更新列表 2023.6.20
+| 开发套件            | 模型列表                                                     |
+| --------------- | ------------------------------------------------------------ |
+| PaddleClas      | [v2.5模型列表](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/model_list.md) |
+| PaddleDetection | [v2.6模型列表](https://github.com/paddlepaddle/paddledetection/tree/release/2.6#%E6%A8%A1%E5%9E%8B%E5%BA%93) |
+| PaddleSeg       | [v2.8模型列表](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.8/README_CN.md#-%E4%BA%A7%E5%93%81%E7%9F%A9%E9%98%B5) |
+| PaddleOCR       | [v2.6模型列表](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/algorithm_overview.md)  [v2.6PP系列模型列表](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/models_list.md) |
+| PaddleGAN       | [模型列表](https://github.com/paddlepaddle/paddlegan)        |
+| PaddleVideo     | [模型列表](https://github.com/PaddlePaddle/PaddleVideo/tree/develop/docs/zh-CN/model_zoo) |
+| PaddleNLP       | [模型列表](https://github.com/PaddlePaddle/PaddleNLP/tree/develop/paddlenlp/transformers) |
+| PaddleSpeech    | [模型列表](https://github.com/paddlepaddle/paddlespeech)     |
+| PaddleRec       | [模型列表](https://github.com/paddlepaddle/paddlerec)        |
+| PARL            | [模型列表](https://github.com/PaddlePaddle/PARL/tree/develop/examples) |
+| PGL             | [模型列表](https://github.com/PaddlePaddle/PGL/tree/main/examples) |
+
 
 ### PaddleClas
 <table>
