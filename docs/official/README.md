@@ -314,7 +314,7 @@
     <tr>
         <td>34</td>
         <td>ResNet101</td>
-        <td><a href="https://arxiv.org/abs/1512.03385">Adaptively Connected Neural Networks</a></td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div> This paper presents a novel adaptively connected neural network (ACNet) to improve the traditional convolutional neural networks (CNNs) {in} two aspects. First, ACNet employs a flexible way to switch global and local inference in processing the internal feature representations by adaptively determining the connection status among the feature nodes (e.g., pixels of the feature maps) \footnote{In a computer vision domain, a node refers to a pixel of a feature map{, while} in {the} graph domain, a node denotes a graph node.}. We can show that existing CNNs, the classical multilayer perceptron (MLP), and the recently proposed non-local network (NLN) \cite{nonlocalnn17} are all special cases of ACNet. Second, ACNet is also capable of handling non-Euclidean data. Extensive experimental analyses on {a variety of benchmarks (i.e.,} ImageNet-1k classification, COCO 2017 detection and segmentation, CUHK03 person re-identification, CIFAR analysis, and Cora document categorization) demonstrate that {ACNet} cannot only achieve state-of-the-art performance but also overcome the limitation of the conventional MLP and CNN \footnote{Corresponding author: Liang Lin (linliang@ieee.org)}. The code is available at \url{this https URL}. </div></details></td>
         <td>ImageNet/Acc 0.7756</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
