@@ -917,7 +917,7 @@
     <tr>
         <td>101</td>
         <td>MobileNetV3_large_x1_</br>0-FPGM</td>
-        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV4</a></td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
         <td>-</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
@@ -926,7 +926,7 @@
     <tr>
         <td>102</td>
         <td>MobileNetV3_large_x1_</br>0_PACT</td>
-        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV5</a></td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
         <td>-</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
@@ -935,7 +935,7 @@
     <tr>
         <td>103</td>
         <td>MobileNetV3_large_x1_</br>0_KL</td>
-        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV6</a></td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
         <td>-</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
@@ -1063,7 +1063,7 @@
         <td>CSPDarkNet53</td>
         <td><a href="https://arxiv.org/abs/1911.11929">CSPNet: A New Backbone that can Enhance Learning Capability of CNN</a></td>
         <td><details><summary>Abstract</summary><div>Neural networks have enabled state-of-the-art approaches to achieve incredible results on computer vision tasks such as object detection. However, such success greatly relies on costly computation resources, which hinders people with cheap devices from appreciating the advanced technology. In this paper, we propose Cross Stage Partial Network (CSPNet) to mitigate the problem that previous works require heavy inference computations from the network architecture perspective. We attribute the problem to the duplicate gradient information within network optimization. The proposed networks respect the variability of the gradients by integrating feature maps from the beginning and the end of a network stage, which, in our experiments, reduces computations by 20% with equivalent or even superior accuracy on the ImageNet dataset, and significantly outperforms state-of-the-art approaches in terms of AP50 on the MS COCO object detection dataset. The CSPNet is easy to implement and general enough to cope with architectures based on ResNet, ResNeXt, and DenseNet. Source code is at this https URL. </div></details></td>
-        <td>-</td>
+        <td>ImageNet/Acc 0.7725</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSPNet.md">快速开始</a></td>
         </td>
     </tr>
@@ -1096,10 +1096,10 @@
     </tr>
     <tr>
         <td>121</td>
-        <td>RegNet</td>
+        <td>RegNet50</td>
         <td><a href="https://arxiv.org/abs/2101.00590">RegNet: Self-Regulated Network for Image Classification</a></td>
         <td><details><summary>Abstract</summary><div>The ResNet and its variants have achieved remarkable successes in various computer vision tasks. Despite its success in making gradient flow through building blocks, the simple shortcut connection mechanism limits the ability of re-exploring new potentially complementary features due to the additive function. To address this issue, in this paper, we propose to introduce a regulator module as a memory mechanism to extract complementary features, which are further fed to the ResNet. In particular, the regulator module is composed of convolutional RNNs (e.g., Convolutional LSTMs or Convolutional GRUs), which are shown to be good at extracting Spatio-temporal information. We named the new regulated networks as RegNet. The regulator module can be easily implemented and appended to any ResNet architecture. We also apply the regulator module for improving the Squeeze-and-Excitation ResNet to show the generalization ability of our method. Experimental results on three image classification datasets have demonstrated the promising performance of the proposed architecture compared with the standard ResNet, SE-ResNet, and other state-of-the-art architectures.</div></details></td>
-        <td>ImageNet/Acc      0.785</td>
+        <td>ImageNet/Acc 0.7833</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RegNet.md">快速开始</a></td>
         </td>
     </tr>
@@ -1537,24 +1537,6 @@
     </tr>
     <tr>
         <td>170</td>
-        <td>ViT_huge_patch16_224</td>
-        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
-        </td>
-    </tr>
-    <tr>
-        <td>171</td>
-        <td>ViT_huge_patch32_384</td>
-        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
-        </td>
-    </tr>
-    <tr>
-        <td>172</td>
         <td>ViT_large_patch16_224</td>
         <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
@@ -1563,7 +1545,7 @@
         </td>
     </tr>
     <tr>
-        <td>173</td>
+        <td>171</td>
         <td>ViT_large_patch16_384</td>
         <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
@@ -1572,7 +1554,7 @@
         </td>
     </tr>
     <tr>
-        <td>174</td>
+        <td>172</td>
         <td>ViT_large_patch32_384</td>
         <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
@@ -1581,7 +1563,7 @@
         </td>
     </tr>
     <tr>
-        <td>175</td>
+        <td>173</td>
         <td>ViT_small_patch16_224</td>
         <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
@@ -1590,7 +1572,7 @@
         </td>
     </tr>
     <tr>
-        <td>176</td>
+        <td>174</td>
         <td>DeiT_base_patch16_224</td>
         <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
         <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
@@ -1599,7 +1581,7 @@
         </td>
     </tr>
     <tr>
-        <td>177</td>
+        <td>175</td>
         <td>DeiT_base_patch16_384</td>
         <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
         <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
@@ -1608,7 +1590,7 @@
         </td>
     </tr>
     <tr>
-        <td>178</td>
+        <td>176</td>
         <td>DeiT_small_patch16_22</br>4</td>
         <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
         <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
@@ -1617,7 +1599,7 @@
         </td>
     </tr>
     <tr>
-        <td>179</td>
+        <td>177</td>
         <td>DeiT_tiny_patch16_224</td>
         <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
         <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
@@ -1626,7 +1608,7 @@
         </td>
     </tr>
     <tr>
-        <td>180</td>
+        <td>178</td>
         <td>SwinTransformer_base_</br>patch4_window12_384</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1635,7 +1617,7 @@
         </td>
     </tr>
     <tr>
-        <td>181</td>
+        <td>179</td>
         <td>SwinTransformer_base_</br>patch4_window7_224</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1644,7 +1626,7 @@
         </td>
     </tr>
     <tr>
-        <td>182</td>
+        <td>180</td>
         <td>SwinTransformer_large</br>_patch4_window12_384</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1653,7 +1635,7 @@
         </td>
     </tr>
     <tr>
-        <td>183</td>
+        <td>181</td>
         <td>SwinTransformer_large</br>_patch4_window7_224</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1662,7 +1644,7 @@
         </td>
     </tr>
     <tr>
-        <td>184</td>
+        <td>182</td>
         <td>SwinTransformer_small</br>_patch4_window7_224</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1671,7 +1653,7 @@
         </td>
     </tr>
     <tr>
-        <td>185</td>
+        <td>183</td>
         <td>SwinTransformer_tiny_</br>patch4_window7_224</td>
         <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
@@ -1680,200 +1662,200 @@
         </td>
     </tr>
     <tr>
-        <td>186</td>
+        <td>184</td>
         <td>CSWinTransformer_base</br>_224</td>
         <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8281</td>
+        <td>ImageNet/Acc 0.8281</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>185</td>
+        <td>CSWinTransformer_base</br>_384</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
+        <td>ImageNet/Acc 0.8358</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>186</td>
+        <td>CSWinTransformer_larg</br>e_224</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
+        <td>ImageNet/Acc 0.842</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>187</td>
-        <td>CSWinTransformer_base</br>_384</td>
+        <td>CSWinTransformer_larg</br>e_384</td>
         <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8358</td>
+        <td>ImageNet/Acc 0.8643</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>188</td>
-        <td>CSWinTransformer_larg</br>e_224</td>
+        <td>CSWinTransformer_smal</br>l_224</td>
         <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.842</td>
+        <td>ImageNet/Acc 0.855</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>189</td>
-        <td>CSWinTransformer_larg</br>e_384</td>
+        <td>CSWinTransformer_tiny</br>_224</td>
         <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8643</td>
+        <td>ImageNet/Acc 0.855</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>190</td>
-        <td>CSWinTransformer_smal</br>l_224</td>
-        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
-        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.855</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
+        <td>PVT_V2_B0</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.705</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>191</td>
-        <td>CSWinTransformer_tiny</br>_224</td>
-        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
-        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.855</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
+        <td>PVT_V2_B1</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.787</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>192</td>
-        <td>PVT_V2_B0</td>
+        <td>PVT_V2_B2</td>
         <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.705</td>
+        <td>ImageNet/Acc 0.821</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>193</td>
-        <td>PVT_V2_B1</td>
+        <td>PVT_V2_B2_Linear</td>
         <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.787</td>
+        <td>ImageNet/Acc 0.821</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>194</td>
-        <td>PVT_V2_B2</td>
+        <td>PVT_V2_B3</td>
         <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.821</td>
+        <td>ImageNet/Acc 0.831</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>195</td>
-        <td>PVT_V2_B2_Linear</td>
+        <td>PVT_V2_B4</td>
         <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.821</td>
+        <td>ImageNet/Acc 0.836</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>196</td>
-        <td>PVT_V2_B3</td>
+        <td>PVT_V2_B5</td>
         <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.831</td>
+        <td>ImageNet/Acc 0.837</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>197</td>
-        <td>PVT_V2_B4</td>
-        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.836</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
+        <td>MobileViT_XXS</td>
+        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
+        <td>ImageNet/Acc 0.6867</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>198</td>
-        <td>PVT_V2_B5</td>
-        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
-        <td>0.837</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
+        <td>MobileViT_XS</td>
+        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
+        <td>ImageNet/Acc 0.7454</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>199</td>
-        <td>MobileViT_XXS</td>
+        <td>MobileViT_S</td>
         <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
         <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.6867</td>
+        <td>ImageNet/Acc 0.7814</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>200</td>
-        <td>MobileViT_XS</td>
-        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.7454</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
+        <td>ReID_strong_baseline</td>
+        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
+        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
+        <td>Market1501/recall@1 </br>88.45</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>201</td>
-        <td>MobileViT_S</td>
-        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.7814</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
+        <td>ReID_softmax_triplet</td>
+        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
+        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
+        <td>market1501/recall1@ 9</br>4.29</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>202</td>
-        <td>strong_baseline</td>
+        <td>ReID_softmax_triplet_with_</br>center</td>
         <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
         <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501:recall 1: </br>88.21</td>
+        <td>market1501/recall@1 9</br>4.50</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>203</td>
-        <td>softmax_triplet</td>
-        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
-        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501 recall1: 9</br>4.181</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
-        </td>
-    </tr>
-    <tr>
-        <td>204</td>
-        <td>softmax_triplet_with_</br>center</td>
-        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
-        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501 recall1: 9</br>4.196</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
-        </td>
-    </tr>
-    <tr>
-        <td>205</td>
-        <td>VAN</td>
+        <td>VAN_B0</td>
         <td><a href="https://arxiv.org/abs/2202.09741">Visual Attention Network</a></td>
         <td><details><summary>Abstract</summary><div>While originally designed for natural language processing tasks, the self-attention mechanism has recently taken various computer vision areas by storm. However, the 2D nature of images brings three challenges for applying self-attention in computer vision. (1) Treating images as 1D sequences neglects their 2D structures. (2) The quadratic complexity is too expensive for high-resolution images. (3) It only captures spatial adaptability but ignores channel adaptability. In this paper, we propose a novel linear attention named large kernel attention (LKA) to enable self-adaptive and long-range correlations in self-attention while avoiding its shortcomings. Furthermore, we present a neural network based on LKA, namely Visual Attention Network (VAN). While extremely simple, VAN surpasses similar size vision transformers(ViTs) and convolutional neural networks(CNNs) in various tasks, including image classification, object detection, semantic segmentation, panoptic segmentation, pose estimation, etc. For example, VAN-B6 achieves 87.8% accuracy on ImageNet benchmark and set new state-of-the-art performance (58.2 PQ) for panoptic segmentation. Besides, VAN-B2 surpasses Swin-T 4% mIoU (50.1 vs. 46.1) for semantic segmentation on ADE20K benchmark, 2.6% AP (48.8 vs. 46.2) for object detection on COCO dataset. It provides a novel method and a simple yet strong baseline for the community. Code is available at https://github.com/Visual-Attention-Network.</div></details></td>
-        <td>VAN-B0 imagenet top1=</br>75.35%</td>
+        <td>ImageNet/Acc 0.7535</br></td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VAN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
-        <td>206</td>
+        <td>204</td>
         <td>PeleeNet</td>
         <td><a href="https://arxiv.org/abs/1804.06882">Pelee: A Real-Time Object Detection System on MobileDevices</a></td>
         <td><details><summary>Abstract</summary><div>An increasing need of running Convolutional Neural Network (CNN) models onmobile devices with limited computing power and memory resource encouragesstudies on efficient model design. A number of efficient architectures have beenproposed in recent years, for example, MobileNet, ShuffleNet, and MobileNetV2.However, all these models are heavily dependent on depthwise separable convolution which lacks efficient implementation in most deep learning frameworks. Inthis study, we propose an efficient architecture named PeleeNet, which is built withconventional convolution instead. On ImageNet ILSVRC 2012 dataset, our proposed PeleeNet achieves a higher accuracy and over 1.8 times faster speed thanMobileNet and MobileNetV2 on NVIDIA TX2. Meanwhile, PeleeNet is only66% of the model size of MobileNet. We then propose a real-time object detection system by combining PeleeNet with Single Shot MultiBox Detector (SSD)method and optimizing the architecture for fast speed. Our proposed detectionsystem1, named Pelee, achieves 76.4% mAP (mean average precision) on PASCAL VOC2007 and 22.4 mAP on MS COCO dataset at the speed of 23.6 FPSon iPhone 8 and 125 FPS on NVIDIA TX2. The result on COCO outperformsYOLOv2 in consideration of a higher precision, 13.6 times lower computationalcost and 11.3 times smaller model size.</div></details></td>
-        <td>PeLeeNet imagenet top</br>1=71.53%</td>
+        <td>ImageNet/Acc 0.7153</br></td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PeleeNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
-        <td>207</td>
-        <td>ConvNeXt </td>
+        <td>205</td>
+        <td>ConvNeXt_tiny </td>
         <td><a href="https://arxiv.org/abs/2201.03545">A ConvNet for the 2020s</a></td>
         <td><details><summary>Abstract</summary><div>The "Roaring 20s" of visual recognition began with the introduction of Vision Transformers (ViTs), which quickly superseded ConvNets as the state-of-the-art image classification model. A vanilla ViT, on the other hand, faces difficulties when applied to general computer vision tasks such as object detection and semantic segmentation. It is the hierarchical Transformers (e.g., Swin Transformers) that reintroduced several ConvNet priors, making Transformers practically viable as a generic vision backbone and demonstrating remarkable performance on a wide variety of vision tasks. However, the effectiveness of such hybrid approaches is still largely credited to the intrinsic superiority of Transformers, rather than the inherent inductive biases of convolutions. In this work, we reexamine the design spaces and test the limits of what a pure ConvNet can achieve. We gradually "modernize" a standard ResNet toward the design of a vision Transformer, and discover several key components that contribute to the performance difference along the way. The outcome of this exploration is a family of pure ConvNet models dubbed ConvNeXt. Constructed entirely from standard ConvNet modules, ConvNeXts compete favorably with Transformers in terms of accuracy and scalability, achieving 87.8% ImageNet top-1 accuracy and outperforming Swin Transformers on COCO detection and ADE20K segmentation, while maintaining the simplicity and efficiency of standard ConvNets.</div></details></td>
-        <td>ConvNeXt_tiny imagene</br>t top1=82.03%</td>
+        <td>ImageNet/Acc 0.8203</br></td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ConvNeXt.md">快速开始</a></td>
         </td>
     </tr>
