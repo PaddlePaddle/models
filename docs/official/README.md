@@ -1859,6 +1859,123 @@
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ConvNeXt.md">快速开始</a></td>
         </td>
     </tr>
+    <tr>
+        <td>206</td>
+        <td>PULC_car_exists</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Objects365/Tpr@Fpr0.01 0.9592</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_car_exists.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>207</td>
+        <td>PULC_language_classification</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Multi-lingual scene text detection and recognition/Acc 0.9926</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_language_classification.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>208</td>
+        <td>PULC_person_attribute</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>pa100k/mAP 0.7859</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_attribute.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>209</td>
+        <td>PULC_person_exists</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Object365、ImageNet/Tpr 0.9623</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_exists.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>210</td>
+        <td>PULC_safety_helmet</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Safety-Helmet-Wearing-Dataset、hard-hat-detection、Large-scale CelebFaces Attributes (CelebA) Dataset/Tpr 0.9938</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_safety_helmet.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>211</td>
+        <td>PULC_text_image_orientation</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>ICDAR2019-ArT、XFUND、ICDAR2015/Acc 0.9906</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_text_image_orientation.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>212</td>
+        <td>PULC_textline_orientation</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>ICDAR2019-LSVT/Acc 0.9601</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_textline_orientation.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>213</td>
+        <td>PULC_traffic_sign</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Tsinghua-Tencent 100K/Acc 0.9835</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_traffic_sign.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>214</td>
+        <td>PULC_vehicle_attribute</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>VeRi/mAP 0.9081</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_vehicle_attribute.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>215</td>
+        <td>PP-ShiTuV1_mainbody_detection</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been a challenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural network architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve label assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on object detection for mobile devices. Our models achieve better trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M parameters achieves 30.6% mAP, which is an absolute 4.8% improvement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an absolute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state-of-the-art results for lightweight object detection. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>自制数据集/mAP 0.401</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/mainbody_detection.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>216</td>
+        <td>PP-ShiTuV1_feature_extraction</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
+        <td>Aliproduct/Recall@1 0.839</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/feature_extraction.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>217</td>
+        <td>PP-ShiTuV1_mainbody_detection</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been a challenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural network architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve label assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on object detection for mobile devices. Our models achieve better trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M parameters achieves 30.6% mAP, which is an absolute 4.8% improvement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an absolute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state-of-the-art results for lightweight object detection. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>自制数据集/mAP 0.415</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/training/PP-ShiTu/mainbody_detection.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>218</td>
+        <td>PP-ShiTuV1_feature_extraction</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
+        <td>Aliproduct/Recall@1 0.842</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/feature_extraction.md">快速开始</a></td>
+        </td>
+    </tr>
 </table>
 
 ### PaddleDetection
