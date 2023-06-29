@@ -1819,7 +1819,7 @@
         <td>ReID_softmax_triplet</td>
         <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
         <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501/recall1@ 0.9429</br></td>
+        <td>market1501/Recall1@ 0.9429</br></td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
@@ -1828,7 +1828,7 @@
         <td>ReID_softmax_triplet_with_</br>center</td>
         <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
         <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501/recall@1 0.945</br></td>
+        <td>market1501/Recall@1 0.945</br></td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
