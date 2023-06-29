@@ -2,21 +2,6 @@
 
 飞桨为开发者精选并汇聚了600+面向产业实践的优质模型，分方向汇总如下：
 
-### 模型更新列表 2023.6.20
-| 开发套件            | 模型列表                                                     |
-| --------------- | ------------------------------------------------------------ |
-| PaddleClas      | [v2.5模型列表](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/model_list.md) |
-| PaddleDetection | [v2.6模型列表](https://github.com/paddlepaddle/paddledetection/tree/release/2.6#%E6%A8%A1%E5%9E%8B%E5%BA%93) |
-| PaddleSeg       | [v2.8模型列表](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.8/README_CN.md#-%E4%BA%A7%E5%93%81%E7%9F%A9%E9%98%B5) |
-| PaddleOCR       | [v2.6模型列表](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/algorithm_overview.md)  [v2.6PP系列模型列表](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/models_list.md) |
-| PaddleGAN       | [模型列表](https://github.com/paddlepaddle/paddlegan)        |
-| PaddleVideo     | [模型列表](https://github.com/PaddlePaddle/PaddleVideo/tree/develop/docs/zh-CN/model_zoo) |
-| PaddleNLP       | [模型列表](https://github.com/PaddlePaddle/PaddleNLP/tree/develop/paddlenlp/transformers) |
-| PaddleSpeech    | [模型列表](https://github.com/paddlepaddle/paddlespeech)     |
-| PaddleRec       | [模型列表](https://github.com/paddlepaddle/paddlerec)        |
-| PARL            | [模型列表](https://github.com/PaddlePaddle/PARL/tree/develop/examples) |
-| PGL             | [模型列表](https://github.com/PaddlePaddle/PGL/tree/main/examples) |
-
 
 ### PaddleClas
 <table>
@@ -32,1873 +17,1963 @@
     <tr>
         <td>1</td>
         <td>PPLCNet_x0_25</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.5179</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>2</td>
         <td>PPLCNet_x0_35</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.5809</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>3</td>
         <td>PPLCNet_x0_5</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.6314</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>4</td>
         <td>PPLCNet_x0_75</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.6818</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>5</td>
         <td>PPLCNet_x1_0</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.7132</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>6</td>
         <td>PPLCNet_x1_5</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.7371</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>7</td>
         <td>PPLCNet_x2_0</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.7518</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>8</td>
         <td>PPLCNet_x2_5</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=LCNet">PP-LCNet: A Lightweight CPU Convolutional Neural Networ</a></td>
-        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas2</div></details></td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>ImageNet/Acc 0.766</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PP-LCNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>9</td>
-        <td>DistillationModel</td>
-        <td><a href="https://paperswithcode.com/model/seresnext?variant=seresnext50-32x4d">Squeeze-and-Excitation Networks</a></td>
+        <td>SE_ResNeXt50_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
         <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7952</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7844</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>10</td>
-        <td>SE_ResNeXt50_32x4d</td>
-        <td><a href="https://paperswithcode.com/model/seresnext">Squeeze-and-Excitation Networks</a></td>
+        <td>SE_ResNet18_vd</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
         <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7844</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7333</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>11</td>
-        <td>SE_ResNet18_vd</td>
-        <td><a href="https://paperswithcode.com/paper/squeeze-and-excitation-networks">Squeeze-and-Excitation Networks</a></td>
+        <td>SE_ResNet34_vd</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
         <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7333</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7651</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>12</td>
-        <td>SE_ResNet34_vd</td>
-        <td><a href="https://paperswithcode.com/paper/squeeze-and-excitation-networks">Squeeze-and-Excitation Networks</a></td>
+        <td>SE_ResNet50_vd</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
         <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7651</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7952</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>13</td>
-        <td>SE_ResNet50_vd</td>
-        <td><a href="https://paperswithcode.com/paper/squeeze-and-excitation-networks">Squeeze-and-Excitation Networks</a></td>
-        <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7952</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>HRNet_W18_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
+        <td>ImageNet/Acc 0.7692</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>14</td>
-        <td>HRNet_W18_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W30_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.7692</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7804</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>15</td>
-        <td>HRNet_W30_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W32_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.7804</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7828</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>16</td>
-        <td>HRNet_W32_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W40_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.7828</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7877</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>17</td>
-        <td>HRNet_W40_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W44_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.7877</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.79</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>18</td>
-        <td>HRNet_W44_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W48_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.79</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7895</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>19</td>
-        <td>HRNet_W48_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
+        <td>HRNet_W64_C</td>
+        <td><a href="https://arxiv.org/abs/1908.07919">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.7895</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.793</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HRNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>20</td>
-        <td>HRNet_W64_C</td>
-        <td><a href="https://paperswithcode.com/method/hrnet">Deep High-Resolution Representation Learning for Visual Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>High-resolution representations are essential for position-sensitive vision problems, such as human pose estimation, semantic segmentation, and object detection. Existing state-of-the-art frameworks first encode the input image as a low-resolution representation through a subnetwork that is formed by connecting high-to-low resolution convolutions \emph{in series} (e.g., ResNet, VGGNet), and then recover the high-resolution representation from the encoded low-resolution representation. Instead, our proposed network, named as High-Resolution Network (HRNet), maintains high-resolution representations through the whole process. There are two key characteristics: (i) Connect the high-to-low resolution convolution streams \emph{in parallel}; (ii) Repeatedly exchange the information across resolutions. The benefit is that the resulting representation is semantically richer and spatially more precise. We show the superiority of the proposed HRNet in a wide range of applications, including human pose estimation, semantic segmentation, and object detection, suggesting that the HRNet is a stronger backbone for computer vision problems. All the codes are available at~{\url{this https URL}}. </div></details></td>
-        <td>ImageNet/Acc 0.793</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>SE_ResNeXt101_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
+        <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.7939</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>21</td>
-        <td>SE_ResNeXt101_32x4d</td>
-        <td><a href="https://paperswithcode.com/paper/squeeze-and-excitation-networks">Squeeze-and-Excitation Networks</a></td>
+        <td>SENet154_vd</td>
+        <td><a href="https://arxiv.org/abs/1709.01507">Squeeze-and-Excitation Networks</a></td>
         <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL.</div></details></td>
-        <td>ImageNet/Acc 0.7939</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.814</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SENet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>22</td>
-        <td>SENet154_vd</td>
-        <td><a href="https://paperswithcode.com/paper/squeeze-and-excitation-networks">Squeeze-and-Excitation Networks</a></td>
-        <td><details><summary>Abstract</summary><div>The central building block of convolutional neural networks (CNNs) is the convolution operator, which enables networks to construct informative features by fusing both spatial and channel-wise information within local receptive fields at each layer. A broad range of prior research has investigated the spatial component of this relationship, seeking to strengthen the representational power of a CNN by enhancing the quality of spatial encodings throughout its feature hierarchy. In this work, we focus instead on the channel relationship and propose a novel architectural unit, which we term the "Squeeze-and-Excitation" (SE) block, that adaptively recalibrates channel-wise feature responses by explicitly modelling interdependencies between channels. We show that these blocks can be stacked together to form SENet architectures that generalise extremely effectively across different datasets. We further demonstrate that SE blocks bring significant improvements in performance for existing state-of-the-art CNNs at slight additional computational cost. Squeeze-and-Excitation Networks formed the foundation of our ILSVRC 2017 classification submission which won first place and reduced the top-5 error to 2.251%, surpassing the winning entry of 2016 by a relative improvement of ~25%. Models and code are available at this https URL.</div></details></td>
-        <td>ImageNet/Acc 0.814</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>GoogLeNet</td>
+        <td><a href="https://arxiv.org/abs/1409.4842">Going Deeper with Convolutions</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a deep convolutional neural network architecture codenamed "Inception", which was responsible for setting the new state of the art for classification and detection in the ImageNet Large-Scale Visual Recognition Challenge 2014 (ILSVRC 2014). The main hallmark of this architecture is the improved utilization of the computing resources inside the network. This was achieved by a carefully crafted design that allows for increasing the depth and width of the network while keeping the computational budget constant. To optimize quality, the architectural decisions were based on the Hebbian principle and the intuition of multi-scale processing. One particular incarnation used in our submission for ILSVRC 2014 is called GoogLeNet, a 22 layers deep network, the quality of which is assessed in the context of classification and detection.  </div></details></td>
+        <td>ImageNet/Acc 0.707</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>23</td>
-        <td>GoogLeNet</td>
-        <td><a href="https://paperswithcode.com/model/inception-v4?variant=inception-v4-1">Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning</a></td>
-        <td><details><summary>Abstract</summary><div>Very deep convolutional networks have been central to the largest advances in image recognition performance in recent years. One example is the Inception architecture that has been shown to achieve very good performance at relatively low computational cost. Recently, the introduction of residual connections in conjunction with a more traditional architecture has yielded state-of-the-art performance in the 2015 ILSVRC challenge; its performance was similar to the latest generation Inception-v3 network. This raises the question of whether there are any benefit in combining the Inception architecture with residual connections. Here we give clear empirical evidence that training with residual connections accelerates the training of Inception networks significantly. There is also some evidence of residual Inception networks outperforming similarly expensive Inception networks without residual connections by a thin margin. We also present several new streamlined architectures for both residual and non-residual Inception networks. These variations improve the single-frame recognition performance on the ILSVRC 2012 classification task significantly. We further demonstrate how proper activation scaling stabilizes the training of very wide residual Inception networks. With an ensemble of three residual and one Inception-v4, we achieve 3.08 percent top-5 error on the test set of the ImageNet classification (CLS) challenge </div></details></td>
-        <td>ImageNet/Acc 0.707</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>InceptionV3</td>
+        <td><a href="https://arxiv.org/abs/1512.00567">Rethinking the Inception Architecture for Computer Vision</a></td>
+        <td><details><summary>Abstract</summary><div>Convolutional networks are at the core of most state-of-the-art computer vision solutions for a wide variety of tasks. Since 2014 very deep convolutional networks started to become mainstream, yielding substantial gains in various benchmarks. Although increased model size and computational cost tend to translate to immediate quality gains for most tasks (as long as enough labeled data is provided for training), computational efficiency and low parameter count are still enabling factors for various use cases such as mobile vision and big-data scenarios. Here we explore ways to scale up networks in ways that aim at utilizing the added computation as efficiently as possible by suitably factorized convolutions and aggressive regularization. We benchmark our methods on the ILSVRC 2012 classification challenge validation set demonstrate substantial gains over the state of the art: 21.2% top-1 and 5.6% top-5 error for single frame evaluation using a network with a computational cost of 5 billion multiply-adds per inference and with using less than 25 million parameters. With an ensemble of 4 models and multi-crop evaluation, we report 3.5% top-5 error on the validation set (3.6% error on the test set) and 17.3% top-1 error on the validation set.</div></details></td>
+        <td>ImageNet/Acc 0.7914</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>24</td>
-        <td>InceptionV3</td>
-        <td><a href="https://paperswithcode.com/model/inception-v4?variant=inception-v4-1">Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning</a></td>
-        <td><details><summary>Abstract</summary><div>Very deep convolutional networks have been central to the largest advances in image recognition performance in recent years. One example is the Inception architecture that has been shown to achieve very good performance at relatively low computational cost. Recently, the introduction of residual connections in conjunction with a more traditional architecture has yielded state-of-the-art performance in the 2015 ILSVRC challenge; its performance was similar to the latest generation Inception-v3 network. This raises the question of whether there are any benefit in combining the Inception architecture with residual connections. Here we give clear empirical evidence that training with residual connections accelerates the training of Inception networks significantly. There is also some evidence of residual Inception networks outperforming similarly expensive Inception networks without residual connections by a thin margin. We also present several new streamlined architectures for both residual and non-residual Inception networks. These variations improve the single-frame recognition performance on the ILSVRC 2012 classification task significantly. We further demonstrate how proper activation scaling stabilizes the training of very wide residual Inception networks. With an ensemble of three residual and one Inception-v4, we achieve 3.08 percent top-5 error on the test set of the ImageNet classification (CLS) challenge </div></details></td>
-        <td>ImageNet/Acc 0.7914</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
-        </td>
-    </tr>
-    <tr>
-        <td>25</td>
         <td>InceptionV4</td>
         <td><a href="https://paperswithcode.com/model/inception-v4?variant=inception-v4-1">Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning</a></td>
         <td><details><summary>Abstract</summary><div>Very deep convolutional networks have been central to the largest advances in image recognition performance in recent years. One example is the Inception architecture that has been shown to achieve very good performance at relatively low computational cost. Recently, the introduction of residual connections in conjunction with a more traditional architecture has yielded state-of-the-art performance in the 2015 ILSVRC challenge; its performance was similar to the latest generation Inception-v3 network. This raises the question of whether there are any benefit in combining the Inception architecture with residual connections. Here we give clear empirical evidence that training with residual connections accelerates the training of Inception networks significantly. There is also some evidence of residual Inception networks outperforming similarly expensive Inception networks without residual connections by a thin margin. We also present several new streamlined architectures for both residual and non-residual Inception networks. These variations improve the single-frame recognition performance on the ILSVRC 2012 classification task significantly. We further demonstrate how proper activation scaling stabilizes the training of very wide residual Inception networks. With an ensemble of three residual and one Inception-v4, we achieve 3.08 percent top-5 error on the test set of the ImageNet classification (CLS) challenge </div></details></td>
         <td>ImageNet/Acc 0.8077</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>25</td>
+        <td>ResNet18</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
+        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
+        <td>ImageNet/Acc 0.7098</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>26</td>
-        <td>ResNet18</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet18_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7098</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7226</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>27</td>
-        <td>ResNet18_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet34</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7226</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7457</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>28</td>
-        <td>ResNet34</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet34_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7457</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7598</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>29</td>
-        <td>ResNet34_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet50</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7598</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.765</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>30</td>
-        <td>ResNet50</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet50_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.765</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7912</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>31</td>
-        <td>ResNet50_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet50_vd-FPGM</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7912</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>-</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>32</td>
-        <td>ResNet50_vd-FPGM</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet50_vd_PACT</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
         <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>33</td>
-        <td>ResNet50_vd_PACT</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet50_vd_KL</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
         <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>34</td>
-        <td>ResNet50_vd_KL</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNet101</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
+        <td><details><summary>Abstract</summary><div> This paper presents a novel adaptively connected neural network (ACNet) to improve the traditional convolutional neural networks (CNNs) {in} two aspects. First, ACNet employs a flexible way to switch global and local inference in processing the internal feature representations by adaptively determining the connection status among the feature nodes (e.g., pixels of the feature maps) \footnote{In a computer vision domain, a node refers to a pixel of a feature map{, while} in {the} graph domain, a node denotes a graph node.}. We can show that existing CNNs, the classical multilayer perceptron (MLP), and the recently proposed non-local network (NLN) \cite{nonlocalnn17} are all special cases of ACNet. Second, ACNet is also capable of handling non-Euclidean data. Extensive experimental analyses on {a variety of benchmarks (i.e.,} ImageNet-1k classification, COCO 2017 detection and segmentation, CUHK03 person re-identification, CIFAR analysis, and Cora document categorization) demonstrate that {ACNet} cannot only achieve state-of-the-art performance but also overcome the limitation of the conventional MLP and CNN \footnote{Corresponding author: Liang Lin (linliang@ieee.org)}. The code is available at \url{this https URL}. </div></details></td>
+        <td>ImageNet/Acc 0.7756</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>35</td>
-        <td>ResNet101</td>
-        <td><a href="https://paperswithcode.com/paper/adaptively-connected-neural-networks">Adaptively Connected Neural Networks</a></td>
-        <td><details><summary>Abstract</summary><div> This paper presents a novel adaptively connected neural network (ACNet) to improve the traditional convolutional neural networks (CNNs) {in} two aspects. First, ACNet employs a flexible way to switch global and local inference in processing the internal feature representations by adaptively determining the connection status among the feature nodes (e.g., pixels of the feature maps) \footnote{In a computer vision domain, a node refers to a pixel of a feature map{, while} in {the} graph domain, a node denotes a graph node.}. We can show that existing CNNs, the classical multilayer perceptron (MLP), and the recently proposed non-local network (NLN) \cite{nonlocalnn17} are all special cases of ACNet. Second, ACNet is also capable of handling non-Euclidean data. Extensive experimental analyses on {a variety of benchmarks (i.e.,} ImageNet-1k classification, COCO 2017 detection and segmentation, CUHK03 person re-identification, CIFAR analysis, and Cora document categorization) demonstrate that {ACNet} cannot only achieve state-of-the-art performance but also overcome the limitation of the conventional MLP and CNN \footnote{Corresponding author: Liang Lin (linliang@ieee.org)}. The code is available at \url{this https URL}. </div></details></td>
-        <td>ImageNet/Acc 0.7756</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNet101_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
+        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
+        <td>ImageNet/Acc 0.8017</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>36</td>
-        <td>ResNet101_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet152</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.8017</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7826</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>37</td>
-        <td>ResNet152</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet152_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7826</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8059</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>38</td>
-        <td>ResNet152_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
+        <td>ResNet200_vd</td>
+        <td><a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.8059</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8093</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>39</td>
-        <td>ResNet200_vd</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.8093</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Res2Net50_26w_4s</td>
+        <td><a href="https://arxiv.org/abs/1904.01169">Res2Net: A New Multi-scale Backbone Architecture</a></td>
+        <td><details><summary>Abstract</summary><div>Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7933</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Res2Net.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>40</td>
-        <td>Res2Net50_26w_4s</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7933</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Res2Net50_14w_8s</td>
+        <td><a href="https://arxiv.org/abs/1904.01169">Res2Net: A New Multi-scale Backbone Architecture</a></td>
+        <td><details><summary>Abstract</summary><div>Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7946</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Res2Net.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>41</td>
-        <td>Res2Net50_14w_8s</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7946</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Res2Net50_vd_26w_4s</td>
+        <td><a href="https://arxiv.org/abs/1904.01169">Res2Net: A New Multi-scale Backbone Architecture</a></td>
+        <td><details><summary>Abstract</summary><div>Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7975</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Res2Net.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>42</td>
-        <td>Res2Net50_vd_26w_4s</td>
-        <td><a href="https://paperswithcode.com/model/resnet">Deep Residual Learning for Image Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions. We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 3.57% error on the ImageNet test set. This result won the 1st place on the ILSVRC 2015 classification task. We also present analysis on CIFAR-10 with 100 and 1000 layers.The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7975</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Res2Net101_vd_26w_4s</td>
+        <td><a href="https://arxiv.org/abs/1904.01169">Res2Net: A New Multi-scale Backbone Architecture</a></td>
+        <td><details><summary>Abstract</summary><div>Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.8064</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Res2Net.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>43</td>
-        <td>Res2Net101_vd_26w_4s</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8064</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Res2Net200_vd_26w_4s</td>
+        <td><a href="https://arxiv.org/abs/1904.01169">Res2Net: A New Multi-scale Backbone Architecture</a></td>
+        <td><details><summary>Abstract</summary><div>Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.8121</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Res2Net.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>44</td>
-        <td>Res2Net200_vd_26w_4s</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8121</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt50_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7775</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>45</td>
-        <td>ResNeXt50_32x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7775</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt50_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7843</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>46</td>
-        <td>ResNeXt50_64x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7843</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt50_vd_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7956</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>47</td>
-        <td>ResNeXt50_vd_32x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7956</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt50_vd_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.8012</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>48</td>
-        <td>ResNeXt50_vd_64x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8012</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt101_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7865</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>49</td>
-        <td>ResNeXt101_32x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7865</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt101_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.8033</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>50</td>
-        <td>ResNeXt101_64x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8033</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt101_vd_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7835</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>51</td>
-        <td>ResNeXt101_vd_32x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7835</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt101_vd_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.8078</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>52</td>
-        <td>ResNeXt101_vd_64x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8078</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt152_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7898</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>53</td>
-        <td>ResNeXt152_32x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7898</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt152_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.7951</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>54</td>
-        <td>ResNeXt152_64x4d</td>
-        <td><a href="﻿﻿﻿https://paperswithcode.com/model/res2net">Res2Net: A New Multi-scale Backbone Architecture</a></td>
-        <td><details><summary>Abstract</summary><div>﻿    Representing features at multiple scales is of great importance for numerous vision tasks. Recent advances in backbone convolutional neural networks (CNNs) continually demonstrate stronger multi-scale representation ability, leading to consistent performance gains on a wide range of applications. However, most existing methods represent the multi-scale features in a layer-wise manner. In this paper, we propose a novel building block for CNNs, namely Res2Net, by constructing hierarchical residual-like connections within one single residual block. The Res2Net represents multi-scale features at a granular level and increases the range of receptive fields for each network layer. The proposed Res2Net block can be plugged into the state-of-the-art backbone CNN models, e.g., ResNet, ResNeXt, and DLA. We evaluate the Res2Net block on all these models and demonstrate consistent performance gains over baseline models on widely-used datasets, e.g., CIFAR-100 and ImageNet. Further ablation studies and experimental results on representative computer vision tasks, i.e., object detection, class activation mapping, and salient object detection, further verify the superiority of the Res2Net over the state-of-the-art baseline methods. The source code and trained models are available on this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7951</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ResNeXt152_vd_32x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
+        <td>ImageNet/Acc 0.8072</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>55</td>
-        <td>ResNeXt152_vd_32x4d</td>
-        <td><a href="https://paperswithcode.com/model/resnext">Aggregated Residual Transformations for Deep Neural Networks</a></td>
+        <td>ResNeXt152_vd_64x4d</td>
+        <td><a href="https://arxiv.org/abs/1611.05431">Aggregated Residual Transformations for Deep Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
-        <td>ImageNet/Acc 0.8072</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8108</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>56</td>
-        <td>ResNeXt152_vd_64x4d</td>
-        <td><a href="https://paperswithcode.com/model/resnext">Aggregated Residual Transformations for Deep Neural Networks</a></td>
-        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
-        <td>ImageNet/Acc 0.8108</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DenseNet121</td>
+        <td><a href="https://arxiv.org/abs/1608.06993">Densely Connected Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7566</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DenseNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>57</td>
-        <td>DenseNet121</td>
-        <td><a href="https://paperswithcode.com/model/resnext">Aggregated Residual Transformations for Deep Neural Networks</a></td>
-        <td><details><summary>Abstract</summary><div>We present a simple, highly modularized network architecture for image classification. Our network is constructed by repeating a building block that aggregates a set of transformations with the same topology. Our simple design results in a homogeneous, multi-branch architecture that has only a few hyper-parameters to set. This strategy exposes a new dimension, which we call "cardinality" (the size of the set of transformations), as an essential factor in addition to the dimensions of depth and width. On the ImageNet-1K dataset, we empirically show that even under the restricted condition of maintaining complexity, increasing cardinality is able to improve classification accuracy. Moreover, increasing cardinality is more effective than going deeper or wider when we increase the capacity. Our models, named ResNeXt, are the foundations of our entry to the ILSVRC 2016 classification task in which we secured 2nd place. We further investigate ResNeXt on an ImageNet-5K set and the COCO detection set, also showing better results than its ResNet counterpart. The code and models are publicly available online. </div></details></td>
-        <td>ImageNet/Acc 0.7566</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DenseNet161</td>
+        <td><a href="https://arxiv.org/abs/1608.06993">Densely Connected Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7857</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DenseNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>58</td>
-        <td>DenseNet161</td>
-        <td><a href="https://paperswithcode.com/paper/densely-connected-convolutional-networks">Densely Connected Convolutional Networks</a></td>
-        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.7857</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DenseNet169</td>
+        <td><a href="https://arxiv.org/abs/1608.06993">Densely Connected Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7681</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DenseNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>59</td>
-        <td>DenseNet169</td>
-        <td><a href="https://paperswithcode.com/paper/densely-connected-convolutional-networks">Densely Connected Convolutional Networks</a></td>
-        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.7681</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DenseNet201</td>
+        <td><a href="https://arxiv.org/abs/1608.06993">Densely Connected Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7763</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DenseNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>60</td>
-        <td>DenseNet201</td>
-        <td><a href="https://paperswithcode.com/paper/densely-connected-convolutional-networks">Densely Connected Convolutional Networks</a></td>
-        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.7763</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DenseNet264</td>
+        <td><a href="https://arxiv.org/abs/1608.06993">Densely Connected Convolutional Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7796</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DenseNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>61</td>
-        <td>DenseNet264</td>
-        <td><a href="https://paperswithcode.com/paper/densely-connected-convolutional-networks">Densely Connected Convolutional Networks</a></td>
-        <td><details><summary>Abstract</summary><div>Recent work has shown that convolutional networks can be substantially deeper, more accurate, and efficient to train if they contain shorter connections between layers close to the input and those close to the output. In this paper, we embrace this observation and introduce the Dense Convolutional Network (DenseNet), which connects each layer to every other layer in a feed-forward fashion. Whereas traditional convolutional networks with L layers have L connections - one between each layer and its subsequent layer - our network has L(L+1)/2 direct connections. For each layer, the feature-maps of all preceding layers are used as inputs, and its own feature-maps are used as inputs into all subsequent layers. DenseNets have several compelling advantages: they alleviate the vanishing-gradient problem, strengthen feature propagation, encourage feature reuse, and substantially reduce the number of parameters. We evaluate our proposed architecture on four highly competitive object recognition benchmark tasks (CIFAR-10, CIFAR-100, SVHN, and ImageNet). DenseNets obtain significant improvements over the state-of-the-art on most of them, whilst requiring less computation to achieve high performance. Code and pre-trained models are available at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.7796</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DPN68</td>
+        <td><a href="https://arxiv.org/abs/1707.01629">Dual Path Networks</a></td>
+        <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
+        <td>ImageNet/Acc 0.7678</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DPN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>62</td>
-        <td>DPN68</td>
-        <td><a href="https://paperswithcode.com/paper/dual-path-networks">Dual Path Networks</a></td>
+        <td>DPN92</td>
+        <td><a href="https://arxiv.org/abs/1707.01629">Dual Path Networks</a></td>
         <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
-        <td>ImageNet/Acc 0.7678</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7985</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DPN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>63</td>
-        <td>DPN92</td>
-        <td><a href="https://paperswithcode.com/paper/dual-path-networks">Dual Path Networks</a></td>
+        <td>DPN98</td>
+        <td><a href="https://arxiv.org/abs/1707.01629">Dual Path Networks</a></td>
         <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
-        <td>ImageNet/Acc 0.7985</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8059</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DPN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>64</td>
-        <td>DPN98</td>
-        <td><a href="https://paperswithcode.com/paper/dual-path-networks">Dual Path Networks</a></td>
+        <td>DPN107</td>
+        <td><a href="https://arxiv.org/abs/1707.01629">Dual Path Networks</a></td>
         <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
-        <td>ImageNet/Acc 0.8059</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8089</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DPN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>65</td>
-        <td>DPN107</td>
-        <td><a href="https://paperswithcode.com/paper/dual-path-networks">Dual Path Networks</a></td>
+        <td>DPN131</td>
+        <td><a href="https://arxiv.org/abs/1707.01629">Dual Path Networks</a></td>
         <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
-        <td>ImageNet/Acc 0.8089</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.807</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DPN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>66</td>
-        <td>DPN131</td>
-        <td><a href="https://paperswithcode.com/paper/dual-path-networks">Dual Path Networks</a></td>
-        <td><details><summary>Abstract</summary><div>In this work, we present a simple, highly efficient and modularized Dual Path Network (DPN) for image classification which presents a new topology of connection paths internally. By revealing the equivalence of the state-of-the-art Residual Network (ResNet) and Densely Convolutional Network (DenseNet) within the HORNN framework, we find that ResNet enables feature re-usage while DenseNet enables new features exploration which are both important for learning good representations. To enjoy the benefits from both path topologies, our proposed Dual Path Network shares common features while maintaining the flexibility to explore new features through dual path architectures. Extensive experiments on three benchmark datasets, ImagNet-1k, Places365 and PASCAL VOC, clearly demonstrate superior performance of the proposed DPN over state-of-the-arts. In particular, on the ImagNet-1k dataset, a shallow DPN surpasses the best ResNeXt-101(64x4d) with 26% smaller model size, 25% less computational cost and 8% lower memory consumption, and a deeper DPN (DPN-131) further pushes the state-of-the-art single model performance with about 2 times faster training speed. Experiments on the Places365 large-scale scene dataset, PASCAL VOC detection dataset, and PASCAL VOC segmentation dataset also demonstrate its consistently better performance than DenseNet, ResNet and the latest ResNeXt model over various applications. </div></details></td>
-        <td>ImageNet/Acc 0.807</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>VGG11</td>
+        <td><a href="https://arxiv.org/abs/1409.1556">Very Deep Convolutional Networks for Large-Scale Image Recognition</a></td>
+        <td><details><summary>Abstract</summary><div>In this work we investigate the effect of the convolutional network depth on its accuracy in the large-scale image recognition setting. Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3x3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16-19 weight layers. These findings were the basis of our ImageNet Challenge 2014 submission, where our team secured the first and the second places in the localisation and classification tracks respectively. We also show that our representations generalise well to other datasets, where they achieve state-of-the-art results. We have made our two best-performing ConvNet models publicly available to facilitate further research on the use of deep visual representations in computer vision. </div></details></td>
+        <td>ImageNet/Acc 0.693</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VGG.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>67</td>
-        <td>VGG11</td>
-        <td><a href="https://paperswithcode.com/model/vgg">https://paperswithcode.com/method/vgg</a></td>
+        <td>VGG13</td>
+        <td><a href="https://arxiv.org/abs/1409.1556">Very Deep Convolutional Networks for Large-Scale Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>In this work we investigate the effect of the convolutional network depth on its accuracy in the large-scale image recognition setting. Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3x3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16-19 weight layers. These findings were the basis of our ImageNet Challenge 2014 submission, where our team secured the first and the second places in the localisation and classification tracks respectively. We also show that our representations generalise well to other datasets, where they achieve state-of-the-art results. We have made our two best-performing ConvNet models publicly available to facilitate further research on the use of deep visual representations in computer vision. </div></details></td>
-        <td>ImageNet/Acc 0.693</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VGG.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>68</td>
-        <td>VGG13</td>
-        <td><a href="https://paperswithcode.com/model/vgg">https://paperswithcode.com/method/vgg</a></td>
+        <td>VGG16</td>
+        <td><a href="https://arxiv.org/abs/1409.1556">Very Deep Convolutional Networks for Large-Scale Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>In this work we investigate the effect of the convolutional network depth on its accuracy in the large-scale image recognition setting. Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3x3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16-19 weight layers. These findings were the basis of our ImageNet Challenge 2014 submission, where our team secured the first and the second places in the localisation and classification tracks respectively. We also show that our representations generalise well to other datasets, where they achieve state-of-the-art results. We have made our two best-performing ConvNet models publicly available to facilitate further research on the use of deep visual representations in computer vision. </div></details></td>
-        <td>ImageNet/Acc 0.7</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.72</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VGG.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>69</td>
-        <td>VGG16</td>
-        <td><a href="https://paperswithcode.com/model/vgg">https://paperswithcode.com/method/vgg</a></td>
+        <td>VGG19</td>
+        <td><a href="https://arxiv.org/abs/1409.1556">Very Deep Convolutional Networks for Large-Scale Image Recognition</a></td>
         <td><details><summary>Abstract</summary><div>In this work we investigate the effect of the convolutional network depth on its accuracy in the large-scale image recognition setting. Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3x3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16-19 weight layers. These findings were the basis of our ImageNet Challenge 2014 submission, where our team secured the first and the second places in the localisation and classification tracks respectively. We also show that our representations generalise well to other datasets, where they achieve state-of-the-art results. We have made our two best-performing ConvNet models publicly available to facilitate further research on the use of deep visual representations in computer vision. </div></details></td>
-        <td>ImageNet/Acc 0.72</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.726</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VGG.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>70</td>
-        <td>VGG19</td>
-        <td><a href="https://paperswithcode.com/model/vgg">https://paperswithcode.com/method/vgg</a></td>
-        <td><details><summary>Abstract</summary><div>In this work we investigate the effect of the convolutional network depth on its accuracy in the large-scale image recognition setting. Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3x3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16-19 weight layers. These findings were the basis of our ImageNet Challenge 2014 submission, where our team secured the first and the second places in the localisation and classification tracks respectively. We also show that our representations generalise well to other datasets, where they achieve state-of-the-art results. We have made our two best-performing ConvNet models publicly available to facilitate further research on the use of deep visual representations in computer vision. </div></details></td>
-        <td>ImageNet/Acc 0.726</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>AlexNet</td>
+        <td><a href="https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf">ImageNet Classification with Deep Convolutional Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>We trained a large, deep convolutional neural network to classify the 1.2 million high-resolution images in the ImageNet LSVRC-2010 contest into the 1000 different classes. On the test data, we achieved top-1 and top-5 error rates of 37.5% and 17.0% which is considerably better than the previous state-of-the-art. The neural network, which has 60 million parameters and 650,000 neurons, consists of five convolutional layers, some of which are followed by max-pooling layers, and three fully-connected layers with a final 1000-way softmax. To make training faster, we used non-saturating neurons and a very efficient GPU implementation of the convolution operation. To reduce overfitting in the fully-connected layers we employed a recently-developed regularization method called “dropout” that proved to be very effective. We also entered a variant of this model in the ILSVRC-2012 competition and achieved a winning top-5 test error rate of 15.3%, compared to 26.2% achieved by the second-best entry</div></details></td>
+        <td>ImageNet/Acc 0.567</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Others.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>71</td>
-        <td>AlexNet</td>
-        <td><a href="https://paperswithcode.com/model/alexnet">ImageNet Classification with Deep Convolutional Neural Networks</a></td>
-        <td><details><summary>Abstract</summary><div>We trained a large, deep convolutional neural network to classify the 1.2 million high-resolution images in the ImageNet LSVRC-2010 contest into the 1000 different classes. On the test data, we achieved top-1 and top-5 error rates of 37.5% and 17.0% which is considerably better than the previous state-of-the-art. The neural network, which has 60 million parameters and 650,000 neurons, consists of five convolutional layers, some of which are followed by max-pooling layers, and three fully-connected layers with a final 1000-way softmax. To make training faster, we used non-saturating neurons and a very efficient GPU implementation of the convolution operation. To reduce overfitting in the fully-connected layers we employed a recently-developed regularization method called “dropout” that proved to be very effective. We also entered a variant of this model in the ILSVRC-2012 competition and achieved a winning top-5 test error rate of 15.3%, compared to 26.2% achieved by the second-best entry</div></details></td>
-        <td>ImageNet/Acc 0.567</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>Xception41</td>
+        <td><a href="https://arxiv.org/abs/1610.02357">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
+        <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
+        <td>ImageNet/Acc 0.793</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>72</td>
-        <td>Xception41</td>
-        <td><a href="https://paperswithcode.com/model/xception?variant=xception-1">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
+        <td>Xception65</td>
+        <td><a href="https://arxiv.org/abs/1610.02357">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
         <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
-        <td>ImageNet/Acc 0.793</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.81</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>73</td>
-        <td>Xception65</td>
-        <td><a href="https://paperswithcode.com/model/xception?variant=xception-1">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
+        <td>Xception71</td>
+        <td><a href="https://arxiv.org/abs/1610.02357">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
         <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
-        <td>ImageNet/Acc 0.81</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8111</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>74</td>
-        <td>Xception71</td>
-        <td><a href="https://paperswithcode.com/model/xception?variant=xception-1">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
+        <td>Xception41_deeplab</td>
+        <td><a href="https://arxiv.org/abs/1610.02357">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
         <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
-        <td>ImageNet/Acc 0.8111</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7955</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>75</td>
-        <td>Xception41_deeplab</td>
-        <td><a href="https://paperswithcode.com/model/xception?variant=xception-1">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
+        <td>Xception65_deeplab</td>
+        <td><a href="https://arxiv.org/abs/1610.02357">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
         <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
-        <td>ImageNet/Acc 0.7955</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8032</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Inception.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>76</td>
-        <td>Xception65_deeplab</td>
-        <td><a href="https://paperswithcode.com/model/xception?variant=xception-1">Xception: Deep Learning with Depthwise Separable Convolutions</a></td>
-        <td><details><summary>Abstract</summary><div>We present an interpretation of Inception modules in convolutional neural networks as being an intermediate step in-between regular convolution and the depthwise separable convolution operation (a depthwise convolution followed by a pointwise convolution). In this light, a depthwise separable convolution can be understood as an Inception module with a maximally large number of towers. This observation leads us to propose a novel deep convolutional neural network architecture inspired by Inception, where Inception modules have been replaced with depthwise separable convolutions. We show that this architecture, dubbed Xception, slightly outperforms Inception V3 on the ImageNet dataset (which Inception V3 was designed for), and significantly outperforms Inception V3 on a larger image classification dataset comprising 350 million images and 17,000 classes. Since the Xception architecture has the same number of parameters as Inception V3, the performance gains are not due to increased capacity but rather to a more efficient use of model parameters. </div></details></td>
-        <td>ImageNet/Acc 0.8032</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DarkNet53</td>
+        <td><a href="https://arxiv.org/pdf/1804.02767.pdf">YOLOv3: An Incremental Improvement</a></td>
+        <td><details><summary>Abstract</summary><div>We present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that's pretty swell. It's a little bigger than last time but more accurate. It's still fast though, don't worry. At 320x320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 mAP@50 in 51 ms on a Titan X, compared to 57.5 mAP@50 in 198 ms by RetinaNet, similar performance but 3.8x faster. As always, all the code is online at this https URL</div></details></td>
+        <td>ImageNet/Acc 0.78</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Others.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>77</td>
-        <td>DarkNet53</td>
-        <td><a href="https://paperswithcode.com/method/darknet-53">YOLOv3: An Incremental Improvement</a></td>
-        <td><details><summary>Abstract</summary><div>We present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that's pretty swell. It's a little bigger than last time but more accurate. It's still fast though, don't worry. At 320x320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 mAP@50 in 51 ms on a Titan X, compared to 57.5 mAP@50 in 198 ms by RetinaNet, similar performance but 3.8x faster. As always, all the code is online at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.78</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>EfficientNetB0</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7738</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>78</td>
-        <td>EfficientNetB0</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB1</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7738</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7915</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>79</td>
-        <td>EfficientNetB1</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB2</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7915</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7985</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>80</td>
-        <td>EfficientNetB2</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB3</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7985</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8115</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>81</td>
-        <td>EfficientNetB3</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB4</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8115</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8285</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>82</td>
-        <td>EfficientNetB4</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB5</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8285</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.8362</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>83</td>
-        <td>EfficientNetB5</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB6</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8362</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.84</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>84</td>
-        <td>EfficientNetB6</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
+        <td>EfficientNetB7</td>
+        <td><a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
         <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.84</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.843</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/EfficientNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>85</td>
-        <td>EfficientNetB7</td>
-        <td><a href="https://paperswithcode.com/method/efficientnet">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a></td>
-        <td><details><summary>Abstract</summary><div>Convolutional Neural Networks (ConvNets) are commonly developed at a fixed resource budget, and then scaled up for better accuracy if more resources are available. In this paper, we systematically study model scaling and identify that carefully balancing network depth, width, and resolution can lead to better performance. Based on this observation, we propose a new scaling method that uniformly scales all dimensions of depth/width/resolution using a simple yet highly effective compound coefficient. We demonstrate the effectiveness of this method on scaling up MobileNets and ResNet.To go even further, we use neural architecture search to design a new baseline network and scale it up to obtain a family of models, called EfficientNets, which achieve much better accuracy and efficiency than previous ConvNets. In particular, our EfficientNet-B7 achieves state-of-the-art 84.3% top-1 accuracy on ImageNet, while being 8.4x smaller and 6.1x faster on inference than the best existing ConvNet. Our EfficientNets also transfer well and achieve state-of-the-art accuracy on CIFAR-100 (91.7%), Flowers (98.8%), and 3 other transfer learning datasets, with an order of magnitude fewer parameters. Source code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.843</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>SqueezeNet1_0</td>
+        <td><a href="https://arxiv.org/abs/1602.07360">SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and </a></td>
+        <td><details><summary>Abstract</summary><div>Recent research on deep neural networks has focused primarily on improving accuracy. For a given accuracy level, it is typically possible to identify multiple DNN architectures that achieve that accuracy level. With equivalent accuracy, smaller DNN architectures offer at least three advantages: (1) Smaller DNNs require less communication across servers during distributed training. (2) Smaller DNNs require less bandwidth to export a new model from the cloud to an autonomous car. (3) Smaller DNNs are more feasible to deploy on FPGAs and other hardware with limited memory. To provide all of these advantages, we propose a small DNN architecture called SqueezeNet. SqueezeNet achieves AlexNet-level accuracy on ImageNet with 50x fewer parameters. Additionally, with model compression techniques we are able to compress SqueezeNet to less than 0.5MB (510x smaller than AlexNet).The SqueezeNet architecture is available for download here: this https URL</div></details></td>
+        <td>ImageNet/Acc 0.596</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Others.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>86</td>
-        <td>SqueezeNet1_0</td>
-        <td><a href="https://paperswithcode.com/method/squeezenet">SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size</a></td>
+        <td>SqueezeNet1_1</td>
+        <td><a href="https://arxiv.org/abs/1602.07360">SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and </a></td>
         <td><details><summary>Abstract</summary><div>Recent research on deep neural networks has focused primarily on improving accuracy. For a given accuracy level, it is typically possible to identify multiple DNN architectures that achieve that accuracy level. With equivalent accuracy, smaller DNN architectures offer at least three advantages: (1) Smaller DNNs require less communication across servers during distributed training. (2) Smaller DNNs require less bandwidth to export a new model from the cloud to an autonomous car. (3) Smaller DNNs are more feasible to deploy on FPGAs and other hardware with limited memory. To provide all of these advantages, we propose a small DNN architecture called SqueezeNet. SqueezeNet achieves AlexNet-level accuracy on ImageNet with 50x fewer parameters. Additionally, with model compression techniques we are able to compress SqueezeNet to less than 0.5MB (510x smaller than AlexNet).The SqueezeNet architecture is available for download here: this https URL</div></details></td>
-        <td>ImageNet/Acc 0.596</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.601</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Others.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>87</td>
-        <td>SqueezeNet1_1</td>
-        <td><a href="https://paperswithcode.com/method/squeezenet">SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size</a></td>
-        <td><details><summary>Abstract</summary><div>Recent research on deep neural networks has focused primarily on improving accuracy. For a given accuracy level, it is typically possible to identify multiple DNN architectures that achieve that accuracy level. With equivalent accuracy, smaller DNN architectures offer at least three advantages: (1) Smaller DNNs require less communication across servers during distributed training. (2) Smaller DNNs require less bandwidth to export a new model from the cloud to an autonomous car. (3) Smaller DNNs are more feasible to deploy on FPGAs and other hardware with limited memory. To provide all of these advantages, we propose a small DNN architecture called SqueezeNet. SqueezeNet achieves AlexNet-level accuracy on ImageNet with 50x fewer parameters. Additionally, with model compression techniques we are able to compress SqueezeNet to less than 0.5MB (510x smaller than AlexNet).The SqueezeNet architecture is available for download here: this https URL</div></details></td>
-        <td>ImageNet/Acc 0.601</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>MobileNetV1</td>
+        <td><a href="https://arxiv.org/abs/1704.04861">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
+        <td><details><summary>Abstract</summary><div> We present a class of efficient models called MobileNets for mobile and embedded vision applications. MobileNets are based on a streamlined architecture that uses depth-wise separable convolutions to build light weight deep neural networks. We introduce two simple global hyper-parameters that efficiently trade off between latency and accuracy. These hyper-parameters allow the model builder to choose the right sized model for their application based on the constraints of the problem. We present extensive experiments on resource and accuracy tradeoffs and show strong performance compared to other popular models on ImageNet classification. We then demonstrate the effectiveness of MobileNets across a wide range of applications and use cases including object detection, finegrain classification, face attributes and large scale geo-localization. </div></details></td>
+        <td>ImageNet/Acc 0.7099</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV1.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>88</td>
-        <td>MobileNetV1</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv1">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
+        <td>MobileNetV1_x0_25</td>
+        <td><a href="https://arxiv.org/abs/1704.04861">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
         <td><details><summary>Abstract</summary><div> We present a class of efficient models called MobileNets for mobile and embedded vision applications. MobileNets are based on a streamlined architecture that uses depth-wise separable convolutions to build light weight deep neural networks. We introduce two simple global hyper-parameters that efficiently trade off between latency and accuracy. These hyper-parameters allow the model builder to choose the right sized model for their application based on the constraints of the problem. We present extensive experiments on resource and accuracy tradeoffs and show strong performance compared to other popular models on ImageNet classification. We then demonstrate the effectiveness of MobileNets across a wide range of applications and use cases including object detection, finegrain classification, face attributes and large scale geo-localization. </div></details></td>
-        <td>ImageNet/Acc 0.7099</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.5143</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV1.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>89</td>
-        <td>MobileNetV1_x0_25</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv1">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
+        <td>MobileNetV1_x0_5</td>
+        <td><a href="https://arxiv.org/abs/1704.04861">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
         <td><details><summary>Abstract</summary><div> We present a class of efficient models called MobileNets for mobile and embedded vision applications. MobileNets are based on a streamlined architecture that uses depth-wise separable convolutions to build light weight deep neural networks. We introduce two simple global hyper-parameters that efficiently trade off between latency and accuracy. These hyper-parameters allow the model builder to choose the right sized model for their application based on the constraints of the problem. We present extensive experiments on resource and accuracy tradeoffs and show strong performance compared to other popular models on ImageNet classification. We then demonstrate the effectiveness of MobileNets across a wide range of applications and use cases including object detection, finegrain classification, face attributes and large scale geo-localization. </div></details></td>
-        <td>ImageNet/Acc 0.5143</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6352</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV1.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>90</td>
-        <td>MobileNetV1_x0_5</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv1">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
+        <td>MobileNetV1_x0_75</td>
+        <td><a href="https://arxiv.org/abs/1704.04861">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
         <td><details><summary>Abstract</summary><div> We present a class of efficient models called MobileNets for mobile and embedded vision applications. MobileNets are based on a streamlined architecture that uses depth-wise separable convolutions to build light weight deep neural networks. We introduce two simple global hyper-parameters that efficiently trade off between latency and accuracy. These hyper-parameters allow the model builder to choose the right sized model for their application based on the constraints of the problem. We present extensive experiments on resource and accuracy tradeoffs and show strong performance compared to other popular models on ImageNet classification. We then demonstrate the effectiveness of MobileNets across a wide range of applications and use cases including object detection, finegrain classification, face attributes and large scale geo-localization. </div></details></td>
-        <td>ImageNet/Acc 0.6352</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6881</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV1.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>91</td>
-        <td>MobileNetV1_x0_75</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv1">MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</a></td>
-        <td><details><summary>Abstract</summary><div> We present a class of efficient models called MobileNets for mobile and embedded vision applications. MobileNets are based on a streamlined architecture that uses depth-wise separable convolutions to build light weight deep neural networks. We introduce two simple global hyper-parameters that efficiently trade off between latency and accuracy. These hyper-parameters allow the model builder to choose the right sized model for their application based on the constraints of the problem. We present extensive experiments on resource and accuracy tradeoffs and show strong performance compared to other popular models on ImageNet classification. We then demonstrate the effectiveness of MobileNets across a wide range of applications and use cases including object detection, finegrain classification, face attributes and large scale geo-localization. </div></details></td>
-        <td>ImageNet/Acc 0.6881</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>MobileNetV2</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
+        <td>ImageNet/Acc 0.7215</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>92</td>
-        <td>MobileNetV2</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td>MobileNetV2_x0_25</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
         <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.7215</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.5321</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>93</td>
-        <td>MobileNetV2_x0_25</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td>MobileNetV2_x0_5</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
         <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.5321</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6503</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>94</td>
-        <td>MobileNetV2_x0_5</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td>MobileNetV2_x0_75</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
         <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.6503</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6983</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>95</td>
-        <td>MobileNetV2_x0_75</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td>MobileNetV2_x1_5</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
         <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.6983</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7412</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>96</td>
-        <td>MobileNetV2_x1_5</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
+        <td>MobileNetV2_x2_0</td>
+        <td><a href="https://arxiv.org/abs/1801.04381">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
         <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.7412</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7523</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>97</td>
-        <td>MobileNetV2_x2_0</td>
-        <td><a href="https://paperswithcode.com/method/mobilenetv2">MobileNetV2: Inverted Residuals and Linear Bottlenecks</a></td>
-        <td><details><summary>Abstract</summary><div>In this paper we describe a new mobile architecture, MobileNetV2, that improves the state of the art performance of mobile models on multiple tasks and benchmarks as well as across a spectrum of different model sizes. We also describe efficient ways of applying these mobile models to object detection in a novel framework we call SSDLite. Additionally, we demonstrate how to build mobile semantic segmentation models through a reduced form of DeepLabv3 which we call Mobile DeepLabv3.The MobileNetV2 architecture is based on an inverted residual structure where the input and output of the residual block are thin bottleneck layers opposite to traditional residual models which use expanded representations in the input an MobileNetV2 uses lightweight depthwise convolutions to filter features in the intermediate expansion layer. Additionally, we find that it is important to remove non-linearities in the narrow layers in order to maintain representational power. We demonstrate that this improves performance and provide an intuition that led to this design. Finally, our approach allows decoupling of the input/output domains from the expressiveness of the transformation, which provides a convenient framework for further analysis. We measure our performance on Imagenet classification, COCO object detection, VOC image segmentation. We evaluate the trade-offs between accuracy, and number of operations measured by multiply-adds (MAdd), as well as the number of parameters </div></details></td>
-        <td>ImageNet/Acc 0.7523</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>MobileNetV3_large_x0_</br>35</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
+        <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
+        <td>ImageNet/Acc 0.6432</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>98</td>
-        <td>MobileNetV3_large_x0_</br>35</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_large_x0_</br>5</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.6432</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6924</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>99</td>
-        <td>MobileNetV3_large_x0_</br>5</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_large_x0_</br>75</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.6924</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7314</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>100</td>
-        <td>MobileNetV3_large_x0_</br>75</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_large_x1_</br>0</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7314</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7532</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>101</td>
-        <td>MobileNetV3_large_x1_</br>0</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_large_x1_</br>0-FPGM</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7532</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>-</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>102</td>
-        <td>MobileNetV3_large_x1_</br>0-FPGM</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv4">Searching for MobileNetV4</a></td>
+        <td>MobileNetV3_large_x1_</br>0_PACT</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
         <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>103</td>
-        <td>MobileNetV3_large_x1_</br>0_PACT</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv5">Searching for MobileNetV5</a></td>
+        <td>MobileNetV3_large_x1_</br>0_KL</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
         <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>104</td>
-        <td>MobileNetV3_large_x1_</br>0_KL</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv6">Searching for MobileNetV6</a></td>
+        <td>MobileNetV3_large_x1_</br>25</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7067</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>105</td>
-        <td>MobileNetV3_large_x1_</br>25</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_small_x0_</br>35</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7067</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.5303</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>106</td>
-        <td>MobileNetV3_small_x0_</br>35</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_small_x0_</br>5</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.5303</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.5921</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>107</td>
-        <td>MobileNetV3_small_x0_</br>5</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_small_x0_</br>75</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.5921</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6602</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>108</td>
-        <td>MobileNetV3_small_x0_</br>75</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_small_x1_</br>0</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.6602</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6824</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>109</td>
-        <td>MobileNetV3_small_x1_</br>0</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
+        <td>MobileNetV3_small_x1_</br>25</td>
+        <td><a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a></td>
         <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.6824</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7067</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileNetV3.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>110</td>
-        <td>MobileNetV3_small_x1_</br>25</td>
-        <td><a href="https://paperswithcode.com/paper/searching-for-mobilenetv3">Searching for MobileNetV3</a></td>
-        <td><details><summary>Abstract</summary><div>We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2\% more accurate on ImageNet classification while reducing latency by 15\% compared to MobileNetV2. MobileNetV3-Small is 4.6\% more accurate while reducing latency by 5\% compared to MobileNetV2. MobileNetV3-Large detection is 25\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation. </div></details></td>
-        <td>ImageNet/Acc 0.7067</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ShuffleNetV2_swish</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
+        <td>ImageNet/Acc 0.7003</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>111</td>
-        <td>ShuffleNetV2_swish</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x0_25</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.7003</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.499</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>112</td>
-        <td>ShuffleNetV2_x0_25</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x0_33</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.499</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.5373</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>113</td>
-        <td>ShuffleNetV2_x0_33</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x0_5</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.5373</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.6032</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>114</td>
-        <td>ShuffleNetV2_x0_5</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x1_0</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.6032</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.688</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>115</td>
-        <td>ShuffleNetV2_x1_0</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x1_5</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.688</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7163</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>116</td>
-        <td>ShuffleNetV2_x1_5</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
+        <td>ShuffleNetV2_x2_0</td>
+        <td><a href="https://arxiv.org/abs/1807.11164">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
         <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.7163</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7315</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ShuffleNetV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>117</td>
-        <td>ShuffleNetV2_x2_0</td>
-        <td><a href="https://paperswithcode.com/method/shufflenet-v2">ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design</a></td>
-        <td><details><summary>Abstract</summary><div>Currently, the neural network architecture design is mostly guided by the \emph{indirect} metric of computation complexity, i.e., FLOPs. However, the \emph{direct} metric, e.g., speed, also depends on the other factors such as memory access cost and platform characterics. Thus, this work proposes to evaluate the direct metric on the target platform, beyond only considering FLOPs. Based on a series of controlled experiments, this work derives several practical \emph{guidelines} for efficient network design. Accordingly, a new architecture is presented, called \emph{ShuffleNet V2}. Comprehensive ablation experiments verify that our model is the state-of-the-art in terms of speed and accuracy tradeoff. </div></details></td>
-        <td>ImageNet/Acc 0.7315</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>CSPDarkNet53</td>
+        <td><a href="https://arxiv.org/abs/1911.11929">CSPNet: A New Backbone that can Enhance Learning Capability of CNN</a></td>
+        <td><details><summary>Abstract</summary><div>Neural networks have enabled state-of-the-art approaches to achieve incredible results on computer vision tasks such as object detection. However, such success greatly relies on costly computation resources, which hinders people with cheap devices from appreciating the advanced technology. In this paper, we propose Cross Stage Partial Network (CSPNet) to mitigate the problem that previous works require heavy inference computations from the network architecture perspective. We attribute the problem to the duplicate gradient information within network optimization. The proposed networks respect the variability of the gradients by integrating feature maps from the beginning and the end of a network stage, which, in our experiments, reduces computations by 20% with equivalent or even superior accuracy on the ImageNet dataset, and significantly outperforms state-of-the-art approaches in terms of AP50 on the MS COCO object detection dataset. The CSPNet is easy to implement and general enough to cope with architectures based on ResNet, ResNeXt, and DenseNet. Source code is at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7725</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSPNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>118</td>
-        <td>CSPDarkNet53</td>
-        <td><a href="https://paperswithcode.com/model/csp-resnet?variant=cspresnet50">CSPNet: A New Backbone that can Enhance Learning Capability of CNN</a></td>
-        <td><details><summary>Abstract</summary><div>Neural networks have enabled state-of-the-art approaches to achieve incredible results on computer vision tasks such as object detection. However, such success greatly relies on costly computation resources, which hinders people with cheap devices from appreciating the advanced technology. In this paper, we propose Cross Stage Partial Network (CSPNet) to mitigate the problem that previous works require heavy inference computations from the network architecture perspective. We attribute the problem to the duplicate gradient information within network optimization. The proposed networks respect the variability of the gradients by integrating feature maps from the beginning and the end of a network stage, which, in our experiments, reduces computations by 20% with equivalent or even superior accuracy on the ImageNet dataset, and significantly outperforms state-of-the-art approaches in terms of AP50 on the MS COCO object detection dataset. The CSPNet is easy to implement and general enough to cope with architectures based on ResNet, ResNeXt, and DenseNet. Source code is at this https URL. </div></details></td>
-        <td>-</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>GhostNet_x0_5</td>
+        <td><a href="https://arxiv.org/abs/1911.11907">GhostNet: More Features from Cheap Operations</a></td>
+        <td><details><summary>Abstract</summary><div>Deploying convolutional neural networks (CNNs) on embedded devices is difficult due to the limited memory and computation resources. The redundancy in feature maps is an important characteristic of those successful CNNs, but has rarely been investigated in neural architecture design. This paper proposes a novel Ghost module to generate more feature maps from cheap operations. Based on a set of intrinsic feature maps, we apply a series of linear transformations with cheap cost to generate many ghost feature maps that could fully reveal information underlying intrinsic features. The proposed Ghost module can be taken as a plug-and-play component to upgrade existing convolutional neural networks. Ghost bottlenecks are designed to stack Ghost modules, and then the lightweight GhostNet can be easily established. Experiments conducted on benchmarks demonstrate that the proposed Ghost module is an impressive alternative of convolution layers in baseline models, and our GhostNet can achieve higher recognition performance (e.g. 75.7% top-1 accuracy) than MobileNetV3 with similar computational cost on the ImageNet ILSVRC-2012 classification dataset. Code is available at this https URL</div></details></td>
+        <td>ImageNet/Acc 0.6688</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/GhostNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>119</td>
-        <td>GhostNet_x0_5</td>
-        <td><a href="https://paperswithcode.com/method/ghostnet">GhostNet: More Features from Cheap Operations</a></td>
+        <td>GhostNet_x1_0</td>
+        <td><a href="https://arxiv.org/abs/1911.11907">GhostNet: More Features from Cheap Operations</a></td>
         <td><details><summary>Abstract</summary><div>Deploying convolutional neural networks (CNNs) on embedded devices is difficult due to the limited memory and computation resources. The redundancy in feature maps is an important characteristic of those successful CNNs, but has rarely been investigated in neural architecture design. This paper proposes a novel Ghost module to generate more feature maps from cheap operations. Based on a set of intrinsic feature maps, we apply a series of linear transformations with cheap cost to generate many ghost feature maps that could fully reveal information underlying intrinsic features. The proposed Ghost module can be taken as a plug-and-play component to upgrade existing convolutional neural networks. Ghost bottlenecks are designed to stack Ghost modules, and then the lightweight GhostNet can be easily established. Experiments conducted on benchmarks demonstrate that the proposed Ghost module is an impressive alternative of convolution layers in baseline models, and our GhostNet can achieve higher recognition performance (e.g. 75.7% top-1 accuracy) than MobileNetV3 with similar computational cost on the ImageNet ILSVRC-2012 classification dataset. Code is available at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.6688</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7402</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/GhostNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>120</td>
-        <td>GhostNet_x1_0</td>
-        <td><a href="https://paperswithcode.com/method/ghostnet">GhostNet: More Features from Cheap Operations</a></td>
+        <td>GhostNet_x1_3</td>
+        <td><a href="https://arxiv.org/abs/1911.11907">GhostNet: More Features from Cheap Operations</a></td>
         <td><details><summary>Abstract</summary><div>Deploying convolutional neural networks (CNNs) on embedded devices is difficult due to the limited memory and computation resources. The redundancy in feature maps is an important characteristic of those successful CNNs, but has rarely been investigated in neural architecture design. This paper proposes a novel Ghost module to generate more feature maps from cheap operations. Based on a set of intrinsic feature maps, we apply a series of linear transformations with cheap cost to generate many ghost feature maps that could fully reveal information underlying intrinsic features. The proposed Ghost module can be taken as a plug-and-play component to upgrade existing convolutional neural networks. Ghost bottlenecks are designed to stack Ghost modules, and then the lightweight GhostNet can be easily established. Experiments conducted on benchmarks demonstrate that the proposed Ghost module is an impressive alternative of convolution layers in baseline models, and our GhostNet can achieve higher recognition performance (e.g. 75.7% top-1 accuracy) than MobileNetV3 with similar computational cost on the ImageNet ILSVRC-2012 classification dataset. Code is available at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.7402</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>ImageNet/Acc 0.7579</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/GhostNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>121</td>
-        <td>GhostNet_x1_3</td>
-        <td><a href="https://paperswithcode.com/method/ghostnet">GhostNet: More Features from Cheap Operations</a></td>
-        <td><details><summary>Abstract</summary><div>Deploying convolutional neural networks (CNNs) on embedded devices is difficult due to the limited memory and computation resources. The redundancy in feature maps is an important characteristic of those successful CNNs, but has rarely been investigated in neural architecture design. This paper proposes a novel Ghost module to generate more feature maps from cheap operations. Based on a set of intrinsic feature maps, we apply a series of linear transformations with cheap cost to generate many ghost feature maps that could fully reveal information underlying intrinsic features. The proposed Ghost module can be taken as a plug-and-play component to upgrade existing convolutional neural networks. Ghost bottlenecks are designed to stack Ghost modules, and then the lightweight GhostNet can be easily established. Experiments conducted on benchmarks demonstrate that the proposed Ghost module is an impressive alternative of convolution layers in baseline models, and our GhostNet can achieve higher recognition performance (e.g. 75.7% top-1 accuracy) than MobileNetV3 with similar computational cost on the ImageNet ILSVRC-2012 classification dataset. Code is available at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.7579</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>RegNet50</td>
+        <td><a href="https://arxiv.org/abs/2101.00590">RegNet: Self-Regulated Network for Image Classification</a></td>
+        <td><details><summary>Abstract</summary><div>The ResNet and its variants have achieved remarkable successes in various computer vision tasks. Despite its success in making gradient flow through building blocks, the simple shortcut connection mechanism limits the ability of re-exploring new potentially complementary features due to the additive function. To address this issue, in this paper, we propose to introduce a regulator module as a memory mechanism to extract complementary features, which are further fed to the ResNet. In particular, the regulator module is composed of convolutional RNNs (e.g., Convolutional LSTMs or Convolutional GRUs), which are shown to be good at extracting Spatio-temporal information. We named the new regulated networks as RegNet. The regulator module can be easily implemented and appended to any ResNet architecture. We also apply the regulator module for improving the Squeeze-and-Excitation ResNet to show the generalization ability of our method. Experimental results on three image classification datasets have demonstrated the promising performance of the proposed architecture compared with the standard ResNet, SE-ResNet, and other state-of-the-art architectures.</div></details></td>
+        <td>ImageNet/Acc 0.7833</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RegNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>122</td>
-        <td>RegNet</td>
-        <td><a href="https://paperswithcode.com/paper/regnet-self-regulated-network-for-image">RegNet: Self-Regulated Network for Image Classification</a></td>
-        <td><details><summary>Abstract</summary><div>The ResNet and its variants have achieved remarkable successes in various computer vision tasks. Despite its success in making gradient flow through building blocks, the simple shortcut connection mechanism limits the ability of re-exploring new potentially complementary features due to the additive function. To address this issue, in this paper, we propose to introduce a regulator module as a memory mechanism to extract complementary features, which are further fed to the ResNet. In particular, the regulator module is composed of convolutional RNNs (e.g., Convolutional LSTMs or Convolutional GRUs), which are shown to be good at extracting Spatio-temporal information. We named the new regulated networks as RegNet. The regulator module can be easily implemented and appended to any ResNet architecture. We also apply the regulator module for improving the Squeeze-and-Excitation ResNet to show the generalization ability of our method. Experimental results on three image classification datasets have demonstrated the promising performance of the proposed architecture compared with the standard ResNet, SE-ResNet, and other state-of-the-art architectures.</div></details></td>
-        <td>ImageNet/Acc      0.785</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.3/docs/en/ImageNet_models_en.md">快速开始</a></td>
+        <td>DLA169</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
+        <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7809</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>123</td>
-        <td>DLA169</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA60x_c</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7809</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.6645</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>124</td>
-        <td>DLA60x_c</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA102x2</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.6645</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7885</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>125</td>
-        <td>DLA102x2</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA102</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7885</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7893</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>126</td>
-        <td>DLA102</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA60x</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7893</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7753</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>127</td>
-        <td>DLA60x</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA60</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7753</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.761</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>128</td>
-        <td>DLA60</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA46_c</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.761</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.6321</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>129</td>
-        <td>DLA46_c</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA34</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.6321</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7603</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>130</td>
-        <td>DLA34</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA102x</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7603</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.781</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>131</td>
-        <td>DLA102x</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
+        <td>DLA46x_c</td>
+        <td><a href="https://arxiv.org/abs/1707.06484">Deep Layer Aggregation</a></td>
         <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.781</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.6321</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DLA.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>132</td>
-        <td>DLA46x_c</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=Deep+Layer+Aggregation">Deep Layer Aggregation</a></td>
-        <td><details><summary>Abstract</summary><div>Visual recognition requires rich representations that span levels from low to high, scales from small to large, and resolutions from fine to coarse. Even with the depth of features in a convolutional network, a layer in isolation is not enough: compounding and aggregating these representations improves inference of what and where. Architectural efforts are exploring many dimensions for network backbones, designing deeper or wider architectures, but how to best aggregate layers and blocks across a network deserves further attention. Although skip connections have been incorporated to combine layers, these connections have been "shallow" themselves, and only fuse by simple, one-step operations. We augment standard architectures with deeper aggregation to better fuse information across layers. Our deep layer aggregation structures iteratively and hierarchically merge the feature hierarchy to make networks with better accuracy and fewer parameters. Experiments across architectures and tasks show that deep layer aggregation improves recognition and resolution compared to existing branching and merging schemes. The code is at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.6321</td>
-        <td><a href="">快速开始</a></td>
+        <td>ReXNet_1_5</td>
+        <td><a href="https://arxiv.org/abs/2007.00992">Rethinking Channel Dimensions for Efficient Model Design</a></td>
+        <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.8006</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ReXNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>133</td>
-        <td>ReXNet_1_5</td>
-        <td><a href="https://paperswithcode.com/paper/rexnet-diminishing-representational#code">Rethinking Channel Dimensions for Efficient Model Design</a></td>
+        <td>ReXNet_1_0</td>
+        <td><a href="https://arxiv.org/abs/2007.00992">Rethinking Channel Dimensions for Efficient Model Design</a></td>
         <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8006</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7746</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ReXNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>134</td>
-        <td>ReXNet_1_0</td>
-        <td><a href="https://paperswithcode.com/paper/rexnet-diminishing-representational#code">Rethinking Channel Dimensions for Efficient Model Design</a></td>
+        <td>ReXNet_3_0</td>
+        <td><a href="https://arxiv.org/abs/2007.00992">Rethinking Channel Dimensions for Efficient Model Design</a></td>
         <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7746</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8209</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ReXNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>135</td>
-        <td>ReXNet_3_0</td>
-        <td><a href="https://paperswithcode.com/paper/rexnet-diminishing-representational#code">Rethinking Channel Dimensions for Efficient Model Design</a></td>
+        <td>ReXNet_2_0</td>
+        <td><a href="https://arxiv.org/abs/2007.00992">Rethinking Channel Dimensions for Efficient Model Design</a></td>
         <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8209</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8122</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ReXNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>136</td>
-        <td>ReXNet_2_0</td>
-        <td><a href="https://paperswithcode.com/paper/rexnet-diminishing-representational#code">Rethinking Channel Dimensions for Efficient Model Design</a></td>
+        <td>ReXNet_1_3</td>
+        <td><a href="https://arxiv.org/abs/2007.00992">Rethinking Channel Dimensions for Efficient Model Design</a></td>
         <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8122</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7913</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ReXNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>137</td>
-        <td>ReXNet_1_3</td>
-        <td><a href="https://paperswithcode.com/paper/rexnet-diminishing-representational#code">Rethinking Channel Dimensions for Efficient Model Design</a></td>
-        <td><details><summary>Abstract</summary><div>Designing an efficient model within the limited computational cost is challenging. We argue the accuracy of a lightweight model has been further limited by the design convention: a stage-wise configuration of the channel dimensions, which looks like a piecewise linear function of the network stage. In this paper, we study an effective channel dimension configuration towards better performance than the convention. To this end, we empirically study how to design a single layer properly by analyzing the rank of the output feature. We then investigate the channel configuration of a model by searching network architectures concerning the channel configuration under the computational cost restriction. Based on the investigation, we propose a simple yet effective channel configuration that can be parameterized by the layer index. As a result, our proposed model following the channel parameterization achieves remarkable performance on ImageNet classification and transfer learning tasks including COCO object detection, COCO instance segmentation, and fine-grained classifications. Code and ImageNet pretrained models are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7913</td>
-        <td><a href="">快速开始</a></td>
+        <td>TNT_small</td>
+        <td><a href="https://arxiv.org/abs/2103.00112">Transformer in Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer is a new kind of neural architecture which encodes the input data as powerful features via the attention mechanism. Basically, the visual transformers first divide the input images into several local patches and then calculate both representations and their relationship. Since natural images are of high complexity with abundant detail and color information, the granularity of the patch dividing is not fine enough for excavating features of objects in different scales and locations. In this paper, we point out that the attention inside these local patches are also essential for building visual transformers with high performance and we explore a new architecture, namely, Transformer iN Transformer (TNT). Specifically, we regard the local patches (e.g., 16×16) as "visual sentences" and present to further divide them into smaller patches (e.g., 4×4) as "visual words". The attention of each word will be calculated with other words in the given visual sentence with negligible computational costs. Features of both words and sentences will be aggregated to enhance the representation ability. Experiments on several benchmarks demonstrate the effectiveness of the proposed TNT architecture, e.g., we achieve an 81.5% top-1 accuracy on the ImageNet, which is about 1.7% higher than that of the state-of-the-art visual transformer with similar computational cost. The PyTorch code is available at this https URL, and the MindSpore code is available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.8121</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/TNT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>138</td>
-        <td>TNT_small</td>
-        <td><a href="https://paperswithcode.com/method/tnt">Transformer in Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer is a new kind of neural architecture which encodes the input data as powerful features via the attention mechanism. Basically, the visual transformers first divide the input images into several local patches and then calculate both representations and their relationship. Since natural images are of high complexity with abundant detail and color information, the granularity of the patch dividing is not fine enough for excavating features of objects in different scales and locations. In this paper, we point out that the attention inside these local patches are also essential for building visual transformers with high performance and we explore a new architecture, namely, Transformer iN Transformer (TNT). Specifically, we regard the local patches (e.g., 16×16) as "visual sentences" and present to further divide them into smaller patches (e.g., 4×4) as "visual words". The attention of each word will be calculated with other words in the given visual sentence with negligible computational costs. Features of both words and sentences will be aggregated to enhance the representation ability. Experiments on several benchmarks demonstrate the effectiveness of the proposed TNT architecture, e.g., we achieve an 81.5% top-1 accuracy on the ImageNet, which is about 1.7% higher than that of the state-of-the-art visual transformer with similar computational cost. The PyTorch code is available at this https URL, and the MindSpore code is available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.8121</td>
-        <td><a href="">快速开始</a></td>
+        <td>MixNet_L</td>
+        <td><a href="https://arxiv.org/abs/1907.09595">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
+        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
+        <td>ImageNet/Acc 0.786</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MixNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>139</td>
-        <td>MixNet_L</td>
-        <td><a href="https://github.com/tensorflow/tpu/tree/master/models/official/mnasnet/mixnet">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
-        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (<600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
-        <td>ImageNet/Acc 0.786</td>
-        <td><a href="">快速开始</a></td>
+        <td>MixNet_S</td>
+        <td><a href="https://arxiv.org/abs/1907.09595">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
+        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
+        <td>ImageNet/Acc 0.7628</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MixNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>140</td>
-        <td>MixNet_S</td>
-        <td><a href="https://github.com/tensorflow/tpu/tree/master/models/official/mnasnet/mixnet">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
-        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (<600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
-        <td>ImageNet/Acc 0.7628</td>
-        <td><a href="">快速开始</a></td>
+        <td>MixNet_M</td>
+        <td><a href="https://arxiv.org/abs/1907.09595">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
+        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
+        <td>ImageNet/Acc 0.7767</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MixNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>141</td>
-        <td>MixNet_M</td>
-        <td><a href="https://github.com/tensorflow/tpu/tree/master/models/official/mnasnet/mixnet">MixConv: Mixed Depthwise Convolutional Kernels</a></td>
-        <td><details><summary>Abstract</summary><div>     Depthwise convolution is becoming increasingly popular in modern efficient ConvNets, but its kernel size is often overlooked. In this paper, we systematically study the impact of different kernel sizes, and observe that combining the benefits of multiple kernel sizes can lead to better accuracy and efficiency. Based on this observation, we propose a new mixed depthwise convolution (MixConv), which naturally mixes up multiple kernel sizes in a single convolution. As a simple drop-in replacement of vanilla depthwise convolution, our MixConv improves the accuracy and efficiency for existing MobileNets on both ImageNet classification and COCO object detection. To demonstrate the effectiveness of MixConv, we integrate it into AutoML search space and develop a new family of models, named as MixNets, which outperform previous mobile models including MobileNetV2 [20] (ImageNet top-1 accuracy +4.2%), ShuffleNetV2 [16] (+3.5%), MnasNet [26] (+1.3%), ProxylessNAS [2] (+2.2%), and FBNet [27] (+2.0%). In particular, our MixNet-L achieves a new state-of-the-art 78.9% ImageNet top-1 accuracy under typical mobile settings (<600M FLOPS). Code is at this https URL tensorflow/tpu/tree/master/models/official/mnasnet/mixnet </div></details></td>
-        <td>ImageNet/Acc 0.7767</td>
-        <td><a href="">快速开始</a></td>
+        <td>ResNeSt50</td>
+        <td><a href="https://arxiv.org/abs/2004.08955">ResNeSt: Split-Attention Networks</a></td>
+        <td><details><summary>Abstract</summary><div>While image classification models have recently continuedto advance, most downstream applications such as object detection andsemantic segmentation still employ ResNet variants as the backbone net-work due to their simple and modular structure. We present a modularSplit-Attention block that enables attention across feature-map groups.By stacking these Split-Attention blocks ResNet-style, we obtain a newResNet variant which we call ResNeSt. Our network preserves the over-all ResNet structure to be used in downstream tasks straightforwardlywithout introducing additional computational costs.ResNeSt models outperform other networks with similar model com-plexities. For example, ResNeSt-50 achieves 81.13% top-1 accuracy onImageNet using a single crop-size of 224 × 224, outperforming previ-ous best ResNet variant by more than 1% accuracy. This improvementalso helps downstream tasks including object detection, instance segmen-tation and semantic segmentation. For example, by simply replace theResNet-50 backbone with ResNeSt-50, we improve the mAP of Faster-RCNN on MS-COCO from 39.3% to 42.3% and the mIoU for DeeplabV3on ADE20K from 42.1% to 45.1%1</div></details></td>
+        <td>ImageNet/Acc 0.8083</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeSt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>142</td>
-        <td>ResNeSt50</td>
-        <td><a href="https://github.com/zhanghang1989/ResNeSt">ResNeSt: Split-Attention Networks</a></td>
+        <td>ResNeSt50_fast_1s1x64</br>d</td>
+        <td><a href="https://arxiv.org/abs/2004.08955">ResNeSt: Split-Attention Networks</a></td>
         <td><details><summary>Abstract</summary><div>While image classification models have recently continuedto advance, most downstream applications such as object detection andsemantic segmentation still employ ResNet variants as the backbone net-work due to their simple and modular structure. We present a modularSplit-Attention block that enables attention across feature-map groups.By stacking these Split-Attention blocks ResNet-style, we obtain a newResNet variant which we call ResNeSt. Our network preserves the over-all ResNet structure to be used in downstream tasks straightforwardlywithout introducing additional computational costs.ResNeSt models outperform other networks with similar model com-plexities. For example, ResNeSt-50 achieves 81.13% top-1 accuracy onImageNet using a single crop-size of 224 × 224, outperforming previ-ous best ResNet variant by more than 1% accuracy. This improvementalso helps downstream tasks including object detection, instance segmen-tation and semantic segmentation. For example, by simply replace theResNet-50 backbone with ResNeSt-50, we improve the mAP of Faster-RCNN on MS-COCO from 39.3% to 42.3% and the mIoU for DeeplabV3on ADE20K from 42.1% to 45.1%1</div></details></td>
-        <td>ImageNet/Acc 0.8083</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8035</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ResNeSt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>143</td>
-        <td>ResNeSt50_fast_1s1x64</br>d</td>
-        <td><a href="https://github.com/zhanghang1989/ResNeSt">ResNeSt: Split-Attention Networks</a></td>
-        <td><details><summary>Abstract</summary><div>While image classification models have recently continuedto advance, most downstream applications such as object detection andsemantic segmentation still employ ResNet variants as the backbone net-work due to their simple and modular structure. We present a modularSplit-Attention block that enables attention across feature-map groups.By stacking these Split-Attention blocks ResNet-style, we obtain a newResNet variant which we call ResNeSt. Our network preserves the over-all ResNet structure to be used in downstream tasks straightforwardlywithout introducing additional computational costs.ResNeSt models outperform other networks with similar model com-plexities. For example, ResNeSt-50 achieves 81.13% top-1 accuracy onImageNet using a single crop-size of 224 × 224, outperforming previ-ous best ResNet variant by more than 1% accuracy. This improvementalso helps downstream tasks including object detection, instance segmen-tation and semantic segmentation. For example, by simply replace theResNet-50 backbone with ResNeSt-50, we improve the mAP of Faster-RCNN on MS-COCO from 39.3% to 42.3% and the mIoU for DeeplabV3on ADE20K from 42.1% to 45.1%1</div></details></td>
-        <td>ImageNet/Acc 0.8035</td>
-        <td><a href="">快速开始</a></td>
+        <td>RedNet152</td>
+        <td><a href="https://arxiv.org/abs/2103.06255">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
+        <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
+        <td>ImageNet/Acc 0.7917</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RedNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>144</td>
-        <td>RedNet152</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=RedNet">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
+        <td>RedNet38</td>
+        <td><a href="https://arxiv.org/abs/2103.06255">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7917</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7747</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RedNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>145</td>
-        <td>RedNet38</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=RedNet">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
+        <td>RedNet101</td>
+        <td><a href="https://arxiv.org/abs/2103.06255">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7747</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7894</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RedNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>146</td>
-        <td>RedNet101</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=RedNet">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
+        <td>RedNet26</td>
+        <td><a href="https://arxiv.org/abs/2103.06255">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7894</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7595</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RedNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>147</td>
-        <td>RedNet26</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=RedNet">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
+        <td>RedNet50</td>
+        <td><a href="https://arxiv.org/abs/2103.06255">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
         <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7595</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7833</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/RedNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>148</td>
-        <td>RedNet50</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=RedNet">Involution: Inverting the Inherence of Convolution for Visual Recognition</a></td>
-        <td><details><summary>Abstract</summary><div>Convolution has been the core ingredient of modern neural networks, triggering the surge of deep learning in vision. In this work, we rethink the inherent principles of standard convolution for vision tasks, specifically spatial-agnostic and channel-specific. Instead, we present a novel atomic operation for deep neural networks by inverting the aforementioned design principles of convolution, coined as involution. We additionally demystify the recent popular self-attention operator and subsume it into our involution family as an over-complicated instantiation. The proposed involution operator could be leveraged as fundamental bricks to build the new generation of neural networks for visual recognition, powering different deep learning models on several prevalent benchmarks, including ImageNet classification, COCO detection and segmentation, together with Cityscapes segmentation. Our involution-based models improve the performance of convolutional baselines using ResNet-50 by up to 1.6% top-1 accuracy, 2.5% and 2.4% bounding box AP, and 4.7% mean IoU absolutely while compressing the computational cost to 66%, 65%, 72%, and 57% on the above benchmarks, respectively. Code and pre-trained models for all the tasks are available at this https URL. </div></details></td>
-        <td>ImageNet/Acc 0.7833</td>
-        <td><a href="">快速开始</a></td>
+        <td>LeViT_128S</td>
+        <td><a href="https://arxiv.org/abs/2104.01136">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
+        <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
+        <td>ImageNet/Acc 0.7598</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/LeViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>149</td>
-        <td>LeViT_128S</td>
-        <td><a href="https://paperswithcode.com/method/levit">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
+        <td>LeViT_256</td>
+        <td><a href="https://arxiv.org/abs/2104.01136">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
         <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.7598</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8085</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/LeViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>150</td>
-        <td>LeViT_256</td>
-        <td><a href="https://paperswithcode.com/method/levit">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
+        <td>LeViT_192</td>
+        <td><a href="https://arxiv.org/abs/2104.01136">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
         <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.8085</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7598</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/LeViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>151</td>
-        <td>LeViT_192</td>
-        <td><a href="https://paperswithcode.com/method/levit">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
+        <td>LeViT_128</td>
+        <td><a href="https://arxiv.org/abs/2104.01136">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
         <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
         <td>ImageNet/Acc 0.7598</td>
-        <td><a href="">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/LeViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>152</td>
-        <td>LeViT_128</td>
-        <td><a href="https://paperswithcode.com/method/levit">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
+        <td>LeViT_384</td>
+        <td><a href="https://arxiv.org/abs/2104.01136">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
         <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.7598</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8191</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/LeViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>153</td>
-        <td>LeViT_384</td>
-        <td><a href="https://paperswithcode.com/method/levit">LeViT: a Vision Transformer in ConvNet's Clothing for Faster Inference</a></td>
-        <td><details><summary>Abstract</summary><div>We design a family of image classification architectures that optimize the trade-off between accuracy and efficiency in a high-speed regime. Our work exploits recent findings in attention-based architectures, which are competitive on highly parallel processing hardware. We revisit principles from the extensive literature on convolutional neural networks to apply them to transformers, in particular activation maps with decreasing resolutions. We also introduce the attention bias, a new way to integrate positional information in vision transformers. As a result, we propose LeVIT: a hybrid neural network for fast inference image classification. We consider different measures of efficiency on different hardware platforms, so as to best reflect a wide range of application scenarios. Our extensive experiments empirically validate our technical choices and show they are suitable to most architectures. Overall, LeViT significantly outperforms existing convnets and vision transformers with respect to the speed/accuracy tradeoff. For example, at 80% ImageNet top-1 accuracy, LeViT is 5 times faster than EfficientNet on CPU. We release the code at this https URL</div></details></td>
-        <td>ImageNet/Acc 0.8191</td>
-        <td><a href="">快速开始</a></td>
+        <td>alt_gvt_large</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
+        <td>ImageNet/Acc 0.8331</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>154</td>
-        <td>alt_gvt_large</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td>pcpvt_large</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.8331</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8273</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>155</td>
-        <td>pcpvt_large</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td>alt_gvt_small</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.8273</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.814</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>156</td>
-        <td>alt_gvt_small</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td>pcpvt_base</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.814</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8242</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>157</td>
-        <td>pcpvt_base</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td>pcpvt_small</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.8242</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8082</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>158</td>
-        <td>pcpvt_small</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
+        <td>alt_gvt_base</td>
+        <td><a href="https://arxiv.org/abs/2104.13840">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
         <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.8082</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8294</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/Twins.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>159</td>
-        <td>alt_gvt_base</td>
-        <td><a href="https://paperswithcode.com/paper/twins-revisiting-spatial-attention-design-in#code">Twins: Revisiting the Design of Spatial Attention in Vision Transformers</a></td>
-        <td><details><summary>Abstract</summary><div>Very recently, a variety of vision transformer architectures for dense prediction tasks have been proposed and they show that the design of spatial attention is critical to their success in these tasks. In this work, we revisit the design of the spatial attention and demonstrate that a carefully-devised yet simple spatial attention mechanism performs favourably against the state-of-the-art schemes. As a result, we propose two vision transformer architectures, namely, Twins-PCPVT and Twins-SVT. Our proposed architectures are highly-efficient and easy to implement, only involving matrix multiplications that are highly optimized in modern deep learning frameworks. More importantly, the proposed architectures achieve excellent performance on a wide range of visual tasks, including image level classification as well as dense detection and segmentation. The simplicity and strong performance suggest that our proposed architectures may serve as stronger backbones for many vision tasks. Our code is released at this https URL . </div></details></td>
-        <td>ImageNet/Acc 0.8294</td>
-        <td><a href="">快速开始</a></td>
+        <td>ESNet_x0_5</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1</div></details></td>
+        <td>ImageNet/Acc 0.6882</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ESNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>160</td>
-        <td>ESNet_x0_5</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=PicoDet">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices arXiv:2111.00902v1</a></td>
-        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1. Introduction Object detection is widely adopted in numerous com-puter vision tasks, including autonomous driving, robot vi- sion, intelligent transportation, industrial quality inspec- tion, object tracking, etc. Two-stage models normally lead to higher performance. However, this type of resource- 1https://github.com/PaddlePaddle/PaddleDetectionFigure</div></details></td>
-        <td>ImageNet/Acc 0.6882</td>
-        <td><a href="">快速开始</a></td>
+        <td>ESNet_x0_75</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1</div></details></td>
+        <td>ImageNet/Acc 0.7224</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ESNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>161</td>
-        <td>ESNet_x0_75</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=PicoDet">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices arXiv:2111.00902v1</a></td>
-        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1. Introduction Object detection is widely adopted in numerous com-puter vision tasks, including autonomous driving, robot vi- sion, intelligent transportation, industrial quality inspec- tion, object tracking, etc. Two-stage models normally lead to higher performance. However, this type of resource- 1https://github.com/PaddlePaddle/PaddleDetectionFigure</div></details></td>
-        <td>ImageNet/Acc 0.7224</td>
-        <td><a href="">快速开始</a></td>
+        <td>ESNet_x1_0</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1</div></details></td>
+        <td>ImageNet/Acc 0.7392</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ESNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>162</td>
-        <td>ESNet_x1_0</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=PicoDet">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices arXiv:2111.00902v1</a></td>
-        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1. Introduction Object detection is widely adopted in numerous com-puter vision tasks, including autonomous driving, robot vi- sion, intelligent transportation, industrial quality inspec- tion, object tracking, etc. Two-stage models normally lead to higher performance. However, this type of resource- 1https://github.com/PaddlePaddle/PaddleDetectionFigure</div></details></td>
-        <td>ImageNet/Acc 0.7392</td>
-        <td><a href="">快速开始</a></td>
+        <td>ESNet_x0_25</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1</div></details></td>
+        <td>ImageNet/Acc 0.6248</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ESNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>163</td>
-        <td>ESNet_x0_25</td>
-        <td><a href="https://paperswithcode.com/search?q_meta=&q_type=&q=PicoDet">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices arXiv:2111.00902v1</a></td>
-        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been achallenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural net- work architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve la- bel assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on ob- ject detection for mobile devices. Our models achieve bet- ter trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M param- eters achieves 30.6% mAP, which is an absolute 4.8% im- provement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an ab- solute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state- of-the-art results for lightweight object detection. Code and pre-trained models are available at PaddleDetection1.1. Introduction Object detection is widely adopted in numerous com-puter vision tasks, including autonomous driving, robot vi- sion, intelligent transportation, industrial quality inspec- tion, object tracking, etc. Two-stage models normally lead to higher performance. However, this type of resource- 1https://github.com/PaddlePaddle/PaddleDetectionFigure</div></details></td>
-        <td>ImageNet/Acc 0.6248</td>
-        <td><a href="">快速开始</a></td>
+        <td>HarDNet68_ds</td>
+        <td><a href="https://arxiv.org/abs/1909.00948">HarDNet: A Low Memory Traffic Network</a></td>
+        <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge. </div></details></td>
+        <td>ImageNet/Acc 0.7362</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HarDNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>164</td>
-        <td>HarDNet68_ds</td>
-        <td><a href="https://paperswithcode.com/paper/hardnet-a-low-memory-traffic-network">HarDNet: A Low Memory Traffic Network</a></td>
+        <td>HarDNet85</td>
+        <td><a href="https://arxiv.org/abs/1909.00948">HarDNet: A Low Memory Traffic Network</a></td>
         <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge. </div></details></td>
-        <td>ImageNet/Acc 0.7362</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7744</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HarDNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>165</td>
-        <td>HarDNet85</td>
-        <td><a href="https://paperswithcode.com/paper/hardnet-a-low-memory-traffic-network">HarDNet: A Low Memory Traffic Network</a></td>
+        <td>HarDNet68</td>
+        <td><a href="https://arxiv.org/abs/1909.00948">HarDNet: A Low Memory Traffic Network</a></td>
         <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge. </div></details></td>
-        <td>ImageNet/Acc 0.7744</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7546</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HarDNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>166</td>
-        <td>HarDNet68</td>
-        <td><a href="https://paperswithcode.com/paper/hardnet-a-low-memory-traffic-network">HarDNet: A Low Memory Traffic Network</a></td>
+        <td>HarDNet39_ds</td>
+        <td><a href="https://arxiv.org/abs/1909.00948">HarDNet: A Low Memory Traffic Network</a></td>
         <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge. </div></details></td>
-        <td>ImageNet/Acc 0.7546</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7133</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/HarDNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>167</td>
-        <td>HarDNet39_ds</td>
-        <td><a href="https://paperswithcode.com/paper/hardnet-a-low-memory-traffic-network">HarDNet: A Low Memory Traffic Network</a></td>
-        <td><details><summary>Abstract</summary><div>State-of-the-art neural network architectures such as ResNet, MobileNet, and DenseNet have achieved outstanding accuracy over low MACs and small model size counterparts. However, these metrics might not be accurate for predicting the inference time. We suggest that memory traffic for accessing intermediate feature maps can be a factor dominating the inference latency, especially in such tasks as real-time object detection and semantic segmentation of high-resolution video. We propose a Harmonic Densely Connected Network to achieve high efficiency in terms of both low MACs and memory traffic. The new network achieves 35%, 36%, 30%, 32%, and 45% inference time reduction compared with FC-DenseNet-103, DenseNet-264, ResNet-50, ResNet-152, and SSD-VGG, respectively. We use tools including Nvidia profiler and ARM Scale-Sim to measure the memory traffic and verify that the inference latency is indeed proportional to the memory traffic consumption and the proposed network consumes low memory traffic. We conclude that one should take memory traffic into consideration when designing neural network architectures for high-resolution applications at the edge. </div></details></td>
-        <td>ImageNet/Acc 0.7133</td>
-        <td><a href="">快速开始</a></td>
+        <td>ViT_base_patch16_224</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
+        <td>ImageNet/Acc 0.8195</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>168</td>
-        <td>ViT_base_patch16_224</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_base_patch16_384</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8195</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8414</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>169</td>
-        <td>ViT_base_patch16_384</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_base_patch32_384</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8414</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8176</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>170</td>
-        <td>ViT_base_patch32_384</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_large_patch16_224</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8176</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8323</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>171</td>
-        <td>ViT_huge_patch16_224</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_large_patch16_384</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>-</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8513</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>172</td>
-        <td>ViT_huge_patch32_384</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_large_patch32_384</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>-</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8153</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>173</td>
-        <td>ViT_large_patch16_224</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
+        <td>ViT_small_patch16_224</td>
+        <td><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
         <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8323</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.7769</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>174</td>
-        <td>ViT_large_patch16_384</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8513</td>
-        <td><a href="">快速开始</a></td>
+        <td>DeiT_base_patch16_224</td>
+        <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
+        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
+        <td>ImageNet/Acc 0.817</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DeiT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>175</td>
-        <td>ViT_large_patch32_384</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.8153</td>
-        <td><a href="">快速开始</a></td>
+        <td>DeiT_base_patch16_384</td>
+        <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
+        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
+        <td>ImageNet/Acc 0.83</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DeiT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>176</td>
-        <td>ViT_small_patch16_224</td>
-        <td><a href="https://paperswithcode.com/paper/an-image-is-worth-16x16-words-transformers-1">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-        <td><details><summary>Abstract</summary><div>While the Transformer architecture has become the de-facto standard for natural language processing tasks, its applications to computer vision remain limited. In vision, attention is either applied in conjunction with convolutional networks, or used to replace certain components of convolutional networks while keeping their overall structure in place. We show that this reliance on CNNs is not necessary and a pure transformer applied directly to sequences of image patches can perform very well on image classification tasks. When pre-trained on large amounts of data and transferred to multiple mid-sized or small image recognition benchmarks (ImageNet, CIFAR-100, VTAB, etc.), Vision Transformer (ViT) attains excellent results compared to state-of-the-art convolutional networks while requiring substantially fewer computational resources to train.</div></details></td>
-        <td>ImageNet/Acc 0.7769</td>
-        <td><a href="">快速开始</a></td>
+        <td>DeiT_small_patch16_22</br>4</td>
+        <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
+        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
+        <td>ImageNet/Acc 0.796</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DeiT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>177</td>
-        <td>DeiT_base_patch16_224</td>
-        <td><a href="https://paperswithcode.com/method/deit">Training data-efficient image transformers & distillation through attention</a></td>
+        <td>DeiT_tiny_patch16_224</td>
+        <td><a href="https://arxiv.org/abs/2012.12877">Training data-efficient image transformers & distillation through attention</a></td>
         <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
-        <td>ImageNet/Acc 0.817</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.718</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/DeiT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>178</td>
-        <td>DeiT_base_patch16_384</td>
-        <td><a href="https://paperswithcode.com/method/deit">Training data-efficient image transformers & distillation through attention</a></td>
-        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
-        <td>ImageNet/Acc 0.83</td>
-        <td><a href="">快速开始</a></td>
+        <td>SwinTransformer_base_</br>patch4_window12_384</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
+        <td>ImageNet/Acc 0.8439</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>179</td>
-        <td>DeiT_small_patch16_22</br>4</td>
-        <td><a href="https://paperswithcode.com/method/deit">Training data-efficient image transformers & distillation through attention</a></td>
-        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
-        <td>ImageNet/Acc 0.796</td>
-        <td><a href="">快速开始</a></td>
+        <td>SwinTransformer_base_</br>patch4_window7_224</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
+        <td>ImageNet/Acc 0.83</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>180</td>
-        <td>DeiT_tiny_patch16_224</td>
-        <td><a href="https://paperswithcode.com/method/deit">Training data-efficient image transformers & distillation through attention</a></td>
-        <td><details><summary>Abstract</summary><div>Recently, neural networks purely based on attention were shown to address image understanding tasks such as image classification. However, these visual transformers are pre-trained with hundreds of millions of images using an expensive infrastructure, thereby limiting their adoption.In this work, we produce a competitive convolution-free transformer by training on Imagenet only. We train them on a single computer in less than 3 days. Our reference vision transformer (86M parameters) achieves top-1 accuracy of 83.1% (single-crop evaluation) on ImageNet with no external data.More importantly, we introduce a teacher-student strategy specific to transformers. It relies on a distillation token ensuring that the student learns from the teacher through attention. We show the interest of this token-based distillation, especially when using a convnet as a teacher. This leads us to report results competitive with convnets for both Imagenet (where we obtain up to 85.2% accuracy) and when transferring to other tasks. We share our code and models.</div></details></td>
-        <td>ImageNet/Acc 0.718</td>
-        <td><a href="">快速开始</a></td>
+        <td>SwinTransformer_large</br>_patch4_window12_384</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
+        <td>ImageNet/Acc 0.8642</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>181</td>
-        <td>SwinTransformer_base_</br>patch4_window12_384</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td>SwinTransformer_large</br>_patch4_window7_224</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.8439</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8596</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>182</td>
-        <td>SwinTransformer_base_</br>patch4_window7_224</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td>SwinTransformer_small</br>_patch4_window7_224</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.83</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8275</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>183</td>
-        <td>SwinTransformer_large</br>_patch4_window12_384</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td>SwinTransformer_tiny_</br>patch4_window7_224</td>
+        <td><a href="https://arxiv.org/abs/2103.14030">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
         <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.8642</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8069</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/SwinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>184</td>
-        <td>SwinTransformer_large</br>_patch4_window7_224</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
-        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.8596</td>
-        <td><a href="">快速开始</a></td>
+        <td>CSWinTransformer_base</br>_224</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
+        <td>ImageNet/Acc 0.8281</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>185</td>
-        <td>SwinTransformer_small</br>_patch4_window7_224</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
-        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.8275</td>
-        <td><a href="">快速开始</a></td>
+        <td>CSWinTransformer_base</br>_384</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
+        <td>ImageNet/Acc 0.8358</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>186</td>
-        <td>SwinTransformer_tiny_</br>patch4_window7_224</td>
-        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
-        <td><details><summary>Abstract</summary><div>This paper presents a new vision Transformer, called Swin Transformer, that capably serves as a general-purpose backbone for computer vision. Challenges in adapting Transformer from language to vision arise from differences between the two domains, such as large variations in the scale of visual entities and the high resolution of pixels in images compared to words in text. To address these differences, we propose a hierarchical Transformer whose representation is computed with \textbf{S}hifted \textbf{win}dows. The shifted windowing scheme brings greater efficiency by limiting self-attention computation to non-overlapping local windows while also allowing for cross-window connection. This hierarchical architecture has the flexibility to model at various scales and has linear computational complexity with respect to image size. These qualities of Swin Transformer make it compatible with a broad range of vision tasks, including image classification (87.3 top-1 accuracy on ImageNet-1K) and dense prediction tasks such as object detection (58.7 box AP and 51.1 mask AP on COCO test-dev) and semantic segmentation (53.5 mIoU on ADE20K val). Its performance surpasses the previous state-of-the-art by a large margin of +2.7 box AP and +2.6 mask AP on COCO, and +3.2 mIoU on ADE20K, demonstrating the potential of Transformer-based models as vision backbones. The hierarchical design and the shifted window approach also prove beneficial for all-MLP architectures. The code and models are publicly available at~\url{this https URL}.</div></details></td>
-        <td>ImageNet/Acc 0.8069</td>
-        <td><a href="">快速开始</a></td>
+        <td>CSWinTransformer_larg</br>e_224</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
+        <td>ImageNet/Acc 0.842</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>187</td>
-        <td>CSWinTransformer_base</br>_224</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td>CSWinTransformer_larg</br>e_384</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8281</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.8643</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>188</td>
-        <td>CSWinTransformer_base</br>_384</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td>CSWinTransformer_smal</br>l_224</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8358</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.855</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>189</td>
-        <td>CSWinTransformer_larg</br>e_224</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
+        <td>CSWinTransformer_tiny</br>_224</td>
+        <td><a href="https://arxiv.org/abs/2107.00652">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
         <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.842</td>
-        <td><a href="">快速开始</a></td>
+        <td>ImageNet/Acc 0.855</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/CSWinTransformer.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>190</td>
-        <td>CSWinTransformer_larg</br>e_384</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
-        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.8643</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B0</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.705</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>191</td>
-        <td>CSWinTransformer_smal</br>l_224</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
-        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.855</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B1</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.787</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>192</td>
-        <td>CSWinTransformer_tiny</br>_224</td>
-        <td><a href="https://github.com/microsoft/CSWin-Transformer">CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows</a></td>
-        <td><details><summary>Abstract</summary><div>We present CSWin Transformer, an efficient and effective Transformer-based backbone for general-purpose visiontasks. A challenging issue in Transformer design is thatglobal self-attention is very expensive to compute whereaslocal self-attention often limits the field of interactions ofeach token. To address this issue, we develop the CrossShaped Window self-attention mechanism for computingself-attention in the horizontal and vertical stripes in parallelthat form a cross-shaped window, with each stripe obtainedby splitting the input feature into stripes of equal width. Weprovide a mathematical analysis of the effect of the stripewidth and vary the stripe width for different layers of theTransformer network which achieves strong modeling capability while limiting the computation cost. We also introduceLocally-enhanced Positional Encoding (LePE), which handles the local positional information better than existingencoding schemes. LePE naturally supports arbitrary inputresolutions, and is thus especially effective and friendly fordownstream tasks. Incorporated with these designs and a hierarchical structure, CSWin Transformer demonstrates competitive performance on common vision tasks. Specifically,it achieves 85.4% Top-1 accuracy on ImageNet-1K withoutany extra training data or label, 53.9 box AP and 46.4 maskAP on the COCO detection task, and 52.2 mIOU on theADE20K semantic segmentation task, surpassing previousstate-of-the-art Swin Transformer backbone by +1.2, +2.0,+1.4, and +2.0 respectively under the similar FLOPs setting.By further pretraining on the larger dataset ImageNet-21K,we achieve 87.5% Top-1 accuracy on ImageNet-1K and highsegmentation performance on ADE20K with 55.7 mIoU.</div></details></td>
-        <td>0.855</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B2</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.821</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>193</td>
-        <td>PVT_V2_B0</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.705</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B2_Linear</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.821</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>194</td>
-        <td>PVT_V2_B1</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.787</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B3</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.831</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>195</td>
-        <td>PVT_V2_B2</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.821</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B4</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.836</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>196</td>
-        <td>PVT_V2_B2_Linear</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.821</td>
-        <td><a href="">快速开始</a></td>
+        <td>PVT_V2_B5</td>
+        <td><a href="https://arxiv.org/abs/2106.13797">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision Transformer (PVT v1) by adding three designs, including (1) linear complexity attention layer, (2) overlapping patch embedding, and (3) convolutional feed-forward network. With these modifications, PVT v2 reduces the computational complexity of PVT v1 to linear and achieves significant improvements on fundamental vision tasks such as classification, detection, and segmentation. Notably, the proposed PVT v2 achieves comparable or better performances than recent works such as Swin Transformer. We hope this work will facilitate state-of-the-art Transformer researches in computer vision. Code is available at this https URL.</div></details></td>
+        <td>ImageNet/Acc 0.837</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PVTV2.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>197</td>
-        <td>PVT_V2_B3</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.831</td>
-        <td><a href="">快速开始</a></td>
+        <td>MobileViT_XXS</td>
+        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
+        <td>ImageNet/Acc 0.6867</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>198</td>
-        <td>PVT_V2_B4</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.836</td>
-        <td><a href="">快速开始</a></td>
+        <td>MobileViT_XS</td>
+        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
+        <td>ImageNet/Acc 0.7454</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>199</td>
-        <td>PVT_V2_B5</td>
-        <td><a href="https://github.com/whai362/PVT">PVTv2: Improved Baselines with Pyramid Vision Transformer</a></td>
-        <td><details><summary>Abstract</summary><div>Transformer recently has presented encouraging progress in computer vision. In this work, we present new baselines by improving the original Pyramid Vision</div></details></td>
-        <td>0.837</td>
-        <td><a href="">快速开始</a></td>
+        <td>MobileViT_S</td>
+        <td><a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a></td>
+        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
+        <td>ImageNet/Acc 0.7814</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/MobileViT.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>200</td>
-        <td>MobileViT_XXS</td>
-        <td><a href="https://github.com/apple/ml-cvnets">MOBILEVIT: LIGHT-WEIGHT, GENERAL-PURPOSE,AND MOBILE-FRIENDLY VISION TRANSFORMER</a></td>
-        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.6867</td>
-        <td><a href="">快速开始</a></td>
+        <td>ReID_strong_baseline</td>
+        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
+        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
+        <td>Market1501/recall@1 0.8845</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>201</td>
-        <td>MobileViT_XS</td>
-        <td><a href="https://github.com/apple/ml-cvnets">MOBILEVIT: LIGHT-WEIGHT, GENERAL-PURPOSE,AND MOBILE-FRIENDLY VISION TRANSFORMER</a></td>
-        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.7454</td>
-        <td><a href="">快速开始</a></td>
+        <td>ReID_softmax_triplet</td>
+        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
+        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
+        <td>market1501/Recall1@ 0.9429</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>202</td>
-        <td>MobileViT_S</td>
-        <td><a href="https://github.com/apple/ml-cvnets">MOBILEVIT: LIGHT-WEIGHT, GENERAL-PURPOSE,AND MOBILE-FRIENDLY VISION TRANSFORMER</a></td>
-        <td><details><summary>Abstract</summary><div>Light-weight convolutional neural networks (CNNs) are the de-facto for mobile vision tasks. Their spatial inductive biases allow them to learn representations with fewer parameters across different vision tasks. However, these networks are spatially local. To learn global representations, self-attention-based vision transformers (ViTs) have been adopted. Unlike CNNs, ViTs are heavy-weight. In this paper, we ask the following question: is it possible to combine the strengths of CNNs and ViTs to build a light-weight and low latency network for mobile vision tasks? Towards this end, we introduce MobileViT, a light-weight and general-purpose vision transformer for mobile devices. MobileViT presents a different perspective for the global processing of information with transformers. Our results show that MobileViT significantly outperforms CNNand ViT-based networks across different tasks and datasets. On the ImageNet-1k dataset, MobileViT achieves top-1 accuracy of 78.4% with about 6 million parameters, which is 3.2% and 6.2% more accurate than MobileNetv3 (CNN-based)and DeIT (ViT-based) for a similar number of parameters. On the MS-COCO object detection task, MobileViT is 5.7% more accurate than MobileNetv3 for a similar number of parameters. Our source code is open-source and available at:https://github.com/apple/ml-cvnets</div></details></td>
-        <td>0.7814</td>
-        <td><a href="">快速开始</a></td>
+        <td>ReID_softmax_triplet_with_</br>center</td>
+        <td><a href="https://arxiv.org/abs/1906.08332">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
+        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
+        <td>market1501/Recall@1 0.945</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/algorithm_introduction/ReID.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>203</td>
-        <td>strong_baseline</td>
-        <td><a href="https://github.com/michuanhaohao/reid-strong-baseline">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
-        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501:recall 1: </br>88.21</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/tree/develop/ppcls/configs/reid/strong_baseline">快速开始</a></td>
+        <td>VAN_B0</td>
+        <td><a href="https://arxiv.org/abs/2202.09741">Visual Attention Network</a></td>
+        <td><details><summary>Abstract</summary><div>While originally designed for natural language processing tasks, the self-attention mechanism has recently taken various computer vision areas by storm. However, the 2D nature of images brings three challenges for applying self-attention in computer vision. (1) Treating images as 1D sequences neglects their 2D structures. (2) The quadratic complexity is too expensive for high-resolution images. (3) It only captures spatial adaptability but ignores channel adaptability. In this paper, we propose a novel linear attention named large kernel attention (LKA) to enable self-adaptive and long-range correlations in self-attention while avoiding its shortcomings. Furthermore, we present a neural network based on LKA, namely Visual Attention Network (VAN). While extremely simple, VAN surpasses similar size vision transformers(ViTs) and convolutional neural networks(CNNs) in various tasks, including image classification, object detection, semantic segmentation, panoptic segmentation, pose estimation, etc. For example, VAN-B6 achieves 87.8% accuracy on ImageNet benchmark and set new state-of-the-art performance (58.2 PQ) for panoptic segmentation. Besides, VAN-B2 surpasses Swin-T 4% mIoU (50.1 vs. 46.1) for semantic segmentation on ADE20K benchmark, 2.6% AP (48.8 vs. 46.2) for object detection on COCO dataset. It provides a novel method and a simple yet strong baseline for the community. Code is available at https://github.com/Visual-Attention-Network.</div></details></td>
+        <td>ImageNet/Acc 0.7535</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/VAN.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>204</td>
-        <td>softmax_triplet</td>
-        <td><a href="https://github.com/michuanhaohao/reid-strong-baseline">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
-        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501 recall1: 9</br>4.181</td>
-        <td><a href="">快速开始</a></td>
+        <td>PeleeNet</td>
+        <td><a href="https://arxiv.org/abs/1804.06882">Pelee: A Real-Time Object Detection System on MobileDevices</a></td>
+        <td><details><summary>Abstract</summary><div>An increasing need of running Convolutional Neural Network (CNN) models onmobile devices with limited computing power and memory resource encouragesstudies on efficient model design. A number of efficient architectures have beenproposed in recent years, for example, MobileNet, ShuffleNet, and MobileNetV2.However, all these models are heavily dependent on depthwise separable convolution which lacks efficient implementation in most deep learning frameworks. Inthis study, we propose an efficient architecture named PeleeNet, which is built withconventional convolution instead. On ImageNet ILSVRC 2012 dataset, our proposed PeleeNet achieves a higher accuracy and over 1.8 times faster speed thanMobileNet and MobileNetV2 on NVIDIA TX2. Meanwhile, PeleeNet is only66% of the model size of MobileNet. We then propose a real-time object detection system by combining PeleeNet with Single Shot MultiBox Detector (SSD)method and optimizing the architecture for fast speed. Our proposed detectionsystem1, named Pelee, achieves 76.4% mAP (mean average precision) on PASCAL VOC2007 and 22.4 mAP on MS COCO dataset at the speed of 23.6 FPSon iPhone 8 and 125 FPS on NVIDIA TX2. The result on COCO outperformsYOLOv2 in consideration of a higher precision, 13.6 times lower computationalcost and 11.3 times smaller model size.</div></details></td>
+        <td>ImageNet/Acc 0.7153</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/PeleeNet.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>205</td>
-        <td>softmax_triplet_with_</br>center</td>
-        <td><a href="https://github.com/michuanhaohao/reid-strong-baseline">A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification.</a></td>
-        <td><details><summary>Abstract</summary><div>This paper explores a simple and efficient baseline for person re-identification (ReID). Person re-identification (ReID) with deep neural networks has made progress and achieved high performance in recent years. However, many state-of-the-arts methods design complex network structure and concatenate multi-branch features. In the literature, some effective training tricks are briefly appeared in several papers or source codes. This paper will collect and evaluate these effective training tricks in person ReID. By combining these tricks together, the model achieves 94.5% rank-1 and 85.9% mAP on Market1501 with only using global features. Our codes and models are available at https://github.com/michuanhaohao/reid-strong-baseline</div></details></td>
-        <td>market1501 recall1: 9</br>4.196</td>
-        <td><a href="">快速开始</a></td>
+        <td>ConvNeXt_tiny </td>
+        <td><a href="https://arxiv.org/abs/2201.03545">A ConvNet for the 2020s</a></td>
+        <td><details><summary>Abstract</summary><div>The "Roaring 20s" of visual recognition began with the introduction of Vision Transformers (ViTs), which quickly superseded ConvNets as the state-of-the-art image classification model. A vanilla ViT, on the other hand, faces difficulties when applied to general computer vision tasks such as object detection and semantic segmentation. It is the hierarchical Transformers (e.g., Swin Transformers) that reintroduced several ConvNet priors, making Transformers practically viable as a generic vision backbone and demonstrating remarkable performance on a wide variety of vision tasks. However, the effectiveness of such hybrid approaches is still largely credited to the intrinsic superiority of Transformers, rather than the inherent inductive biases of convolutions. In this work, we reexamine the design spaces and test the limits of what a pure ConvNet can achieve. We gradually "modernize" a standard ResNet toward the design of a vision Transformer, and discover several key components that contribute to the performance difference along the way. The outcome of this exploration is a family of pure ConvNet models dubbed ConvNeXt. Constructed entirely from standard ConvNet modules, ConvNeXts compete favorably with Transformers in terms of accuracy and scalability, achieving 87.8% ImageNet top-1 accuracy and outperforming Swin Transformers on COCO detection and ADE20K segmentation, while maintaining the simplicity and efficiency of standard ConvNets.</div></details></td>
+        <td>ImageNet/Acc 0.8203</br></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/ConvNeXt.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>206</td>
-        <td>VAN</td>
-        <td><a href="https://paperswithcode.com/paper/visual-attention-network">Visual Attention Network</a></td>
-        <td><details><summary>Abstract</summary><div>While originally designed for natural language processing tasks, the self-attention mechanism has recently taken various computer vision areas by storm. However, the 2D nature of images brings three challenges for applying self-attention in computer vision. (1) Treating images as 1D sequences neglects their 2D structures. (2) The quadratic complexity is too expensive for high-resolution images. (3) It only captures spatial adaptability but ignores channel adaptability. In this paper, we propose a novel linear attention named large kernel attention (LKA) to enable self-adaptive and long-range correlations in self-attention while avoiding its shortcomings. Furthermore, we present a neural network based on LKA, namely Visual Attention Network (VAN). While extremely simple, VAN surpasses similar size vision transformers(ViTs) and convolutional neural networks(CNNs) in various tasks, including image classification, object detection, semantic segmentation, panoptic segmentation, pose estimation, etc. For example, VAN-B6 achieves 87.8% accuracy on ImageNet benchmark and set new state-of-the-art performance (58.2 PQ) for panoptic segmentation. Besides, VAN-B2 surpasses Swin-T 4% mIoU (50.1 vs. 46.1) for semantic segmentation on ADE20K benchmark, 2.6% AP (48.8 vs. 46.2) for object detection on COCO dataset. It provides a novel method and a simple yet strong baseline for the community. Code is available at https://github.com/Visual-Attention-Network.</div></details></td>
-        <td>VAN-B0 imagenet top1=</br>75.35%</td>
-        <td><a href="">快速开始</a></td>
+        <td>PULC_car_exists</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Objects365/Tpr@Fpr0.01 0.9592</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_car_exists.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>207</td>
-        <td>PeleeNet</td>
-        <td><a href="https://paperswithcode.com/method/peleenet">Pelee: A Real-Time Object Detection System on MobileDevices</a></td>
-        <td><details><summary>Abstract</summary><div>An increasing need of running Convolutional Neural Network (CNN) models onmobile devices with limited computing power and memory resource encouragesstudies on efficient model design. A number of efficient architectures have beenproposed in recent years, for example, MobileNet, ShuffleNet, and MobileNetV2.However, all these models are heavily dependent on depthwise separable convolution which lacks efficient implementation in most deep learning frameworks. Inthis study, we propose an efficient architecture named PeleeNet, which is built withconventional convolution instead. On ImageNet ILSVRC 2012 dataset, our proposed PeleeNet achieves a higher accuracy and over 1.8 times faster speed thanMobileNet and MobileNetV2 on NVIDIA TX2. Meanwhile, PeleeNet is only66% of the model size of MobileNet. We then propose a real-time object detection system by combining PeleeNet with Single Shot MultiBox Detector (SSD)method and optimizing the architecture for fast speed. Our proposed detectionsystem1, named Pelee, achieves 76.4% mAP (mean average precision) on PASCAL VOC2007 and 22.4 mAP on MS COCO dataset at the speed of 23.6 FPSon iPhone 8 and 125 FPS on NVIDIA TX2. The result on COCO outperformsYOLOv2 in consideration of a higher precision, 13.6 times lower computationalcost and 11.3 times smaller model size.</div></details></td>
-        <td>PeLeeNet imagenet top</br>1=71.53%</td>
-        <td><a href="">快速开始</a></td>
+        <td>PULC_language_classification</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Multi-lingual scene text detection and recognition/Acc 0.9926</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_language_classification.md">快速开始</a></td>
         </td>
     </tr>
     <tr>
         <td>208</td>
-        <td>ConvNeXt </td>
-        <td><a href="https://paperswithcode.com/paper/a-convnet-for-the-2020s">A ConvNet for the 2020s</a></td>
-        <td><details><summary>Abstract</summary><div>The "Roaring 20s" of visual recognition began with the introduction of Vision Transformers (ViTs), which quickly superseded ConvNets as the state-of-the-art image classification model. A vanilla ViT, on the other hand, faces difficulties when applied to general computer vision tasks such as object detection and semantic segmentation. It is the hierarchical Transformers (e.g., Swin Transformers) that reintroduced several ConvNet priors, making Transformers practically viable as a generic vision backbone and demonstrating remarkable performance on a wide variety of vision tasks. However, the effectiveness of such hybrid approaches is still largely credited to the intrinsic superiority of Transformers, rather than the inherent inductive biases of convolutions. In this work, we reexamine the design spaces and test the limits of what a pure ConvNet can achieve. We gradually "modernize" a standard ResNet toward the design of a vision Transformer, and discover several key components that contribute to the performance difference along the way. The outcome of this exploration is a family of pure ConvNet models dubbed ConvNeXt. Constructed entirely from standard ConvNet modules, ConvNeXts compete favorably with Transformers in terms of accuracy and scalability, achieving 87.8% ImageNet top-1 accuracy and outperforming Swin Transformers on COCO detection and ADE20K segmentation, while maintaining the simplicity and efficiency of standard ConvNets.</div></details></td>
-        <td>ConvNeXt_tiny imagene</br>t top1=82.03%</td>
-        <td><a href="">快速开始</a></td>
+        <td>PULC_person_attribute</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>pa100k/mAP 0.7859</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_attribute.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>209</td>
+        <td>PULC_person_exists</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Object365、ImageNet/Tpr 0.9623</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_exists.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>210</td>
+        <td>PULC_safety_helmet</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Safety-Helmet-Wearing-Dataset、hard-hat-detection、Large-scale CelebFaces Attributes (CelebA) Dataset/Tpr 0.9938</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_safety_helmet.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>211</td>
+        <td>PULC_text_image_orientation</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>ICDAR2019-ArT、XFUND、ICDAR2015/Acc 0.9906</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_text_image_orientation.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>212</td>
+        <td>PULC_textline_orientation</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>ICDAR2019-LSVT/Acc 0.9601</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_textline_orientation.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>213</td>
+        <td>PULC_traffic_sign</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>Tsinghua-Tencent 100K/Acc 0.9835</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_traffic_sign.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>214</td>
+        <td>PULC_vehicle_attribute</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
+        <td>VeRi/mAP 0.9081</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_vehicle_attribute.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>215</td>
+        <td>PP-ShiTuV1_mainbody_detection</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been a challenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural network architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve label assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on object detection for mobile devices. Our models achieve better trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M parameters achieves 30.6% mAP, which is an absolute 4.8% improvement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an absolute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state-of-the-art results for lightweight object detection. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>自建数据集/mAP 0.401</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/mainbody_detection.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>216</td>
+        <td>PP-ShiTuV1_feature_extraction</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
+        <td>Aliproduct/Recall@1 0.839</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/feature_extraction.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>217</td>
+        <td>PP-ShiTuV2_mainbody_detection</td>
+        <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
+        <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been a challenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural network architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve label assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on object detection for mobile devices. Our models achieve better trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M parameters achieves 30.6% mAP, which is an absolute 4.8% improvement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an absolute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state-of-the-art results for lightweight object detection. Code and pre-trained models are available at this https URL. </div></details></td>
+        <td>自建数据集/mAP 0.415</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/training/PP-ShiTu/mainbody_detection.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>218</td>
+        <td>PP-ShiTuV2_feature_extraction</td>
+        <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
+        <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
+        <td>Aliproduct/Recall@1 0.842</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/training/PP-ShiTu/feature_extraction.md">快速开始</a></td>
         </td>
     </tr>
 </table>
