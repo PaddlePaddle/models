@@ -1864,7 +1864,7 @@
         <td>PULC_car_exists</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
-        <td>Objects365/Tpr@Fpr0.01 0.9592</td>
+        <td>自建数据集/Tpr@Fpr0.01 0.9592</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_car_exists.md">快速开始</a></td>
         </td>
     </tr>
@@ -1882,7 +1882,7 @@
         <td>PULC_person_attribute</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
-        <td>pa100k/mAP 0.7859</td>
+        <td>pa100k/mA 0.7859</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_attribute.md">快速开始</a></td>
         </td>
     </tr>
@@ -1891,7 +1891,7 @@
         <td>PULC_person_exists</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
-        <td>Object365、ImageNet/Tpr 0.9623</td>
+        <td>自建数据集/Tpr@Fpr 0.9623</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_person_exists.md">快速开始</a></td>
         </td>
     </tr>
@@ -1900,7 +1900,7 @@
         <td>PULC_safety_helmet</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
-        <td>Safety-Helmet-Wearing-Dataset、hard-hat-detection、Large-scale CelebFaces Attributes (CelebA) Dataset/Tpr 0.9938</td>
+        <td>Safety-Helmet-Wearing-Dataset、hard-hat-detection、Large-scale CelebFaces Attributes (CelebA) Dataset/Tpr@Fpr 0.9938</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_safety_helmet.md">快速开始</a></td>
         </td>
     </tr>
@@ -1936,7 +1936,7 @@
         <td>PULC_vehicle_attribute</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
-        <td>VeRi/mAP 0.9081</td>
+        <td>VeRi/mA 0.9081</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/PULC/PULC_vehicle_attribute.md">快速开始</a></td>
         </td>
     </tr>
