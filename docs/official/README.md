@@ -1960,7 +1960,7 @@
     </tr>
     <tr>
         <td>217</td>
-        <td>PP-ShiTuV1_mainbody_detection</td>
+        <td>PP-ShiTuV2_mainbody_detection</td>
         <td><a href="https://arxiv.org/abs/2111.00902">PP-PicoDet: A Better Real-Time Object Detector on Mobile Devices</a></td>
         <td><details><summary>Abstract</summary><div>The better accuracy and efficiency trade-off has been a challenging problem in object detection. In this work, we are dedicated to studying key optimizations and neural network architecture choices for object detection to improve accuracy and efficiency. We investigate the applicability of the anchor-free strategy on lightweight object detection models. We enhance the backbone structure and design the lightweight structure of the neck, which improves the feature extraction ability of the network. We improve label assignment strategy and loss function to make training more stable and efficient. Through these optimizations, we create a new family of real-time object detectors, named PP-PicoDet, which achieves superior performance on object detection for mobile devices. Our models achieve better trade-offs between accuracy and latency compared to other popular models. PicoDet-S with only 0.99M parameters achieves 30.6% mAP, which is an absolute 4.8% improvement in mAP while reducing mobile CPU inference latency by 55% compared to YOLOX-Nano, and is an absolute 7.1% improvement in mAP compared to NanoDet. It reaches 123 FPS (150 FPS using Paddle Lite) on mobile ARM CPU when the input size is 320. PicoDet-L with only 3.3M parameters achieves 40.9% mAP, which is an absolute 3.7% improvement in mAP and 44% faster than YOLOv5s. As shown in Figure 1, our models far outperform the state-of-the-art results for lightweight object detection. Code and pre-trained models are available at this https URL. </div></details></td>
         <td>自制数据集/mAP 0.415</td>
@@ -1969,11 +1969,11 @@
     </tr>
     <tr>
         <td>218</td>
-        <td>PP-ShiTuV1_feature_extraction</td>
+        <td>PP-ShiTuV2_feature_extraction</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
         <td>Aliproduct/Recall@1 0.842</td>
-        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.4/docs/zh_CN/image_recognition_pipeline/feature_extraction.md">快速开始</a></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/training/PP-ShiTu/feature_extraction.md">快速开始</a></td>
         </td>
     </tr>
 </table>
