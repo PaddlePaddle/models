@@ -1,0 +1,11 @@
+【Segment-Anything-App-YAML】
+
+APP_Info:
+    title: Segment-Anything-App
+    colorFrom: blue
+    colorTo: yellow
+    sdk: gradio
+    sdk_version: 3.4.1
+    app_file: app.py
+    license: apache-2.0
+    device: cpu

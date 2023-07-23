@@ -1,0 +1,31 @@
+---
+Model_Info:
+  name: "SegmentAnything"
+  description: "SegmentAnything分割模型"
+  description_en: "SegmentAnything model"
+  icon: ""
+  from_repo: "PaddleSeg"
+Task:
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Image Segmentation"
+  sub_tag: "图像分割"
+- tag_en: "Computer Vision"
+  tag: "计算机视觉"
+  sub_tag_en: "Figure Segment"
+  sub_tag: "图像分割" 
+Example:
+- tag: "互联网"
+  sub_tag: "图像分割"
+  tag_en: "Internet"
+  sub_tag_en: "Figure Segment"
+  title: "【Segment Anything实践范例】Segment Anything图像分割"
+  url: ""
+Datasets: "SA-1B"
+Publisher: "Baidu"
+License: "apache.2.0"
+Paper:
+- title: "Segment Anything"
+  url: "https://arxiv.org/abs/2304.02643"
+IfTraining: 0
+IfOnlineDemo: 1
