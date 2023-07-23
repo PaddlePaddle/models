@@ -1,0 +1,12 @@
+# ernie_gen
+* 安装 PaddleHub：
+
+    ```bash
+    $ pip install --upgrade paddlehub
+    ```
+
+* 安装 ernie_gen：
+
+    ```bash
+    $ hub install ernie_gen
+    ```

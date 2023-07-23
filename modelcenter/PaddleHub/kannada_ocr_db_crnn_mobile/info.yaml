@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ocr service
+  description_en: ocr service
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: kannada_ocr_db_crnn_mobile
+Publisher: PaddleHub
+Task:
+- sub_tag: 文本识别
+  sub_tag_en: Text Recognition
+  tag: 计算机视觉
+  tag_en: CV

@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: DeepLabv3+ is a semantic segmentation model.
+  description_en: DeepLabv3+ is a semantic segmentation model.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: deeplabv3p_xception65_humanseg
+Publisher: PaddleHub
+Task:
+- sub_tag: 语义分割
+  sub_tag_en: Semantic Segmentation
+  tag: 计算机视觉
+  tag_en: CV

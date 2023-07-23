@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: 'ghostnet_x1_3_imagenet is a classification model, '
+  description_en: 'ghostnet_x1_3_imagenet is a classification model, '
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ghostnet_x1_3_imagenet
+Publisher: PaddleHub
+Task:
+- sub_tag: 分类
+  sub_tag_en: Classification
+  tag: 计算机视觉
+  tag_en: CV

@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: meter_reader implements the detection and automatic reading of traditional
+    mechanical pointer meters based on Meter detection and  pointer segmentation.
+  description_en: meter_reader implements the detection and automatic reading of traditional
+    mechanical pointer meters based on Meter detection and  pointer segmentation.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: barometer_reader
+Publisher: PaddleHub
+Task:
+- sub_tag: 图像编辑
+  sub_tag_en: Image Editing
+  tag: 计算机视觉
+  tag_en: CV

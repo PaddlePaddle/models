@@ -1,0 +1,9 @@
+APP_Info:
+  app_file: app.py
+  colorFrom: blue
+  colorTo: yellow
+  device: cpu
+  license: apache-2.0
+  sdk: gradio
+  sdk_version: 3.4.1
+  title: chinese_ocr_db_crnn_mobile

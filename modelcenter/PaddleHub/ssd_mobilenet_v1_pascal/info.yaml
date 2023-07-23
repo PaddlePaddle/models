@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: SSD with backbone MobileNet_V1, trained with dataset Pasecal VOC.
+  description_en: SSD with backbone MobileNet_V1, trained with dataset Pasecal VOC.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ssd_mobilenet_v1_pascal
+Publisher: PaddleHub
+Task:
+- sub_tag: 目标检测
+  sub_tag_en: Object Detection
+  tag: 计算机视觉
+  tag_en: CV

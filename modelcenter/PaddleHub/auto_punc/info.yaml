@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ''
+  description_en: ''
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: auto_punc
+Publisher: PaddleHub
+Task:
+- sub_tag: 标点复原
+  sub_tag_en: Punctuation Restoration
+  tag: 文本
+  tag_en: Text

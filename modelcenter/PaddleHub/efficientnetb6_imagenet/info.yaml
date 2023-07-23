@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: EfficientNetB6 is a image classfication model, this module is trained
+    with imagenet datasets.
+  description_en: EfficientNetB6 is a image classfication model, this module is trained
+    with imagenet datasets.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: efficientnetb6_imagenet
+Publisher: PaddleHub
+Task:
+- sub_tag: 图像分类
+  sub_tag_en: Image Classification
+  tag: 计算机视觉
+  tag_en: CV

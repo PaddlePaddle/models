@@ -1,0 +1,26 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: 'SKEP: Sentiment Knowledge Enhanced Pre-training for Sentiment Analysis.
+    Ernie_skep_sentiment_analysis module is initialize with enie_1.0_chn_large when
+    pretraining. This module is finetuned on ChnSentiCorp dataset to do sentiment
+    claasification. It can do sentiment analysis prediction directly, label as positive
+    or negative.'
+  description_en: 'SKEP: Sentiment Knowledge Enhanced Pre-training for Sentiment Analysis.
+    Ernie_skep_sentiment_analysis module is initialize with enie_1.0_chn_large when
+    pretraining. This module is finetuned on ChnSentiCorp dataset to do sentiment
+    claasification. It can do sentiment analysis prediction directly, label as positive
+    or negative.'
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ernie_skep_sentiment_analysis
+Publisher: PaddleHub
+Task:
+- sub_tag: 情感分析
+  sub_tag_en: Sentiment Analysis
+  tag: 自然语言处理
+  tag_en: NLP

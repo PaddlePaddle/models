@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ''
+  description_en: ''
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: w2v_baidu_encyclopedia_context_word-character_char1-4_dim300
+Publisher: PaddleHub
+Task:
+- sub_tag: 语义模型
+  sub_tag_en: Semantic Model
+  tag: 自然语言处理
+  tag_en: NLP

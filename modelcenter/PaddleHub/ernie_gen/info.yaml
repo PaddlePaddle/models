@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: ERNIE-GEN is a multi-flow language generation framework for both pre-training
+    and fine-tuning.
+  description_en: ERNIE-GEN is a multi-flow language generation framework for both
+    pre-training and fine-tuning.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: ernie_gen
+Publisher: PaddleHub
+Task:
+- sub_tag: 文本生成
+  sub_tag_en: Text Generation
+  tag: 自然语言处理
+  tag_en: NLP

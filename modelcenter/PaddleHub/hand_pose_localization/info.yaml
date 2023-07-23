@@ -1,0 +1,18 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: hand_pose_localization
+  description_en: hand_pose_localization
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: hand_pose_localization
+Publisher: PaddleHub
+Task:
+- sub_tag: 关键点检测
+  sub_tag_en: Keypoint Detection
+  tag: 计算机视觉
+  tag_en: CV

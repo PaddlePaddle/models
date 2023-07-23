@@ -1,0 +1,20 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 1
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: jieba_paddle is a chineses tokenizer using BiGRU base on the PaddlePaddle
+    deeplearning framework. More information please refer to https://github.com/fxsjy/jieba.
+  description_en: jieba_paddle is a chineses tokenizer using BiGRU base on the PaddlePaddle
+    deeplearning framework. More information please refer to https://github.com/fxsjy/jieba.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: jieba_paddle
+Publisher: PaddleHub
+Task:
+- sub_tag: 词法分析
+  sub_tag_en: Lexical Analysis
+  tag: 自然语言处理
+  tag_en: NLP

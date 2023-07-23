@@ -1,0 +1,22 @@
+Datasets: null
+Example: null
+IfOnlineDemo: 0
+IfTraining: 0
+Language: Chinese
+License: apache-2.0
+Model_Info:
+  description: This is a PaddleHub Module for LDA topic model in webpage dataset,
+    where we can calculate doc distance, calculate the similarity between query and
+    document, etc.
+  description_en: This is a PaddleHub Module for LDA topic model in webpage dataset,
+    where we can calculate doc distance, calculate the similarity between query and
+    document, etc.
+  from_repo: https://github.com/PaddlePaddle/PaddleHub
+  icon: https://paddlenlp.bj.bcebos.com/images/community_icon.png
+  name: lda_webpage
+Publisher: PaddleHub
+Task:
+- sub_tag: 语义模型
+  sub_tag_en: Semantic Model
+  tag: 自然语言处理
+  tag_en: NLP
