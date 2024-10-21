@@ -1,8 +1,7 @@
 # 官方模型库
 
-飞桨为开发者精选并汇聚了600+面向产业实践的优质模型，分方向汇总如下：
+飞桨为开发者精选并汇聚了600+面向产业实践的优质模型，分方向模型索引汇总如下：
 
-### 模型更新列表 2023.6.20
 | 开发套件            | 模型列表                                                     |
 | --------------- | ------------------------------------------------------------ |
 | PaddleClas      | [v2.5模型列表](https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/models/ImageNet1k/model_list.md) |
@@ -1849,7 +1848,7 @@
     </tr>
     <tr>
         <td>203</td>
-        <td>VAN_B0</td>
+        <td>VAN</td>
         <td><a href="https://arxiv.org/abs/2202.09741">Visual Attention Network</a></td>
         <td><details><summary>Abstract</summary><div>While originally designed for natural language processing tasks, the self-attention mechanism has recently taken various computer vision areas by storm. However, the 2D nature of images brings three challenges for applying self-attention in computer vision. (1) Treating images as 1D sequences neglects their 2D structures. (2) The quadratic complexity is too expensive for high-resolution images. (3) It only captures spatial adaptability but ignores channel adaptability. In this paper, we propose a novel linear attention named large kernel attention (LKA) to enable self-adaptive and long-range correlations in self-attention while avoiding its shortcomings. Furthermore, we present a neural network based on LKA, namely Visual Attention Network (VAN). While extremely simple, VAN surpasses similar size vision transformers(ViTs) and convolutional neural networks(CNNs) in various tasks, including image classification, object detection, semantic segmentation, panoptic segmentation, pose estimation, etc. For example, VAN-B6 achieves 87.8% accuracy on ImageNet benchmark and set new state-of-the-art performance (58.2 PQ) for panoptic segmentation. Besides, VAN-B2 surpasses Swin-T 4% mIoU (50.1 vs. 46.1) for semantic segmentation on ADE20K benchmark, 2.6% AP (48.8 vs. 46.2) for object detection on COCO dataset. It provides a novel method and a simple yet strong baseline for the community. Code is available at https://github.com/Visual-Attention-Network.</div></details></td>
         <td>ImageNet/Acc 0.7535</br></td>
@@ -1867,7 +1866,7 @@
     </tr>
     <tr>
         <td>205</td>
-        <td>ConvNeXt_tiny </td>
+        <td>ConvNeXt</td>
         <td><a href="https://arxiv.org/abs/2201.03545">A ConvNet for the 2020s</a></td>
         <td><details><summary>Abstract</summary><div>The "Roaring 20s" of visual recognition began with the introduction of Vision Transformers (ViTs), which quickly superseded ConvNets as the state-of-the-art image classification model. A vanilla ViT, on the other hand, faces difficulties when applied to general computer vision tasks such as object detection and semantic segmentation. It is the hierarchical Transformers (e.g., Swin Transformers) that reintroduced several ConvNet priors, making Transformers practically viable as a generic vision backbone and demonstrating remarkable performance on a wide variety of vision tasks. However, the effectiveness of such hybrid approaches is still largely credited to the intrinsic superiority of Transformers, rather than the inherent inductive biases of convolutions. In this work, we reexamine the design spaces and test the limits of what a pure ConvNet can achieve. We gradually "modernize" a standard ResNet toward the design of a vision Transformer, and discover several key components that contribute to the performance difference along the way. The outcome of this exploration is a family of pure ConvNet models dubbed ConvNeXt. Constructed entirely from standard ConvNet modules, ConvNeXts compete favorably with Transformers in terms of accuracy and scalability, achieving 87.8% ImageNet top-1 accuracy and outperforming Swin Transformers on COCO detection and ADE20K segmentation, while maintaining the simplicity and efficiency of standard ConvNets.</div></details></td>
         <td>ImageNet/Acc 0.8203</br></td>
@@ -1876,7 +1875,7 @@
     </tr>
     <tr>
         <td>206</td>
-        <td>PULC_car_exists</td>
+        <td>PULC</td>
         <td><a href="https://arxiv.org/abs/2109.15099">PP-LCNet: A Lightweight CPU Convolutional Neural Network</a></td>
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on theMKLDNN acceleration strategy, named PP-LCNet, whichimproves the performance of lightweight models on multi-ple tasks. This paper lists technologies which can improvenetwork accuracy while the latency is almost constant. Withthese improvements, the accuracy of PP-LCNet can greatlysurpass the previous network structure with the same infer-ence time for classification. As shown in Figure 1, it outper-forms the most state-of-the-art models. And for downstreamtasks of computer vision, it also performs very well, such asobject detection, semantic segmentation, etc. All our exper-iments are implemented based on PaddlePaddle1. Code andpretrained models are available at PaddleClas</div></details></td>
         <td>自建数据集/Tpr@Fpr0.01 0.9592</td>
@@ -1989,6 +1988,15 @@
         <td><details><summary>Abstract</summary><div>We propose a lightweight CPU network based on the MKLDNN acceleration strategy, named PP-LCNet, which improves the performance of lightweight models on multiple tasks. This paper lists technologies which can improve network accuracy while the latency is almost constant. With these improvements, the accuracy of PP-LCNet can greatly surpass the previous network structure with the same inference time for classification. As shown in Figure 1, it outperforms the most state-of-the-art models. And for downstream tasks of computer vision, it also performs very well, such as object detection, semantic segmentation, etc. All our experiments are implemented based on PaddlePaddle. Code and pretrained models are available at PaddleClas. </div></details></td>
         <td>Aliproduct/Recall@1 0.842</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleClas/blob/release/2.5/docs/zh_CN/training/PP-ShiTu/feature_extraction.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>220</td>
+        <td>Swin Transformer</td>
+        <td><a href="https://paperswithcode.com/paper/swin-transformer-hierarchical-vision">Swin Transformer: Hierarchical Vision Transformer using Shifted Windows</a></td>
+        <td><details><summary>Abstract</summary><div>本文介绍了一种新的视觉 Transformer，称为 Swin Transformer，它可以作为计算机视觉的通用骨干。将 Transformer</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PASSL/blob/main/tasks/classification/swin/configs/swin_base_patch4_window7_224_in1k_1n8c_dp_fp16o1.yaml">快速开始</a></td>
         </td>
     </tr>
 </table>
@@ -2445,7 +2453,81 @@
         <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/develop/configs/rotate/fcosr/README_en.md">快速开始</a></td>
         </td>
     </tr>
+	<tr>
+        <td>50</td>
+        <td>PP-YOLOE+</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>PP-YOLOE是基于PP-YOLOv2的卓越的单阶段Anchor-free模型，超越了多种流行的YOLO模型。PP-YOLOE有一系列的模型，即s/m/l/x，可以通过width multiplier和depth multiplier配置。PP-YOLOE避免了使用诸如Deformable Convolution或者MatrixNMS之类的特殊算子，以使其能轻松地部署在多种多样的硬件上</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.5/configs/ppyoloe/README_cn.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>51</td>
+        <td>PP-YOLOE-SOD</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>针对VisDrone-DET、DOTA水平框、Xview等小目标场景数据集的基于PP-YOLOE改进的检测模型 PP-YOLOE-SOD，以及提供了一套使用SAHI(Slicing Aided Hyper Inference)工具的切图和拼图的方案</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/develop/configs/smalldet/README.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>52</td>
+        <td>PP-Humanv2</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>实时行人分析工具PP-Human，是基于PaddlePaddle深度学习框架的业界首个开源的产业级实时行人分析工具，具有模型丰富、应用广泛和部署高效三大优势</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.5/deploy/pipeline/docs/tutorials/PPHuman_QUICK_STARTED.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>53</td>
+        <td>PP-Vehicle</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>PP-vehicle是一款针对车辆分析相关场景的开源工具，针对实用性、广泛性、低代码三重特性开发</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.5/deploy/pipeline/docs/tutorials/PPVehicle_QUICK_STARTED.md">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>54</td>
+        <td>YOLOv5</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>YOLOv5是一个在COCO数据集上预训练的物体检测架构和模型系列，它是YOLO系列的一个延申，其网络结构共分为：input、backbone、neck和head四个模块</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleYOLO/tree/develop/configs/yolov5">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>55</td>
+        <td>YOLOv6</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>YOLOv6是一种最先进的物体检测器，速度和准确性兼具，成为实时应用的热门选择。该模型在架构和训练方案上引入了几项重要改进，包括双向连接模块（BiC）、锚辅助训练（AAT）策略以及改进了的主干和颈部设计</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleYOLO/tree/develop/configs/yolov6">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>56</td>
+        <td>YOLOv7</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>YOLOv7是YOLO系列中最先进的新型目标检测器。根据论文所述，它是迄今为止最快、最准确的实时目标检测器，最好的模型获得了56.8%的平均精度(AP)，这是所有已知目标检测器中最高的，各种模型的速度范围在5~160FPS</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleYOLO/tree/develop/configs/yolov7">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>57</td>
+        <td>YOLOv8</td>
+        <td><a href="暂无">暂无</a></td>
+        <td><details><summary>Abstract</summary><div>YOLOv8是一款效果领先的（SOTA）模型，它在之前YOLO版本的基础上进行了发展，引入了新的特性和改进，以进一步提高性能和灵活性。YOLOv8旨在快速、准确且易于使用，使其成为各种对象检测和跟踪、实例分割、图像分类和姿态估计任务的绝佳选择。</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleYOLO/tree/develop/configs/yolov8">快速开始</a></td>
+        </td>
+    </tr>
 </table>
+
+
 
 ### PaddleSeg
 <table>
@@ -3647,7 +3729,123 @@
     </tr>
 </table>
 
+### Paddle3D
+
+<table>
+    <tr>
+        <th>序号</th>
+        <th>模型简称</th>
+        <th>论文名称(链接)</th>
+        <th>摘要</th>
+        <th>数据集</th>
+        <th width='10%'>快速开始</th>
+        </th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>SMOKE</td>
+        <td><a href="https://paperswithcode.com/paper/smoke-single-stage-monocular-3d-object">SMOKE: Single-Stage Monocular 3D Object Detection via Keypoint Estimation</a></td>
+        <td><details><summary>Abstract</summary><div>Estimating 3D orientation and translation of objects is essential for infrastructure-less autonomous navigation and driving. In case of monocular vision, successful methods have been mainly based on two ingredients: (i) a network generating 2D region proposals, (ii) a R-CNN structure predicting 3D object pose by utilizing the acquired regions of interest. We argue that the 2D detection network is redundant and introduces non-negligible noise for 3D detection. Hence, we propose a novel 3D object detection method, named SMOKE, in this paper that predicts a 3D bounding box for each detected object by combining a single keypoint estimate with regressed 3D variables. As a second contribution, we propose a multi-step disentangling approach for constructing the 3D bounding box, which significantly improves both training convergence and detection accuracy. In contrast to previous 3D detection techniques, our method does not require complicated pre/post-processing, extra data, and a refinement stage. Despite of its structural simplicity, our proposed SMOKE network outperforms all existing monocular 3D detection methods on the KITTI dataset, giving the best state-of-the-art result on both 3D object detection and Bird's eye view evaluation. The code will be made publicly available.</div></details></td>
+        <td>暂无</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>CaDDN</td>
+        <td><a href="https://paperswithcode.com/paper/categorical-depth-distribution-network-for">Categorical Depth Distribution Network for Monocular 3D Object Detection</a></td>
+        <td><details><summary>Abstract</summary><div>Monocular 3D object detection is a key problem for autonomous vehicles, as it provides a solution with simple configuration compared to typical multi-sensor systems. The main challenge in monocular 3D detection lies in accurately predicting object depth, which must be inferred from object and scene cues due to the lack of direct range measurement. Many methods attempt to directly estimate depth to assist in 3D detection, but show limited performance as a result of depth inaccuracy. Our proposed solution, Categorical Depth Distribution Network (CaDDN), uses a predicted categorical depth distribution for each pixel to project rich contextual feature information to the appropriate depth interval in 3D space. We then use the computationally efficient bird's-eye-view projection and single-stage detector to produce the final output bounding boxes. We design CaDDN as a fully differentiable end-to-end approach for joint depth estimation and object detection. We validate our approach on the KITTI 3D object detection benchmark, where we rank 1st among published monocular methods. We also provide the first monocular 3D detection results on the newly released Waymo Open Dataset. We provide a code release for CaDDN which is made available.</div></details></td>
+        <td>KITTI数据集；ocrnet_hrnet</br>_w18；3DmAP=7.86</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>PointPillars</td>
+        <td><a href="https://paperswithcode.com/paper/pointpillars-fast-encoders-for-object">PointPillars: Fast Encoders for Object Detection from Point Clouds</a></td>
+        <td><details><summary>Abstract</summary><div>Object detection in point clouds is an important aspect of many robotics applications such as autonomous driving. In this paper we consider the problem of encoding a point cloud into a format appropriate for a downstream detection pipeline. Recent literature suggests two types of encoders; fixed encoders tend to be fast but sacrifice accuracy, while encoders that are learned from data are more accurate, but slower. In this work we propose PointPillars, a novel encoder which utilizes PointNets to learn a representation of point clouds organized in vertical columns (pillars). While the encoded features can be used with any standard 2D convolutional detection architecture, we further propose a lean downstream network. Extensive experimentation shows that PointPillars outperforms previous encoders with respect to both speed and accuracy by a large margin. Despite only using lidar, our full detection pipeline significantly outperforms the state of the art, even among fusion methods, with respect to both the 3D and bird's eye view KITTI benchmarks. This detection performance is achieved while running at 62 Hz: a 2 - 4 fold runtime improvement. A faster version of our method matches the state of the art at 105 Hz. These benchmarks suggest that PointPillars is an appropriate encoding for object detection in point clouds.</div></details></td>
+        <td>KITTI数据集：Mod AP: Car@</br>R11=77.28 Pedestrian@R11	=52.29 Cyclist@R11=62.68</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>CenterPoint</td>
+        <td><a href="https://paperswithcode.com/paper/center-based-3d-object-detection-and-tracking">Center-based 3D Object Detection and Tracking</a></td>
+        <td><details><summary>Abstract</summary><div>Three-dimensional objects are commonly represented as 3D boxes in a point-cloud. This representation mimics the well-studied image-based 2D bounding-box detection but comes with additional challenges. Objects in a 3D world do not follow any particular orientation, and box-based detectors have difficulties enumerating all orientations or fitting an axis-aligned bounding box to rotated objects. In this paper, we instead propose to represent, detect, and track 3D objects as points. Our framework, CenterPoint, first detects centers of objects using a keypoint detector and regresses to other attributes, including 3D size, 3D orientation, and velocity. In a second stage, it refines these estimates using additional point features on the object. In CenterPoint, 3D object tracking simplifies to greedy closest-point matching. The resulting detection and tracking algorithm is simple, efficient, and effective. CenterPoint achieved state-of-the-art performance on the nuScenes benchmark for both 3D detection and tracking, with 65.5 NDS and 63.8 AMOTA for a single model. On the Waymo Open Dataset, CenterPoint outperforms all previous single model method by a large margin and ranks first among all Lidar-only submissions. The code and pretrained models are available at this https URL.</div></details></td>
+        <td>nuScenes验证集：CenterPo</br>int_PointPillars：mAP=50.27 NDS=60.24CenterPoint_VoxelNet：mAP=59.05 NDS=66.53 on nuScenes val set</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>SqueezeSegv3</td>
+        <td><a href="https://paperswithcode.com/paper/squeezesegv3-spatially-adaptive-convolution">SqueezeSegV3: Spatially-Adaptive Convolution for Efficient Point-Cloud Segmentation</a></td>
+        <td><details><summary>Abstract</summary><div>LiDAR point-cloud segmentation is an important problem for many applications. For large-scale point cloud segmentation, the \textit{de facto} method is to project a 3D point cloud to get a 2D LiDAR image and use convolutions to process it. Despite the similarity between regular RGB and LiDAR images, we discover that the feature distribution of LiDAR images changes drastically at different image locations. Using standard convolutions to process such LiDAR images is problematic, as convolution filters pick up local features that are only active in specific regions in the image. As a result, the capacity of the network is under-utilized and the segmentation performance decreases. To fix this, we propose Spatially-Adaptive Convolution (SAC) to adopt different filters for different locations according to the input image. SAC can be computed efficiently since it can be implemented as a series of element-wise multiplications, im2col, and standard convolution. It is a general framework such that several previous methods can be seen as special cases of SAC. Using SAC, we build SqueezeSegV3 for LiDAR point-cloud segmentation and outperform all previous published methods by at least 3.7% mIoU on the SemanticKITTI benchmark with comparable inference speed.</div></details></td>
+        <td>SemanticKITTI数据集；Spat</br>ially-Adaptive Convolution (SAC)；mIoU= 48.8，mAcc=</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>PAConv</td>
+        <td><a href="https://paperswithcode.com/paper/paconv-position-adaptive-convolution-with">PAConv: Position Adaptive Convolution with Dynamic Kernel Assembling on Point Clouds</a></td>
+        <td><details><summary>Abstract</summary><div>We introduce Position Adaptive Convolution (PAConv), a generic convolution operation for 3D point cloud processing. The key of PAConv is to construct the convolution kernel by dynamically assembling basic weight matrices stored in Weight Bank, where the coefficients of these weight matrices are self-adaptively learned from point positions through ScoreNet. In this way, the kernel is built in a data-driven manner, endowing PAConv with more flexibility than 2D convolutions to better handle the irregular and unordered point cloud data. Besides, the complexity of the learning process is reduced by combining weight matrices instead of brutally predicting kernels from point positions. Furthermore, different from the existing point convolution operators whose network architectures are often heavily engineered, we integrate our PAConv into classical MLP-based point cloud pipelines without changing network configurations. Even built on simple networks, our method still approaches or even surpasses the state-of-the-art models, and significantly improves baseline performance on both classification and segmentation tasks, yet with decent efficiency. Thorough ablation studies and visualizations are provided to understand PAConv. Code is released on https://github.com/CVMI-Lab/PAConv.</div></details></td>
+        <td>ModelNet40数据集；自适应卷积；A</br>cc=93.4</td>
+        <td><a href="暂无">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>IA-SSD</td>
+        <td><a href="https://paperswithcode.com/paper/not-all-points-are-equal-learning-highly">Not All Points Are Equal: Learning Highly Efficient Point-based Detectors for 3D LiDAR Point Clouds</a></td>
+        <td><details><summary>Abstract</summary><div>We study the problem of efficient object detection of 3D LiDAR point clouds. To reduce the memory and computational cost, existing point-based pipelines usually adopt task-agnostic random sampling or farthest point sampling to progressively downsample input point clouds, despite the fact that not all points are equally important to the task of object detection. In particular, the foreground points are inherently more important than background points for object detectors. Motivated by this, we propose a highly-efficient single-stage point-based 3D detector in this paper, termed IA-SSD. The key of our approach is to exploit two learnable, task-oriented, instance-aware downsampling strategies to hierarchically select the foreground points belonging to objects of interest. Additionally, we also introduce a contextual centroid perception module to further estimate precise instance centers. Finally, we build our IA-SSD following the encoder-only architecture for efficiency. Extensive experiments conducted on several large-scale detection benchmarks demonstrate the competitive performance of our IA-SSD. Thanks to the low memory footprint and a high degree of parallelism, it achieves a superior speed of 80+ frames-per-second on the KITTI dataset with a single RTX2080Ti GPU. The code is available at \url{https://github.com/yifanzhang713/IA-SSD}.</div></details></td>
+        <td>KITTI数据集；pointnet++；3</br>D mAP car=79.13, Ped=58.51, Cyc=71.32</td>
+        <td><a href="https://github.com/PaddlePaddle/Paddle3D">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>VoxelRCNN</td>
+        <td><a href="https://paperswithcode.com/paper/voxel-r-cnn-towards-high-performance-voxel">Voxel R-CNN: Towards High Performance Voxel-based 3D Object Detection</a></td>
+        <td><details><summary>Abstract</summary><div>Recent advances on 3D object detection heavily rely on how the 3D data are represented, \emph{i.e.}, voxel-based or point-based representation. Many existing high performance 3D detectors are point-based because this structure can better retain precise point positions. Nevertheless, point-level features lead to high computation overheads due to unordered storage. In contrast, the voxel-based structure is better suited for feature extraction but often yields lower accuracy because the input data are divided into grids. In this paper, we take a slightly different viewpoint -- we find that precise positioning of raw points is not essential for high performance 3D object detection and that the coarse voxel granularity can also offer sufficient detection accuracy. Bearing this view in mind, we devise a simple but effective voxel-based framework, named Voxel R-CNN. By taking full advantage of voxel features in a two stage approach, our method achieves comparable detection accuracy with state-of-the-art point-based models, but at a fraction of the computation cost. Voxel R-CNN consists of a 3D backbone network, a 2D bird-eye-view (BEV) Region Proposal Network and a detect head. A voxel RoI pooling is devised to extract RoI features directly from voxel features for further refinement. Extensive experiments are conducted on the widely used KITTI Dataset and the more recent Waymo Open Dataset. Our results show that compared to existing voxel-based methods, Voxel R-CNN delivers a higher detection accuracy while maintaining a real-time frame processing rate, \emph{i.e}., at a speed of 25 FPS on an NVIDIA RTX 2080 Ti GPU. The code is available at \url{https://github.com/djiajunustc/Voxel-R-CNN}.</div></details></td>
+        <td>KITTI数据集：Mod AP: Car@</br>R11=84.54 Car@R40=84.96 on KITTI val set</td>
+        <td><a href="https://github.com/PaddlePaddle/Paddle3D">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>PV-RCNN</td>
+        <td><a href="https://paperswithcode.com/paper/pv-rcnn-point-voxel-feature-set-abstraction">PV-RCNN: Point-Voxel Feature Set Abstraction for 3D Object Detection</a></td>
+        <td><details><summary>Abstract</summary><div>We present a novel and high-performance 3D object detection framework, named PointVoxel-RCNN (PV-RCNN), for accurate 3D object detection from point clouds. Our proposed method deeply integrates both 3D voxel Convolutional Neural Network (CNN) and PointNet-based set abstraction to learn more discriminative point cloud features. It takes advantages of efficient learning and high-quality proposals of the 3D voxel CNN and the flexible receptive fields of the PointNet-based networks. Specifically, the proposed framework summarizes the 3D scene with a 3D voxel CNN into a small set of keypoints via a novel voxel set abstraction module to save follow-up computations and also to encode representative scene features. Given the high-quality 3D proposals generated by the voxel CNN, the RoI-grid pooling is proposed to abstract proposal-specific features from the keypoints to the RoI-grid points via keypoint set abstraction with multiple receptive fields. Compared with conventional pooling operations, the RoI-grid feature points encode much richer context information for accurately estimating object confidences and locations. Extensive experiments on both the KITTI dataset and the Waymo Open dataset show that our proposed PV-RCNN surpasses state-of-the-art 3D detection methods with remarkable margins by using only point clouds. Code is available at https://github.com/open-mmlab/OpenPCDet.</div></details></td>
+        <td>KITTI数据集：Mod. AP@R11:</br> Car_83.69 Ped_54.84 Cyc_69.47; Mod. AP@R40: Car_84.36 Ped_54.49 Cyc_70.38</td>
+        <td><a href="https://github.com/PaddlePaddle/Paddle3D">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>Voxel_RCNN</td>
+        <td><a href="https://paperswithcode.com/paper/voxel-r-cnn-towards-high-performance-voxel">Voxel R-CNN: Towards High Performance Voxel-based 3D Object Detection</a></td>
+        <td><details><summary>Abstract</summary><div>Voxel RCNN在仅使用Voxel-Based的情况下，通过调整模型参数达到当时Point-Based和Voxel-Based相结合的SOTA方法的精度。并对RCNN模型结构做了改进，使得模型速度得到了大幅提升</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/Paddle3D/tree/develop/docs/models/voxel_rcnn">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>PV_RCNN</td>
+        <td><a href="https://paperswithcode.com/paper/pv-rcnn-point-voxel-feature-set-abstraction">PV-RCNN: Point-Voxel Feature Set Abstraction for 3D Object Detection</a></td>
+        <td><details><summary>Abstract</summary><div>PV-RCNN是Voxel-Based和Point-based相结合的Anchor-Based二阶段点云三维物体检测方法。在精度提优方面，PV-RCNN在Voxel-Branch中使用3D SparseConv学习有序体素特征，在Point-Branch中基于PointNet++提取无序点云的特征，将两种表示方法的优点充分结合，有效提升模型的精度</div></details></td>
+        <td></td>
+        <td><a href="https://github.com/PaddlePaddle/Paddle3D/tree/develop/docs/models/pv_rcnn">快速开始</a></td>
+        </td>
+    </tr>
+</table>
+
+
+
 ### PaddleVideo
+
 <table>
     <tr>
         <th>序号</th>
@@ -3903,7 +4101,12 @@
     </tr>
 </table>
 
+
+
+
+
 ### PaddleNLP
+
 <table>
     <tr>
         <th>序号</th>
@@ -4267,7 +4470,7 @@
     </tr>
     <tr>
         <td>40</td>
-        <td>BlenderbotSmall</td>
+        <td>Blenderbot_Small</td>
         <td><a href="https://paperswithcode.com/paper/blenderbot-3-a-deployed-conversational-agent">BlenderBot 3: a deployed conversational agent that continually learns to responsibly engage</a></td>
         <td><details><summary>Abstract</summary><div>We present BlenderBot 3, a 175B parameter dialogue model capable of open-domain conversation with access to the internet and a long-term memory, and having been trained on a large number of user defined tasks. We release both the model weights and code, and have also deployed the model on a public web page to interact with organic users. This technical report describes how the model was built (architecture, model and training scheme), and details of its deployment, including safety mechanisms. Human evaluations show its superiority to existing open-domain dialogue agents, including its predecessors (Roller et al., 2021; Komeili et al., 2022). Finally, we detail our plan for continual learning using the data collected from deployment, which will also be publicly released. The goal of this research program is thus to enable the community to study ever-improving responsible agents that learn through interaction.</div></details></td>
         <td>F1</td>
@@ -4443,6 +4646,15 @@
         <td><details><summary>Abstract</summary><div>SqueezeBERT is an efficient architectural variant of BERT for natural language processing that uses grouped convolutions. It is much like BERT-base, but with positional feedforward connection layers implemented as convolutions, and grouped convolution for many of the layers.</div></details></td>
         <td>F1</td>
         <td><a href="https://github.com/PaddlePaddle/PaddleNLP">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>60</td>
+        <td>GPT3</td>
+        <td><a href="https://paperswithcode.com/method/gpt-3">GPT-3</a></td>
+        <td><details><summary>Abstract</summary><div>GPT-3 is an autoregressive transformer model with 175 billion parameters. It uses the same architecture/model as GPT-2, including the modified initialization, pre-normalization, and reversible tokenization, with the exception that GPT-3 uses alternating dense and locally banded sparse attention patterns in the layers of the transformer, similar to the Sparse Transformer.</div></details></td>
+        <td>F1</td>
+        <td><a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop/llm/config/gpt-3">快速开始</a></td>
         </td>
     </tr>
 </table>
@@ -5695,3 +5907,125 @@
         </td>
     </tr>
 </table>
+
+### PaddleTS
+<table>
+    <tr>
+        <th>序号</th>
+        <th>模型简称</th>
+        <th>论文名称(链接)</th>
+        <th>摘要</th>
+        <th>数据集</th>
+        <th width='10%'>快速开始</th>
+        </th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>DeepAR</td>
+        <td><a href="https://paperswithcode.com/paper/deepar-probabilistic-forecasting-with">DeepAR: Probabilistic Forecasting with Autoregressive Recurrent Networks</a></td>
+        <td><details><summary>Abstract</summary><div>优先经验回放（Prioritized experience replay，PER）提出了一种优先考虑经验的框架，以便更频繁地重放重要的转换。有两种优先考虑转换的变体，一种是基于排名的（rank-based），另一种是基于比例的（proportional-based）。我们的实现采用了基于比例的变体，据原始论文报道，该变体具有更好的性能</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.deepar.html#">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Informer</td>
+        <td><a href="https://ojs.aaai.org/index.php/AAAI/article/view/17325">Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting</a></td>
+        <td><details><summary>Abstract</summary><div>DeepAR是亚马逊提出的一种针对大量相关时间序列统一建模的预测算法，该算法采用了深度学习的技术，通过在大量时间序列上训练自回归递归网络模型，可以从相关的时间序列中有效地学习全局模型，并且能够学习复杂的模式，例如季节性、数据随时间的不确定性增长，从而对各条时间序列进行预测</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.informer.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>LstNet</td>
+        <td><a href="https://link.springer.com/chapter/10.1007/978-3-030-58607-2_33">Lst-net: Learning a convolutional neural network with a learnable sparse transform</a></td>
+        <td><details><summary>Abstract</summary><div>Informer是一种用于时间序列预测的神经网络模型，它专注于处理多变量时间序列数据，并在预测过程中考虑到序列中的长期依赖关系。Informer模型由Zhou等人于2020年提出，并在时间序列预测任务中展现出良好的性能。</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.lstnet.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>NBeats</td>
+        <td><a href="https://arxiv.org/abs/1905.10437">N-BEATS: Neural basis expansion analysis for interpretable time series forecasting</a></td>
+        <td><details><summary>Abstract</summary><div>LSTNet是2018年提出的时序预测模型, 它同时利用卷积层和循环层的优势, 提取时间序列多变量之间的局部依赖模式和捕获复杂的长期依赖</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.nbeats.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>NHits</td>
+        <td><a href="https://ojs.aaai.org/index.php/AAAI/article/view/25854">Nhits: Neural hierarchical interpolation for time series forecasting</a></td>
+        <td><details><summary>Abstract</summary><div>Nbeats 模型由Element AI 提出，是一种基于神经网络的时间序列预测模型。 Nbeats模型的核心思想是将时间序列分解成若干个基函数，每个基函数可以被视为一个小型的神经网络，来进行时间序列的拟合</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.nhits.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>RNN</td>
+        <td><a href="https://ieeexplore.ieee.org/abstract/document/728168/">Time series prediction using RNN in multi-dimension embedding phase space</a></td>
+        <td><details><summary>Abstract</summary><div>是N-Beats模型的改进，缓解了随着预测长度（Horizon）的增加，速度变慢、参数量变多，误差变大的问题</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.rnn.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>TCN</td>
+        <td><a href="https://link.springer.com/article/10.1007/s00500-020-04954-0">Temporal convolutional neural (TCN) network for an effective weather forecasting using time-series data  from the local weather station</a></td>
+        <td><details><summary>Abstract</summary><div>循环神经网络 (RNN) 是一种使用序列数据或时序数据的人工神经网络。这些深度学习算法常用于顺序或时间问题，如语言翻译、自然语言处理 (nlp)、语音识别、图像字幕等</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.forecasting.dl.tcn.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>TS2Vec</td>
+        <td><a href="https://ojs.aaai.org/index.php/AAAI/article/view/20881">Ts2vec: Towards universal representation of time series</a></td>
+        <td><details><summary>Abstract</summary><div>Transformer模型（直译为“变换器”）是一种采用自注意力机制的深度学习模型，这一机制可以按输入数据各部分重要性的不同而分配不同的权重。该模型主要用于自然语言处理（NLP）与计算机视觉（CV）领域</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.representation.dl.ts2vec.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>CoST</td>
+        <td><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/(SICI)1099-1255(199609)11:5%3C539::AID-JAE412%3E3.0.CO;2-I">Estimating time series models using the relevant cost function</a></td>
+        <td><details><summary>Abstract</summary><div>一个在任意语义层学习时间序列表示的通用框架</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.representation.dl.cost.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>AE</td>
+        <td><a href="https://www.sciencedirect.com/science/article/pii/S0925231214003658">Autoencoder for words</a></td>
+        <td><details><summary>Abstract</summary><div>表征模型属于自监督模型里的一种，主要是希望能够学习到一种通用的特征表达用于下游任务；当前主流的自监督学习主要有基于生成式和基于对比学习的方法</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.anomaly.dl.autoencoder.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>VAE</td>
+        <td><a href="http://dm.snu.ac.kr/static/docs/TR/SNUDM-TR-2015-03.pdf">Variational autoencoder based anomaly detection using reconstruction probability</a></td>
+        <td><details><summary>Abstract</summary><div>经典的时序异常检测的深度模型</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.anomaly.dl.vae.html">快速开始</a></td>
+        </td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>AnomalyTransformer</td>
+        <td><a href="https://arxiv.org/abs/2110.02642">Anomaly transformer: Time series anomaly detection with association discrepancy</a></td>
+        <td><details><summary>Abstract</summary><div>经典的时序异常检测的深度模型</div></details></td>
+        <td>MSE</td>
+        <td><a href="https://paddlets.readthedocs.io/zh-cn/latest/source/api/paddlets.models.anomaly.dl._anomaly_transformer.html">快速开始</a></td>
+        </td>
+    </tr>
+</table>
+
