@@ -47,3 +47,4 @@
 |PaddleSpeech|PP-TTS|PP-TTS是一套基于基于端到端神经网络结构的流式语音合成系统，支持流式声学模型与流式声码器，开源快速部署流式合成服务方案|[快速开始](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/tts/PPTTS_cn.md)|
 |PaddleSpeech|PP-VPR|PP-VPR是一套声纹提取与检索系统，使用ECAPA-TDNN模型提取声纹特征，识别等错误率（EER，Equal error rate）低至0.95%，并且通过串联Mysql和Milvus，搭建完整的音频检索系统，实现毫秒级声音检索。|[快速开始](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/vpr/PPVPR_cn.md)|
 |PaddleSpeech|ERNIE-SAT|语音-语言跨模态大模型文心 ERNIE-SAT 在语音编辑、个性化语音合成以及跨语言的语音合成等多个任务取得了领先效果，可以应用于语音编辑、个性化合成、语音克隆、同传翻译等一系列场景|[快速开始](https://github.com/PaddlePaddle/PaddleSpeech/tree/develop/examples/aishell3_vctk/ernie_sat)|
+
