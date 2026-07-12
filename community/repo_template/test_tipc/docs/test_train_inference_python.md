@@ -91,5 +91,5 @@ Run failed with xxxxx
 ## 3. 更多教程
 本文档为功能测试用，更丰富的训练预测使用教程请参考：
 
-- [模型训练](../../README.md)  
+- [模型训练](../../README.md)
 - [基于Python预测引擎推理](../../deploy/pdinference/README.md)

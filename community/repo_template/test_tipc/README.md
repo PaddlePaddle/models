@@ -57,7 +57,7 @@ bash test_tipc/test_train_inference_python.sh configs/[model_name]/[params_file_
 bash test_tipc/prepare.sh ./test_tipc/configs/${model_name}/train_infer_python.txt 'lite_train_lite_infer'
 # 运行测试
 bash test_tipc/test_train_inference_python.sh ./test_tipc/configs/${model_name}/train_infer_python.txt 'lite_train_lite_infer'
-```  
+```
 
 关于本示例命令的更多信息可查看[基础训练预测使用文档](#more)。
 
