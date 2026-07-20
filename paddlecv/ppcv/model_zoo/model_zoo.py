@@ -77,7 +77,7 @@ def list_model(filters=[]):
         filters = [filters]
     model_names = [name for name in model_names if filt(name)]
     if len(model_names) == 0 and len(filters) > 0:
-        raise ValueError("no model found, please check filters seeting, "
+        raise ValueError("no model found, please check filters setting, "
                          "filters can be set as following kinds:\n"
                          "\tTask: single_op, system\n"
                          "\tArchitecture: PPLCNet, PPYOLOE ...\n")
